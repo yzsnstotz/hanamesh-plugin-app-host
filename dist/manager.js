@@ -419,9 +419,17 @@ export class AppHost {
   }
   async stopAll() {
     const records=this.#state?.instances ?? [];
-    const results=await Promise.allSettled(records.filter(i=>!isTerminal(i.status)||this.#controls.has(i.id))
-      .map(i=>this.stop(i.id,{confirm:true},i.principalId)));
+    const targets=records.filter(i=>!isTerminal(i.status)||this.#controls.has(i.id));
+    const results=await Promise.allSettled(targets.map(i=>this.stop(i.id,{confirm:true},i.principalId)));
     const failures=results.filter(r=>r.status==='rejected');
+    // Host teardown: the persistence medium may already be closing (a whole-profile unload tears the
+    // storage domain down alongside this plugin), which makes the "persist stopping first" write fail.
+    // An owned process must still never be orphaned by its host going away, so the runtime is signalled
+    // directly; the stopped state is not advertised (it was never persisted) and the error still surfaces.
+    if(failures.length && this.#closing){
+      await Promise.allSettled(targets.filter((_,index)=>results[index].status==='rejected')
+        .map(i=>this.#controls.get(i.id)?.runner?.stop()));
+    }
     if(failures.length)throw new AppHostError('STOP_ALL_INCOMPLETE','Some runtimes could not be confirmed stopped.',{count:failures.length});
   }
   async sweepLeases() {
@@ -461,7 +469,14 @@ export class AppHost {
   async dispose() {
     if(this.#disposing)return await this.#disposing;
     this.#closing=true;clearInterval(this.#timer);
-    this.#disposing=(async()=>{await this.stopAll();await this.#queue.drained();await this.store.close();this.#initialized=false;this.#listeners.clear();})();
+    this.#disposing=(async()=>{
+      let failure;
+      try{await this.stopAll();}catch(error){failure=error;}
+      // Release the medium even when a stop could not be confirmed; the failure is still reported.
+      try{await this.#queue.drained();await this.store.close();}catch(error){failure??=error;}
+      this.#initialized=false;this.#listeners.clear();
+      if(failure)throw failure;
+    })();
     return await this.#disposing;
   }
 }
