@@ -7,7 +7,8 @@ export class WorkspaceAppClient {
     this.origin=origin;this.fetcher=fetcher;this.headers=headers;
   }
   async request(path,input,signal){
-    const response=await this.fetcher(this.origin+path,{method:input===undefined?'GET':'POST',credentials:'same-origin',redirect:'error',signal,
+    // Browsers refuse `fetch` invoked with a foreign `this`; keep the global receiver for the default fetcher.
+    const response=await this.fetcher.call(globalThis,this.origin+path,{method:input===undefined?'GET':'POST',credentials:'same-origin',redirect:'error',signal,
       headers:{...await this.headers(),...(input===undefined?{}:{'content-type':'application/json','x-hanamesh-client':'workspace-v1'})},
       ...(input===undefined?{}:{body:JSON.stringify(input)})});
     const body=await response.json();
