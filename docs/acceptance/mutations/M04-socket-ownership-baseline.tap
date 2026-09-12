@@ -1,16 +1,9 @@
-TAP version 13
-# Subtest: AH readiness: unrelated HTTP 200 with the same app marker is not owned readiness
-ok 1 - AH readiness: unrelated HTTP 200 with the same app marker is not owned readiness
-  ---
-  duration_ms: 238.063491
-  type: 'test'
-  ...
-1..1
-# tests 1
-# suites 0
-# pass 1
-# fail 0
-# cancelled 0
-# skipped 0
-# todo 0
-# duration_ms 314.758462
+✔ AH readiness: unrelated HTTP 200 with the same app marker is not owned readiness (183.387292ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 242.309375

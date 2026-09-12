@@ -1,8 +1,10 @@
-# HanaMesh app-host · 0.1.0-rc.1
+# HanaMesh app-host · 0.1.0-rc.2
 
-**交付状态：PARTIAL（核心实现候选版），不是已验收的 DSH 插件。**
+**交付状态：`DELIVERED`（等用户验收），不是 ACCEPTED。**
 
-本仓完成可独立运行的应用实例管理、持久视图租约、受控网关和工作台 SDK。原型源码所在私有仓访问返回 404，附件只有需求/流程文档，因此这是新的实现候选，不是已经完成的原型提取；原型许可证和 commit 尚未核实。真实 DSH 0.1.5-alpha.1 的 storage-domain、认证、路由和生命周期绑定仍未接通验证，不能据此解除 MOD-03 的依赖门。
+> rc.1 是核心实现候选（无 DSH 侧）。2026-09-12 回收判定按 brief 把 DSH 侧作为本模块范围实现（`src/dsh.js`，见 `docs/DSH_INTEGRATION.md`），并在目标环境完成 H01–H14 与 X 项，含真实 DSH `web` profile 加载、真实 Chrome、真实 Cordis 服务栈；两处交付缺陷（浏览器内 `fetch` 未绑定、整 root 卸载遗留自有进程）已修。逐项证据：`docs/acceptance/REPORT.md` 末尾「回收判定记录」。`ACCEPTED` 仍只有用户能给，MOD-03 的依赖门在那之前不解除。
+
+本仓完成可独立运行的应用实例管理、持久视图租约、受控网关和工作台 SDK。原型源码所在私有仓当时访问返回 404，因此这是新的实现候选，不是原型提取；原型许可证和 commit 尚未核实（原型现在可读，见 `<umbrella>/research/dsh-greenfield-2026-09-09/workspace/packages/hanamesh-app-host/`，契约差异未逐项对照）。
 
 ## 本次已实现
 
@@ -25,7 +27,7 @@ npm run demo -- --smoke
 
 `npm run demo` 启动一个受控示例应用，并让两个视图共用同一实例；终端打印应用 URL，Ctrl+C 清理自有进程和临时示例目录。它不是 DSH、工作台或两个上游应用的演示。
 
-有 TypeScript 5.8.3 的开发环境可运行 `npm run test:types`。本次已经实际执行。交付 tarball 可以用 `npm install --offline --ignore-scripts --legacy-peer-deps /绝对路径/hanamesh-dsh-app-host-0.1.0-rc.1.tgz` 安装到一个独立测试工程；不要装到个人 DSH profile。
+有 TypeScript 5.8.3 的开发环境可运行 `npm run test:types`。本次已经实际执行。交付 tarball 可以用 `npm install --offline --ignore-scripts --legacy-peer-deps /绝对路径/hanamesh-dsh-app-host-0.1.0-rc.2.tgz` 安装到一个独立测试工程；不要装到个人 DSH profile。
 
 ## 验收结果在哪里
 
@@ -37,7 +39,7 @@ npm run demo -- --smoke
 |---|---|---|
 | 受信宿主代码 | `@hanamesh/dsh-app-host` | `AppHost`、存储、路由、网关 |
 | 工作台顶层页面 | `@hanamesh/dsh-app-host/client` | 明确的 Open 回执、恢复、心跳、Stop；禁止注入应用 iframe |
-| DSH profile 适配 | `@hanamesh/dsh-app-host/dsh` | `createDshPlugin(verifiedBridge)`；默认 `apply()` 明确拒绝假装加载成功 |
+| DSH profile 适配 | `@hanamesh/dsh-app-host/dsh` | Cordis 插件入口（`name`/`inject`/`Config`/`apply`），绑定固定版本公开 API；见 `docs/DSH_INTEGRATION.md` |
 
 契约详见 [`docs/CONTRACT.md`](docs/CONTRACT.md)，未完成步骤见 [`docs/DSH_INTEGRATION.md`](docs/DSH_INTEGRATION.md)，安全限制见 [`docs/SECURITY.md`](docs/SECURITY.md)。本仓不包含工作台 UI、应用适配包、授权/安装状态的第二份真相、钱包权限或 runtime driver。
 

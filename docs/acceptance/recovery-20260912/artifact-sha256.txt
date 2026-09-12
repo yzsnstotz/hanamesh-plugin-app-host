@@ -1,0 +1,1 @@
+78ea039c7b10ba3714d44d11e9be86f2a9104b291de1c9e6c5b85cf676e44dbe  artifacts/hanamesh-dsh-app-host-0.1.0-rc.2.tgz

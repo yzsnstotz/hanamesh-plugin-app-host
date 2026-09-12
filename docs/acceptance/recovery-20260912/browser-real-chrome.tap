@@ -1,0 +1,12 @@
+REAL_BROWSER embedding/security: {"browser":"Chrome/152.0.7977.84","namedParentEmbedded":true,"iframeMaliciousCallsBlocked":4,"directTopNavigationDenied":true}
+✔ H13 REAL_BROWSER: named parent embeds unchanged app; direct top navigation and iframe control calls are denied (1384.607ms)
+REAL_BROWSER lease expiry: {"browser":"Chrome/152.0.7977.84","signal":"SIGKILL","browserPid":54941,"appPid":54961,"noUnload":true,"lease":"expired","runtime":"stopped"}
+✔ H10 REAL_BROWSER: SIGKILL browser process group, no unload, lease expiry stops actual owned application (1910.025541ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3334.437875

@@ -1,0 +1,35 @@
+== H01: fresh isolated profile from web template, install rc.2 tarball (sha256 2c032475…0fbf) ==
++ @hanamesh/dsh-app-host file:<umbrella>/hanamesh-plugin-app-host/artifacts/hanamesh-dsh-app-host-0.1.0-rc.2.tgz
+++
+Done in 357ms using pnpm v10.33.0
+dsh: warning: @hanamesh/dsh-app-host declares no dsh.bundle — installed as a plain dependency, not a profile layer (a later update that gains one activates it automatically)
+ls: <scratchpad>/h01-dsh-home/profiles/h01/node_modules/@hanamesh/dsh-app-host/node_modules: No such file or directory
+<scratchpad>/h01-dsh-home/profiles/h01/node_modules/@hanamesh/:
+dsh-app-host
+== dump-config: row present ==
+541:- id: hanamesh-app-host
+542-  name: '@hanamesh/dsh-app-host/dsh'
+543-  config:
+544-    dataRoot: >-
+== boot: dsh --profile h01 --port 34201 --host 127.0.0.1 ==
+dsh web: http://127.0.0.1:34201/?token=[REDACTED]
+-- (a) unauthenticated GET /hanamesh/apps -> 401 {"error":{"code":"UNAUTHENTICATED","message":"Host authentication is required.","details":{}},"traceId":"4b419d2d-9017-4
+-- (b) exchange launch token for the browser cookie: GET /?token=… -> 303 -> http://127.0.0.1:34201/
+-- (c) cookie GET /hanamesh/apps -> 200 {"contractVersion":1,"apps":[{"id":"fixture","name":"Fixture application","singleInstanceOnly":true,"deployments":[{"id":"local","dataId":"data-v1","mode":"owned","embedding":"direct"}]}],"instances":[],"views":[],"sequence":0,"traceId":"48a195c2-5f0a-44f0-b39f-29fe62a89e20"}
+-- (d) cookie POST /apps/open (workspace origin + client header) -> 200 {"instance":{"id":"f1964adb-316f-4390-a60d-b47b6f32a37e","appId":"fixture","deploymentId":"local","dataId":"data-v1","mode":"owned","status":"starting","runtimeId":"e8a5ee6b-8fdf-4939-bf14-98bbbad752fd"},"lease":{"principalId":"dsh-browser","viewId":"h01-view","instanceId":"f1964adb-316f-4390-a60d-b47b6f32a37e","generation":1,"status":"active","expiresAt":1789206804461,"createdAt":1789206714461,"o
+-- (e) cookie GET /hanamesh/apps (instance ready?) -> 200 [('f1964adb', 'ready', 'owned')] views [('h01-view', 'active')]
+-- (f) ps: fixture app pid 54291 54291 54290 SN   /Users/yzliu/.local/state/fnm_multishells/21010_1789203072505/bin/node /Users/yzliu/work/projects/hanam
+-- (g) POST /apps/open from a foreign origin with the same cookie -> 403 {"error":{"code":"ORIGIN_DENIED","message":"Unapproved browser origin.","details":{}},"traceId":"d2d490ec-e553-4003-85e1
+-- (h) POST /apps/open with a command override -> 400 {"error":{"code":"UNKNOWN_FIELDS","message":"Only registered identifiers and lease fields are accepted.","details":{"fie
+-- (i) storage-domain sidecar on disk:
+hanamesh_app_host.json
+workspace.json
+<scratchpad>/h01-dsh-home/storages/hanamesh_app_host.json
+  instances 1 leases [('h01-view', 'active')] tokenHash-only: True
+-- (j) data root written by the real app:
+<scratchpad>/h01-dsh-home/app-data/8695bef47d82e4517c6268b6/fixture/local/data-v1/single/.runtime.lock
+<scratchpad>/h01-dsh-home/app-data/8695bef47d82e4517c6268b6/fixture/local/data-v1/single/runtime-evidence.json
+<scratchpad>/h01-dsh-home/app-data/8695bef47d82e4517c6268b6/fixture/local/data-v1/single/write-e8a5ee6b-8fdf-4939-bf14-98bbbad752fd.txt
+== SIGTERM the profile ==
+dsh exit=0
+fixture app still alive after profile shutdown? 0 (0 = stopped with the host)

@@ -1,6 +1,19 @@
-# 尚未完成的 DSH 集成
+# DSH 集成
 
-**当前不支持直接把本候选当成已加载的 DSH 插件。** `apply()` 有意抛出 DSH_BINDING_REQUIRED。`createDshPlugin()` 接受的 bridge 是本仓定义的集成端口，不是已验证的官方 API 名称；不能填几个假函数就把 H01/H11 标 PASS。
+> **2026-09-12（rc.2）：DSH 侧已实现并在真实 profile 加载。** 入口 `@hanamesh/dsh-app-host/dsh`（`src/dsh.js`）绑定固定版本 DSH 0.1.5-alpha.1 **声明过的**公开 API：`ctx.storageDomain.open()`（single 布局，整个快照是一个 global，`global.set` 即一次整体发布）、`ctx.webServer.register()`（八条 exact 路由）、`ctx.connection.requestRejection()`（与 `/api` 通道相同的 Host/Origin 栅栏 + 浏览器 cookie；主体为本 profile 唯一的本地浏览器会话 `dsh-browser`）、`ctx.provide/ctx.effect`。`inject` 声明三项服务，缺 `connection` 时插件不激活、不会有公开路由。profile 接法：
+>
+> ```yaml
+> - insert:
+>     - id: hanamesh-app-host
+>       name: '@hanamesh/dsh-app-host/dsh'
+>       config: { dataRoot: /abs/path, applications: [ …AppDefinition… ] }
+> ```
+>
+> 证据：`docs/acceptance/recovery-20260912/h01-real-profile.log`、`dsh-real-cordis.tap`。下文是 rc.1 交付方写下的当时缺口，作为历史保留。
+
+## rc.1 时的缺口（历史）
+
+**当时不支持直接把本候选当成已加载的 DSH 插件。** `apply()` 有意抛出 DSH_BINDING_REQUIRED。`createDshPlugin()` 接受的 bridge 是本仓定义的集成端口，不是已验证的官方 API 名称；不能填几个假函数就把 H01/H11 标 PASS。
 
 ## 已知目标与实际证据
 

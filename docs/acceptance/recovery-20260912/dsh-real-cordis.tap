@@ -1,0 +1,21 @@
+✔ H01 (harness half): the plugin activates on a real Cordis root and provides ctx.hanameshApps (70.1555ms)
+✔ H11: lease/instance state lands in the storage-domain sidecar and DSH still reads its own session (264.824708ms)
+✔ H14/AC-07 on the real web server: unauthenticated, wrong origin and iframe callers are refused (67.401833ms)
+✔ H09/dispose: unloading the plugin removes its routes, stops owned instances, and closes the domain (429.710458ms)
+✔ AC-26 shape: without the connection service the plugin never activates, so no route is public (339.04025ms)
+✔ unit: bare apply() cannot masquerade as a loaded plugin (0.817375ms)
+✖ tests/dsh.test.mjs (120029.223917ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 1
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 120030.676375
+
+✖ failing tests:
+
+test at tests/dsh.test.mjs:1:1
+✖ tests/dsh.test.mjs (120029.223917ms)
+  'Promise resolution is still pending but the event loop has already resolved'
