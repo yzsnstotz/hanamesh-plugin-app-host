@@ -1,4 +1,4 @@
-✖ X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data (221.607375ms)
+✖ X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data (228.829416ms)
 ℹ tests 1
 ℹ suites 0
 ℹ pass 0
@@ -6,14 +6,14 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 260.028125
+ℹ duration_ms 267.573792
 
 ✖ failing tests:
 
 test at tests/crash.test.mjs:45:1
-✖ X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data (221.607375ms)
+✖ X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data (228.829416ms)
   AssertionError [ERR_ASSERTION]: RESERVE_BOUNDARY_UNSAFE: real app data exists without durable instance + lease ownership
-      at TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-c5kZ2x/tests/crash.test.mjs:49:3)
+      at TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-LDvehE/tests/crash.test.mjs:49:3)
       at async Test.run (node:internal/test_runner/test:1110:7)
       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
     generatedMessage: false,

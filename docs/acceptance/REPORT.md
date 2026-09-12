@@ -130,3 +130,9 @@ Claude Opus 5（1M context）；重试 0；人工介入 0（用户一次指示�
 `npm ci` 的锁文件漂移、干净安装后的类型检查及 busy Stop 的 HTTP 400 已修复；rc.3 在 Node 24.13.1 下通过 49/49 测试（含真实 Chrome 2/2）、4/4 变异、类型检查、独立 tarball 安装，以及隔离真实 DSH profile 的五个动作。首次 Open 后对同一 view 的重复请求须携带首次回执的 `leaseToken`；清单原样三次无 token 请求为 `200/403/403`，详见 [修复与复验报告](wave01-resolution-report.md)及[rc.3 产物清单](wave01-rc3-artifact.json)。
 
 此处没有用户签名、没有 `ACCEPTED`，下游仍按共享状态表的验收门执行。rc.2 的全部记录及摘要在上方保持不变。
+## 用户验收签名（ACCEPTED）
+
+**日期：** 2026-09-13　**签署：** yzliu（产品负责人），在与回收判定 session 的对话中明确确认「四个全部 ACCEPTED」。
+**验收版本：** `0.1.0-rc.3` @ `1b4d657`，tag `v0.1.0-rc.3`，sha256 `fdde04917bfc68eb566044a941a9c7d1aeaa9b7c8b8de9635a55d03f32d2212c`
+**依据：** 2026-09-12 回收判定 + 阻塞修复后的独立复验（见 docs 仓 STATUS.md §4 2026-09-12 深夜 checkpoint）。
+**明确接受的限制：** X02 未在真实 storage-domain 后端强杀（STATUS §3 X02-REAL）；Tauri/WKWebView 内嵌归 workspace 联验。
