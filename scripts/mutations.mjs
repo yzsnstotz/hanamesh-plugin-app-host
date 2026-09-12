@@ -1,4 +1,4 @@
-import { cp,mkdtemp,readFile,writeFile,mkdir,rm } from 'node:fs/promises';
+import { cp,mkdtemp,readFile,writeFile,mkdir,rm,symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join,resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -21,6 +21,8 @@ for(const c of cases){
   const temp=await mkdtemp(join(tmpdir(),'hm-app-host-mutation-'));
   try{
     for(const path of ['src','tests','scripts','consistency.json','package.json'])await cp(join(root,path),join(temp,path),{recursive:true});
+    // Installed dependencies only (the DSH plugin entry imports schemastery/zod/storage-domain); never another repo's source.
+    await symlink(join(root,'node_modules'),join(temp,'node_modules'),'dir');
     const target=join(temp,c.file),source=await readFile(target,'utf8');
     if(source.split(c.from).length!==2)throw new Error(`${c.id}: expected exactly one mutation anchor.`);
     const changed=source.replace(c.from,c.to);await writeFile(target,changed);

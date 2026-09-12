@@ -149,7 +149,7 @@ export class AtomicFileStore {
 /** Explicit bridge port; a verified profile must supply the actual DSH public-API binding. */
 export class DshDomainSnapshotStore {
   constructor(binding) {
-    requireCondition(binding?.layout === 'single' && binding?.domain === 'hanamesh-app-host' &&
+    requireCondition(binding?.layout === 'single' && binding?.domain === 'hanamesh_app_host' &&
       typeof binding.readSnapshot === 'function' && typeof binding.publishSnapshot === 'function' &&
       typeof binding.acquireExclusive === 'function' && typeof binding.releaseExclusive === 'function',
       'DSH_BINDING_REQUIRED', 'A verified single-image DSH storage-domain binding is required.');

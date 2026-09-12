@@ -8,7 +8,9 @@ import { createHttpHandler } from '../src/index.js';
 import { setup,definition,temporary,until,pidAlive,delay } from './helpers.mjs';
 async function chrome(t){
   let binary;
-  for(const candidate of ['/usr/bin/chromium','/usr/bin/chromium-browser','/usr/bin/google-chrome'])try{await access(candidate);binary=candidate;break;}catch{}
+  // HM_CHROMIUM names an isolated Chromium binary on hosts without a system one (e.g. a Playwright cache on macOS).
+  const candidates=[process.env.HM_CHROMIUM,'/usr/bin/chromium','/usr/bin/chromium-browser','/usr/bin/google-chrome'].filter(Boolean);
+  for(const candidate of candidates)try{await access(candidate);binary=candidate;break;}catch{}
   if(!binary){t.skip('REAL_BROWSER unavailable: isolated Chromium binary was not found.');return null;}
   const root=await temporary(),profile=join(root,'chromium-profile');
   const processHandle=spawn(binary,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--no-first-run','--no-default-browser-check','--remote-debugging-address=127.0.0.1','--remote-debugging-port=0',`--user-data-dir=${profile}`,'about:blank'],{detached:true,stdio:['ignore','ignore','pipe']});

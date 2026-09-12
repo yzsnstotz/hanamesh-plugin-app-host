@@ -6,7 +6,7 @@ import { AtomicFileStore } from '../src/index.js';
 import { emptySnapshot,validateSnapshot,secureDirectory } from '../src/store.js';
 import { waitReady,ownsLoopbackPort } from '../src/runtime.js';
 import { validateDefinition } from '../src/descriptor.js';
-import { apply,createDshPlugin } from '../src/dsh.js';
+import { apply,domainBinding } from '../src/dsh.js';
 import { temporary,external,definition,parentOrigin } from './helpers.mjs';
 test('AH store: pre-publish failure preserves prior image; post-publish failure is explicitly uncertain',async t=>{
   const root=await temporary();let failPoint;const s=new AtomicFileStore(root,{checkpoint:async at=>{if(at===failPoint)throw new Error('injected write failure');}});
@@ -31,6 +31,10 @@ test('AH readiness: unrelated HTTP 200 with the same app marker is not owned rea
 test('AH descriptors: relative commands, shell-style launch, missing data binding and host env are rejected',()=>{
   for(const transform of [d=>d.deployments[0].command='node',d=>d.deployments[0].args='node app.js',d=>d.deployments[0].args=['port={{port}}'],d=>{d.deployments[0].env={DSH_TOKEN:'x'};d.deployments[0].envAllowlist=['DSH_TOKEN'];}]){const d=definition();transform(d);assert.throws(()=>validateDefinition(d));}
 });
-test('H01/H11 guard: absent verified DSH bridge cannot masquerade as a loaded plugin',async()=>{
-  assert.throws(()=>createDshPlugin({dshVersion:'0.1.5-alpha.1'}),{code:'DSH_BINDING_REQUIRED'});await assert.rejects(apply(),{code:'DSH_BINDING_REQUIRED'});
+test('H01/H11 guard: bare apply() cannot masquerade as a loaded plugin; the domain binding is a single-image port',async()=>{
+  await assert.rejects(apply(),{code:'DSH_BINDING_REQUIRED'});
+  let image=null,closed=0;const binding=domainBinding({global:{get:()=>image,set:async v=>{image=v;}},close:async()=>{closed++;}});
+  assert.equal(binding.layout,'single');assert.equal(binding.domain,'hanamesh_app_host');
+  await binding.publishSnapshot({schema:1,revision:1,sequence:0,instances:[],leases:[],events:[]});assert.equal((await binding.readSnapshot()).revision,1);
+  await binding.releaseExclusive();assert.equal(closed,1);
 });
