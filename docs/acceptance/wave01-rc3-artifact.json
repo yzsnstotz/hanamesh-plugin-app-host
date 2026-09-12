@@ -1,0 +1,24 @@
+{
+  "module": "app-host",
+  "package": "@hanamesh/dsh-app-host",
+  "version": "0.1.0-rc.3",
+  "status": "LOCAL_CANDIDATE_PENDING_USER_ACCEPTANCE",
+  "sourceBase": "20445c83ea79136c364e6b394875f93bb3307032",
+  "artifact": "artifacts/hanamesh-dsh-app-host-0.1.0-rc.3.tgz",
+  "bytes": 42965,
+  "sha256": "fdde04917bfc68eb566044a941a9c7d1aeaa9b7c8b8de9635a55d03f32d2212c",
+  "npmIntegrity": "sha512-ezwY63kJNDKEjfdJf3uI/W/oLWp50G3bqNaq0kSKp1Km62W751f9ISv8b3xl8Af7oZS89fJgZSEBnQP8X4CUgQ==",
+  "dshTarget": "0.1.5-alpha.1",
+  "node": "24.13.1",
+  "checks": {
+    "cleanInstall": "wave01-rc3-npm-ci.log",
+    "build": "wave01-rc3-build.log",
+    "suite": "wave01-rc3-tests.tap",
+    "mutations": "wave01-rc3-mutations.log",
+    "types": "wave01-rc3-types.log",
+    "consistency": "wave01-rc3-consistency.log",
+    "packageSmoke": "wave01-rc3-package-smoke.log",
+    "realProfile": "wave01-rc3-real-profile.json",
+    "freshRepack": "wave01-rc3-repack-check.log"
+  }
+}

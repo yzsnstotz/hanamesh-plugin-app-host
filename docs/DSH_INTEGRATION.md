@@ -1,5 +1,7 @@
 # DSH 集成
 
+> **2026-09-12（rc.3）：** 干净安装锁文件和占用 Stop 的 HTTP 409 已修复；五个动作的重新验收证据见 `acceptance/wave01-resolution-report.md`。rc.2 的回收证据保留在下方，不能作为 rc.3 的包摘要。
+
 > **2026-09-12（rc.2）：DSH 侧已实现并在真实 profile 加载。** 入口 `@hanamesh/dsh-app-host/dsh`（`src/dsh.js`）绑定固定版本 DSH 0.1.5-alpha.1 **声明过的**公开 API：`ctx.storageDomain.open()`（single 布局，整个快照是一个 global，`global.set` 即一次整体发布）、`ctx.webServer.register()`（八条 exact 路由）、`ctx.connection.requestRejection()`（与 `/api` 通道相同的 Host/Origin 栅栏 + 浏览器 cookie；主体为本 profile 唯一的本地浏览器会话 `dsh-browser`）、`ctx.provide/ctx.effect`。`inject` 声明三项服务，缺 `connection` 时插件不激活、不会有公开路由。profile 接法：
 >
 > ```yaml

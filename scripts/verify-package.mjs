@@ -2,7 +2,7 @@ import { mkdtemp,writeFile,readFile,rm,realpath } from 'node:fs/promises';
 import { join,resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
-const tarball=resolve(process.argv[2]??'hanamesh-dsh-app-host-0.1.0-rc.1.tgz');
+const tarball=resolve(process.argv[2]??'hanamesh-dsh-app-host-0.1.0-rc.3.tgz');
 await readFile(tarball);
 const root=await mkdtemp(join(await realpath(tmpdir()),'hm-app-host-package-'));
 try{
@@ -18,7 +18,7 @@ try{
     try{await host.init();const result=await host.open({appId:'installed',deploymentId:'local',viewId:'installed-view'});assert.equal(await readFile(join(result.instance.dataDir,'independent-app.txt'),'utf8'),'actual app write');assert.equal(typeof WorkspaceAppClient,'function');
     // The ./dsh entry needs the pinned DSH peers (schemastery, storage-domain): without them it cannot load at all, so it cannot masquerade as a plugin here. Its real load is the H01 profile run.
     await assert.rejects(import('@hanamesh/dsh-app-host/dsh'),{code:'ERR_MODULE_NOT_FOUND'});
-    console.log(JSON.stringify({check:'ISOLATED_PACKAGE',status:'PASS',realOwnedPid:result.instance.pid,realAppData:true,installedExports:['.','./client'],dshEntry:'requires pinned DSH peers; verified in the real profile (docs/acceptance/recovery-20260912/h01-real-profile.log)',sourceTreeImports:0}));}
+    console.log(JSON.stringify({check:'ISOLATED_PACKAGE',status:'PASS',realOwnedPid:result.instance.pid,realAppData:true,installedExports:['.','./client'],dshEntry:'requires pinned DSH peers; verified separately in the real profile',sourceTreeImports:0}));}
     finally{await host.dispose();}
   `);
   const run=spawnSync(process.execPath,['verify.mjs'],{cwd:root,encoding:'utf8',timeout:15000});

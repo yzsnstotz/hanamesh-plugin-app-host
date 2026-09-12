@@ -1,0 +1,136 @@
+[
+  {
+    "id": "@hanamesh/dsh-app-host@0.1.0-rc.3",
+    "name": "@hanamesh/dsh-app-host",
+    "version": "0.1.0-rc.3",
+    "size": 42965,
+    "unpackedSize": 126477,
+    "shasum": "7ee88e5e4c9f8fd908eb48b0be95727f94c802f0",
+    "integrity": "sha512-ezwY63kJNDKEjfdJf3uI/W/oLWp50G3bqNaq0kSKp1Km62W751f9ISv8b3xl8Af7oZS89fJgZSEBnQP8X4CUgQ==",
+    "filename": "hanamesh-dsh-app-host-0.1.0-rc.3.tgz",
+    "files": [
+      {
+        "path": "AGENTS.md",
+        "size": 2322,
+        "mode": 420
+      },
+      {
+        "path": "README.md",
+        "size": 4817,
+        "mode": 420
+      },
+      {
+        "path": "consistency.json",
+        "size": 2131,
+        "mode": 420
+      },
+      {
+        "path": "dist/client.d.ts",
+        "size": 1470,
+        "mode": 420
+      },
+      {
+        "path": "dist/client.js",
+        "size": 3295,
+        "mode": 420
+      },
+      {
+        "path": "dist/consistency.js",
+        "size": 591,
+        "mode": 420
+      },
+      {
+        "path": "dist/descriptor.js",
+        "size": 5313,
+        "mode": 420
+      },
+      {
+        "path": "dist/dsh.d.ts",
+        "size": 1480,
+        "mode": 420
+      },
+      {
+        "path": "dist/dsh.js",
+        "size": 6220,
+        "mode": 420
+      },
+      {
+        "path": "dist/errors.js",
+        "size": 923,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway.js",
+        "size": 10108,
+        "mode": 420
+      },
+      {
+        "path": "dist/guardian.js",
+        "size": 4125,
+        "mode": 420
+      },
+      {
+        "path": "dist/index.d.ts",
+        "size": 6386,
+        "mode": 420
+      },
+      {
+        "path": "dist/index.js",
+        "size": 278,
+        "mode": 420
+      },
+      {
+        "path": "dist/launcher.js",
+        "size": 899,
+        "mode": 420
+      },
+      {
+        "path": "dist/manager.js",
+        "size": 31753,
+        "mode": 420
+      },
+      {
+        "path": "dist/routes.js",
+        "size": 5222,
+        "mode": 420
+      },
+      {
+        "path": "dist/runtime.js",
+        "size": 8991,
+        "mode": 420
+      },
+      {
+        "path": "dist/store.js",
+        "size": 8630,
+        "mode": 420
+      },
+      {
+        "path": "docs/CONTRACT.md",
+        "size": 7824,
+        "mode": 420
+      },
+      {
+        "path": "docs/DSH_INTEGRATION.md",
+        "size": 4634,
+        "mode": 420
+      },
+      {
+        "path": "docs/PROVENANCE.json",
+        "size": 1710,
+        "mode": 420
+      },
+      {
+        "path": "docs/SECURITY.md",
+        "size": 4230,
+        "mode": 420
+      },
+      {
+        "path": "package.json",
+        "size": 3125,
+        "mode": 420
+      }
+    ],
+    "entryCount": 24,
+    "bundled": []
+  }
+]

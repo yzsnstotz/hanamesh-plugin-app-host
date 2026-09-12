@@ -389,7 +389,7 @@ export class AppHost {
       if(isTerminal(stored.status) && !control)return {task:Promise.resolve(publicInstance(stored))};
       const users=this.#activeFor(this.#state,instanceId);
       requireCondition(confirm || users.length===0,'INSTANCE_IN_USE','Stop refused: views are still using this instance.',
-        {views:users.map(l=>({viewId:l.viewId,generation:l.generation,expiresAt:l.expiresAt}))});
+        {views:users.map(l=>({viewId:l.viewId,generation:l.generation,expiresAt:l.expiresAt}))},409);
       const next=copy(this.#state),record=next.instances.find(i=>i.id===instanceId);
       record.status='stopping';record.updatedAt=this.clock();
       this.#event(next,'instance.stop-requested',record,{views:users.map(l=>l.viewId)});

@@ -33,3 +33,12 @@ test('AH routes: startup receipt can be cancelled and tokens are not leaked thro
   for(const path of ['/hanamesh/apps','/apps/events']){const list=await http(a.origin+path,{headers:a.headers});assert.equal(list.status,200);assert(!list.body.includes(r.json.leaseToken));assert(!list.body.includes('tokenHash'));}
   assert.equal((await a.post('/apps/close',lease)).status,200);assert.equal(a.host.instance(r.json.instance.id,'alice').status,'stopped');
 });
+test('H08: busy Stop is HTTP 409 and names the occupying view',async t=>{
+  const a=await api(t);
+  const opened=await a.post('/apps/open',input('busy-view'));
+  assert.equal(opened.status,200);
+  const stopped=await a.post('/apps/stop',{instanceId:opened.json.instance.id,confirm:false});
+  assert.equal(stopped.status,409);
+  assert.equal(stopped.json.error.code,'INSTANCE_IN_USE');
+  assert.deepEqual(stopped.json.error.details.views.map(view=>view.viewId),['busy-view']);
+});

@@ -1,0 +1,73 @@
+
+> @hanamesh/dsh-app-host@0.1.0-rc.3 test
+> node --test --test-concurrency=1 tests/*.test.mjs
+
+REAL_BROWSER embedding/security: {"browser":"Chrome/152.0.7977.84","namedParentEmbedded":true,"iframeMaliciousCallsBlocked":4,"directTopNavigationDenied":true}
+✔ H13 REAL_BROWSER: named parent embeds unchanged app; direct top navigation and iframe control calls are denied (1347.702ms)
+REAL_BROWSER lease expiry: {"browser":"Chrome/152.0.7977.84","signal":"SIGKILL","browserPid":38008,"appPid":38028,"noUnload":true,"lease":"expired","runtime":"stopped"}
+✔ H10 REAL_BROWSER: SIGKILL browser process group, no unload, lease expiry stops actual owned application (2025.888041ms)
+✔ X01: consistency declaration covers each production group and boundary (4.142708ms)
+X02 first-lease: {"point":"snapshot-temp-fsynced","death":{"code":null,"signal":"SIGKILL"},"facts":[false,false,false],"revision":0}
+✔ X02 first-lease: real SIGKILL at snapshot-temp-fsynced restores all or none (71.858166ms)
+X02 stopped-views: {"point":"snapshot-temp-fsynced","death":{"code":null,"signal":"SIGKILL"},"facts":[false,false,false],"revision":4}
+✔ X02 stopped-views: real SIGKILL at snapshot-temp-fsynced restores all or none (286.617125ms)
+X02 first-lease: {"point":"snapshot-published","death":{"code":null,"signal":"SIGKILL"},"facts":[true,true,true],"revision":1}
+✔ X02 first-lease: real SIGKILL at snapshot-published restores all or none (68.494291ms)
+X02 stopped-views: {"point":"snapshot-published","death":{"code":null,"signal":"SIGKILL"},"facts":[true,true,true],"revision":5}
+✔ X02 stopped-views: real SIGKILL at snapshot-published restores all or none (306.009833ms)
+X03 reserve-launch: {"signal":"SIGKILL","instanceId":"5327c709-3acd-4e8d-b957-9548c8aac179","pid":38094,"appWroteData":true,"durableOwner":true,"guardianCleanup":true}
+✔ X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data (238.537333ms)
+X03 stop-publish: {"signal":"SIGKILL","stateAfterRestart":"stopping","aliveAtCut":false,"aliveAfterRestart":false}
+✔ X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive (292.395083ms)
+H12 real host kill/resume: {"stableInstance":"52885231-871b-4d0a-b1c4-88ee15821664","oldRuntime":"353d3fbc-04f2-49ec-91a7-d6bc079ec1d7","newRuntime":"01e23df3-e70a-46ae-8e2e-3091d4755395","dataRetained":true}
+✔ H12/H06: SIGKILL host, guardian cleanup, fresh host exact-identity resume and persisted app data (537.5525ms)
+✔ H01 (harness half): the plugin activates on a real Cordis root and provides ctx.hanameshApps (70.03575ms)
+✔ H11: lease/instance state lands in the storage-domain sidecar and DSH still reads its own session (935.378417ms)
+✔ H14/AC-07 on the real web server: unauthenticated, wrong origin and iframe callers are refused (69.369125ms)
+✔ H09/dispose: unloading the plugin removes its routes, stops owned instances, and closes the domain (382.63175ms)
+✔ AC-26 shape: without the connection service the plugin never activates, so no route is public (339.699875ms)
+✔ unit: bare apply() cannot masquerade as a loaded plugin (1.088209ms)
+✔ teardown: a whole-root unload (profile shutdown) never orphans an owned process, even though the storage domain closes concurrently (338.760209ms)
+✔ H13: fixed gateway changes only XFO/frame-ancestors; preserves HTML, gzip and application headers (48.748209ms)
+✔ H14: gateway requires live capability; denies foreign origins, top navigation, arbitrary targets and ticket reuse (67.439375ms)
+✔ H14: gateway strips DSH credentials, control headers and unregistered cookies (69.399125ms)
+✔ AH gateway: uploads, SSE, relative application paths and redirects retain transport semantics (144.886625ms)
+✔ AH gateway: real WebSocket upgrade preserves frame bytes (68.17025ms)
+H02 real process evidence: {"opens":8,"pids":[38428]}
+✔ H02: eight concurrent opens reserve one actual application process (248.40425ms)
+H03 actual directory contents: {"a":{"path":"/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-38425-UOMNVP/data/4740ae6347b0172c01254ff5/example/local/data-v1/adf215bf-a72e-419f-b390-7fc66d75702f","files":[".runtime.lock","cache","config","home","runtime-evidence.json","state","tmp","write-3406ba05-37af-42f2-b3d5-5b08fd19c391.txt"]},"b":{"path":"/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-38425-UOMNVP/data/4740ae6347b0172c01254ff5/example/local/data-v1/980c6b74-984a-4917-9dce-c9bccaea8018","files":[".runtime.lock","cache","config","home","runtime-evidence.json","state","tmp","write-ce1fbcbd-19be-4fcf-b1ba-9248b0776dd1.txt"]}}
+✔ H03: multi-instance applications write genuinely separate data roots (413.964584ms)
+✔ H04/H05: reopen is idempotent; closing one view does not stop the other (298.862292ms)
+H06 durable slot restore: {"old":"bacd4a04-b84a-4bea-90e4-269ed1ba0420","restored":"bacd4a04-b84a-4bea-90e4-269ed1ba0420","originalSessionId":"document-exact-a"}
+✔ H06: restart/resume preserves exact view, deployment, data and original-session identities (851.847417ms)
+✔ H07: forged, expired-generation, and cross-principal close cannot decrement another lease (477.928875ms)
+✔ H08: busy Stop explains occupiers; confirmed stop emits durable notifications for every view (257.946917ms)
+✔ H09: attach close, stopAll and dispose never signal the external process (242.769667ms)
+✔ H10: expired leases converge without any unload request (567.915166ms)
+✔ AH: startup cancellation receipt stops the actual child and does not return false-ready (186.63375ms)
+✔ AH: never-ready startup is bounded, cleans up, and supports an explicit retry (632.929375ms)
+✔ AH: spontaneous application exit cannot leave ready forever (278.825625ms)
+✔ AH: disjoint applications launch independently and cannot rebind an existing view (316.762292ms)
+✔ AH: host secrets are not inherited; logs redact bearer and JSON secrets (236.84175ms)
+✔ AH: confirmed Stop removes a SIGTERM-resistant descendant in its owned group (247.820709ms)
+✔ FIX-01: lost receipt recovery is owner-confirmed, fences old credentials and retains exact identity (255.924667ms)
+✔ FIX-01 gateway: closed/recovered generations never regain iframe capabilities after reopen (278.8775ms)
+✔ AH recovery: tampered data-root bindings cannot redirect application writes (253.553334ms)
+✔ H14: every browser command/env/cwd/path/url override is rejected before spawn (21.879ms)
+✔ H14: control routes require authentication, CSRF header, exact origin and host (8.692875ms)
+✔ AH routes: startup receipt can be cancelled and tokens are not leaked through list/events (173.92725ms)
+✔ H08: busy Stop is HTTP 409 and names the occupying view (166.800708ms)
+✔ AH store: pre-publish failure preserves prior image; post-publish failure is explicitly uncertain (30.1345ms)
+✔ AH store: a second live owner is rejected and cannot silently overwrite state (13.070791ms)
+✔ AH store: corrupt snapshots and symlinked roots fail closed (3.994ms)
+✔ AH readiness: unrelated HTTP 200 with the same app marker is not owned readiness (222.353292ms)
+✔ AH descriptors: relative commands, shell-style launch, missing data binding and host env are rejected (0.494166ms)
+✔ H01/H11 guard: bare apply() cannot masquerade as a loaded plugin; the domain binding is a single-image port (0.213417ms)
+ℹ tests 49
+ℹ suites 0
+ℹ pass 49
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14787.233542
