@@ -1,0 +1,91 @@
+{
+  "profile": "isolated web-derived acc",
+  "node": "v24.13.1",
+  "setup": [
+    {
+      "label": "create profile",
+      "exit": 0,
+      "signal": null
+    },
+    {
+      "label": "install packaged plugin",
+      "exit": 0,
+      "signal": null
+    },
+    {
+      "label": "compose patched profile",
+      "exit": 0,
+      "signal": null
+    }
+  ],
+  "actions": [
+    {
+      "action": "1 exact checklist repeated Open without token",
+      "statuses": [
+        200,
+        403,
+        403
+      ],
+      "codes": [
+        null,
+        "LEASE_NOT_OWNED",
+        "LEASE_NOT_OWNED"
+      ]
+    },
+    {
+      "action": "1 token-bearing repeated Open",
+      "statuses": [
+        200,
+        200,
+        200
+      ],
+      "instanceIds": [
+        "70f1df7c-0d95-49d1-ae61-41c2496dd20b",
+        "70f1df7c-0d95-49d1-ae61-41c2496dd20b",
+        "70f1df7c-0d95-49d1-ae61-41c2496dd20b"
+      ],
+      "ready": "ready",
+      "processCount": 1,
+      "pid": 46268
+    },
+    {
+      "action": "2 two views then close v1",
+      "openStatus": 200,
+      "closeStatus": 200,
+      "sameInstance": true,
+      "remainingView": "active",
+      "instanceStatus": "ready",
+      "processAlive": true
+    },
+    {
+      "action": "3 busy Stop",
+      "status": 409,
+      "code": "INSTANCE_IN_USE",
+      "occupiers": [
+        "v2"
+      ]
+    },
+    {
+      "action": "4 restart and resume",
+      "listStatus": 200,
+      "sameInstance": true,
+      "restoredViewStatus": "active",
+      "resumeStatus": 200,
+      "newRuntimePid": 46312
+    },
+    {
+      "action": "5 runtime-written data files",
+      "count": 2,
+      "paths": [
+        "8695bef47d82e4517c6268b6/fixture/local/data-v1/single/write-14a54b8f-6558-42d8-b040-45b1c7ebbc30.txt",
+        "8695bef47d82e4517c6268b6/fixture/local/data-v1/single/write-40dd03bc-f0f3-49c3-9ed3-cb45fe2aaddd.txt"
+      ]
+    }
+  ],
+  "cleanup": {
+    "hostExitZero": true,
+    "ownedProcessesStopped": true,
+    "temporaryProfileRemoved": true
+  },
+  "result": "PASS_WITH_CHECKLIST_CORRECTION"
+}
