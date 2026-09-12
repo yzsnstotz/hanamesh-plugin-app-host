@@ -1,0 +1,5 @@
+
+> @hanamesh/dsh-app-host@0.1.0-rc.1 build
+> node scripts/build.mjs
+
+Build completed: self-contained ESM modules and public type declarations.

@@ -1,0 +1,17 @@
+TAP version 13
+# X03 stop-publish: {"signal":"SIGKILL","stateAfterRestart":"stopping","aliveAtCut":false,"aliveAfterRestart":false}
+# Subtest: X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive
+ok 1 - X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive
+  ---
+  duration_ms: 321.441068
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 393.56459

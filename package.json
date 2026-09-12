@@ -1,0 +1,67 @@
+{
+  "name": "@hanamesh/dsh-app-host",
+  "version": "0.1.0-rc.1",
+  "description": "HanaMesh application ownership and durable view leases; DSH integration candidate",
+  "type": "module",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22.16.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./dsh": {
+      "types": "./dist/dsh.d.ts",
+      "default": "./dist/dsh.js"
+    },
+    "./package.json": "./package.json",
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.js"
+    }
+  },
+  "files": [
+    "dist",
+    "consistency.json",
+    "README.md",
+    "AGENTS.md",
+    "docs/CONTRACT.md",
+    "docs/DSH_INTEGRATION.md",
+    "docs/SECURITY.md",
+    "docs/PROVENANCE.json"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test --test-concurrency=1 tests/*.test.mjs",
+    "test:mutation": "node scripts/mutations.mjs",
+    "test:types": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext tests/consumer.mts",
+    "check": "npm run build && npm run check:consistency && npm test && npm run test:mutation",
+    "prepack": "npm run build",
+    "demo": "node examples/demo.mjs",
+    "preflight:dsh": "node scripts/preflight-dsh.mjs",
+    "check:consistency": "node scripts/check-consistency.mjs"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.2",
+    "@deepseek-ai/schemastery": "^3.18.2"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    }
+  },
+  "hanamesh": {
+    "module": "app-host",
+    "contractVersion": 1,
+    "deliveryStatus": "PARTIAL",
+    "dshTarget": "0.1.5-alpha.1",
+    "upstreamFilesModified": 0
+  }
+}

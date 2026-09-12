@@ -1,0 +1,48 @@
+{
+  "module": "app-host",
+  "version": "0.1.0-rc.1",
+  "status": "PARTIAL",
+  "implementationOrigin": "New implementation candidate based on supplied specifications; not an extraction of the inaccessible prototype",
+  "inputArchive": {
+    "file": "90fe3c76-3f06-4abd-b83c-52c17429cba9.zip",
+    "sha256": "cd79ef78b311537f0a9425e0b7b8c9f0c44f2581d8c9156f23f1fe431832c1c7",
+    "bytes": 2121179
+  },
+  "inputDocsHead": "195ee9f2e71a41caede474e29d58237fab7e4b89",
+  "inputDocsWorkingTree": "Contains pre-existing modifications in supplied archive; original files left unchanged",
+  "requiredPrototype": {
+    "repository": "yzsnstotz/hanamesh",
+    "path": "research/dsh-greenfield-2026-09-09/workspace/packages/hanamesh-app-host/",
+    "commit": null,
+    "license": null,
+    "retrieval": "GitHub.get_repo returned HTTP 404"
+  },
+  "remoteDelivery": {
+    "created": false,
+    "pushed": false,
+    "pullRequest": null,
+    "reason": "No create_repository action exposed; requested prototype repository is not readable; unrelated repository not modified"
+  },
+  "runtime": {
+    "node": "v22.16.0",
+    "npm": "10.9.2",
+    "platform": "Linux",
+    "arch": "x86_64",
+    "typescript": "Version 5.8.3"
+  },
+  "target": {
+    "dsh": "0.1.5-alpha.1",
+    "node": "24.13.1",
+    "pnpm": "10.33.0",
+    "platform": "darwin-arm64",
+    "tested": false
+  },
+  "actualModel": "GPT-6 Astra Pro",
+  "effortSetting": "not exposed; not claimed",
+  "defaultModelInInput": "Opus 5 High (not executed here)",
+  "auxiliaryAgents": 0,
+  "tokenUsage": "not independently metered",
+  "upstreamFilesModified": 0,
+  "sessionLogWrites": 0,
+  "license": "UNLICENSED; no upstream-license inheritance or open-source grant asserted"
+}

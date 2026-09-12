@@ -1,0 +1,26 @@
+name: app-host-core
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['22.16.0', '24.13.1']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm ci --offline --ignore-scripts --legacy-peer-deps --no-audit --no-fund
+      - run: npm run check
+      - run: npm pack --offline
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evidence-node-${{ matrix.node }}
+          path: |
+            docs/acceptance/mutations/
+            *.tgz
+# Workflow authored only; no GitHub Actions run was performed in this delivery.

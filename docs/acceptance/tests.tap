@@ -1,0 +1,272 @@
+
+> @hanamesh/dsh-app-host@0.1.0-rc.1 test
+> node --test --test-concurrency=1 tests/*.test.mjs
+
+TAP version 13
+# REAL_BROWSER BLOCKED: administrator policy denies loopback navigation; policy was not modified.
+# Subtest: H13 REAL_BROWSER: named parent embeds unchanged app; direct top navigation and iframe control calls are denied
+ok 1 - H13 REAL_BROWSER: named parent embeds unchanged app; direct top navigation and iframe control calls are denied # SKIP BLOCKED: Chromium net::ERR_BLOCKED_BY_ADMINISTRATOR on isolated loopback test profile.
+  ---
+  duration_ms: 300.504613
+  type: 'test'
+  ...
+# REAL_BROWSER BLOCKED: administrator policy denies loopback navigation; policy was not modified.
+# Subtest: H10 REAL_BROWSER: SIGKILL browser process group, no unload, lease expiry stops actual owned application
+ok 2 - H10 REAL_BROWSER: SIGKILL browser process group, no unload, lease expiry stops actual owned application # SKIP BLOCKED: Chromium net::ERR_BLOCKED_BY_ADMINISTRATOR on isolated loopback test profile.
+  ---
+  duration_ms: 314.238583
+  type: 'test'
+  ...
+# Subtest: X01: consistency declaration covers each production group and boundary
+ok 3 - X01: consistency declaration covers each production group and boundary
+  ---
+  duration_ms: 10.575528
+  type: 'test'
+  ...
+# X02 first-lease: {"point":"snapshot-temp-fsynced","death":{"code":null,"signal":"SIGKILL"},"facts":[false,false,false],"revision":0}
+# Subtest: X02 first-lease: real SIGKILL at snapshot-temp-fsynced restores all or none
+ok 4 - X02 first-lease: real SIGKILL at snapshot-temp-fsynced restores all or none
+  ---
+  duration_ms: 72.528614
+  type: 'test'
+  ...
+# X02 stopped-views: {"point":"snapshot-temp-fsynced","death":{"code":null,"signal":"SIGKILL"},"facts":[false,false,false],"revision":4}
+# Subtest: X02 stopped-views: real SIGKILL at snapshot-temp-fsynced restores all or none
+ok 5 - X02 stopped-views: real SIGKILL at snapshot-temp-fsynced restores all or none
+  ---
+  duration_ms: 300.205601
+  type: 'test'
+  ...
+# X02 first-lease: {"point":"snapshot-published","death":{"code":null,"signal":"SIGKILL"},"facts":[true,true,true],"revision":1}
+# Subtest: X02 first-lease: real SIGKILL at snapshot-published restores all or none
+ok 6 - X02 first-lease: real SIGKILL at snapshot-published restores all or none
+  ---
+  duration_ms: 65.46012
+  type: 'test'
+  ...
+# X02 stopped-views: {"point":"snapshot-published","death":{"code":null,"signal":"SIGKILL"},"facts":[true,true,true],"revision":5}
+# Subtest: X02 stopped-views: real SIGKILL at snapshot-published restores all or none
+ok 7 - X02 stopped-views: real SIGKILL at snapshot-published restores all or none
+  ---
+  duration_ms: 304.26184
+  type: 'test'
+  ...
+# X03 reserve-launch: {"signal":"SIGKILL","instanceId":"a8a531cc-5004-4b36-a13b-29444f273df6","pid":6931,"appWroteData":true,"durableOwner":true,"guardianCleanup":true}
+# Subtest: X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data
+ok 8 - X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data
+  ---
+  duration_ms: 285.429265
+  type: 'test'
+  ...
+# X03 stop-publish: {"signal":"SIGKILL","stateAfterRestart":"stopping","aliveAtCut":false,"aliveAfterRestart":false}
+# Subtest: X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive
+ok 9 - X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive
+  ---
+  duration_ms: 304.034867
+  type: 'test'
+  ...
+# H12 real host kill/resume: {"stableInstance":"7256b3d1-6029-44f5-ba60-7993c38ffe2b","oldRuntime":"fc854d5b-c0bb-4eac-831f-44e23422fbf3","newRuntime":"4344372d-7e4b-4a7d-a394-6f7820f0cc3b","dataRetained":true}
+# Subtest: H12/H06: SIGKILL host, guardian cleanup, fresh host exact-identity resume and persisted app data
+ok 10 - H12/H06: SIGKILL host, guardian cleanup, fresh host exact-identity resume and persisted app data
+  ---
+  duration_ms: 552.212418
+  type: 'test'
+  ...
+# Subtest: H13: fixed gateway changes only XFO/frame-ancestors; preserves HTML, gzip and application headers
+ok 11 - H13: fixed gateway changes only XFO/frame-ancestors; preserves HTML, gzip and application headers
+  ---
+  duration_ms: 95.889614
+  type: 'test'
+  ...
+# Subtest: H14: gateway requires live capability; denies foreign origins, top navigation, arbitrary targets and ticket reuse
+ok 12 - H14: gateway requires live capability; denies foreign origins, top navigation, arbitrary targets and ticket reuse
+  ---
+  duration_ms: 72.696638
+  type: 'test'
+  ...
+# Subtest: H14: gateway strips DSH credentials, control headers and unregistered cookies
+ok 13 - H14: gateway strips DSH credentials, control headers and unregistered cookies
+  ---
+  duration_ms: 73.488259
+  type: 'test'
+  ...
+# Subtest: AH gateway: uploads, SSE, relative application paths and redirects retain transport semantics
+ok 14 - AH gateway: uploads, SSE, relative application paths and redirects retain transport semantics
+  ---
+  duration_ms: 152.365204
+  type: 'test'
+  ...
+# Subtest: AH gateway: real WebSocket upgrade preserves frame bytes
+ok 15 - AH gateway: real WebSocket upgrade preserves frame bytes
+  ---
+  duration_ms: 71.592619
+  type: 'test'
+  ...
+# H02 real process evidence: {"opens":8,"pids":[7175]}
+# Subtest: H02: eight concurrent opens reserve one actual application process
+ok 16 - H02: eight concurrent opens reserve one actual application process
+  ---
+  duration_ms: 274.757067
+  type: 'test'
+  ...
+# H03 actual directory contents: {"a":{"path":"/tmp/hm-app-host-7142-YxrtDW/data/4740ae6347b0172c01254ff5/example/local/data-v1/9d980944-d07b-4e79-ad39-9c051f9f687a","files":[".runtime.lock","cache","config","home","runtime-evidence.json","state","tmp","write-dcc72546-0c50-4cbe-a3c0-3b267bdeca3b.txt"]},"b":{"path":"/tmp/hm-app-host-7142-YxrtDW/data/4740ae6347b0172c01254ff5/example/local/data-v1/c0cd05b6-aec5-4b4d-ae84-07ba1f167fae","files":[".runtime.lock","cache","config","home","runtime-evidence.json","state","tmp","write-f46a1398-a4fd-4102-afdb-bbf21c0832dc.txt"]}}
+# Subtest: H03: multi-instance applications write genuinely separate data roots
+ok 17 - H03: multi-instance applications write genuinely separate data roots
+  ---
+  duration_ms: 374.867609
+  type: 'test'
+  ...
+# Subtest: H04/H05: reopen is idempotent; closing one view does not stop the other
+ok 18 - H04/H05: reopen is idempotent; closing one view does not stop the other
+  ---
+  duration_ms: 242.17125
+  type: 'test'
+  ...
+# H06 durable slot restore: {"old":"8b15c772-d27f-43eb-831c-47b448951ed7","restored":"8b15c772-d27f-43eb-831c-47b448951ed7","originalSessionId":"document-exact-a"}
+# Subtest: H06: restart/resume preserves exact view, deployment, data and original-session identities
+ok 19 - H06: restart/resume preserves exact view, deployment, data and original-session identities
+  ---
+  duration_ms: 736.990411
+  type: 'test'
+  ...
+# Subtest: H07: forged, expired-generation, and cross-principal close cannot decrement another lease
+ok 20 - H07: forged, expired-generation, and cross-principal close cannot decrement another lease
+  ---
+  duration_ms: 454.397262
+  type: 'test'
+  ...
+# Subtest: H08: busy Stop explains occupiers; confirmed stop emits durable notifications for every view
+ok 21 - H08: busy Stop explains occupiers; confirmed stop emits durable notifications for every view
+  ---
+  duration_ms: 225.935516
+  type: 'test'
+  ...
+# Subtest: H09: attach close, stopAll and dispose never signal the external process
+ok 22 - H09: attach close, stopAll and dispose never signal the external process
+  ---
+  duration_ms: 98.327824
+  type: 'test'
+  ...
+# Subtest: H10: expired leases converge without any unload request
+ok 23 - H10: expired leases converge without any unload request
+  ---
+  duration_ms: 491.013692
+  type: 'test'
+  ...
+# Subtest: AH: startup cancellation receipt stops the actual child and does not return false-ready
+ok 24 - AH: startup cancellation receipt stops the actual child and does not return false-ready
+  ---
+  duration_ms: 146.762479
+  type: 'test'
+  ...
+# Subtest: AH: never-ready startup is bounded, cleans up, and supports an explicit retry
+ok 25 - AH: never-ready startup is bounded, cleans up, and supports an explicit retry
+  ---
+  duration_ms: 554.620896
+  type: 'test'
+  ...
+# Subtest: AH: spontaneous application exit cannot leave ready forever
+ok 26 - AH: spontaneous application exit cannot leave ready forever
+  ---
+  duration_ms: 290.865156
+  type: 'test'
+  ...
+# Subtest: AH: disjoint applications launch independently and cannot rebind an existing view
+ok 27 - AH: disjoint applications launch independently and cannot rebind an existing view
+  ---
+  duration_ms: 289.40178
+  type: 'test'
+  ...
+# Subtest: AH: host secrets are not inherited; logs redact bearer and JSON secrets
+ok 28 - AH: host secrets are not inherited; logs redact bearer and JSON secrets
+  ---
+  duration_ms: 231.086947
+  type: 'test'
+  ...
+# Subtest: AH: confirmed Stop removes a SIGTERM-resistant descendant in its owned group
+ok 29 - AH: confirmed Stop removes a SIGTERM-resistant descendant in its owned group
+  ---
+  duration_ms: 234.360691
+  type: 'test'
+  ...
+# Subtest: FIX-01: lost receipt recovery is owner-confirmed, fences old credentials and retains exact identity
+ok 30 - FIX-01: lost receipt recovery is owner-confirmed, fences old credentials and retains exact identity
+  ---
+  duration_ms: 241.172266
+  type: 'test'
+  ...
+# Subtest: FIX-01 gateway: closed/recovered generations never regain iframe capabilities after reopen
+ok 31 - FIX-01 gateway: closed/recovered generations never regain iframe capabilities after reopen
+  ---
+  duration_ms: 234.764347
+  type: 'test'
+  ...
+# Subtest: AH recovery: tampered data-root bindings cannot redirect application writes
+ok 32 - AH recovery: tampered data-root bindings cannot redirect application writes
+  ---
+  duration_ms: 231.932749
+  type: 'test'
+  ...
+# Subtest: H14: every browser command/env/cwd/path/url override is rejected before spawn
+ok 33 - H14: every browser command/env/cwd/path/url override is rejected before spawn
+  ---
+  duration_ms: 35.495032
+  type: 'test'
+  ...
+# Subtest: H14: control routes require authentication, CSRF header, exact origin and host
+ok 34 - H14: control routes require authentication, CSRF header, exact origin and host
+  ---
+  duration_ms: 10.653968
+  type: 'test'
+  ...
+# Subtest: AH routes: startup receipt can be cancelled and tokens are not leaked through list/events
+ok 35 - AH routes: startup receipt can be cancelled and tokens are not leaked through list/events
+  ---
+  duration_ms: 164.444461
+  type: 'test'
+  ...
+# Subtest: AH store: pre-publish failure preserves prior image; post-publish failure is explicitly uncertain
+ok 36 - AH store: pre-publish failure preserves prior image; post-publish failure is explicitly uncertain
+  ---
+  duration_ms: 11.33052
+  type: 'test'
+  ...
+# Subtest: AH store: a second live owner is rejected and cannot silently overwrite state
+ok 37 - AH store: a second live owner is rejected and cannot silently overwrite state
+  ---
+  duration_ms: 4.595254
+  type: 'test'
+  ...
+# Subtest: AH store: corrupt snapshots and symlinked roots fail closed
+ok 38 - AH store: corrupt snapshots and symlinked roots fail closed
+  ---
+  duration_ms: 3.787983
+  type: 'test'
+  ...
+# Subtest: AH readiness: unrelated HTTP 200 with the same app marker is not owned readiness
+ok 39 - AH readiness: unrelated HTTP 200 with the same app marker is not owned readiness
+  ---
+  duration_ms: 223.718007
+  type: 'test'
+  ...
+# Subtest: AH descriptors: relative commands, shell-style launch, missing data binding and host env are rejected
+ok 40 - AH descriptors: relative commands, shell-style launch, missing data binding and host env are rejected
+  ---
+  duration_ms: 1.126762
+  type: 'test'
+  ...
+# Subtest: H01/H11 guard: absent verified DSH bridge cannot masquerade as a loaded plugin
+ok 41 - H01/H11 guard: absent verified DSH bridge cannot masquerade as a loaded plugin
+  ---
+  duration_ms: 0.33738
+  type: 'test'
+  ...
+1..41
+# tests 41
+# suites 0
+# pass 39
+# fail 0
+# cancelled 0
+# skipped 2
+# todo 0
+# duration_ms 9176.352364

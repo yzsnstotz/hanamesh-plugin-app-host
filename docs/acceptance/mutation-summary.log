@@ -1,0 +1,9 @@
+
+> @hanamesh/dsh-app-host@0.1.0-rc.1 test:mutation
+> node scripts/mutations.mjs
+
+M01-single-instance: baseline PASS; mutation DETECTED
+M02-reserve-launch: baseline PASS; mutation DETECTED
+M03-stop-publish: baseline PASS; mutation DETECTED
+M04-socket-ownership: baseline PASS; mutation DETECTED
+Mutation guard PASS: 4/4 genuine source mutations detected.

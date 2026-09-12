@@ -1,0 +1,42 @@
+TAP version 13
+# Subtest: H13 REAL_BROWSER: named parent embeds unchanged app; direct top navigation and iframe control calls are denied
+not ok 1 - H13 REAL_BROWSER: named parent embeds unchanged app; direct top navigation and iframe control calls are denied
+  ---
+  duration_ms: 1281.48638
+  type: 'test'
+  location: '/mnt/data/work/hanamesh-plugin-app-host/tests/browser.test.mjs:64:1'
+  failureType: 'testCodeFailure'
+  error: '{"exceptionId":1,"text":"Uncaught (in promise) TypeError: Failed to fetch dynamically imported module: chrome-error://chromewebdata/client.js","lineNumber":0,"columnNumber":0,"exception":{"type":"object","subtype":"error","className":"TypeError","description":"TypeError: Failed to fetch dynamically imported module: chrome-error://chromewebdata/client.js","objectId":"-6097229416367567250.1.1"}}'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    Object.evaluate (file:///mnt/data/work/hanamesh-plugin-app-host/tests/browser.test.mjs:31:38)
+    async browserHost (file:///mnt/data/work/hanamesh-plugin-app-host/tests/browser.test.mjs:49:17)
+    async TestContext.<anonymous> (file:///mnt/data/work/hanamesh-plugin-app-host/tests/browser.test.mjs:65:15)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: H10 REAL_BROWSER: SIGKILL browser process group, no unload, lease expiry stops actual owned application
+not ok 2 - H10 REAL_BROWSER: SIGKILL browser process group, no unload, lease expiry stops actual owned application
+  ---
+  duration_ms: 409.622323
+  type: 'test'
+  location: '/mnt/data/work/hanamesh-plugin-app-host/tests/browser.test.mjs:77:1'
+  failureType: 'testCodeFailure'
+  error: '{"exceptionId":1,"text":"Uncaught (in promise) TypeError: Failed to fetch dynamically imported module: chrome-error://chromewebdata/client.js","lineNumber":0,"columnNumber":0,"exception":{"type":"object","subtype":"error","className":"TypeError","description":"TypeError: Failed to fetch dynamically imported module: chrome-error://chromewebdata/client.js","objectId":"-3340010626107437268.1.1"}}'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    Object.evaluate (file:///mnt/data/work/hanamesh-plugin-app-host/tests/browser.test.mjs:31:38)
+    async browserHost (file:///mnt/data/work/hanamesh-plugin-app-host/tests/browser.test.mjs:49:17)
+    async TestContext.<anonymous> (file:///mnt/data/work/hanamesh-plugin-app-host/tests/browser.test.mjs:78:15)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1765.896551

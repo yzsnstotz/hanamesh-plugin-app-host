@@ -1,0 +1,12 @@
+{
+  "notice": "受控示例，不是 DSH 集成验收",
+  "url": "http://127.0.0.1:45371",
+  "instanceIds": [
+    "3274c71e-e32f-449b-a1c2-f1a83a9b288f",
+    "3274c71e-e32f-449b-a1c2-f1a83a9b288f"
+  ],
+  "actualPid": 6272,
+  "activeViews": 2,
+  "dataRoot": "/tmp/hm-app-host-demo-yEPm09/data/4740ae6347b0172c01254ff5/example/local/example-v1/single"
+}
+Demo smoke PASS: both views shared one process; dispose completed.

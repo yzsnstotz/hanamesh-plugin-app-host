@@ -1,0 +1,97 @@
+TAP version 13
+# H02 real process evidence: {"opens":8,"pids":[1545]}
+# Subtest: H02: eight concurrent opens reserve one actual application process
+ok 1 - H02: eight concurrent opens reserve one actual application process
+  ---
+  duration_ms: 259.515684
+  type: 'test'
+  ...
+# H03 actual directory contents: {"a":{"path":"/tmp/hm-app-host-1512-Ua9ggi/data/4740ae6347b0172c01254ff5/example/local/data-v1/51474de0-43e3-4840-b10f-a4adda36d8d4","files":[".runtime.lock","cache","config","home","runtime-evidence.json","state","tmp","write-1c9dbd0e-b4ca-4540-89d6-fc312bc5011c.txt"]},"b":{"path":"/tmp/hm-app-host-1512-Ua9ggi/data/4740ae6347b0172c01254ff5/example/local/data-v1/b88e4372-861f-4674-b73b-781cc099cae7","files":[".runtime.lock","cache","config","home","runtime-evidence.json","state","tmp","write-5d445dfb-0a9a-4811-a7ae-5fb2a15ff6a5.txt"]}}
+# Subtest: H03: multi-instance applications write genuinely separate data roots
+ok 2 - H03: multi-instance applications write genuinely separate data roots
+  ---
+  duration_ms: 383.102784
+  type: 'test'
+  ...
+# Subtest: H04/H05: reopen is idempotent; closing one view does not stop the other
+ok 3 - H04/H05: reopen is idempotent; closing one view does not stop the other
+  ---
+  duration_ms: 232.266882
+  type: 'test'
+  ...
+# H06 durable slot restore: {"old":"e9e66b19-5572-48a3-b408-6ac639d64bf7","restored":"e9e66b19-5572-48a3-b408-6ac639d64bf7","originalSessionId":"document-exact-a"}
+# Subtest: H06: restart/resume preserves exact view, deployment, data and original-session identities
+ok 4 - H06: restart/resume preserves exact view, deployment, data and original-session identities
+  ---
+  duration_ms: 744.407856
+  type: 'test'
+  ...
+# Subtest: H07: forged, expired-generation, and cross-principal close cannot decrement another lease
+ok 5 - H07: forged, expired-generation, and cross-principal close cannot decrement another lease
+  ---
+  duration_ms: 442.963852
+  type: 'test'
+  ...
+# Subtest: H08: busy Stop explains occupiers; confirmed stop emits durable notifications for every view
+ok 6 - H08: busy Stop explains occupiers; confirmed stop emits durable notifications for every view
+  ---
+  duration_ms: 229.724981
+  type: 'test'
+  ...
+# Subtest: H09: attach close, stopAll and dispose never signal the external process
+ok 7 - H09: attach close, stopAll and dispose never signal the external process
+  ---
+  duration_ms: 94.166051
+  type: 'test'
+  ...
+# Subtest: H10: expired leases converge without any unload request
+ok 8 - H10: expired leases converge without any unload request
+  ---
+  duration_ms: 488.666012
+  type: 'test'
+  ...
+# Subtest: AH: startup cancellation receipt stops the actual child and does not return false-ready
+ok 9 - AH: startup cancellation receipt stops the actual child and does not return false-ready
+  ---
+  duration_ms: 140.379595
+  type: 'test'
+  ...
+# Subtest: AH: never-ready startup is bounded, cleans up, and supports an explicit retry
+ok 10 - AH: never-ready startup is bounded, cleans up, and supports an explicit retry
+  ---
+  duration_ms: 536.689551
+  type: 'test'
+  ...
+# Subtest: AH: spontaneous application exit cannot leave ready forever
+ok 11 - AH: spontaneous application exit cannot leave ready forever
+  ---
+  duration_ms: 265.443706
+  type: 'test'
+  ...
+# Subtest: AH: disjoint applications launch independently and cannot rebind an existing view
+ok 12 - AH: disjoint applications launch independently and cannot rebind an existing view
+  ---
+  duration_ms: 290.930026
+  type: 'test'
+  ...
+# Subtest: AH: host secrets are not inherited; logs redact bearer and JSON secrets
+ok 13 - AH: host secrets are not inherited; logs redact bearer and JSON secrets
+  ---
+  duration_ms: 224.503283
+  type: 'test'
+  ...
+# Subtest: AH: confirmed Stop removes a SIGTERM-resistant descendant in its owned group
+ok 14 - AH: confirmed Stop removes a SIGTERM-resistant descendant in its owned group
+  ---
+  duration_ms: 229.432614
+  type: 'test'
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4642.996951

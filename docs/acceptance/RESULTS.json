@@ -1,0 +1,117 @@
+{
+  "module": "app-host",
+  "version": "0.1.0-rc.1",
+  "status": "PARTIAL",
+  "generatedAt": "2026-09-12T06:57:08.904528+00:00",
+  "testRunner": {
+    "tests": 41,
+    "pass": 39,
+    "fail": 0,
+    "skipped": 2,
+    "cancelled": 0
+  },
+  "mutations": {
+    "tested": 4,
+    "detected": 4,
+    "baselinePassed": 4
+  },
+  "typecheck": "PASS",
+  "coreBuild": "PASS",
+  "demoSmoke": "PASS",
+  "realDsh": "BLOCKED",
+  "realBrowser": "BLOCKED: net::ERR_BLOCKED_BY_ADMINISTRATOR",
+  "matrix": [
+    {
+      "id": "H01",
+      "status": "PARTIAL",
+      "evidence": "Independent build/package/import validated; real DSH load BLOCKED"
+    },
+    {
+      "id": "H02",
+      "status": "PARTIAL",
+      "evidence": "8 concurrent actual application subprocess opens; one PID; M01 mutation detected; target DSH/prototype integration not verified"
+    },
+    {
+      "id": "H03",
+      "status": "PARTIAL",
+      "evidence": "Two actual app data roots contain distinct runtime-written files; controlled example, not target profile validation"
+    },
+    {
+      "id": "H04",
+      "status": "PASS",
+      "evidence": "Three same-view reopens; one lease; same generation"
+    },
+    {
+      "id": "H05",
+      "status": "PASS",
+      "evidence": "Two views; close one preserves serving process; last close terminates it"
+    },
+    {
+      "id": "H06",
+      "status": "PARTIAL",
+      "evidence": "Fresh-host exact persistent slot/data/view restore and SIGKILL recovery; no target DSH or actual upstream document recovery claim"
+    },
+    {
+      "id": "H07",
+      "status": "PASS",
+      "evidence": "Forged, stale generation and cross-owner close rejected; lost receipt recovery fenced"
+    },
+    {
+      "id": "H08",
+      "status": "PARTIAL",
+      "evidence": "Busy stop response and one durable notification per view verified; workbench receipt/display not integrated"
+    },
+    {
+      "id": "H09",
+      "status": "PARTIAL",
+      "evidence": "External app remains alive across close/stopAll/dispose and no signal observed; real DSH plugin unload not run"
+    },
+    {
+      "id": "H10",
+      "status": "PARTIAL",
+      "evidence": "TTL scanner stops actual child without unload; browser kill test BLOCKED by administrator navigation policy"
+    },
+    {
+      "id": "H11",
+      "status": "BLOCKED",
+      "evidence": "Real DSH storage-domain and DSH session roundtrip unavailable"
+    },
+    {
+      "id": "H12",
+      "status": "PARTIAL",
+      "evidence": "Real SIGKILL host + guardian cleanup + durable local sidecar owner; real DSH medium not verified"
+    },
+    {
+      "id": "H13",
+      "status": "PARTIAL",
+      "evidence": "HTTP body/header/gzip/SSE/WebSocket tests PASS; real browser embedding blocked"
+    },
+    {
+      "id": "H14",
+      "status": "PARTIAL",
+      "evidence": "Actual HTTP command/env/path/url and CSRF/auth rejection PASS; browser iframe end-to-end blocked"
+    },
+    {
+      "id": "X01",
+      "status": "PASS",
+      "evidence": "Local declaration checker validates two groups and two boundaries"
+    },
+    {
+      "id": "X02",
+      "status": "PARTIAL",
+      "evidence": "Both groups tested at pre/post snapshot publication with real SIGKILL; all-or-none local disk PASS, real DSH domain pending"
+    },
+    {
+      "id": "X03",
+      "status": "PARTIAL",
+      "evidence": "Both production ordering boundaries real SIGKILL PASS; reversed-order source mutations detected; real DSH domain pending"
+    }
+  ],
+  "isolatedTarballInstallAndRealProcessSmoke": "PASS",
+  "tarball": {
+    "filename": "hanamesh-dsh-app-host-0.1.0-rc.1.tgz",
+    "sha256": "e6ab6dd44922a925ee697029afde5abe34bb3d39265cc7c4197cfc5ac5317ccb",
+    "npmIntegrity": "sha512-XDxa8HXWhx7r+2pI682O26EB92NBueyUVhuGoHRg7cRXhJyxyONgMwMJIdhAh2hoxMXyO4MLMfSYDIro4gcvFA==",
+    "bytes": 40216
+  }
+}

@@ -1,0 +1,41 @@
+TAP version 13
+# Browser navigation: {"frameId":"761C7775AB50E3BA5F63B144D302A163","loaderId":"9C58A09B2539CFC3903308CCCEA40754","errorText":"net::ERR_BLOCKED_BY_ADMINISTRATOR","isDownload":false}
+# Browser document: {
+#   url: 'chrome-error://chromewebdata/',
+#   text: '\\n' +
+#     '  \\n' +
+#     '    \\n' +
+#     '      \\n' +
+#     '        \\n' +
+#     '        \\n' +
+#     '          \\n' +
+#     '            127.0.0.1 is blocked\\n' +
+#     '          \\n' +
+#     '          \\n' +
+#     '            Your organization doesn’t allow you to view this'
+# }
+# Subtest: H13 REAL_BROWSER: named parent embeds unchanged app; direct top navigation and iframe control calls are denied
+not ok 1 - H13 REAL_BROWSER: named parent embeds unchanged app; direct top navigation and iframe control calls are denied
+  ---
+  duration_ms: 367.267462
+  type: 'test'
+  location: '/mnt/data/work/hanamesh-plugin-app-host/tests/browser.test.mjs:66:1'
+  failureType: 'testCodeFailure'
+  error: '{"exceptionId":1,"text":"Uncaught (in promise) TypeError: Failed to fetch dynamically imported module: chrome-error://chromewebdata/client.js","lineNumber":0,"columnNumber":0,"exception":{"type":"object","subtype":"error","className":"TypeError","description":"TypeError: Failed to fetch dynamically imported module: chrome-error://chromewebdata/client.js","objectId":"-7760226816955240713.1.1"}}'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    Object.evaluate (file:///mnt/data/work/hanamesh-plugin-app-host/tests/browser.test.mjs:31:38)
+    async browserHost (file:///mnt/data/work/hanamesh-plugin-app-host/tests/browser.test.mjs:51:17)
+    async TestContext.<anonymous> (file:///mnt/data/work/hanamesh-plugin-app-host/tests/browser.test.mjs:67:15)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 445.096334

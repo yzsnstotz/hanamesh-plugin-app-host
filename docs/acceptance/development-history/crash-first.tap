@@ -1,0 +1,101 @@
+TAP version 13
+# Subtest: X01: consistency declaration covers each production group and boundary
+ok 1 - X01: consistency declaration covers each production group and boundary
+  ---
+  duration_ms: 11.627656
+  type: 'test'
+  ...
+# X02 first-lease: {"point":"snapshot-temp-fsynced","death":{"code":null,"signal":"SIGKILL"},"facts":[false,false,false],"revision":0}
+# Subtest: X02 first-lease: real SIGKILL at snapshot-temp-fsynced restores all or none
+ok 2 - X02 first-lease: real SIGKILL at snapshot-temp-fsynced restores all or none
+  ---
+  duration_ms: 67.554336
+  type: 'test'
+  ...
+# X02 stopped-views: {"point":"snapshot-temp-fsynced","death":{"code":null,"signal":"SIGKILL"},"facts":[false,false,false],"revision":4}
+# Subtest: X02 stopped-views: real SIGKILL at snapshot-temp-fsynced restores all or none
+ok 3 - X02 stopped-views: real SIGKILL at snapshot-temp-fsynced restores all or none
+  ---
+  duration_ms: 293.626538
+  type: 'test'
+  ...
+# X02 first-lease: {"point":"snapshot-published","death":{"code":null,"signal":"SIGKILL"},"facts":[true,true,true],"revision":1}
+# Subtest: X02 first-lease: real SIGKILL at snapshot-published restores all or none
+ok 4 - X02 first-lease: real SIGKILL at snapshot-published restores all or none
+  ---
+  duration_ms: 63.750921
+  type: 'test'
+  ...
+# X02 stopped-views: {"point":"snapshot-published","death":{"code":null,"signal":"SIGKILL"},"facts":[true,true,true],"revision":5}
+# Subtest: X02 stopped-views: real SIGKILL at snapshot-published restores all or none
+ok 5 - X02 stopped-views: real SIGKILL at snapshot-published restores all or none
+  ---
+  duration_ms: 300.400383
+  type: 'test'
+  ...
+# X03 reserve-launch: {"signal":"SIGKILL","instanceId":"5548b8f9-54fa-4b14-987e-a7eb566544f4","pid":3245,"appWroteData":true,"durableOwner":true,"guardianCleanup":true}
+# Subtest: X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data
+ok 6 - X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data
+  ---
+  duration_ms: 277.782833
+  type: 'test'
+  ...
+# X03 stop-publish: {"signal":"SIGKILL","stateAfterRestart":"stopping","aliveAtCut":false,"aliveAfterRestart":false}
+# Subtest: X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive
+ok 7 - X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive
+  ---
+  duration_ms: 300.509808
+  type: 'test'
+  ...
+# H12 real host kill/resume: {"stableInstance":"bd34a03b-ea30-4bdd-8c33-20bacd76df13","oldRuntime":"79c8c9b0-6c5d-4edb-aeef-14a3e6574f9b","newRuntime":"c85b1da0-0550-4cba-bdf8-e06af29b55ac","dataRetained":true}
+# Subtest: H12/H06: SIGKILL host, guardian cleanup, fresh host exact-identity resume and persisted app data
+ok 8 - H12/H06: SIGKILL host, guardian cleanup, fresh host exact-identity resume and persisted app data
+  ---
+  duration_ms: 561.211071
+  type: 'test'
+  ...
+# Subtest: AH store: pre-publish failure preserves prior image; post-publish failure is explicitly uncertain
+ok 9 - AH store: pre-publish failure preserves prior image; post-publish failure is explicitly uncertain
+  ---
+  duration_ms: 10.457679
+  type: 'test'
+  ...
+# Subtest: AH store: a second live owner is rejected and cannot silently overwrite state
+ok 10 - AH store: a second live owner is rejected and cannot silently overwrite state
+  ---
+  duration_ms: 4.443994
+  type: 'test'
+  ...
+# Subtest: AH store: corrupt snapshots and symlinked roots fail closed
+ok 11 - AH store: corrupt snapshots and symlinked roots fail closed
+  ---
+  duration_ms: 3.444944
+  type: 'test'
+  ...
+# Subtest: AH readiness: unrelated HTTP 200 with the same app marker is not owned readiness
+ok 12 - AH readiness: unrelated HTTP 200 with the same app marker is not owned readiness
+  ---
+  duration_ms: 213.425162
+  type: 'test'
+  ...
+# Subtest: AH descriptors: relative commands, shell-style launch, missing data binding and host env are rejected
+ok 13 - AH descriptors: relative commands, shell-style launch, missing data binding and host env are rejected
+  ---
+  duration_ms: 1.03921
+  type: 'test'
+  ...
+# Subtest: H01/H11 guard: absent verified DSH bridge cannot masquerade as a loaded plugin
+ok 14 - H01/H11 guard: absent verified DSH bridge cannot masquerade as a loaded plugin
+  ---
+  duration_ms: 0.349048
+  type: 'test'
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2245.689109

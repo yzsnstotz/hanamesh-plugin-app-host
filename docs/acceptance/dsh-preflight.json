@@ -1,0 +1,20 @@
+{
+  "status": "BLOCKED",
+  "target": "0.1.5-alpha.1",
+  "checks": [
+    {
+      "name": "@deepseek-ai/dsh",
+      "installed": false
+    },
+    {
+      "name": "@deepseek-ai/cordis",
+      "installed": false
+    },
+    {
+      "name": "@deepseek-ai/schemastery",
+      "installed": false
+    }
+  ],
+  "reason": "真实 DSH storage-domain / auth / route / lifecycle bridge 尚未绑定验证；存在同名包也不算完成集成。",
+  "upstreamFilesModified": 0
+}

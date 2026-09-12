@@ -1,0 +1,155 @@
+TAP version 13
+# Subtest: H12: fixed gateway changes only XFO/frame-ancestors; preserves HTML, gzip and application headers
+ok 1 - H12: fixed gateway changes only XFO/frame-ancestors; preserves HTML, gzip and application headers
+  ---
+  duration_ms: 92.691419
+  type: 'test'
+  ...
+# Subtest: H14: gateway requires live capability; denies foreign origins, top navigation, arbitrary targets and ticket reuse
+ok 2 - H14: gateway requires live capability; denies foreign origins, top navigation, arbitrary targets and ticket reuse
+  ---
+  duration_ms: 71.913187
+  type: 'test'
+  ...
+# Subtest: H14: gateway strips DSH credentials, control headers and unregistered cookies
+ok 3 - H14: gateway strips DSH credentials, control headers and unregistered cookies
+  ---
+  duration_ms: 71.187951
+  type: 'test'
+  ...
+# Subtest: AH gateway: uploads, SSE, relative application paths and redirects retain transport semantics
+ok 4 - AH gateway: uploads, SSE, relative application paths and redirects retain transport semantics
+  ---
+  duration_ms: 150.46543
+  type: 'test'
+  ...
+# Subtest: AH gateway: real WebSocket upgrade preserves frame bytes
+ok 5 - AH gateway: real WebSocket upgrade preserves frame bytes
+  ---
+  duration_ms: 70.095751
+  type: 'test'
+  ...
+# H02 real process evidence: {"opens":8,"pids":[2336]}
+# Subtest: H02: eight concurrent opens reserve one actual application process
+ok 6 - H02: eight concurrent opens reserve one actual application process
+  ---
+  duration_ms: 262.519272
+  type: 'test'
+  ...
+# H03 actual directory contents: {"a":{"path":"/tmp/hm-app-host-2303-31Kr8w/data/4740ae6347b0172c01254ff5/example/local/data-v1/3fc2bc25-c6e2-49c1-a2aa-c6c80a500b73","files":[".runtime.lock","cache","config","home","runtime-evidence.json","state","tmp","write-3a2bb8e7-33bd-433f-a0e6-30a27569ad90.txt"]},"b":{"path":"/tmp/hm-app-host-2303-31Kr8w/data/4740ae6347b0172c01254ff5/example/local/data-v1/651a9e09-7f2e-4a21-9108-49fb2e74bd0a","files":[".runtime.lock","cache","config","home","runtime-evidence.json","state","tmp","write-c797862a-b300-4852-beab-49ed4609e8d9.txt"]}}
+# Subtest: H03: multi-instance applications write genuinely separate data roots
+ok 7 - H03: multi-instance applications write genuinely separate data roots
+  ---
+  duration_ms: 368.650932
+  type: 'test'
+  ...
+# Subtest: H04/H05: reopen is idempotent; closing one view does not stop the other
+ok 8 - H04/H05: reopen is idempotent; closing one view does not stop the other
+  ---
+  duration_ms: 240.399163
+  type: 'test'
+  ...
+# H06 durable slot restore: {"old":"c44ab604-a684-4c0b-9fb0-c5cb13cf5681","restored":"c44ab604-a684-4c0b-9fb0-c5cb13cf5681","originalSessionId":"document-exact-a"}
+# Subtest: H06: restart/resume preserves exact view, deployment, data and original-session identities
+ok 9 - H06: restart/resume preserves exact view, deployment, data and original-session identities
+  ---
+  duration_ms: 746.757062
+  type: 'test'
+  ...
+# Subtest: H07: forged, expired-generation, and cross-principal close cannot decrement another lease
+ok 10 - H07: forged, expired-generation, and cross-principal close cannot decrement another lease
+  ---
+  duration_ms: 444.868713
+  type: 'test'
+  ...
+# Subtest: H08: busy Stop explains occupiers; confirmed stop emits durable notifications for every view
+ok 11 - H08: busy Stop explains occupiers; confirmed stop emits durable notifications for every view
+  ---
+  duration_ms: 226.757763
+  type: 'test'
+  ...
+# Subtest: H09: attach close, stopAll and dispose never signal the external process
+ok 12 - H09: attach close, stopAll and dispose never signal the external process
+  ---
+  duration_ms: 92.754659
+  type: 'test'
+  ...
+# Subtest: H10: expired leases converge without any unload request
+ok 13 - H10: expired leases converge without any unload request
+  ---
+  duration_ms: 492.755735
+  type: 'test'
+  ...
+# Subtest: AH: startup cancellation receipt stops the actual child and does not return false-ready
+ok 14 - AH: startup cancellation receipt stops the actual child and does not return false-ready
+  ---
+  duration_ms: 145.741137
+  type: 'test'
+  ...
+# Subtest: AH: never-ready startup is bounded, cleans up, and supports an explicit retry
+ok 15 - AH: never-ready startup is bounded, cleans up, and supports an explicit retry
+  ---
+  duration_ms: 552.3356
+  type: 'test'
+  ...
+# Subtest: AH: spontaneous application exit cannot leave ready forever
+ok 16 - AH: spontaneous application exit cannot leave ready forever
+  ---
+  duration_ms: 268.12003
+  type: 'test'
+  ...
+# Subtest: AH: disjoint applications launch independently and cannot rebind an existing view
+ok 17 - AH: disjoint applications launch independently and cannot rebind an existing view
+  ---
+  duration_ms: 288.017205
+  type: 'test'
+  ...
+# Subtest: AH: host secrets are not inherited; logs redact bearer and JSON secrets
+ok 18 - AH: host secrets are not inherited; logs redact bearer and JSON secrets
+  ---
+  duration_ms: 223.958123
+  type: 'test'
+  ...
+# Subtest: AH: confirmed Stop removes a SIGTERM-resistant descendant in its owned group
+ok 19 - AH: confirmed Stop removes a SIGTERM-resistant descendant in its owned group
+  ---
+  duration_ms: 226.864274
+  type: 'test'
+  ...
+# Subtest: H14: every browser command/env/cwd/path/url override is rejected before spawn
+ok 20 - H14: every browser command/env/cwd/path/url override is rejected before spawn
+  ---
+  duration_ms: 32.010913
+  type: 'test'
+  ...
+# Subtest: H14: control routes require authentication, CSRF header, exact origin and host
+ok 21 - H14: control routes require authentication, CSRF header, exact origin and host
+  ---
+  duration_ms: 8.934889
+  type: 'test'
+  ...
+# Subtest: AH routes: startup receipt can be cancelled and tokens are not leaked through list/events
+not ok 22 - AH routes: startup receipt can be cancelled and tokens are not leaked through list/events
+  ---
+  duration_ms: 150.093572
+  type: 'test'
+  location: '/mnt/data/work/hanamesh-plugin-app-host/tests/routes.test.mjs:29:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of null (reading 'status')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/work/hanamesh-plugin-app-host/tests/routes.test.mjs:34:112)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..22
+# tests 22
+# suites 0
+# pass 21
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5426.753442

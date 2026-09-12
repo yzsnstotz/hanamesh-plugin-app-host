@@ -1,0 +1,10 @@
+node_modules/
+*.tgz
+coverage/
+.DS_Store
+.env
+*.log
+.work/
+
+!docs/acceptance/*.log
+!docs/acceptance/**/*.log
