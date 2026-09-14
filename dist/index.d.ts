@@ -7,7 +7,8 @@ interface DeploymentBase { id:string; dataId:string; readiness:Readiness; embedd
 /** rc.4: what an app needs, never where it comes from. `projection:'env'` names a process variable; `projection:'file'` a path relative to the app HOME. */
 export type CredentialEnvEntry =
   { env:string; kind?:'api-key'|'grant'; providers?:string[]; required?:boolean; purpose?:string; projection?:'env' }
-| { path:string; kind?:'api-key'|'grant'; providers?:string[]; required?:boolean; purpose?:string; projection:'file' };
+| { path:string; kind?:'api-key'|'grant'; providers?:string[]; required?:boolean; purpose?:string; projection:'file'; base?:'home'|'dataDir'; format?:string };
+/** `base`: where `path` is rooted — the app HOME (`<dataDir>/home`, default) or the data directory itself (e.g. a `$XXX_HOME={{dataDir}}` app). `format`: opaque id the credential broker maps a grant to (e.g. `codex-cli-auth-json`, `oauth-cli-kit`); the host never interprets it. */
 export interface CredentialResolverInput { appId:string; deploymentId:string; instanceId:string; principalId:string; credentialEnv:CredentialEnvEntry[]; }
 export interface CredentialResolverResult { env?:Record<string,string>; files?:Array<{path:string;content:string;mode?:number}>; secrets?:string[]; }
 /** Seated by the credential broker (plugin-auth-apikey). Undefined / throw = inject nothing; the launch proceeds. */

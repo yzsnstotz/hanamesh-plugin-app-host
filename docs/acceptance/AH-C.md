@@ -1,4 +1,4 @@
-# app-host 0.1.0-rc.4 · 凭据声明与注入（AH-C1–C6）· 2026-09-14
+# app-host 0.1.0-rc.5 · 凭据声明与注入（AH-C1–C6）· 2026-09-14（rc.4 + file 投射 `base`/`format`）
 
 **状态：DELIVERED（本机 session 实现 + 离线真实子进程验证；真实 DSH 宿主装 rc.4 + vibe rc.3 的联验待 plugin-auth-apikey 回收时做）。rc.3 ✅ 不动。**
 
@@ -9,7 +9,7 @@
 | AH-C1 | PASS · UNIT | 宿主控制名（`DSH_TOKEN`、`HOME`）、重复、与静态 env 重名、`../`/绝对路径、未知 kind 全部 `INVALID_CREDENTIAL_ENV`；合法声明经 `list()` 原样带出 |
 | AH-C2 | PASS · 真实子进程 | resolver 给的 `EXAMPLE_API_KEY`/`LANGCHAIN_PROVIDER` 在子进程 env 可见（fixture `/identity` 回显）；`.codex/auth.json` 写进 `<dataDir>/home`，mode 0600 |
 | AH-C3 | PASS | 未声明的 `UNDECLARED_KEY` 不进子进程；事件 `credential.env-rejected {names:[UNDECLARED_KEY, file:../escape.txt]}`、`credential.injected {names:[EXAMPLE_API_KEY, LANGCHAIN_PROVIDER, file:.codex/auth.json]}` |
-| AH-C4 | PASS | `../escape.txt` 被拒，dataDir 下不存在该文件 |
+| AH-C4 | PASS | `../escape.txt` 被拒，dataDir 下不存在该文件；rc.5：`base:'dataDir'` 的 `auth/openai-codex.json` 写在 `<dataDir>/auth/`（0600）而不在 HOME；`base:'root'`、非法 `format` 被拒 |
 | AH-C5 | PASS | resolver 抛 `BROKER_DOWN` → 实例仍 `ready`，事件 `credential.resolver-failed {code:BROKER_DOWN}` |
 | AH-C6 | PASS | 无 resolver / disposer 后：不注入、无 `credential.*` 事件；rc.3 全部 51 测试通过（回归） |
 | 日志脱敏 | PASS | 子进程 stdout 打印 key → `logTail` 只见 `[REDACTED]` |
@@ -18,4 +18,6 @@
 
 命令：`npm run build && npm test && npm run test:types && npm run check:consistency && npm run test:mutation`（Node 24.13.1，darwin-arm64）。一次观察：`test:mutation` 首跑时 M02 基线在紧接全量测试后失败一次（疑为端口/时序抖动），单独重跑 `tests/crash.test.mjs` 8/8 与再次整跑 5/5 均通过；未改任何判据。
 
-产物：`artifacts/hanamesh-dsh-app-host-0.1.0-rc.4.tgz` sha256 `9c3418757737669d078dba253f019039ba0440aed1e5aae736f9aa6ce66a7949`。
+产物：见文末 rc.5 行。
+
+产物 rc.5：`artifacts/hanamesh-dsh-app-host-0.1.0-rc.5.tgz` sha256 `534768f32d47cd1ac31ac85c8926be5df7c407efeb3db8dd2ee72e8ed0d95db9`（rc.4 `9c341875…` 被本版取代，tag 保留）。

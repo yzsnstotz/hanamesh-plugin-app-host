@@ -6,7 +6,8 @@ import { AppHost, AtomicFileStore } from '../src/index.js';
 import { setup, definition, input, identity, until, temporary } from './helpers.mjs';
 
 const declared=[{env:'EXAMPLE_API_KEY',kind:'api-key',providers:['example'],required:true},
-  {env:'LANGCHAIN_PROVIDER'},{path:'.codex/auth.json',kind:'grant',projection:'file',providers:['openai-chatgpt']}];
+  {env:'LANGCHAIN_PROVIDER'},{path:'.codex/auth.json',kind:'grant',projection:'file',providers:['openai-chatgpt'],format:'codex-cli-auth-json'},
+  {path:'auth/openai-codex.json',kind:'grant',projection:'file',base:'dataDir',format:'oauth-cli-kit'}];
 function withCredentials(){const d=definition();d.deployments[0].credentialEnv=declared;d.deployments[0].envAllowlist=[];return d;}
 
 test('AH-C1: credentialEnv is validated — host control names, duplicates, static-env repeats and escaping paths are rejected',async t=>{
@@ -19,19 +20,22 @@ test('AH-C1: credentialEnv is validated — host control names, duplicates, stat
   assert.throws(bad({credentialEnv:[{path:'../x',projection:'file'}]}),/relative to the app HOME/);
   assert.throws(bad({credentialEnv:[{path:'/etc/x',projection:'file'}]}),/relative to the app HOME/);
   assert.throws(bad({credentialEnv:[{env:'A_KEY',kind:'oauth'}]}),/unknown kind/);
+  assert.throws(bad({credentialEnv:[{path:'x.json',projection:'file',base:'root'}]}),/base must be home or dataDir/);
+  assert.throws(bad({credentialEnv:[{path:'x.json',projection:'file',format:'Bad Format'}]}),/format is an opaque/);
   const ok=definition();ok.deployments[0].credentialEnv=declared;
   const h=new AppHost({store:new AtomicFileStore(join(dir,'s2')),dataRoot:join(dir,'d2'),parentOrigin:'http://127.0.0.1:49123'});
   h.register(ok);
-  assert.deepEqual(h.list().apps[0].deployments[0].credentialEnv.map(c=>c.env??c.path),['EXAMPLE_API_KEY','LANGCHAIN_PROVIDER','.codex/auth.json']);
+  assert.deepEqual(h.list().apps[0].deployments[0].credentialEnv.map(c=>c.env??c.path),['EXAMPLE_API_KEY','LANGCHAIN_PROVIDER','.codex/auth.json','auth/openai-codex.json']);
+  assert.equal(h.list().apps[0].deployments[0].credentialEnv[3].base,'dataDir');assert.equal(h.list().apps[0].deployments[0].credentialEnv[2].base,'home');
 });
 
 test('AH-C2/C3/C4: resolver values reach the child only for declared names; undeclared env and escaping files are rejected with events; logs are redacted',async t=>{
   const seen=[];
   const {host,root}=await setup(t,{def:withCredentials()});
   host.setCredentialResolver(async req=>{seen.push(req);return{env:{EXAMPLE_API_KEY:'sk-secret-value-1234',LANGCHAIN_PROVIDER:'example',UNDECLARED_KEY:'nope'},
-    files:[{path:'.codex/auth.json',content:'{"tokens":{"access_token":"tok-abcdef-9999"}}'},{path:'../escape.txt',content:'x'}],secrets:['tok-abcdef-9999']};});
+    files:[{path:'.codex/auth.json',content:'{"tokens":{"access_token":"tok-abcdef-9999"}}'},{path:'auth/openai-codex.json',content:'{"access":"tok-vibe-1111","refresh":"r","expires":1}'},{path:'../escape.txt',content:'x'}],secrets:['tok-abcdef-9999']};});
   const opened=await host.open(input());
-  assert.equal(seen.length,1);assert.equal(seen[0].appId,'example');assert.equal(seen[0].credentialEnv.length,3);
+  assert.equal(seen.length,1);assert.equal(seen[0].appId,'example');assert.equal(seen[0].credentialEnv.length,4);
   const id=await identity(opened.uiUrl);
   assert.equal(id.credentialEnv.EXAMPLE_API_KEY,'sk-secret-value-1234');
   assert.equal(id.credentialEnv.LANGCHAIN_PROVIDER,'example');
@@ -39,9 +43,12 @@ test('AH-C2/C3/C4: resolver values reach the child only for declared names; unde
   assert.equal(JSON.parse(id.homeAuth).tokens.access_token,'tok-abcdef-9999');
   const home=join(opened.instance.dataDir,'home');
   assert.equal(((await stat(join(home,'.codex','auth.json'))).mode & 0o777),0o600);
+  assert.equal(JSON.parse(id.dataAuth).access,'tok-vibe-1111');
+  assert.equal(((await stat(join(opened.instance.dataDir,'auth','openai-codex.json'))).mode & 0o777),0o600);
+  await assert.rejects(stat(join(home,'auth','openai-codex.json')));
   await assert.rejects(stat(join(opened.instance.dataDir,'escape.txt')));
   const events=host.eventsSince(0).events.map(e=>[e.type,e.names]);
-  assert.ok(events.some(([t,n])=>t==='credential.injected'&&n.includes('EXAMPLE_API_KEY')&&n.includes('file:.codex/auth.json')));
+  assert.ok(events.some(([t,n])=>t==='credential.injected'&&n.includes('EXAMPLE_API_KEY')&&n.includes('file:.codex/auth.json')&&n.includes('file:auth/openai-codex.json')));
   assert.ok(events.some(([t,n])=>t==='credential.env-rejected'&&n.includes('UNDECLARED_KEY')&&n.includes('file:../escape.txt')));
   await until(()=>host.logTail(opened.instance.id).some(l=>l.text.includes('fixture-sees-key')));
   const lines=host.logTail(opened.instance.id).map(l=>l.text).join('\n');

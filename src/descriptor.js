@@ -56,6 +56,10 @@ export function validateDefinition(input) {
       for (const c of p.credentialEnv) {
         requireCondition(c && typeof c === 'object' && !Array.isArray(c), 'INVALID_CREDENTIAL_ENV', 'credentialEnv entries must be objects.');
         c.kind ??= 'api-key'; c.required ??= false; c.projection ??= 'env'; c.providers ??= [];
+        if (c.projection === 'file') { c.base ??= 'home'; }
+        requireCondition((c.projection !== 'file' || ['home','dataDir'].includes(c.base)) &&
+          (c.format === undefined || (typeof c.format === 'string' && /^[a-z0-9][a-z0-9.-]{0,63}$/.test(c.format))),
+          'INVALID_CREDENTIAL_ENV', 'credentialEnv file base must be home or dataDir; format is an opaque lowercase id.');
         requireCondition(['api-key','grant'].includes(c.kind) && ['env','file'].includes(c.projection) && typeof c.required === 'boolean' &&
           Array.isArray(c.providers) && c.providers.every(x => typeof x === 'string' && /^[a-z0-9][a-z0-9_.-]{0,63}$/.test(x)) &&
           (c.purpose === undefined || (typeof c.purpose === 'string' && c.purpose.length <= 120)),
@@ -69,7 +73,7 @@ export function validateDefinition(input) {
           requireCondition(typeof c.path === 'string' && c.path.length > 0 && c.path.length <= 200 && !c.path.startsWith('/') &&
             !c.path.includes('\0') && c.path.split('/').every(seg => seg && seg !== '.' && seg !== '..'),
             'INVALID_CREDENTIAL_ENV', 'credentialEnv file path must be relative to the app HOME and contain no "." or ".." segments.');
-          requireCondition(!seen.has('file:' + c.path), 'INVALID_CREDENTIAL_ENV', 'Duplicate credentialEnv file path.'); seen.add('file:' + c.path);
+          requireCondition(!seen.has(`file:${c.base}:` + c.path), 'INVALID_CREDENTIAL_ENV', 'Duplicate credentialEnv file path.'); seen.add(`file:${c.base}:` + c.path);
         }
       }
       const bindings = [...p.args, ...Object.values(p.env)];

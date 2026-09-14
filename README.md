@@ -1,4 +1,4 @@
-# HanaMesh app-host · 0.1.0-rc.4
+# HanaMesh app-host · 0.1.0-rc.5
 
 **交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4 增量（`credentialEnv` + `credentialResolver`，2026-09-14）`DELIVERED` 等用户签。**
 

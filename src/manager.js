@@ -47,7 +47,7 @@ export class AppHost {
     const declared = deployment.credentialEnv ?? [], events = [];
     if (!this.#credentialResolver || declared.length === 0) return { env:{}, files:[], secrets:[], events };
     const envNames = new Set(declared.filter(c => c.projection === 'env').map(c => c.env));
-    const filePaths = new Set(declared.filter(c => c.projection === 'file').map(c => c.path));
+    const fileBases = new Map(declared.filter(c => c.projection === 'file').map(c => [c.path, c.base ?? 'home']));
     let result;
     try {
       result = await this.#credentialResolver({ appId:instance.appId, deploymentId:instance.deploymentId, instanceId:instance.id,
@@ -63,7 +63,7 @@ export class AppHost {
     }
     const files = [];
     for (const f of Array.isArray(result.files) ? result.files : []) {
-      if (f && filePaths.has(f.path) && typeof f.content === 'string') files.push({ path:f.path, content:f.content, mode:Number.isInteger(f.mode) ? f.mode : 0o600 });
+      if (f && fileBases.has(f.path) && typeof f.content === 'string') files.push({ path:f.path, base:fileBases.get(f.path), content:f.content, mode:Number.isInteger(f.mode) ? f.mode : 0o600 });
       else rejected.push(`file:${f?.path}`);
     }
     if (rejected.length) events.push({ type:'credential.env-rejected', details:{ names:rejected } });
@@ -297,8 +297,9 @@ export class AppHost {
     const credentials = await this.#resolveCredentials(instance,deployment);
     control.credentialEvents = credentials.events;
     for (const file of credentials.files) {
-      const target = join(instance.dataDir,'home',file.path);
-      requireCondition(target.startsWith(join(instance.dataDir,'home') + '/'),'INVALID_CREDENTIAL_ENV','Credential file escapes the app HOME.');
+      const base = file.base === 'dataDir' ? instance.dataDir : join(instance.dataDir,'home');
+      const target = join(base,file.path);
+      requireCondition(target.startsWith(base + '/'),'INVALID_CREDENTIAL_ENV','Credential file escapes its declared base.');
       await mkdir(dirname(target),{ recursive:true, mode:0o700 });
       await writeFile(target,file.content,{ mode:file.mode });
     }
