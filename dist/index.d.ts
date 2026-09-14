@@ -4,7 +4,15 @@ export type LeaseStatus = 'active'|'closed'|'expired'|'stopped'|'failed';
 export interface Readiness { path:string; status:number; bodyIncludes?:string; header?:{name:string;value:string}; }
 export interface GatewayPolicy { cookieAllowlist?:string[]; allowAppAuthorization?:boolean; }
 interface DeploymentBase { id:string; dataId:string; readiness:Readiness; embedding?:'direct'|'gateway'; startTimeoutMs?:number; stopGraceMs?:number; gateway?:GatewayPolicy; }
-export interface OwnedDeployment extends DeploymentBase { mode:'owned'; command:string; args:string[]; cwd?:string; env?:Record<string,string>; envAllowlist?:string[]; }
+/** rc.4: what an app needs, never where it comes from. `projection:'env'` names a process variable; `projection:'file'` a path relative to the app HOME. */
+export type CredentialEnvEntry =
+  { env:string; kind?:'api-key'|'grant'; providers?:string[]; required?:boolean; purpose?:string; projection?:'env' }
+| { path:string; kind?:'api-key'|'grant'; providers?:string[]; required?:boolean; purpose?:string; projection:'file' };
+export interface CredentialResolverInput { appId:string; deploymentId:string; instanceId:string; principalId:string; credentialEnv:CredentialEnvEntry[]; }
+export interface CredentialResolverResult { env?:Record<string,string>; files?:Array<{path:string;content:string;mode?:number}>; secrets?:string[]; }
+/** Seated by the credential broker (plugin-auth-apikey). Undefined / throw = inject nothing; the launch proceeds. */
+export type CredentialResolver = (input:CredentialResolverInput)=>Awaitable<CredentialResolverResult|undefined>;
+export interface OwnedDeployment extends DeploymentBase { mode:'owned'; command:string; args:string[]; cwd?:string; env?:Record<string,string>; envAllowlist?:string[]; credentialEnv?:CredentialEnvEntry[]; }
 export interface AttachedDeployment extends DeploymentBase { mode:'attach'; url:string; }
 export type Deployment = OwnedDeployment|AttachedDeployment;
 export interface AppDefinition { id:string; name:string; singleInstanceOnly?:boolean; deployments:Deployment[]; }
@@ -23,16 +31,18 @@ export interface LeaseRequest { viewId:string; leaseToken:string; }
 export interface RecoverRequest { viewId:string; instanceId:string; confirm:true; }
 export interface OpenReceipt { instance:InstanceRecord; lease:ViewLease; leaseToken:string; uiUrl:string|null; originalSessionId:string|null; }
 export interface AppListing {
-  contractVersion:1; apps:Array<{id:string;name:string;singleInstanceOnly:boolean;deployments:Array<{id:string;dataId:string;mode:'owned'|'attach';embedding:'direct'|'gateway'}>}>;
+  contractVersion:1; apps:Array<{id:string;name:string;singleInstanceOnly:boolean;deployments:Array<{id:string;dataId:string;mode:'owned'|'attach';embedding:'direct'|'gateway';credentialEnv:CredentialEnvEntry[]}>}>;
   instances:InstanceRecord[]; views:ViewLease[]; sequence:number;
 }
 export interface EventPage { events:HostEvent[]; sequence:number; resetRequired:boolean; }
 export interface HostOptions {
   store:SnapshotStore; dataRoot:string; parentOrigin:string; leaseTtlMs?:number; sweepIntervalMs?:number;
-  clock?:()=>number; checkpoint?:(point:string,details:Record<string,unknown>)=>Awaitable<void>;
+  clock?:()=>number; checkpoint?:(point:string,details:Record<string,unknown>)=>Awaitable<void>; credentialResolver?:CredentialResolver|null;
 }
 export class AppHost {
   constructor(options:HostOptions);
+  /** rc.4: seat or clear the credential broker; returns a disposer that clears it only if still the same function. */
+  setCredentialResolver(resolver:CredentialResolver|null):()=>void;
   register(definition:AppDefinition):{appId:string;definitionHash:string}; init():Promise<this>;
   beginOpen(input:OpenRequest,principalId?:string):Promise<OpenReceipt>;
   open(input:OpenRequest,principalId?:string):Promise<OpenReceipt>; start(input:OpenRequest,principalId?:string):Promise<OpenReceipt>;

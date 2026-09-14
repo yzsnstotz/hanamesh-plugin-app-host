@@ -1,5 +1,5 @@
-X03 reserve-launch: {"signal":"SIGKILL","instanceId":"3ff98fa8-6e00-46bf-bc3b-a5e86c54547c","pid":58956,"appWroteData":true,"durableOwner":true,"guardianCleanup":true}
-✔ X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data (234.405542ms)
+X03 reserve-launch: {"signal":"SIGKILL","instanceId":"6b896420-fe04-4e22-8552-976006dbff12","pid":21118,"appWroteData":true,"durableOwner":true,"guardianCleanup":true}
+✔ X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data (278.303417ms)
 ℹ tests 1
 ℹ suites 0
 ℹ pass 1
@@ -7,4 +7,4 @@ X03 reserve-launch: {"signal":"SIGKILL","instanceId":"3ff98fa8-6e00-46bf-bc3b-a5
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 273.506667
+ℹ duration_ms 318.649417

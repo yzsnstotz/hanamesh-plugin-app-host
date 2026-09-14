@@ -2,7 +2,7 @@ import { mkdtemp,writeFile,readFile,rm,realpath } from 'node:fs/promises';
 import { join,resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
-const tarball=resolve(process.argv[2]??'hanamesh-dsh-app-host-0.1.0-rc.3.tgz');
+const tarball=resolve(process.argv[2]??'hanamesh-dsh-app-host-0.1.0-rc.4.tgz');
 await readFile(tarball);
 const root=await mkdtemp(join(await realpath(tmpdir()),'hm-app-host-package-'));
 try{

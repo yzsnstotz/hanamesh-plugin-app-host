@@ -49,6 +49,29 @@ export function validateDefinition(input) {
         Object.entries(p.env).every(([k, v]) => /^[A-Z_][A-Z0-9_]*$/.test(k) && p.envAllowlist.includes(k) &&
           typeof v === 'string' && !v.includes('\0') && !/^(DSH_|NODE_OPTIONS$|LD_|DYLD_)/.test(k)),
         'INVALID_ENV', 'Every environment entry must be explicitly allowlisted; host control variables are forbidden.');
+      // rc.4: an app declares WHICH credentials it needs (env names / home files), never where they come from.
+      p.credentialEnv ??= [];
+      requireCondition(Array.isArray(p.credentialEnv), 'INVALID_CREDENTIAL_ENV', 'credentialEnv must be an array.');
+      const seen = new Set();
+      for (const c of p.credentialEnv) {
+        requireCondition(c && typeof c === 'object' && !Array.isArray(c), 'INVALID_CREDENTIAL_ENV', 'credentialEnv entries must be objects.');
+        c.kind ??= 'api-key'; c.required ??= false; c.projection ??= 'env'; c.providers ??= [];
+        requireCondition(['api-key','grant'].includes(c.kind) && ['env','file'].includes(c.projection) && typeof c.required === 'boolean' &&
+          Array.isArray(c.providers) && c.providers.every(x => typeof x === 'string' && /^[a-z0-9][a-z0-9_.-]{0,63}$/.test(x)) &&
+          (c.purpose === undefined || (typeof c.purpose === 'string' && c.purpose.length <= 120)),
+          'INVALID_CREDENTIAL_ENV', 'credentialEnv entry has an unknown kind, projection, provider id or purpose.');
+        if (c.projection === 'env') {
+          requireCondition(typeof c.env === 'string' && /^[A-Z_][A-Z0-9_]*$/.test(c.env) && !/^(DSH_|NODE_OPTIONS$|LD_|DYLD_|PATH$|HOME$|TMPDIR$|XDG_)/.test(c.env),
+            'INVALID_CREDENTIAL_ENV', 'credentialEnv env must be a POSIX identifier and not a host control variable.');
+          requireCondition(!(c.env in p.env), 'INVALID_CREDENTIAL_ENV', 'credentialEnv must not repeat a static env entry.');
+          requireCondition(!seen.has('env:' + c.env), 'INVALID_CREDENTIAL_ENV', 'Duplicate credentialEnv env name.'); seen.add('env:' + c.env);
+        } else {
+          requireCondition(typeof c.path === 'string' && c.path.length > 0 && c.path.length <= 200 && !c.path.startsWith('/') &&
+            !c.path.includes('\0') && c.path.split('/').every(seg => seg && seg !== '.' && seg !== '..'),
+            'INVALID_CREDENTIAL_ENV', 'credentialEnv file path must be relative to the app HOME and contain no "." or ".." segments.');
+          requireCondition(!seen.has('file:' + c.path), 'INVALID_CREDENTIAL_ENV', 'Duplicate credentialEnv file path.'); seen.add('file:' + c.path);
+        }
+      }
       const bindings = [...p.args, ...Object.values(p.env)];
       requireCondition(bindings.some(v => v.includes('{{dataDir}}')) && bindings.some(v => v.includes('{{port}}')),
         'MISSING_RUNTIME_BINDING', 'Application adapter must explicitly bind its data directory and loopback port.');

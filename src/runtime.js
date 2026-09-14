@@ -93,7 +93,8 @@ export async function spawnOwned(config, { onLog = () => {} } = {}) {
     env: { PATH: '/usr/bin:/bin:/usr/sbin:/sbin', LANG: 'C.UTF-8' },
     stdio: ['ignore','pipe','pipe','ipc'], shell: false,
   });
-  const secrets = Object.entries(config.env).filter(([key]) => /TOKEN|SECRET|PASSWORD|KEY/.test(key)).map(([, value]) => value);
+  const secrets = [...Object.entries(config.env).filter(([key]) => /TOKEN|SECRET|PASSWORD|KEY|AUTH|OAUTH|CREDENTIAL/.test(key)).map(([, value]) => value),
+    ...(Array.isArray(config.secrets) ? config.secrets : [])];
   lineSink(guardian.stdout, text => onLog('stdout', text), secrets);
   lineSink(guardian.stderr, text => onLog('stderr', text), secrets);
   let resolveSpawn, rejectSpawn, childPid, groupId, appExit, cleanupConfirmed = false;

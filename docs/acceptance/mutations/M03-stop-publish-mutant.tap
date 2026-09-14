@@ -1,4 +1,4 @@
-✖ X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive (309.0725ms)
+✖ X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive (293.707917ms)
 ℹ tests 1
 ℹ suites 0
 ℹ pass 0
@@ -6,14 +6,14 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 347.657958
+ℹ duration_ms 334.599292
 
 ✖ failing tests:
 
 test at tests/crash.test.mjs:53:1
-✖ X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive (309.0725ms)
+✖ X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive (293.707917ms)
   AssertionError [ERR_ASSERTION]: STOP_BOUNDARY_UNSAFE: stopped was published while its owned app still ran at the actual crash cut
-      at TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-4M3yNh/tests/crash.test.mjs:56:3)
+      at TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-y0MFYX/tests/crash.test.mjs:56:3)
       at async Test.run (node:internal/test_runner/test:1110:7)
       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
     generatedMessage: false,

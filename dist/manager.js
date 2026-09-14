@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID, createHash, timingSafeEqual } from 'node:crypto';
-import { join, resolve } from 'node:path';
-import { access } from 'node:fs/promises';
+import { join, resolve, dirname } from 'node:path';
+import { access, mkdir, writeFile } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { AppHostError, requireCondition, SerialQueue, copy } from './errors.js';
 import { validateDefinition, identifier, fingerprint, expand, loopbackOrigin } from './descriptor.js';
@@ -23,8 +23,9 @@ const isTerminal = s => ['stopped','failed','interrupted'].includes(s);
 export class AppHost {
   #queue = new SerialQueue(); #definitions = new Map(); #controls = new Map(); #listeners = new Set();
   #logs = new Map(); #state; #initialized = false; #closing = false; #poisoned = false; #timer; #disposing;
+  #credentialResolver = null;
   constructor({ store, dataRoot, parentOrigin, leaseTtlMs = 90_000, sweepIntervalMs = 15_000,
-    checkpoint = async () => {}, clock = () => Date.now() }) {
+    checkpoint = async () => {}, clock = () => Date.now(), credentialResolver = null }) {
     requireCondition(store && ['init','load','save','close'].every(k => typeof store[k] === 'function'),
       'INVALID_STORE','A durable snapshot store is required.');
     requireCondition(typeof dataRoot === 'string' && resolve(dataRoot) === dataRoot,'INVALID_ROOT','dataRoot must be an absolute canonical path.');
@@ -33,6 +34,43 @@ export class AppHost {
       'INVALID_TIMEOUT','Invalid lease or sweep timing.');
     this.store = store; this.dataRoot = dataRoot; this.parentOrigin = loopbackOrigin(parentOrigin);
     this.leaseTtlMs = leaseTtlMs; this.sweepIntervalMs = sweepIntervalMs; this.checkpoint = checkpoint; this.clock = clock;
+    this.setCredentialResolver(credentialResolver);
+  }
+  /** rc.4: the credential broker (plugin-auth-apikey) seats itself here; null = inject nothing (FR-02: apps still start). */
+  setCredentialResolver(resolver) {
+    requireCondition(resolver === null || resolver === undefined || typeof resolver === 'function','INVALID_CREDENTIAL_RESOLVER','credentialResolver must be a function or null.');
+    this.#credentialResolver = resolver ?? null;
+    return () => { if (this.#credentialResolver === resolver) this.#credentialResolver = null; };
+  }
+  /** Ask the broker for this launch. Only declared names/paths pass; any failure is recorded and never blocks the launch. */
+  async #resolveCredentials(instance,deployment) {
+    const declared = deployment.credentialEnv ?? [], events = [];
+    if (!this.#credentialResolver || declared.length === 0) return { env:{}, files:[], secrets:[], events };
+    const envNames = new Set(declared.filter(c => c.projection === 'env').map(c => c.env));
+    const filePaths = new Set(declared.filter(c => c.projection === 'file').map(c => c.path));
+    let result;
+    try {
+      result = await this.#credentialResolver({ appId:instance.appId, deploymentId:instance.deploymentId, instanceId:instance.id,
+        principalId:instance.principalId, credentialEnv:copy(declared) });
+    } catch (error) {
+      events.push({ type:'credential.resolver-failed', details:{ code:error?.code ?? 'RESOLVER_ERROR' } });
+      return { env:{}, files:[], secrets:[], events };
+    }
+    if (!result || typeof result !== 'object') return { env:{}, files:[], secrets:[], events };
+    const env = {}, rejected = [];
+    for (const [key,value] of Object.entries(result.env ?? {})) {
+      if (envNames.has(key) && typeof value === 'string' && !value.includes('\0')) env[key] = value; else rejected.push(key);
+    }
+    const files = [];
+    for (const f of Array.isArray(result.files) ? result.files : []) {
+      if (f && filePaths.has(f.path) && typeof f.content === 'string') files.push({ path:f.path, content:f.content, mode:Number.isInteger(f.mode) ? f.mode : 0o600 });
+      else rejected.push(`file:${f?.path}`);
+    }
+    if (rejected.length) events.push({ type:'credential.env-rejected', details:{ names:rejected } });
+    const injected = [...Object.keys(env), ...files.map(f => `file:${f.path}`)];
+    if (injected.length) events.push({ type:'credential.injected', details:{ names:injected } });
+    const secrets = [...Object.values(env), ...files.map(f => f.content), ...(Array.isArray(result.secrets) ? result.secrets.filter(x => typeof x === 'string') : [])];
+    return { env, files, secrets, events };
   }
   register(definition) {
     requireCondition(!this.#closing,'HOST_CLOSED','Host is closing.');
@@ -190,6 +228,7 @@ export class AppHost {
               const started = copy(this.#state), stored = started.instances.find(i => i.id === instance.id);
               stored.status = 'starting'; stored.endpoint = control.origin; stored.pid = control.runner?.pid ?? null;
               stored.guardianPid = control.runner?.guardianPid ?? null; stored.updatedAt = this.clock();
+              for (const e of control.credentialEvents ?? []) this.#event(started,e.type,stored,e.details);
               this.#event(started,'instance.starting',stored);
               await this.#commit(started);
             },
@@ -255,8 +294,17 @@ export class AppHost {
     for (const child of ['home','tmp','config','cache','state']) await secureDirectory(join(instance.dataDir,child));
     const port = await freePort();
     const values = { ...instance,instanceId:instance.id,port };
+    const credentials = await this.#resolveCredentials(instance,deployment);
+    control.credentialEvents = credentials.events;
+    for (const file of credentials.files) {
+      const target = join(instance.dataDir,'home',file.path);
+      requireCondition(target.startsWith(join(instance.dataDir,'home') + '/'),'INVALID_CREDENTIAL_ENV','Credential file escapes the app HOME.');
+      await mkdir(dirname(target),{ recursive:true, mode:0o700 });
+      await writeFile(target,file.content,{ mode:file.mode });
+    }
     const env = {
       PATH:'/usr/bin:/bin:/usr/sbin:/sbin',LANG:'C.UTF-8',
+      ...credentials.env,
       ...Object.fromEntries(Object.entries(deployment.env).map(([key,value]) => [key,expand(value,values)])),
       HOME:join(instance.dataDir,'home'),TMPDIR:join(instance.dataDir,'tmp'),
       XDG_CONFIG_HOME:join(instance.dataDir,'config'),XDG_CACHE_HOME:join(instance.dataDir,'cache'),
@@ -264,7 +312,7 @@ export class AppHost {
     };
     control.origin=`http://127.0.0.1:${port}`;
     control.runner=await spawnOwned({ command:deployment.command,args:deployment.args.map(value => expand(value,values)),
-      cwd:deployment.cwd ?? instance.dataDir,dataDir:instance.dataDir,env,stopGraceMs:deployment.stopGraceMs },{
+      cwd:deployment.cwd ?? instance.dataDir,dataDir:instance.dataDir,env,stopGraceMs:deployment.stopGraceMs,secrets:credentials.secrets },{
       onLog:(stream,text) => {
         const records=this.#logs.get(instance.id) ?? [];
         records.push({at:this.clock(),stream,text}); if(records.length>128)records.shift(); this.#logs.set(instance.id,records);
@@ -450,7 +498,7 @@ export class AppHost {
   instanceList(principalId='host') {return (this.#state?.instances ?? []).filter(i=>i.principalId===principalId).map(publicInstance);}
   list(principalId='host') {
     return {contractVersion:1,apps:[...this.#definitions.values()].map(d=>({id:d.id,name:d.name,singleInstanceOnly:d.singleInstanceOnly,
-      deployments:d.deployments.map(p=>({id:p.id,dataId:p.dataId,mode:p.mode,embedding:p.embedding}))})),
+      deployments:d.deployments.map(p=>({id:p.id,dataId:p.dataId,mode:p.mode,embedding:p.embedding,credentialEnv:copy(p.credentialEnv??[])}))})),
       instances:this.instanceList(principalId),views:(this.#state?.leases??[]).filter(l=>l.principalId===principalId).map(publicLease),
       sequence:this.#state?.sequence??0};
   }

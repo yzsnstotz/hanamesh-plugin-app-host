@@ -6,7 +6,10 @@ import { spawn } from 'node:child_process';
 const args=Object.fromEntries(process.argv.slice(2).map(s=>{const p=s.indexOf('=');return[s.slice(0,p),s.slice(p+1)];}));
 const root=args.data;await mkdir(root,{recursive:true});
 const evidence={pid:process.pid,runtimeId:args.runtimeId,instanceId:args.instanceId,dataDir:root,home:process.env.HOME,
-  inheritedSecret:process.env.DSH_TOKEN??null};
+  inheritedSecret:process.env.DSH_TOKEN??null,
+  credentialEnv:{EXAMPLE_API_KEY:process.env.EXAMPLE_API_KEY??null,LANGCHAIN_PROVIDER:process.env.LANGCHAIN_PROVIDER??null,UNDECLARED_KEY:process.env.UNDECLARED_KEY??null},
+  homeAuth:await readFile(join(process.env.HOME??'','.codex','auth.json'),'utf8').catch(()=>null)};
+if(process.env.EXAMPLE_API_KEY)console.log('fixture-sees-key '+process.env.EXAMPLE_API_KEY);
 await writeFile(join(root,'runtime-evidence.json'),JSON.stringify(evidence));
 await writeFile(join(root,`write-${args.runtimeId}.txt`),`Written by runtime ${args.runtimeId}\n`);
 if(args.ignoreTerm==='true')process.on('SIGTERM',()=>{});

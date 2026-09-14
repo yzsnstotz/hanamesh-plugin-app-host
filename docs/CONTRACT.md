@@ -1,4 +1,4 @@
-# 公开契约 v1（候选，0.1.0-rc.3）
+# 公开契约 v1（候选，0.1.0-rc.4）
 
 ## 身份与所有权
 
@@ -26,6 +26,25 @@ host.register({
 绝对 command、argv 数组、显式 envAllowlist；无 shell 拼接。模板只接受 `dataDir/port/instanceId/runtimeId/appId/deploymentId/dataId`，必须绑定 dataDir 与 port。部署不得 daemonize/setsid 脱离所拥有的进程组。dataDir、HOME、TMPDIR 与 XDG 由宿主计算；与既有持久记录不匹配时要求显式迁移，不猜测改绑。
 
 attach 描述符只有 `url: http://127.0.0.1:<固定端口>` 与身份探针，不允许 command/args/env。attach 就绪是端点+标记匹配，不冒称对外部进程的所有权。
+
+### 凭据声明与注入（rc.4，[凭据决策](../../../../Docs/Projects/hanamesh/decisions/2026-09-14-credentials-oauth-and-apikey.md) §3.3）
+
+owned 部署可带 `credentialEnv: CredentialEnvEntry[]`：app 声明**需要什么**，从不声明值从哪来。
+
+```js
+credentialEnv: [
+  { env: 'OPENAI_API_KEY', kind: 'api-key', providers: ['openai'], required: false, purpose: 'LLM' },
+  { env: 'LANGCHAIN_PROVIDER' },                                     // 派生值，由 broker 按所选引用填
+  { path: '.codex/auth.json', kind: 'grant', projection: 'file', providers: ['openai-chatgpt'] },
+]
+```
+
+- `projection:'env'`（默认）：`env` 是 POSIX 标识符，不得是宿主控制变量（`DSH_*`、`NODE_OPTIONS`、`LD_*`、`DYLD_*`、`PATH`、`HOME`、`TMPDIR`、`XDG_*`），不得与静态 `env` 重名。
+- `projection:'file'`：`path` 相对 app 的 HOME（`<dataDir>/home`），不含 `.`/`..` 段、不以 `/` 开头；写入 0600，父目录 0700。
+- 值来自 **credential broker**：`new AppHost({ credentialResolver })` 或运行中 `host.setCredentialResolver(fn)`（返回 disposer；`plugin-auth-apikey` 在 DSH 里 `ctx.hanameshApps.setCredentialResolver(...)`）。每次 owned 启动前调用 `resolver({ appId, deploymentId, instanceId, principalId, credentialEnv })`，期望 `{ env?, files?, secrets? }`。
+- **只接受声明过的名字/路径**：其余丢弃并记事件 `credential.env-rejected {names}`；注入成功记 `credential.injected {names}`（只有名字，永无值）；resolver 抛错记 `credential.resolver-failed {code}` 且**不阻止启动**（FR-02）；无 resolver 时行为与 rc.3 相同。
+- 注入值与 `files` 内容进入日志脱敏集合；静态 `env` 与宿主变量仍优先于注入值（不能用凭据覆盖 `HOME` 等）。
+- `list()` 的 `apps[].deployments[].credentialEnv` 原样带出，供客户端渲染「缺凭据」；是否已授权由 broker 的 `plan` 回答，本宿主不存任何凭据。
 
 ## Host service
 
