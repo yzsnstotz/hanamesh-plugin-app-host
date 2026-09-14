@@ -1,6 +1,6 @@
 # app-host 仓库行为边界
 
-当前本地候选版本 0.1.0-rc.5；真实 DSH profile 已跑，但只有用户可以签 ACCEPTED。不要把通过本地 fixture 等同于真实宿主 ACCEPTED。
+当前本地候选版本 0.1.0-rc.6；真实 DSH profile 已跑，但只有用户可以签 ACCEPTED。不要把通过本地 fixture 等同于真实宿主 ACCEPTED。
 
 ## 只维护本模块
 

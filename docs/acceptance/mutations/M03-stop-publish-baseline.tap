@@ -1,5 +1,5 @@
 X03 stop-publish: {"signal":"SIGKILL","stateAfterRestart":"stopping","aliveAtCut":false,"aliveAfterRestart":false}
-✔ X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive (294.981166ms)
+✔ X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive (294.303291ms)
 ℹ tests 1
 ℹ suites 0
 ℹ pass 1
@@ -7,4 +7,4 @@ X03 stop-publish: {"signal":"SIGKILL","stateAfterRestart":"stopping","aliveAtCut
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 334.333958
+ℹ duration_ms 333.322

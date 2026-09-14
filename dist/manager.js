@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID, createHash, timingSafeEqual } from 'node:crypto';
 import { join, resolve, dirname } from 'node:path';
-import { access, mkdir, writeFile } from 'node:fs/promises';
+import { access, mkdir, writeFile, rm } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { AppHostError, requireCondition, SerialQueue, copy } from './errors.js';
 import { validateDefinition, identifier, fingerprint, expand, loopbackOrigin } from './descriptor.js';
@@ -45,7 +45,7 @@ export class AppHost {
   /** Ask the broker for this launch. Only declared names/paths pass; any failure is recorded and never blocks the launch. */
   async #resolveCredentials(instance,deployment) {
     const declared = deployment.credentialEnv ?? [], events = [];
-    if (!this.#credentialResolver || declared.length === 0) return { env:{}, files:[], secrets:[], events };
+    if (!this.#credentialResolver || declared.length === 0) return { env:{}, files:[], secrets:[], events, envNames:[] };
     const envNames = new Set(declared.filter(c => c.projection === 'env').map(c => c.env));
     const fileBases = new Map(declared.filter(c => c.projection === 'file').map(c => [c.path, c.base ?? 'home']));
     let result;
@@ -54,23 +54,23 @@ export class AppHost {
         principalId:instance.principalId, credentialEnv:copy(declared) });
     } catch (error) {
       events.push({ type:'credential.resolver-failed', details:{ code:error?.code ?? 'RESOLVER_ERROR' } });
-      return { env:{}, files:[], secrets:[], events };
+      return { env:{}, files:[], secrets:[], events, envNames:[] };
     }
-    if (!result || typeof result !== 'object') return { env:{}, files:[], secrets:[], events };
+    if (!result || typeof result !== 'object') return { env:{}, files:[], secrets:[], events, envNames:[] };
     const env = {}, rejected = [];
     for (const [key,value] of Object.entries(result.env ?? {})) {
       if (envNames.has(key) && typeof value === 'string' && !value.includes('\0')) env[key] = value; else rejected.push(key);
     }
     const files = [];
     for (const f of Array.isArray(result.files) ? result.files : []) {
-      if (f && fileBases.has(f.path) && typeof f.content === 'string') files.push({ path:f.path, base:fileBases.get(f.path), content:f.content, mode:Number.isInteger(f.mode) ? f.mode : 0o600 });
+      const policy = f?.policy ?? 'if-absent';
+      if (f && fileBases.has(f.path) && ['if-absent','overwrite','remove'].includes(policy) && (policy === 'remove' || typeof f.content === 'string'))
+        files.push({ path:f.path, base:fileBases.get(f.path), content:policy === 'remove' ? '' : f.content, mode:Number.isInteger(f.mode) ? f.mode : 0o600, policy });
       else rejected.push(`file:${f?.path}`);
     }
     if (rejected.length) events.push({ type:'credential.env-rejected', details:{ names:rejected } });
-    const injected = [...Object.keys(env), ...files.map(f => `file:${f.path}`)];
-    if (injected.length) events.push({ type:'credential.injected', details:{ names:injected } });
-    const secrets = [...Object.values(env), ...files.map(f => f.content), ...(Array.isArray(result.secrets) ? result.secrets.filter(x => typeof x === 'string') : [])];
-    return { env, files, secrets, events };
+    const secrets = [...Object.values(env), ...files.filter(f => f.policy !== 'remove').map(f => f.content), ...(Array.isArray(result.secrets) ? result.secrets.filter(x => typeof x === 'string') : [])];
+    return { env, files, secrets, events, envNames:Object.keys(env) };
   }
   register(definition) {
     requireCondition(!this.#closing,'HOST_CLOSED','Host is closing.');
@@ -296,13 +296,23 @@ export class AppHost {
     const values = { ...instance,instanceId:instance.id,port };
     const credentials = await this.#resolveCredentials(instance,deployment);
     control.credentialEvents = credentials.events;
+    const written = [], kept = [], removed = [];
     for (const file of credentials.files) {
       const base = file.base === 'dataDir' ? instance.dataDir : join(instance.dataDir,'home');
       const target = join(base,file.path);
       requireCondition(target.startsWith(base + '/'),'INVALID_CREDENTIAL_ENV','Credential file escapes its declared base.');
+      if (file.policy === 'remove') { await rm(target,{ force:true }); removed.push(`file:${file.path}`); continue; }
+      // rc.6: 'if-absent' (default) keeps a file the app has since rotated itself (its own refresh token);
+      // 'overwrite' is for a new grant version; the broker decides, the host never reads the file back.
+      if (file.policy === 'if-absent' && await access(target).then(() => true, () => false)) { kept.push(`file:${file.path}`); continue; }
       await mkdir(dirname(target),{ recursive:true, mode:0o700 });
       await writeFile(target,file.content,{ mode:file.mode });
+      written.push(`file:${file.path}`);
     }
+    const injected = [...credentials.envNames, ...written];
+    if (injected.length) control.credentialEvents.push({ type:'credential.injected', details:{ names:injected } });
+    if (kept.length) control.credentialEvents.push({ type:'credential.file-kept', details:{ names:kept } });
+    if (removed.length) control.credentialEvents.push({ type:'credential.file-removed', details:{ names:removed } });
     const env = {
       PATH:'/usr/bin:/bin:/usr/sbin:/sbin',LANG:'C.UTF-8',
       ...credentials.env,

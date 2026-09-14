@@ -71,3 +71,26 @@ test('AH-C6: without a resolver (or after its disposer ran) nothing is injected 
   const id=await identity(opened.uiUrl);assert.equal(id.credentialEnv.EXAMPLE_API_KEY,null);assert.equal(id.homeAuth,null);
   assert.ok(!host.eventsSince(0).events.some(e=>e.type.startsWith('credential.')));
 });
+
+test('AH-C7 (rc.6): file policy — if-absent keeps an app-rotated file, overwrite replaces it, remove deletes it; events name each',async t=>{
+  let policy='if-absent',content='{"access":"v1"}';
+  const {host}=await setup(t,{def:withCredentials()});
+  host.setCredentialResolver(async()=>({files:[{path:'auth/openai-codex.json',content,policy}]}));
+  const first=await host.open(input('v1'));
+  assert.equal(JSON.parse((await identity(first.uiUrl)).dataAuth).access,'v1');
+  await host.stop(first.instance.id,{confirm:true});
+  const { writeFile }=await import('node:fs/promises');
+  await writeFile(join(first.instance.dataDir,'auth','openai-codex.json'),'{"access":"rotated-by-app"}');
+  const second=await host.open(input('v2'));
+  assert.equal(JSON.parse((await identity(second.uiUrl)).dataAuth).access,'rotated-by-app');
+  assert.ok(host.eventsSince(0).events.some(e=>e.type==='credential.file-kept'&&e.names.includes('file:auth/openai-codex.json')));
+  await host.stop(second.instance.id,{confirm:true});
+  policy='overwrite';content='{"access":"v2"}';
+  const third=await host.open(input('v3'));
+  assert.equal(JSON.parse((await identity(third.uiUrl)).dataAuth).access,'v2');
+  await host.stop(third.instance.id,{confirm:true});
+  policy='remove';
+  const fourth=await host.open(input('v4'));
+  assert.equal((await identity(fourth.uiUrl)).dataAuth,null);
+  assert.ok(host.eventsSince(0).events.some(e=>e.type==='credential.file-removed'&&e.names.includes('file:auth/openai-codex.json')));
+});

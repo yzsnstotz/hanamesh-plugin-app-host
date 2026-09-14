@@ -10,7 +10,9 @@ export type CredentialEnvEntry =
 | { path:string; kind?:'api-key'|'grant'; providers?:string[]; required?:boolean; purpose?:string; projection:'file'; base?:'home'|'dataDir'; format?:string };
 /** `base`: where `path` is rooted — the app HOME (`<dataDir>/home`, default) or the data directory itself (e.g. a `$XXX_HOME={{dataDir}}` app). `format`: opaque id the credential broker maps a grant to (e.g. `codex-cli-auth-json`, `oauth-cli-kit`); the host never interprets it. */
 export interface CredentialResolverInput { appId:string; deploymentId:string; instanceId:string; principalId:string; credentialEnv:CredentialEnvEntry[]; }
-export interface CredentialResolverResult { env?:Record<string,string>; files?:Array<{path:string;content:string;mode?:number}>; secrets?:string[]; }
+/** File projection policy (rc.6): `if-absent` (default) never clobbers a file the app rotated itself; `overwrite` replaces it (new grant version); `remove` deletes it (revoke / app-owned). The host never reads the file back. Events: `credential.injected` (env names + written files), `credential.file-kept`, `credential.file-removed`, `credential.env-rejected`, `credential.resolver-failed`. */
+export type CredentialFilePolicy = 'if-absent'|'overwrite'|'remove';
+export interface CredentialResolverResult { env?:Record<string,string>; files?:Array<{path:string;content?:string;mode?:number;policy?:CredentialFilePolicy}>; secrets?:string[]; }
 /** Seated by the credential broker (plugin-auth-apikey). Undefined / throw = inject nothing; the launch proceeds. */
 export type CredentialResolver = (input:CredentialResolverInput)=>Awaitable<CredentialResolverResult|undefined>;
 export interface OwnedDeployment extends DeploymentBase { mode:'owned'; command:string; args:string[]; cwd?:string; env?:Record<string,string>; envAllowlist?:string[]; credentialEnv?:CredentialEnvEntry[]; }

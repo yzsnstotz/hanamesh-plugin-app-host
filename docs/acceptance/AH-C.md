@@ -1,4 +1,4 @@
-# app-host 0.1.0-rc.5 · 凭据声明与注入（AH-C1–C6）· 2026-09-14（rc.4 + file 投射 `base`/`format`）
+# app-host 0.1.0-rc.6 · 凭据声明与注入（AH-C1–C7）· 2026-09-14（rc.4 + rc.5 `base`/`format` + rc.6 文件策略）
 
 **状态：DELIVERED（本机 session 实现 + 离线真实子进程验证；真实 DSH 宿主装 rc.4 + vibe rc.3 的联验待 plugin-auth-apikey 回收时做）。rc.3 ✅ 不动。**
 
@@ -12,6 +12,7 @@
 | AH-C4 | PASS | `../escape.txt` 被拒，dataDir 下不存在该文件；rc.5：`base:'dataDir'` 的 `auth/openai-codex.json` 写在 `<dataDir>/auth/`（0600）而不在 HOME；`base:'root'`、非法 `format` 被拒 |
 | AH-C5 | PASS | resolver 抛 `BROKER_DOWN` → 实例仍 `ready`，事件 `credential.resolver-failed {code:BROKER_DOWN}` |
 | AH-C6 | PASS | 无 resolver / disposer 后：不注入、无 `credential.*` 事件；rc.3 全部 51 测试通过（回归） |
+| AH-C7（rc.6） | PASS · 真实子进程 | `if-absent` 保留 app 自己改过的文件（事件 `credential.file-kept`）；`overwrite` 替换；`remove` 删除（`credential.file-removed`）；`credential.injected` 只列真正写入的 |
 | 日志脱敏 | PASS | 子进程 stdout 打印 key → `logTail` 只见 `[REDACTED]` |
 | M05 变异 | DETECTED | 去掉「只注入声明名」过滤 → AH-C2 变红；5/5 变异（含原 4 条）全部检出，见 `docs/acceptance/mutations/` |
 | 真实 DSH 宿主 | NOT_RUN | 装进隔离 profile + `plugin-auth-apikey` 作为 resolver + vibe rc.3 打开——归 Wave 5 回收 |
@@ -21,3 +22,5 @@
 产物：见文末 rc.5 行。
 
 产物 rc.5：`artifacts/hanamesh-dsh-app-host-0.1.0-rc.5.tgz` sha256 `534768f32d47cd1ac31ac85c8926be5df7c407efeb3db8dd2ee72e8ed0d95db9`（rc.4 `9c341875…` 被本版取代，tag 保留）。
+
+产物 rc.6：`artifacts/hanamesh-dsh-app-host-0.1.0-rc.6.tgz` sha256 `74a622269dbf1db003e2cb356ba0e739fd655c0fdee1a34d2025c7241f2aae7e`（取代 rc.5 `534768f3…`）。
