@@ -152,3 +152,22 @@ test('AH recovery: tampered data-root bindings cannot redirect application write
   await assert.rejects(second.host.resume(leaseInput(a)),{code:'BINDING_PATH_INVALID'});
   assert(!(await readdir(root)).includes('outside-approved-layout'));
 });
+
+test('AH-D1: an upgraded descriptor is adopted by a stopped instance across a host restart',async t=>{
+  const root=await temporary();
+  const first=await setup(null,{root});
+  const opened=await first.host.open(input('v1'));
+  await first.host.stop(opened.instance.id,{confirm:true});
+  await first.host.dispose();
+  // Same app id, same data binding, different descriptor text (what an app rc bump does).
+  const upgraded=definition();upgraded.name='App example (upgraded)';
+  const second=await setup(t,{root,def:upgraded});t.after(()=>rm(root,{recursive:true,force:true}));
+  const reopened=await second.host.open(input('v2'));
+  assert.equal(reopened.instance.id,opened.instance.id,'same stopped instance, no new data root');
+  assert.equal(reopened.instance.status,'ready');
+  assert(second.host.eventsSince(0).events.some(e=>e.type==='instance.definition-adopted'&&e.instanceId===opened.instance.id));
+  // A definition can only change across a host restart (register() refuses replacement in a running host), so the
+  // adopted instance keeps working for further views without a second adoption event.
+  const again=await second.host.open(input('v3'));assert.equal(again.instance.id,opened.instance.id);
+  assert.equal(second.host.eventsSince(0).events.filter(e=>e.type==='instance.definition-adopted').length,1);
+});

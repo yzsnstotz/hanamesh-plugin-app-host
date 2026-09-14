@@ -197,8 +197,15 @@ export class AppHost {
           status:'active',expiresAt:this.clock()+this.leaseTtlMs,createdAt:this.clock(),originalSessionId:input.originalSessionId ?? null };
         next.leases.push(lease);
       }
-      requireCondition(instance.definitionHash === fingerprint(app),'DEFINITION_CHANGED',
-        'Stored deployment differs from the registered definition; explicit migration is required.');
+      // App upgrades change descriptors (credentialEnv, purpose text, name). Data ownership is checked separately below
+      // (BINDING_PATH_INVALID), so a not-running instance simply adopts the new definition; a running one keeps the
+      // definition it was launched with and must be stopped first.
+      if (instance.definitionHash !== fingerprint(app)) {
+        requireCondition(!this.#controls.get(instance.id),'DEFINITION_CHANGED',
+          'The application definition changed while the instance is running; stop it, then open again.',{},409);
+        const previous = instance.definitionHash; instance.definitionHash = fingerprint(app); instance.updatedAt = this.clock();
+        this.#event(next,'instance.definition-adopted',instance,{ previous:previous.slice(0,12), current:instance.definitionHash.slice(0,12) });
+      }
       identifier(instance.id,'instanceId');
       const expectedNamespace=createHash('sha256').update(principalId).digest('hex').slice(0,24);
       const expectedDirectory=join(this.dataRoot,expectedNamespace,app.id,deployment.id,deployment.dataId,app.singleInstanceOnly?'single':instance.id);
