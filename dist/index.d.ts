@@ -6,8 +6,9 @@ export interface GatewayPolicy { cookieAllowlist?:string[]; allowAppAuthorizatio
 interface DeploymentBase { id:string; dataId:string; readiness:Readiness; embedding?:'direct'|'gateway'; startTimeoutMs?:number; stopGraceMs?:number; gateway?:GatewayPolicy; }
 /** rc.4: what an app needs, never where it comes from. `projection:'env'` names a process variable; `projection:'file'` a path relative to the app HOME. */
 export type CredentialEnvEntry =
-  { env:string; kind?:'api-key'|'grant'; providers?:string[]; required?:boolean; purpose?:string; projection?:'env' }
-| { path:string; kind?:'api-key'|'grant'; providers?:string[]; required?:boolean; purpose?:string; projection:'file'; base?:'home'|'dataDir'; format?:string };
+  { env:string; kind?:'api-key'|'grant'; providers?:string[]; required?:boolean; purpose?:string; projection?:'env'; sets?:Record<string,string> }
+| { path:string; kind?:'api-key'|'grant'; providers?:string[]; required?:boolean; purpose?:string; projection:'file'; base?:'home'|'dataDir'; format?:string; sets?:Record<string,string> };
+/** rc.8 `sets`: non-secret companion env applied by the broker when this slot is granted (each key must be a declared env slot). Value `{{provider}}` is replaced with the granted credential's provider id. */
 /** `base`: where `path` is rooted — the app HOME (`<dataDir>/home`, default) or the data directory itself (e.g. a `$XXX_HOME={{dataDir}}` app). `format`: opaque id the credential broker maps a grant to (e.g. `codex-cli-auth-json`, `oauth-cli-kit`); the host never interprets it. */
 export interface CredentialResolverInput { appId:string; deploymentId:string; instanceId:string; principalId:string; credentialEnv:CredentialEnvEntry[]; }
 /** File projection policy (rc.6): `if-absent` (default) never clobbers a file the app rotated itself; `overwrite` replaces it (new grant version); `remove` deletes it (revoke / app-owned). The host never reads the file back. Events: `credential.injected` (env names + written files), `credential.file-kept`, `credential.file-removed`, `credential.env-rejected`, `credential.resolver-failed`. rc.7: a stopped instance adopts a changed app definition on open (`instance.definition-adopted`); only a running one refuses with `DEFINITION_CHANGED` (409). */

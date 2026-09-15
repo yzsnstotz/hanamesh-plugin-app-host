@@ -75,7 +75,16 @@ export function validateDefinition(input) {
             'INVALID_CREDENTIAL_ENV', 'credentialEnv file path must be relative to the app HOME and contain no "." or ".." segments.');
           requireCondition(!seen.has(`file:${c.base}:` + c.path), 'INVALID_CREDENTIAL_ENV', 'Duplicate credentialEnv file path.'); seen.add(`file:${c.base}:` + c.path);
         }
+        // rc.8 `sets`: non-secret companion values the broker applies when THIS slot is granted (e.g. the app's own
+        // provider id). Each target must be a declared env slot of this deployment, so the injection allowlist holds.
+        if (c.sets !== undefined) {
+          requireCondition(c.sets && typeof c.sets === 'object' && !Array.isArray(c.sets) && Object.entries(c.sets).every(([k, v]) =>
+            /^[A-Z_][A-Z0-9_]*$/.test(k) && typeof v === 'string' && v.length <= 256 && !/[\0\r\n]/.test(v)),
+            'INVALID_CREDENTIAL_ENV', 'credentialEnv sets must map POSIX env names to short single-line strings.');
+        }
       }
+      for (const c of p.credentialEnv) for (const k of Object.keys(c.sets ?? {}))
+        requireCondition(seen.has('env:' + k), 'INVALID_CREDENTIAL_ENV', `credentialEnv sets "${k}", which is not a declared env slot of this deployment.`);
       const bindings = [...p.args, ...Object.values(p.env)];
       requireCondition(bindings.some(v => v.includes('{{dataDir}}')) && bindings.some(v => v.includes('{{port}}')),
         'MISSING_RUNTIME_BINDING', 'Application adapter must explicitly bind its data directory and loopback port.');

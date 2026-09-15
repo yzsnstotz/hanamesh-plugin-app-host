@@ -7,7 +7,7 @@ import { setup, definition, input, identity, until, temporary } from './helpers.
 
 const declared=[{env:'EXAMPLE_API_KEY',kind:'api-key',providers:['example'],required:true},
   {env:'LANGCHAIN_PROVIDER'},{path:'.codex/auth.json',kind:'grant',projection:'file',providers:['openai-chatgpt'],format:'codex-cli-auth-json'},
-  {path:'auth/openai-codex.json',kind:'grant',projection:'file',base:'dataDir',format:'oauth-cli-kit'}];
+  {path:'auth/openai-codex.json',kind:'grant',projection:'file',base:'dataDir',format:'oauth-cli-kit',sets:{LANGCHAIN_PROVIDER:'openai_codex'}}];
 function withCredentials(){const d=definition();d.deployments[0].credentialEnv=declared;d.deployments[0].envAllowlist=[];return d;}
 
 test('AH-C1: credentialEnv is validated — host control names, duplicates, static-env repeats and escaping paths are rejected',async t=>{
@@ -22,6 +22,10 @@ test('AH-C1: credentialEnv is validated — host control names, duplicates, stat
   assert.throws(bad({credentialEnv:[{env:'A_KEY',kind:'oauth'}]}),/unknown kind/);
   assert.throws(bad({credentialEnv:[{path:'x.json',projection:'file',base:'root'}]}),/base must be home or dataDir/);
   assert.throws(bad({credentialEnv:[{path:'x.json',projection:'file',format:'Bad Format'}]}),/format is an opaque/);
+  // rc.8 `sets`: only declared env slots may be targeted; values are short single-line strings.
+  assert.throws(bad({credentialEnv:[{env:'A_KEY',sets:{UNDECLARED:'x'}}]}),/not a declared env slot/);
+  assert.throws(bad({credentialEnv:[{env:'A_KEY'},{env:'B_MODE',sets:{A_KEY:'bad\nline'}}]}),/short single-line/);
+  assert.throws(bad({credentialEnv:[{env:'A_KEY',sets:['x']}]}),/sets must map/);
   const ok=definition();ok.deployments[0].credentialEnv=declared;
   const h=new AppHost({store:new AtomicFileStore(join(dir,'s2')),dataRoot:join(dir,'d2'),parentOrigin:'http://127.0.0.1:49123'});
   h.register(ok);
