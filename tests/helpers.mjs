@@ -30,6 +30,13 @@ export function pidAlive(pid){
     return Boolean(state)&&!state.startsWith('Z');
   }catch{return false;}
 }
+export function pidMatches(pid, marker){
+  try{
+    const output=execFileSync('ps',['-o','stat=','-o','command=','-p',String(pid)],{encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim();
+    const [state,...command]=output.split(/\s+/);
+    return Boolean(state)&&!state.startsWith('Z')&&command.join(' ').includes(marker);
+  }catch{return false;}
+}
 export async function until(fn,{timeout=6_000,interval=30}={}){
   const end=Date.now()+timeout;let last;
   while(Date.now()<end){try{last=await fn();if(last)return last;}catch(e){last=e;}await delay(interval);}

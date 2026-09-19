@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { scanInstalled } from '../src/library/installed.js';
 
-const definition=(id,runtime)=>({id,name:id,singleInstanceOnly:true,deployments:[{id:'local',dataId:'data-v1',mode:'owned',command:'/bin/sh',args:['-c','exec', '{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:id},...(runtime?{runtime}:{})}]});
+const definition=(id,runtime)=>({id,name:id,singleInstanceOnly:true,deployments:[{id:'local',dataId:'data-v1',mode:'owned',...(runtime?{runtime}:{command:'/bin/sh'}),args:['-c','exec', '{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:id}}]});
 async function addPackage(profile,name,id,runtime){
   const root=join(profile,'node_modules',...name.split('/'));await mkdir(root,{recursive:true});
   await writeFile(join(root,'package.json'),JSON.stringify({name,version:'1.0.0',hanamesh:{app:'app.json'}}));
@@ -17,7 +17,7 @@ test('AH-L03: installed scan reports registered, installed-not-loaded and runtim
   await writeFile(join(profile,'package.json'),JSON.stringify({dependencies:{'@hanamesh/app-one':'1.0.0','third-app':'1.0.0','runtime-app':'1.0.0'}}));
   await addPackage(profile,'@hanamesh/app-one','one');
   await addPackage(profile,'third-app','two');
-  await addPackage(profile,'runtime-app','three',{manifest:{schema:1,sources:[],items:[]},item:'runtime'});
+  await addPackage(profile,'runtime-app','three',{manifest:{schema:1,sources:[],items:[{id:'runtime',version:'0.1.15',kind:'tar.gz',installTo:'runtime',platforms:{}}]},item:'runtime',exec:'bin/vibe'});
   const rows=await scanInstalled({profileDir:profile,host:{list:()=>({apps:[{id:'one'}]})},ledgerReader:async()=>({schema:1,items:{}}),dataRoot:join(profile,'data')});
   assert.deepEqual(Object.fromEntries(rows.map(row=>[row.appId,row.state])),{one:'registered',two:'installed-not-loaded',three:'runtime-missing'});
 });

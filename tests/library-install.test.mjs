@@ -7,7 +7,7 @@ import { createLibraryInstaller } from '../src/library/install.js';
 
 async function installedPackage(profile){const root=join(profile,'node_modules','@hanamesh','app-vibe-trading');await mkdir(root,{recursive:true});
   await writeFile(join(root,'package.json'),JSON.stringify({name:'@hanamesh/app-vibe-trading',version:'1.2.3',hanamesh:{app:'app.json'}}));
-  await writeFile(join(root,'app.json'),JSON.stringify({id:'vibe',name:'Vibe',deployments:[{id:'local',dataId:'data-v1',mode:'owned',command:'/bin/sh',args:['{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:'Vibe'},runtime:{manifest:{schema:1,sources:[],items:[]},item:'runtime'}}]}));}
+  await writeFile(join(root,'app.json'),JSON.stringify({id:'vibe',name:'Vibe',deployments:[{id:'local',dataId:'data-v1',mode:'owned',args:['{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:'Vibe'},runtime:{manifest:{schema:1,sources:[],items:[{id:'runtime',version:'0.1.15',kind:'tar.gz',installTo:'runtime',platforms:{}}]},item:'runtime',exec:'bin/vibe'}}]}));}
 
 test('AH-L04/L05: install uses explicit Node + DSH argv, exact stable registry version, then provisions the declared item',async()=>{
   const profile=await mkdtemp(join(tmpdir(),'hm-library-install-')),dataRoot=join(profile,'data');const calls=[],events=[];

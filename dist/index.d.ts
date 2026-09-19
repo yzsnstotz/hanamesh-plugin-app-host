@@ -16,7 +16,11 @@ export type CredentialFilePolicy = 'if-absent'|'overwrite'|'remove';
 export interface CredentialResolverResult { env?:Record<string,string>; files?:Array<{path:string;content?:string;mode?:number;policy?:CredentialFilePolicy}>; secrets?:string[]; }
 /** Seated by the credential broker (plugin-auth-apikey). Undefined / throw = inject nothing; the launch proceeds. */
 export type CredentialResolver = (input:CredentialResolverInput)=>Awaitable<CredentialResolverResult|undefined>;
-export interface OwnedDeployment extends DeploymentBase { mode:'owned'; command:string; args:string[]; cwd?:string; env?:Record<string,string>; envAllowlist?:string[]; credentialEnv?:CredentialEnvEntry[]; }
+export interface RuntimeManifestItem { id:string; version:string; kind:'tar.gz'|'zip'; installTo:string; platforms:Record<string,{asset:string;sha256:string;size?:number;strip?:number;url?:string}>; }
+export interface RuntimeManifest { schema:1; sources:Array<{id:string;kind:'https'|'file';base:string}>; items:RuntimeManifestItem[]; }
+export interface RuntimeSelection { manifest:RuntimeManifest; item:string; exec:string; }
+interface OwnedDeploymentBase extends DeploymentBase { mode:'owned'; args:string[]; cwd?:string; env?:Record<string,string>; envAllowlist?:string[]; credentialEnv?:CredentialEnvEntry[]; }
+export type OwnedDeployment = OwnedDeploymentBase & ({ command:string; runtime?:never }|{ command?:never; runtime:RuntimeSelection });
 export interface AttachedDeployment extends DeploymentBase { mode:'attach'; url:string; }
 export type Deployment = OwnedDeployment|AttachedDeployment;
 export interface AppDefinition { id:string; name:string; singleInstanceOnly?:boolean; deployments:Deployment[]; }
@@ -42,6 +46,7 @@ export interface EventPage { events:HostEvent[]; sequence:number; resetRequired:
 export interface HostOptions {
   store:SnapshotStore; dataRoot:string; parentOrigin:string; leaseTtlMs?:number; sweepIntervalMs?:number;
   nodeBinary?:string; clock?:()=>number; checkpoint?:(point:string,details:Record<string,unknown>)=>Awaitable<void>; credentialResolver?:CredentialResolver|null;
+  runtimeLedgerReader?:(root:string)=>Awaitable<{schema:1;items:Record<string,{version:string}>}>;
 }
 export class AppHost {
   constructor(options:HostOptions);
@@ -84,6 +89,7 @@ export class FixedGateway {
 }
 export function rewriteCsp(value:string,parentOrigin:string):string;
 export function embeddingHeaders(rawHeaders:string[],parentOrigin:string):string[];
+export function validateDefinition(input:AppDefinition):AppDefinition;
 export const name:'hanamesh-app-host';
 export const inject:readonly ['webServer','storageDomain','connection'];
 export function apply(ctx:unknown,config?:import('./dsh.js').DshPluginConfig):Promise<void>;

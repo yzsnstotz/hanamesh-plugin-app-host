@@ -23,9 +23,10 @@ const isTerminal = s => ['stopped','failed','interrupted'].includes(s);
 export class AppHost {
   #queue = new SerialQueue(); #definitions = new Map(); #controls = new Map(); #listeners = new Set();
   #logs = new Map(); #state; #initialized = false; #closing = false; #poisoned = false; #timer; #disposing;
-  #credentialResolver = null; #nodeBinary;
+  #credentialResolver = null; #nodeBinary; #runtimeLedgerReader;
   constructor({ store, dataRoot, parentOrigin, leaseTtlMs = 90_000, sweepIntervalMs = 15_000,
-    checkpoint = async () => {}, clock = () => Date.now(), credentialResolver = null, nodeBinary }) {
+    checkpoint = async () => {}, clock = () => Date.now(), credentialResolver = null, nodeBinary,
+    runtimeLedgerReader = async root => (await import('./provision/index.js')).ledger(root) }) {
     requireCondition(store && ['init','load','save','close'].every(k => typeof store[k] === 'function'),
       'INVALID_STORE','A durable snapshot store is required.');
     requireCondition(typeof dataRoot === 'string' && resolve(dataRoot) === dataRoot,'INVALID_ROOT','dataRoot must be an absolute canonical path.');
@@ -35,6 +36,8 @@ export class AppHost {
     this.store = store; this.dataRoot = dataRoot; this.parentOrigin = loopbackOrigin(parentOrigin);
     this.leaseTtlMs = leaseTtlMs; this.sweepIntervalMs = sweepIntervalMs; this.checkpoint = checkpoint; this.clock = clock;
     this.#nodeBinary = nodeBinary;
+    requireCondition(typeof runtimeLedgerReader === 'function','INVALID_RUNTIME','runtimeLedgerReader must be a function.');
+    this.#runtimeLedgerReader = runtimeLedgerReader;
     this.setCredentialResolver(credentialResolver);
   }
   /** rc.4: the credential broker (plugin-auth-apikey) seats itself here; null = inject nothing (FR-02: apps still start). */
@@ -297,7 +300,20 @@ export class AppHost {
       return;
     }
     requireCondition(['linux','darwin'].includes(process.platform),'PLATFORM_UNSUPPORTED','Owned runtimes are supported only on validated POSIX process-group platforms.');
-    await access(deployment.command,constants.X_OK);
+    let command = deployment.command;
+    if (deployment.runtime) {
+      const selected = deployment.runtime.manifest.items.find(item => item.id === deployment.runtime.item);
+      const root = join(this.dataRoot,'runtimes',instance.appId);
+      let book;
+      try { book = await this.#runtimeLedgerReader(root); }
+      catch { requireCondition(false,'RUNTIME_MISSING','Runtime ledger is unavailable; install or repair the application runtime.',{},409); }
+      requireCondition(book?.items?.[deployment.runtime.item]?.version === selected.version,
+        'RUNTIME_MISSING','The installed runtime is missing or does not match the application manifest.',{},409);
+      command = join(root,selected.installTo,deployment.runtime.exec);
+    }
+    try { await access(command,constants.X_OK); }
+    catch { requireCondition(false,deployment.runtime?'RUNTIME_MISSING':'INVALID_COMMAND',
+      deployment.runtime?'The declared runtime executable is missing or not executable.':'The application command is missing or not executable.',{},409); }
     await secureDirectory(instance.dataDir);
     for (const child of ['home','tmp','config','cache','state']) await secureDirectory(join(instance.dataDir,child));
     const port = await freePort();
@@ -330,7 +346,7 @@ export class AppHost {
       XDG_STATE_HOME:join(instance.dataDir,'state'),XDG_DATA_HOME:instance.dataDir,
     };
     control.origin=`http://127.0.0.1:${port}`;
-    control.runner=await spawnOwned({ nodeBinary:this.#nodeBinary,command:deployment.command,args:deployment.args.map(value => expand(value,values)),
+    control.runner=await spawnOwned({ nodeBinary:this.#nodeBinary,command,args:deployment.args.map(value => expand(value,values)),
       cwd:deployment.cwd ?? instance.dataDir,dataDir:instance.dataDir,env,stopGraceMs:deployment.stopGraceMs,secrets:credentials.secrets },{
       onLog:(stream,text) => {
         const records=this.#logs.get(instance.id) ?? [];

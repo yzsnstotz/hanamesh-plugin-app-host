@@ -22,7 +22,7 @@ const host=new AppHost({store,dataRoot:join(root,'data'),parentOrigin,sweepInter
     if(mode==='boundary-stop'&&at==='runtime-stopped')await pause({at,...lastRuntime,aliveAtCut:alive(lastRuntime.pid)});
   }});
 try{
-  host.register(definition({extra:{ignoreTerm:true}}));await host.init();
+  host.register(definition({extra:{ignoreTerm:true,...(mode==='boundary-reserve'?{spamLogs:true}:{})}}));await host.init();
   const result=await host.open({appId:'example',deploymentId:'local',viewId:'crash-view',originalSessionId:'exact-document'});
   if(mode==='group-stop'||mode==='boundary-stop')await host.stop(result.instance.id,{confirm:true});
   else if(mode==='recovery')await pause({at:'ready',result});

@@ -39,8 +39,27 @@ export function validateDefinition(input) {
       Number.isInteger(p.stopGraceMs) && p.stopGraceMs >= 50 && p.stopGraceMs <= 30_000,
       'INVALID_DEFINITION', 'Lifecycle timeouts are outside the allowed bounds.');
     if (p.mode === 'owned') {
-      requireCondition(typeof p.command === 'string' && isAbsolute(p.command) && !p.command.includes('\0'),
-        'INVALID_COMMAND', 'An absolute, trusted executable path is required.');
+      if (p.runtime !== undefined) {
+        requireCondition(p.runtime && typeof p.runtime === 'object' && !Array.isArray(p.runtime) && p.command === undefined,
+          'INVALID_RUNTIME', 'A runtime deployment must omit command and declare a runtime object.');
+        const { manifest, item, exec } = p.runtime;
+        requireCondition(manifest && typeof manifest === 'object' && !Array.isArray(manifest) && manifest.schema === 1 &&
+          Array.isArray(manifest.sources) && Array.isArray(manifest.items) && typeof item === 'string',
+          'INVALID_RUNTIME', 'runtime.manifest must be a schema 1 provision manifest.');
+        requireCondition(manifest.sources.every(source => source && typeof source === 'object' &&
+          typeof source.id === 'string' && ['https','file'].includes(source.kind) && typeof source.base === 'string'),
+          'INVALID_RUNTIME', 'runtime manifest sources are invalid.');
+        const selected = manifest.items.find(entry => entry?.id === item);
+        requireCondition(selected && typeof selected.version === 'string' && selected.version.length > 0 &&
+          typeof selected.installTo === 'string' && safeRelativePosix(selected.installTo) &&
+          selected.platforms && typeof selected.platforms === 'object' && !Array.isArray(selected.platforms),
+          'INVALID_RUNTIME', 'runtime.item must select a valid manifest item.');
+        requireCondition(typeof exec === 'string' && safeRelativePosix(exec),
+          'INVALID_RUNTIME', 'runtime.exec must be a relative POSIX path inside the selected runtime tree.');
+      } else {
+        requireCondition(typeof p.command === 'string' && isAbsolute(p.command) && !p.command.includes('\0'),
+          'INVALID_COMMAND', 'An absolute, trusted executable path is required.');
+      }
       requireCondition(Array.isArray(p.args) && p.args.every(a => typeof a === 'string' && !a.includes('\0')),
         'INVALID_COMMAND', 'args must be an explicit string array; shell execution is not supported.');
       if (p.cwd) requireCondition(isAbsolute(p.cwd), 'INVALID_COMMAND', 'cwd must be absolute.');
@@ -105,6 +124,12 @@ export function validateDefinition(input) {
     requireCondition(typeof p.gateway.allowAppAuthorization === 'boolean', 'INVALID_DEFINITION', 'Invalid Authorization policy.');
   }
   return d;
+}
+function safeRelativePosix(value) {
+  if (typeof value !== 'string' || value.length === 0 || value.startsWith('/') || /^[A-Za-z]:/.test(value) ||
+    value.includes('\\') || value.includes('\0')) return false;
+  const segments = value.split('/');
+  return segments.every(segment => segment.length > 0 && segment !== '.' && segment !== '..');
 }
 export const fingerprint = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 export function expand(template, values) {

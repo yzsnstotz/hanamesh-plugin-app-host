@@ -1,4 +1,4 @@
-# HanaMesh app-host · 0.1.0-rc.11
+# HanaMesh app-host · 0.1.0-rc.12
 
 **交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4–rc.11 为增量 🧪；rc.11 新增多源应用库、安装接管与 runtime 供给，仍待用户验收。**
 

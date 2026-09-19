@@ -1,6 +1,6 @@
 {
   "module": "app-host",
-  "version": "0.1.0-rc.11",
+  "version": "0.1.0-rc.12",
   "status": "PARTIAL",
   "implementationOrigin": "New implementation candidate based on supplied specifications; not an extraction of the inaccessible prototype",
   "inputArchive": {

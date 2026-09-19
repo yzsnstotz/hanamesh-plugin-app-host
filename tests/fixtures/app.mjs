@@ -14,6 +14,7 @@ if(process.env.EXAMPLE_API_KEY)console.log('fixture-sees-key '+process.env.EXAMP
 await writeFile(join(root,'runtime-evidence.json'),JSON.stringify(evidence));
 await writeFile(join(root,`write-${args.runtimeId}.txt`),`Written by runtime ${args.runtimeId}\n`);
 if(args.ignoreTerm==='true')process.on('SIGTERM',()=>{});
+if(args.spamLogs==='true')setInterval(()=>console.log('FIXTURE_CRASH_LOG'),10);
 if(args.descendant==='true'){
   const child=spawn(process.execPath,['-e',`require('node:fs').writeFileSync(${JSON.stringify(join(root,'descendant.pid'))},String(process.pid));process.on('SIGTERM',()=>{});setInterval(()=>{},1000)`],{stdio:'ignore'});
   child.unref();

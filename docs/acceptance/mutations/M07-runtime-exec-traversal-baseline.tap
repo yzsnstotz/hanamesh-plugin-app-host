@@ -1,0 +1,16 @@
+TAP version 13
+# Subtest: AH-P02: runtime item, installTo and exec must remain inside the provisioned tree
+ok 1 - AH-P02: runtime item, installTo and exec must remain inside the provisioned tree
+  ---
+  duration_ms: 1.073084
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 49.889916

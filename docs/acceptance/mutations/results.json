@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-19T06:27:31.706Z",
+  "generatedAt": "2026-09-19T06:40:25.294Z",
   "results": [
     {
       "id": "M01-single-instance",
@@ -8,8 +8,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "1a180ab66f8c0454a89d5e0cbdd6a1bb0c0dd1d686da047d8240cf8f1f34683e",
-      "mutatedSourceSha256": "a63248e3bdc3997f917dd58c3ee37ec0954bf1c0e23d1efeab98d9918fcdd704"
+      "originalSourceSha256": "bdddbfdce9dcef110a777e434f39bb9d29bf938e8d0184da3a0de38c6f615298",
+      "mutatedSourceSha256": "5c7c342c4ad19c098b23eb1b1b5b3dd33a9e36ec0c87d2c635d22ce7bc3ad52f"
     },
     {
       "id": "M02-reserve-launch",
@@ -38,8 +38,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "1a180ab66f8c0454a89d5e0cbdd6a1bb0c0dd1d686da047d8240cf8f1f34683e",
-      "mutatedSourceSha256": "f488e6e96511e3e05a510444b6c7122b03d8eacbce4e96cf2f946d2f2bac7461"
+      "originalSourceSha256": "bdddbfdce9dcef110a777e434f39bb9d29bf938e8d0184da3a0de38c6f615298",
+      "mutatedSourceSha256": "295e0940cb0f2b0ef87693943ca5ae407b0a7caf481bc051b9ff884d0afa78fd"
     },
     {
       "id": "M04-socket-ownership",
@@ -60,6 +60,16 @@
       "killed": true,
       "originalSourceSha256": "70d5c3c4267557ed65dbb9c86f7f4d9205682500d89194cbcb5327f40520a72c",
       "mutatedSourceSha256": "b100f9e8d79000a99737bcab321484956979c24b96e564051ff7876f4651cd98"
+    },
+    {
+      "id": "M07-runtime-exec-traversal",
+      "test": "tests/descriptor-runtime.test.mjs",
+      "pattern": "^AH-P02:",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "fe7481fa951c3189f296bcec6b4349bbbd3f241ff7f36eab2bd2a9c5e36d34f4",
+      "mutatedSourceSha256": "4d84bdb35fbd12df9bdb1b85d22d9738631627ed2ea0655fff183124f8578b61"
     },
     {
       "id": "M08-node-runtime-electron",

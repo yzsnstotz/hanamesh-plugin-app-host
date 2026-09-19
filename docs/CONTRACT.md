@@ -1,4 +1,4 @@
-# 公开契约 v1（候选，0.1.0-rc.10）
+# 公开契约 v1（候选，0.1.0-rc.12）
 
 ## 身份与所有权
 
@@ -26,6 +26,12 @@ host.register({
 绝对 command、argv 数组、显式 envAllowlist；无 shell 拼接。模板只接受 `dataDir/port/instanceId/runtimeId/appId/deploymentId/dataId`，必须绑定 dataDir 与 port。部署不得 daemonize/setsid 脱离所拥有的进程组。dataDir、HOME、TMPDIR 与 XDG 由宿主计算；与既有持久记录不匹配时要求显式迁移，不猜测改绑。
 
 attach 描述符只有 `url: http://127.0.0.1:<固定端口>` 与身份探针，不允许 command/args/env。attach 就绪是端点+标记匹配，不冒称对外部进程的所有权。
+
+### 便携 runtime（rc.12）
+
+应用包可以用 `runtime: { manifest, item, exec }` 代替绝对 `command`。`item` 必须精确命中 `manifest.items[].id`；`installTo` 与 `exec` 都只能是无空段、`.`、`..`、反斜杠、NUL 或绝对盘符的相对 POSIX 路径。存在 `runtime` 时禁止再提供 `command`。
+
+宿主只从 `<dataRoot>/runtimes/<appId>/.provision/ledger.json` 认领安装结果，且账本中的 item 版本必须与描述符 manifest 完全一致。最终命令固定为 `<dataRoot>/runtimes/<appId>/<installTo>/<exec>`；文件不存在或没有可执行位统一失败为 `RUNTIME_MISSING`，绝不回退到 PATH、系统 Python、`process.execPath` 或应用提供的任意路径。`args`、`env`、凭据投射、readiness 与 K5 guardian 生命周期规则不变。
 
 ### 凭据声明与注入（rc.4，[凭据决策](../../../../Docs/Projects/hanamesh/decisions/2026-09-14-credentials-oauth-and-apikey.md) §3.3）
 
