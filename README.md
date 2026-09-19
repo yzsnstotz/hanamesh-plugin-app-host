@@ -1,6 +1,8 @@
-# HanaMesh app-host · 0.1.0-rc.12
+# HanaMesh app-host · 0.1.0-rc.13
 
-**交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4–rc.11 为增量 🧪；rc.11 新增多源应用库、安装接管与 runtime 供给，仍待用户验收。**
+**交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4–rc.12 为增量 🧪；rc.13 只补上架前提（MIT 许可证、`repository` 字段、DSH peer 精确钉 `0.1.5-alpha.1`），代码与 rc.12 相同，仍待用户验收。**
+
+> 收录不代表审核或推荐。**套件与单包互斥（双向）：** 已单独安装本包的用户装 `hanamesh-core` 前先 `dsh plugin remove @hanamesh/dsh-app-host`；已装套件（core）再显式 `plugin add` 本包同样会以 `duplicate loader entry id` 起不来，移除那次显式安装即恢复。
 
 > rc.4 增加 `credentialEnv` / `credentialResolver`；rc.5 增加文件投射根与格式；rc.6 增加文件生命周期策略；rc.7 允许停止实例在下次打开时采用新定义；rc.8 增加 `credentialEnv[].sets` 声明。逐项证据见 `docs/acceptance/`。`ACCEPTED` 仍只有用户能给。
 

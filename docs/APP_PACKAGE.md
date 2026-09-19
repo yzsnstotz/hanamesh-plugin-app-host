@@ -12,7 +12,7 @@
   "version": "1.0.0",
   "type": "module",
   "files": ["app.json", "dsh.js", "cordis.patch.yml", "README.md", "LICENSE"],
-  "peerDependencies": { "@hanamesh/dsh-app-host": "0.1.0-rc.12" },
+  "peerDependencies": { "@hanamesh/dsh-app-host": "0.1.0-rc.13" },
   "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
   "hanamesh": { "app": "./app.json", "contractVersion": 1 }
 }
