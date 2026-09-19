@@ -1,4 +1,4 @@
-# 公开契约 v1（候选，0.1.0-rc.6）
+# 公开契约 v1（候选，0.1.0-rc.9）
 
 ## 身份与所有权
 
@@ -43,11 +43,14 @@ credentialEnv: [
 - `projection:'file'`：`path` 相对 **`base`**——`'home'`（默认，`<dataDir>/home`）或 `'dataDir'`（给 `$XXX_HOME={{dataDir}}` 这类 app，例如 Vibe 的 `auth/openai-codex.json`）；不含 `.`/`..` 段、不以 `/` 开头；写入 0600，父目录 0700。`format` 是给 broker 看的 opaque id（如 `codex-cli-auth-json`、`oauth-cli-kit`），宿主不解释。（rc.5 增：`base`/`format`）
 - 值来自 **credential broker**：`new AppHost({ credentialResolver })` 或运行中 `host.setCredentialResolver(fn)`（返回 disposer；`plugin-auth-apikey` 在 DSH 里 `ctx.hanameshApps.setCredentialResolver(...)`）。每次 owned 启动前调用 `resolver({ appId, deploymentId, instanceId, principalId, credentialEnv })`，期望 `{ env?, files?, secrets? }`。
 - **只接受声明过的名字/路径**：其余丢弃并记事件 `credential.env-rejected {names}`；注入成功记 `credential.injected {names}`（只有名字，永无值）；resolver 抛错记 `credential.resolver-failed {code}` 且**不阻止启动**（FR-02）；无 resolver 时行为与 rc.3 相同。
-- **`sets`（rc.8）**：槽位可声明 `sets: { ENV: 'value' }`——该槽位被授权时 broker 一并注入的**非密**伴随值（典型：app 自己的 provider id，如 Vibe 的 `LANGCHAIN_PROVIDER=openai_codex`）。每个键必须是同一 deployment 已声明的 env 槽位（注入白名单不变）；值 `{{provider}}` 由 broker 换成所授权凭据的 provider id。宿主只校验形状，不解释。
-- **定义升级（rc.7）**：app 升级会改描述符（`credentialEnv`、`purpose`、`name`…）。宿主只在数据绑定（dataDir/mode，`BINDING_PATH_INVALID`）上严格；**未运行的实例在下次 open 时直接采用新定义**，记事件 `instance.definition-adopted {previous,current}`（指纹前 12 位）；运行中的实例只能在停止后采用（`DEFINITION_CHANGED` 409）。rc.6 以前任何描述符改动都会让旧实例永久 `DEFINITION_CHANGED`，Vibe rc.6 一行 purpose 改动即触发。
+- **`sets`（rc.8）**：槽位可声明 `sets: { ENV: 'value' }`。每个键必须是同一 deployment 已声明的 env 槽位；模板由 Router 展开。宿主只校验形状，不解释、不注入。
 - **文件生命周期（rc.6）**：resolver 的每个 `files[]` 项带 `policy`：`if-absent`（默认）——目标已存在就不动（app 自己旋转过的 token 保留），记事件 `credential.file-kept`；`overwrite`——新 grant 版本，替换；`remove`——撤销 / 切 app-owned 时删除，记 `credential.file-removed`。宿主**从不读回**投射文件；「投射已完成」由 `credential.injected` 事件（含 `file:<path>`）告知 broker（`host.subscribe`）。
 - 注入值与 `files` 内容进入日志脱敏集合；静态 `env` 与宿主变量仍优先于注入值（不能用凭据覆盖 `HOME` 等）。
 - `list()` 的 `apps[].deployments[].credentialEnv` 原样带出，供客户端渲染「缺凭据」；是否已授权由 broker 的 `plan` 回答，本宿主不存任何凭据。
+
+### 定义变更（rc.7）
+
+app 升级会改描述符。宿主只在数据绑定（dataDir/mode，`BINDING_PATH_INVALID`）上严格；**未运行的实例在下次 open 时直接采用新定义**，记事件 `instance.definition-adopted {previous,current}`（指纹前 12 位）；运行中的实例只能在停止后采用（`DEFINITION_CHANGED` 409）。
 
 ## Host service
 

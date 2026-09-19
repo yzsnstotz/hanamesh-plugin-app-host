@@ -1,8 +1,8 @@
-# HanaMesh app-host · 0.1.0-rc.6
+# HanaMesh app-host · 0.1.0-rc.9
 
-**交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4 增量（`credentialEnv` + `credentialResolver`，2026-09-14）`DELIVERED` 等用户签。**
+**交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4–rc.8 增量 🧪（凭据契约、文件策略、定义采用、`sets`）；rc.9 为文档与 domain 命名收口。**
 
-> rc.4 只加凭据声明/注入契约（`docs/CONTRACT.md` §凭据声明与注入），rc.3 行为在无 resolver 时不变；证据 `docs/acceptance/AH-C.md`。rc.1 是核心实现候选（无 DSH 侧）；rc.2 补齐真实 DSH 侧与浏览器/卸载修复。rc.3 修复干净安装锁文件与占用时 Stop 的 HTTP 409，并复跑真实 profile 五个动作。逐项证据见 `docs/acceptance/REPORT.md` 与 `docs/acceptance/wave01-resolution-report.md`。`ACCEPTED` 仍只有用户能给，MOD-03 的依赖门在那之前不解除。
+> rc.4 增加 `credentialEnv` / `credentialResolver`；rc.5 增加文件投射根与格式；rc.6 增加文件生命周期策略；rc.7 允许停止实例在下次打开时采用新定义；rc.8 增加 `credentialEnv[].sets` 声明。逐项证据见 `docs/acceptance/`。`ACCEPTED` 仍只有用户能给。
 
 本仓完成可独立运行的应用实例管理、持久视图租约、受控网关和工作台 SDK。原型源码所在私有仓当时访问返回 404，因此这是新的实现候选，不是原型提取；原型许可证和 commit 尚未核实（原型现在可读，见 `<umbrella>/research/dsh-greenfield-2026-09-09/workspace/packages/hanamesh-app-host/`，契约差异未逐项对照）。
 

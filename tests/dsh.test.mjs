@@ -55,6 +55,14 @@ test('H01 (harness half): the plugin activates on a real Cordis root and provide
   const host = h.ctx.get('hanameshApps');
   for (const method of ['register', 'start', 'stop', 'stopAll', 'instance', 'instanceList', 'logTail', 'open', 'close']) assert.equal(typeof host[method], 'function', method);
   assert.deepEqual(host.list().apps.map(a => a.id), ['example']);
+  const [types, consistency] = await Promise.all([
+    readFile(new URL('../src/index.d.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../consistency.json', import.meta.url), 'utf8'),
+  ]);
+  assert.match(types, /domain:'hanamesh_app_host'/);
+  assert.doesNotMatch(types, /domain:'hanamesh-app-host'/);
+  assert.equal(consistency.includes('hanamesh-app-host'), false);
+  assert.equal(consistency.includes('hanamesh_app_host'), true);
 });
 
 test('H11: lease/instance state lands in the storage-domain sidecar and DSH still reads its own session', async t => {

@@ -1,26 +1,36 @@
 {
   "module": "app-host",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0-rc.9",
   "status": "PARTIAL",
   "generatedAt": "2026-09-12T06:57:08.904528+00:00",
   "testRunner": {
-    "tests": 41,
-    "pass": 39,
+    "tests": 55,
+    "pass": 53,
     "fail": 0,
     "skipped": 2,
     "cancelled": 0
   },
   "mutations": {
-    "tested": 4,
-    "detected": 4,
-    "baselinePassed": 4
+    "tested": 5,
+    "detected": 5,
+    "baselinePassed": 5
   },
   "typecheck": "PASS",
   "coreBuild": "PASS",
   "demoSmoke": "PASS",
-  "realDsh": "BLOCKED",
-  "realBrowser": "BLOCKED: net::ERR_BLOCKED_BY_ADMINISTRATOR",
+  "realDsh": "PASS: recovery-20260912/h01-real-profile.log",
+  "realBrowser": "PASS: recovery-20260912/browser-real-chrome.tap",
   "matrix": [
+    {
+      "id": "AH-D1",
+      "status": "PASS",
+      "evidence": "Stopped instance adopts a changed definition across host restart; tests/manager.test.mjs"
+    },
+    {
+      "id": "AH-S1",
+      "status": "PASS",
+      "evidence": "sets shape and declared-target validation; tests/credentials.test.mjs"
+    },
     {
       "id": "H01",
       "status": "PARTIAL",

@@ -1,4 +1,4 @@
-# app-host 0.1.0-rc.6 · 凭据声明与注入（AH-C1–C7）· 2026-09-14（rc.4 + rc.5 `base`/`format` + rc.6 文件策略）
+# app-host 0.1.0-rc.9 · 凭据声明与注入（AH-C1–C7）· 2026-09-14（rc.4 + rc.5 `base`/`format` + rc.6 文件策略）
 
 **状态：DELIVERED（本机 session 实现 + 离线真实子进程验证；真实 DSH 宿主装 rc.4 + vibe rc.3 的联验待 plugin-auth-apikey 回收时做）。rc.3 ✅ 不动。**
 
@@ -24,3 +24,7 @@
 产物 rc.5：`artifacts/hanamesh-dsh-app-host-0.1.0-rc.5.tgz` sha256 `534768f32d47cd1ac31ac85c8926be5df7c407efeb3db8dd2ee72e8ed0d95db9`（rc.4 `9c341875…` 被本版取代，tag 保留）。
 
 产物 rc.6：`artifacts/hanamesh-dsh-app-host-0.1.0-rc.6.tgz` sha256 `74a622269dbf1db003e2cb356ba0e739fd655c0fdee1a34d2025c7241f2aae7e`（取代 rc.5 `534768f3…`）。
+
+产物 rc.7 / rc.8：sha256 见 `artifacts/hanamesh-dsh-app-host-0.1.0-rc.{7,8}.tgz.sha256`。
+
+产物 rc.9：`artifacts/hanamesh-dsh-app-host-0.1.0-rc.9.tgz` sha256 `d3a17a67441e804ffbb5fb77de0003b80ec0d232229f617bd921ba3c0c8e5d92`。

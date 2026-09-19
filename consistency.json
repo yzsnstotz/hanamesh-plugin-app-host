@@ -7,7 +7,7 @@
       "id": "first-lease",
       "name": "实例、首个租约、对应通知一起发布",
       "facts": ["instance-record:present", "first-lease:owned", "view.opened:journaled"],
-      "medium": "single-snapshot:hanamesh-app-host",
+      "medium": "single-snapshot:hanamesh_app_host",
       "why": "一次完整镜像包含三项事实；本地后端用 fsync + rename；真实 DSH single domain 绑定仍待验证。",
       "test": "tests/crash.test.mjs:X02 first-lease"
     },
@@ -15,7 +15,7 @@
       "id": "stopped-views",
       "name": "已停止状态、撤销全部视图、停止通知一起发布",
       "facts": ["instance-record:stopped", "all-active-leases:stopped", "view.stopped:journaled"],
-      "medium": "single-snapshot:hanamesh-app-host",
+      "medium": "single-snapshot:hanamesh_app_host",
       "why": "物理清理完成后再原子发布状态和通知；不能用 UI 事件代替已停止事实。",
       "test": "tests/crash.test.mjs:X02 stopped-views"
     }
@@ -24,8 +24,8 @@
     {
       "id": "reserve-launch",
       "name": "持久所有权预留 → 实际进程及应用数据写入",
-      "sides": ["single-snapshot:hanamesh-app-host", "owned-process-and-app-data"],
-      "safeDirection": "single-snapshot:hanamesh-app-host",
+      "sides": ["single-snapshot:hanamesh_app_host", "owned-process-and-app-data"],
+      "safeDirection": "single-snapshot:hanamesh_app_host",
       "why": "先记录 owner 和 lease 再 spawn。允许孤儿预留，不允许进程或写出的数据没有记录认领。宿主强杀后独立 guardian 收尾。",
       "test": "tests/crash.test.mjs:X03 reserve-launch"
     },

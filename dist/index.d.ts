@@ -66,7 +66,7 @@ export class AtomicFileStore implements SnapshotStore {
   init():Promise<void>; load():Promise<Snapshot>; save(snapshot:Snapshot):Promise<void>; close():Promise<void>;
 }
 export interface DshStorageBinding {
-  layout:'single'; domain:'hanamesh-app-host'; readSnapshot():Promise<Snapshot|null|undefined>;
+  layout:'single'; domain:'hanamesh_app_host'; readSnapshot():Promise<Snapshot|null|undefined>;
   publishSnapshot(snapshot:Snapshot):Promise<void>; acquireExclusive():Promise<void>; releaseExclusive():Promise<void>;
 }
 export class DshDomainSnapshotStore implements SnapshotStore {
