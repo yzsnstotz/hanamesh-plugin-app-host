@@ -1,10 +1,17 @@
-X03 reserve-launch: {"signal":"SIGKILL","instanceId":"d5b7a93b-57c3-47fc-94f8-a5ce58050f18","pid":19102,"appWroteData":true,"durableOwner":true,"guardianCleanup":true}
-✔ X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data (231.43925ms)
-ℹ tests 1
-ℹ suites 0
-ℹ pass 1
-ℹ fail 0
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 273.587667
+TAP version 13
+# X03 reserve-launch: {"signal":"SIGKILL","instanceId":"0461bd77-dcc6-40d1-9ad7-ffd5065ba194","pid":59493,"appWroteData":true,"durableOwner":true,"guardianCleanup":true}
+# Subtest: X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data
+ok 1 - X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data
+  ---
+  duration_ms: 336.350042
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 390.083875

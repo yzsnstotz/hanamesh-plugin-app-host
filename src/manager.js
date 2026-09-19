@@ -23,9 +23,9 @@ const isTerminal = s => ['stopped','failed','interrupted'].includes(s);
 export class AppHost {
   #queue = new SerialQueue(); #definitions = new Map(); #controls = new Map(); #listeners = new Set();
   #logs = new Map(); #state; #initialized = false; #closing = false; #poisoned = false; #timer; #disposing;
-  #credentialResolver = null;
+  #credentialResolver = null; #nodeBinary;
   constructor({ store, dataRoot, parentOrigin, leaseTtlMs = 90_000, sweepIntervalMs = 15_000,
-    checkpoint = async () => {}, clock = () => Date.now(), credentialResolver = null }) {
+    checkpoint = async () => {}, clock = () => Date.now(), credentialResolver = null, nodeBinary }) {
     requireCondition(store && ['init','load','save','close'].every(k => typeof store[k] === 'function'),
       'INVALID_STORE','A durable snapshot store is required.');
     requireCondition(typeof dataRoot === 'string' && resolve(dataRoot) === dataRoot,'INVALID_ROOT','dataRoot must be an absolute canonical path.');
@@ -34,6 +34,7 @@ export class AppHost {
       'INVALID_TIMEOUT','Invalid lease or sweep timing.');
     this.store = store; this.dataRoot = dataRoot; this.parentOrigin = loopbackOrigin(parentOrigin);
     this.leaseTtlMs = leaseTtlMs; this.sweepIntervalMs = sweepIntervalMs; this.checkpoint = checkpoint; this.clock = clock;
+    this.#nodeBinary = nodeBinary;
     this.setCredentialResolver(credentialResolver);
   }
   /** rc.4: the credential broker (plugin-auth-apikey) seats itself here; null = inject nothing (FR-02: apps still start). */
@@ -329,7 +330,7 @@ export class AppHost {
       XDG_STATE_HOME:join(instance.dataDir,'state'),XDG_DATA_HOME:instance.dataDir,
     };
     control.origin=`http://127.0.0.1:${port}`;
-    control.runner=await spawnOwned({ command:deployment.command,args:deployment.args.map(value => expand(value,values)),
+    control.runner=await spawnOwned({ nodeBinary:this.#nodeBinary,command:deployment.command,args:deployment.args.map(value => expand(value,values)),
       cwd:deployment.cwd ?? instance.dataDir,dataDir:instance.dataDir,env,stopGraceMs:deployment.stopGraceMs,secrets:credentials.secrets },{
       onLog:(stream,text) => {
         const records=this.#logs.get(instance.id) ?? [];
@@ -337,7 +338,8 @@ export class AppHost {
       },
     });
     control.runner.exited.then(result => { void this.#onExit(instance.id,control,result); });
-    await this.checkpoint('runtime-spawned',{instanceId:instance.id,pid:control.runner.pid,dataDir:instance.dataDir});
+    await this.checkpoint('runtime-spawned',{instanceId:instance.id,pid:control.runner.pid,dataDir:instance.dataDir,
+      nodeBinary:control.runner.nodeBinary,guardianBinary:control.runner.guardianBinary,launcherBinary:control.runner.launcherBinary});
   }
   async #completeLaunch(id,deployment,control) {
     try {

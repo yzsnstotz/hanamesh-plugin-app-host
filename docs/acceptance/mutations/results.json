@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-19T05:11:00.509Z",
+  "generatedAt": "2026-09-19T06:04:10.178Z",
   "results": [
     {
       "id": "M01-single-instance",
@@ -8,8 +8,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "1c8bcf795797bf6e7e8856a0d92df49909128ae49aa41f2b4812edb015b95861",
-      "mutatedSourceSha256": "f4e96a20f94a94ae6aba2c0731350d469fc7751944f9fafbce3489a17a82ca47"
+      "originalSourceSha256": "1a180ab66f8c0454a89d5e0cbdd6a1bb0c0dd1d686da047d8240cf8f1f34683e",
+      "mutatedSourceSha256": "a63248e3bdc3997f917dd58c3ee37ec0954bf1c0e23d1efeab98d9918fcdd704"
     },
     {
       "id": "M02-reserve-launch",
@@ -38,8 +38,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "1c8bcf795797bf6e7e8856a0d92df49909128ae49aa41f2b4812edb015b95861",
-      "mutatedSourceSha256": "71281088aa38d9e2671e2cc3d6fe25b1bc592629a954afbf1cc76de674c41e64"
+      "originalSourceSha256": "1a180ab66f8c0454a89d5e0cbdd6a1bb0c0dd1d686da047d8240cf8f1f34683e",
+      "mutatedSourceSha256": "f488e6e96511e3e05a510444b6c7122b03d8eacbce4e96cf2f946d2f2bac7461"
     },
     {
       "id": "M04-socket-ownership",
@@ -48,8 +48,28 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "34afd8461548fe9ed0e2c839a914b9325203ff58668d51171a3ea09b04df5391",
-      "mutatedSourceSha256": "800c1890baf9a84ecd2a7d19991b0023f844b4c963e3cde7a7e82ea7f0089202"
+      "originalSourceSha256": "6ecf45d6c76f317c02fd9673f8eb52c97a3deae776b967b6bf6d47e5e625363e",
+      "mutatedSourceSha256": "e9085b0024163c6cc1c163773c3d43c596278075c7cc034c288a9d044915b6b4"
+    },
+    {
+      "id": "M06-router-sets-declared",
+      "test": "tests/router-broker.test.mjs",
+      "pattern": "^AH-R11/AK11",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "70d5c3c4267557ed65dbb9c86f7f4d9205682500d89194cbcb5327f40520a72c",
+      "mutatedSourceSha256": "b100f9e8d79000a99737bcab321484956979c24b96e564051ff7876f4651cd98"
+    },
+    {
+      "id": "M08-node-runtime-electron",
+      "test": "tests/node-runtime.test.mjs",
+      "pattern": "^AH-K5-2: Electron self-hosting",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "6ecf45d6c76f317c02fd9673f8eb52c97a3deae776b967b6bf6d47e5e625363e",
+      "mutatedSourceSha256": "88d907c5ae02f71dcfa6bda71bc35d64f9f93dea7ecf551dd7556595d258df0d"
     }
   ]
 }

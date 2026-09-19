@@ -1,0 +1,172 @@
+Build completed: self-contained ESM modules and public type declarations.
+[
+  {
+    "id": "@hanamesh/dsh-app-host@0.1.0-rc.10",
+    "name": "@hanamesh/dsh-app-host",
+    "version": "0.1.0-rc.10",
+    "size": 58373,
+    "unpackedSize": 175039,
+    "shasum": "c0697852736904d20d7d187d29a7f100d9dd0cf0",
+    "integrity": "sha512-nItgPAQjPL45fI+ndPN+W3bcoNjc/ioB13gTWOrHNbn44Yxhw6y7PArjQbGT4taB87S2Q8pIzV2NTgk9OL3VGg==",
+    "filename": "hanamesh-dsh-app-host-0.1.0-rc.10.tgz",
+    "files": [
+      {
+        "path": "AGENTS.md",
+        "size": 2322,
+        "mode": 420
+      },
+      {
+        "path": "README.md",
+        "size": 5459,
+        "mode": 420
+      },
+      {
+        "path": "consistency.json",
+        "size": 2131,
+        "mode": 420
+      },
+      {
+        "path": "dist/client-ui.d.ts",
+        "size": 180,
+        "mode": 420
+      },
+      {
+        "path": "dist/client-ui.js",
+        "size": 5089,
+        "mode": 420
+      },
+      {
+        "path": "dist/client.d.ts",
+        "size": 1470,
+        "mode": 420
+      },
+      {
+        "path": "dist/client.js",
+        "size": 3295,
+        "mode": 420
+      },
+      {
+        "path": "dist/consistency.js",
+        "size": 591,
+        "mode": 420
+      },
+      {
+        "path": "dist/descriptor.js",
+        "size": 8811,
+        "mode": 420
+      },
+      {
+        "path": "dist/dsh.d.ts",
+        "size": 1548,
+        "mode": 420
+      },
+      {
+        "path": "dist/dsh.js",
+        "size": 8709,
+        "mode": 420
+      },
+      {
+        "path": "dist/errors.js",
+        "size": 923,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway.js",
+        "size": 10108,
+        "mode": 420
+      },
+      {
+        "path": "dist/guardian.js",
+        "size": 4538,
+        "mode": 420
+      },
+      {
+        "path": "dist/index.d.ts",
+        "size": 9124,
+        "mode": 420
+      },
+      {
+        "path": "dist/index.js",
+        "size": 628,
+        "mode": 420
+      },
+      {
+        "path": "dist/launcher.js",
+        "size": 931,
+        "mode": 420
+      },
+      {
+        "path": "dist/manager.js",
+        "size": 37229,
+        "mode": 420
+      },
+      {
+        "path": "dist/router/broker.js",
+        "size": 9732,
+        "mode": 420
+      },
+      {
+        "path": "dist/router/domain.js",
+        "size": 1013,
+        "mode": 420
+      },
+      {
+        "path": "dist/router/routes.js",
+        "size": 4569,
+        "mode": 420
+      },
+      {
+        "path": "dist/router/sources.js",
+        "size": 6078,
+        "mode": 420
+      },
+      {
+        "path": "dist/routes.js",
+        "size": 5222,
+        "mode": 420
+      },
+      {
+        "path": "dist/runtime.js",
+        "size": 10691,
+        "mode": 420
+      },
+      {
+        "path": "dist/store.js",
+        "size": 8630,
+        "mode": 420
+      },
+      {
+        "path": "docs/CONTRACT.md",
+        "size": 11132,
+        "mode": 420
+      },
+      {
+        "path": "docs/DSH_INTEGRATION.md",
+        "size": 5300,
+        "mode": 420
+      },
+      {
+        "path": "docs/PROVENANCE.json",
+        "size": 1710,
+        "mode": 420
+      },
+      {
+        "path": "docs/SECURITY.md",
+        "size": 4230,
+        "mode": 420
+      },
+      {
+        "path": "package.json",
+        "size": 3560,
+        "mode": 420
+      },
+      {
+        "path": "profile/cordis.patch.yml",
+        "size": 86,
+        "mode": 420
+      }
+    ],
+    "entryCount": 31,
+    "bundled": []
+  }
+]

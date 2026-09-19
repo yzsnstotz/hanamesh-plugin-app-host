@@ -6,7 +6,7 @@ export const BROWSER_PRINCIPAL: 'dsh-browser';
 export const ROUTES: readonly string[];
 export const Config: unknown;
 export const appHostDomainSpec: { readonly name: 'hanamesh_app_host'; readonly version: 1; readonly layout: 'single' };
-export interface DshPluginConfig { dataRoot: string; parentOrigin?: string; applications?: AppDefinition[]; leaseTtlMs?: number; sweepIntervalMs?: number; }
+export interface DshPluginConfig { dataRoot?: string; parentOrigin?: string; nodeBinary?: string; router?:{codingOauth?:{mode?:'http'|'file'}}; applications?: AppDefinition[]; leaseTtlMs?: number; sweepIntervalMs?: number; }
 /** Adapt an open `ctx.storageDomain` handle (single layout, global snapshot) to the store binding. */
 export function domainBinding(domain: { global: { get(): unknown; set(value: unknown): Promise<void> }; close(): Promise<void> }): DshStorageBinding;
 /** Authentication through `ctx.connection.requestRejection`; DSH web is single-user. */

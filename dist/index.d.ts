@@ -41,7 +41,7 @@ export interface AppListing {
 export interface EventPage { events:HostEvent[]; sequence:number; resetRequired:boolean; }
 export interface HostOptions {
   store:SnapshotStore; dataRoot:string; parentOrigin:string; leaseTtlMs?:number; sweepIntervalMs?:number;
-  clock?:()=>number; checkpoint?:(point:string,details:Record<string,unknown>)=>Awaitable<void>; credentialResolver?:CredentialResolver|null;
+  nodeBinary?:string; clock?:()=>number; checkpoint?:(point:string,details:Record<string,unknown>)=>Awaitable<void>; credentialResolver?:CredentialResolver|null;
 }
 export class AppHost {
   constructor(options:HostOptions);
@@ -84,3 +84,6 @@ export class FixedGateway {
 }
 export function rewriteCsp(value:string,parentOrigin:string):string;
 export function embeddingHeaders(rawHeaders:string[],parentOrigin:string):string[];
+export const name:'hanamesh-app-host';
+export const inject:readonly ['webServer','storageDomain','connection'];
+export function apply(ctx:unknown,config?:import('./dsh.js').DshPluginConfig):Promise<void>;

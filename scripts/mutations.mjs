@@ -10,9 +10,11 @@ const cases=[
   {id:'M03-stop-publish',file:'src/consistency.js',from:"await stop(); // ORDER:STOP\n  await checkpoint('runtime-stopped');\n  return await publish(); // ORDER:STOPPED-PUBLISH",to:"await publish(); // MUTATION: unsafe acknowledgement before termination\n  await checkpoint('runtime-stopped');\n  return await stop();",test:'tests/crash.test.mjs',pattern:'^X03 stop-publish:',reason:/STOP_BOUNDARY_UNSAFE/},
   {id:'M05-credential-declared-only',file:'src/manager.js',from:"if (envNames.has(key) && typeof value === 'string' && !value.includes('\\0')) env[key] = value; else rejected.push(key);",to:"env[key] = value; /* MUTATION: undeclared credential names leak into the child */",test:'tests/credentials.test.mjs',pattern:'^AH-C2',reason:/Expected values to be strictly equal|UNDECLARED_KEY/},
   {id:'M04-socket-ownership',file:'src/runtime.js',from:"runtime?.mode !== 'owned' || await ownsLoopbackPort(runtime.groupId, Number(new URL(origin).port))",to:'true /* MUTATION: accepts unrelated same-marker HTTP endpoint */',test:'tests/storage.test.mjs',pattern:'^AH readiness:',reason:/Missing expected rejection/},
+  {id:'M06-router-sets-declared',file:'src/router/broker.js',from:"if(byId.has('env:'+name)){const expanded=template(value,vars);if(expanded)env[name]=expanded;}",to:"if(true){const expanded=template(value,vars);if(expanded)env[name]=expanded;} /* MUTATION: undeclared sets target */",test:'tests/router-broker.test.mjs',pattern:'^AH-R11/AK11',reason:/NOT_DECLARED|Expected values to be strictly deep-equal|actual/},
+  {id:'M08-node-runtime-electron',file:'src/runtime.js',from:"if (process.versions.electron !== undefined) {\n      throw new AppHostError('NODE_RUNTIME_REQUIRED', 'Electron hosts must configure an external Node.js executable.');\n    }",to:"if (process.versions.electron !== undefined) {\n      selected = process.execPath; /* MUTATION: Electron silently self-hosts instead of failing closed */\n    }",test:'tests/node-runtime.test.mjs',pattern:'^AH-K5-2: Electron self-hosting',reason:/Missing expected rejection|NODE_RUNTIME_REQUIRED/},
 ];
 const run=(cwd,c)=>{
-  const result=spawnSync(process.execPath,['--test',`--test-name-pattern=${c.pattern}`,c.test],{cwd,encoding:'utf8',timeout:15_000,maxBuffer:2*1024*1024});
+  const result=spawnSync(process.execPath,['--test','--test-reporter=tap',`--test-name-pattern=${c.pattern}`,c.test],{cwd,encoding:'utf8',timeout:15_000,maxBuffer:2*1024*1024});
   if(result.error)throw result.error;return{code:result.status,log:result.stdout+result.stderr};
 };
 const results=[];

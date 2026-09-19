@@ -15,10 +15,10 @@ export function definition({id='example',single=true,extra={},embedding='direct'
     env:{},envAllowlist:[],embedding,readiness:{path:'/health',status:200,bodyIncludes:'HANAMESH_FIXTURE'},
     startTimeoutMs:4_000,stopGraceMs:60,gateway:{cookieAllowlist:['app_session','app_pref']}}]};
 }
-export async function setup(t,{def=definition(),ttl=60_000,sweep=0,root,checkpoint,origin=parentOrigin}={}){
+export async function setup(t,{def=definition(),ttl=60_000,sweep=0,root,checkpoint,origin=parentOrigin,nodeBinary}={}){
   const dir=root??await temporary();
   const host=new AppHost({store:new AtomicFileStore(join(dir,'sidecar')),dataRoot:join(dir,'data'),parentOrigin:origin,
-    leaseTtlMs:ttl,sweepIntervalMs:sweep,checkpoint});host.register(def);await host.init();
+    leaseTtlMs:ttl,sweepIntervalMs:sweep,checkpoint,nodeBinary});host.register(def);await host.init();
   t?.after(async()=>{await host.dispose();if(!root)await rm(dir,{recursive:true,force:true});});
   return{host,root:dir,def};
 }

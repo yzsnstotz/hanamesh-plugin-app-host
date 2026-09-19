@@ -1,6 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.9
+# HanaMesh app-host · 0.1.0-rc.10
 
-**交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4–rc.8 增量 🧪（凭据契约、文件策略、定义采用、`sets`）；rc.9 为文档与 domain 命名收口。**
+**交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4–rc.9 为增量 🧪；rc.10 新增 K5 独立 Node 运行时与应用凭据 Router，仍待本轮真实门。**
 
 > rc.4 增加 `credentialEnv` / `credentialResolver`；rc.5 增加文件投射根与格式；rc.6 增加文件生命周期策略；rc.7 允许停止实例在下次打开时采用新定义；rc.8 增加 `credentialEnv[].sets` 声明。逐项证据见 `docs/acceptance/`。`ACCEPTED` 仍只有用户能给。
 
@@ -13,6 +13,8 @@
 - **生命周期：** owned 进程由独立 guardian 管理；宿主被 SIGKILL 后清理自有进程组；attach 只释放附着；有占用时 Stop 拒绝并列出视图；确认清理后才发布 stopped 与逐 view 通知。
 - **受控网关：** 固定数字回环上游、每代租约能力票据；只调整 XFO 和 CSP frame-ancestors，保留应用正文；HTTP 上传、SSE、WebSocket 可用；不向应用注入 SDK、不传宿主凭据、不改变应用 auth/CSRF/CORS。
 - **交付契约：** ESM 包、TypeScript 声明、工作台侧 `./client` SDK、完整快照存储接口、DSH 插件入口、测试与崩溃一致性声明。
+- **K5：** Electron 宿主必须显式给绝对且可执行的 `nodeBinary`；guardian/launcher 使用同一 Node，只继承 `DSH_HOME/HOME/LANG/TMPDIR/PATH` 白名单。未配置时 fail-closed 为 `NODE_RUNTIME_REQUIRED`。
+- **Router：** 合并授权、撤销、文件投射 ledger 与 `sets`，来源为 DSH credentials/LLM 目录和 coding-oauth gateway；不搬 key 探测、录入或 OAuth 端口。
 
 ## 运行
 
@@ -41,9 +43,10 @@ npm run demo -- --smoke
 |---|---|---|
 | 受信宿主代码 | `@hanamesh/dsh-app-host` | `AppHost`、存储、路由、网关 |
 | 工作台顶层页面 | `@hanamesh/dsh-app-host/client` | 明确的 Open 回执、恢复、心跳、Stop；禁止注入应用 iframe |
-| DSH profile 适配 | `@hanamesh/dsh-app-host/dsh` | Cordis 插件入口（`name`/`inject`/`Config`/`apply`），绑定固定版本公开 API；见 `docs/DSH_INTEGRATION.md` |
+| DSH profile 适配 | bundle 自动落座包根；显式适配仍可用 `@hanamesh/dsh-app-host/dsh` | 包根懒加载 Cordis `apply`，使同一个 loader entry 同时被 client-modules 发现；见 `docs/DSH_INTEGRATION.md` |
+| DSH 浏览器 UI | `@hanamesh/dsh-app-host/client-ui` | 设置里的「供应商」段；Node 条件下 `./client` 仍解析到工作台 SDK |
 
-契约详见 [`docs/CONTRACT.md`](docs/CONTRACT.md)，未完成步骤见 [`docs/DSH_INTEGRATION.md`](docs/DSH_INTEGRATION.md)，安全限制见 [`docs/SECURITY.md`](docs/SECURITY.md)。本仓不包含工作台 UI、应用适配包、授权/安装状态的第二份真相、钱包权限或 runtime driver。
+契约详见 [`docs/CONTRACT.md`](docs/CONTRACT.md) 与 [`docs/ROUTER_CONTRACT.md`](docs/ROUTER_CONTRACT.md)，未完成步骤见 [`docs/DSH_INTEGRATION.md`](docs/DSH_INTEGRATION.md)，安全限制见 [`docs/SECURITY.md`](docs/SECURITY.md)。本仓不包含应用适配包、钱包权限或 provider runtime driver。
 
 ## GitHub 与来源
 

@@ -4,6 +4,12 @@ import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FileLock } from './store.js';
+import { guardianEnvironment } from './runtime.js';
+if (process.versions.electron !== undefined) {
+  const refusal = { type:'guardian.refused', code:'NODE_RUNTIME_REQUIRED', message:'Guardian requires a standalone Node.js runtime.' };
+  if (process.connected) await new Promise(resolve => process.send(refusal, () => resolve()));
+  process.exit(78);
+}
 let child, lock, stopping, config;
 const send = value => { if (process.connected) process.send(value, () => {}); };
 function signalOwned(signal) {
@@ -51,8 +57,8 @@ process.on('message', async message => {
     lock = new FileLock(join(config.dataDir, '.runtime.lock'), { reclaimDead: false });
     await lock.acquire();
     if (!process.connected || stopping) { await lock.release(); return; }
-    child = spawn(process.execPath, [fileURLToPath(new URL('./launcher.js', import.meta.url))], {
-      env: { PATH: '/usr/bin:/bin:/usr/sbin:/sbin', LANG:'C.UTF-8' }, shell: false,
+    child = spawn(config.nodeBinary, [fileURLToPath(new URL('./launcher.js', import.meta.url))], {
+      env: guardianEnvironment(config.nodeBinary), shell: false,
       detached: true, stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
     });
     child.stdout.pipe(process.stdout); child.stderr.pipe(process.stderr);
@@ -60,7 +66,8 @@ process.on('message', async message => {
       if(error){send({type:'error',code:'SPAWN_FAILED',message:error.message});void cleanup('ipc-error');}
     }));
     child.on('message', message => {
-      if(message.type==='spawned')send({type:'spawned',pid:message.pid,groupId:child.pid});
+      if(message.type==='spawned')send({type:'spawned',pid:message.pid,groupId:child.pid,
+        guardianBinary:process.execPath,launcherBinary:message.launcherBinary});
       if(message.type==='app-exit'){send(message);if(!stopping)void cleanup('app-exited');}
       if(message.type==='error'){send(message);void cleanup('spawn-error');}
     });

@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/dsh-app-host",
-  "version": "0.1.0-rc.9",
+  "version": "0.1.0-rc.10",
   "description": "HanaMesh application ownership and durable view leases; DSH 0.1.5-alpha.1 plugin",
   "type": "module",
   "license": "UNLICENSED",
@@ -21,7 +21,12 @@
     "./package.json": "./package.json",
     "./client": {
       "types": "./dist/client.d.ts",
-      "default": "./dist/client.js"
+      "node": "./dist/client.js",
+      "default": "./dist/client-ui.js"
+    },
+    "./client-ui": {
+      "types": "./dist/client-ui.d.ts",
+      "default": "./dist/client-ui.js"
     }
   },
   "files": [
@@ -32,7 +37,8 @@
     "docs/CONTRACT.md",
     "docs/DSH_INTEGRATION.md",
     "docs/SECURITY.md",
-    "docs/PROVENANCE.json"
+    "docs/PROVENANCE.json",
+    "profile"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -44,6 +50,14 @@
     "demo": "node examples/demo.mjs",
     "preflight:dsh": "node scripts/preflight-dsh.mjs",
     "check:consistency": "node scripts/check-consistency.mjs"
+  },
+  "dsh": {
+    "bundle": { "patch": "./profile/cordis.patch.yml" },
+    "client": {
+      "inject": ["@deepseek-ai/dsh-client-ui-slots", "@deepseek-ai/dsh-client-ui-settings", "@deepseek-ai/dsh-client-locale"],
+      "platform": "web",
+      "external": ["react"]
+    }
   },
   "dependencies": {
     "zod": "4.5.4"

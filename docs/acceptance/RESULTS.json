@@ -1,25 +1,25 @@
 {
   "module": "app-host",
-  "version": "0.1.0-rc.9",
+  "version": "0.1.0-rc.10",
   "status": "PARTIAL",
-  "generatedAt": "2026-09-12T06:57:08.904528+00:00",
+  "generatedAt": "2026-09-19T00:00:00+09:00",
   "testRunner": {
-    "tests": 55,
-    "pass": 53,
+    "tests": 73,
+    "pass": 71,
     "fail": 0,
     "skipped": 2,
     "cancelled": 0
   },
   "mutations": {
-    "tested": 5,
-    "detected": 5,
-    "baselinePassed": 5
+    "tested": 7,
+    "detected": 7,
+    "baselinePassed": 7
   },
   "typecheck": "PASS",
   "coreBuild": "PASS",
   "demoSmoke": "PASS",
-  "realDsh": "PASS: recovery-20260912/h01-real-profile.log",
-  "realBrowser": "PASS: recovery-20260912/browser-real-chrome.tap",
+  "realDsh": "PARTIAL: isolated DSH web profile loaded the root plugin entry; p3-20260919/stage1/R-SPIKE-web-dump-config.log",
+  "realBrowser": "PARTIAL: isolated Chrome rendered Settings > 供应商; subscription login and gateway enable were not authorized",
   "matrix": [
     {
       "id": "AH-D1",
@@ -33,8 +33,8 @@
     },
     {
       "id": "H01",
-      "status": "PARTIAL",
-      "evidence": "Independent build/package/import validated; real DSH load BLOCKED"
+      "status": "PASS",
+      "evidence": "Independent build/package/import and isolated real DSH web-profile root-plugin load validated"
     },
     {
       "id": "H02",
@@ -83,8 +83,8 @@
     },
     {
       "id": "H11",
-      "status": "BLOCKED",
-      "evidence": "Real DSH storage-domain and DSH session roundtrip unavailable"
+      "status": "PARTIAL",
+      "evidence": "Existing storage-domain Cordis integration passes; isolated real DSH plugin load passes, but a production-data roundtrip was not run"
     },
     {
       "id": "H12",
@@ -119,9 +119,9 @@
   ],
   "isolatedTarballInstallAndRealProcessSmoke": "PASS",
   "tarball": {
-    "filename": "hanamesh-dsh-app-host-0.1.0-rc.1.tgz",
-    "sha256": "e6ab6dd44922a925ee697029afde5abe34bb3d39265cc7c4197cfc5ac5317ccb",
-    "npmIntegrity": "sha512-XDxa8HXWhx7r+2pI682O26EB92NBueyUVhuGoHRg7cRXhJyxyONgMwMJIdhAh2hoxMXyO4MLMfSYDIro4gcvFA==",
-    "bytes": 40216
+    "filename": "hanamesh-dsh-app-host-0.1.0-rc.10.tgz",
+    "sha256": "34e6fae09835e7df37410c6f02feb213f5c2e51b7038f3e065f83a845790e776",
+    "npmIntegrity": "sha512-nItgPAQjPL45fI+ndPN+W3bcoNjc/ioB13gTWOrHNbn44Yxhw6y7PArjQbGT4taB87S2Q8pIzV2NTgk9OL3VGg==",
+    "bytes": 58373
   }
 }

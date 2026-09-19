@@ -9,7 +9,7 @@ process.on('message',message=>{
   if(started||message?.type!=='launch')return;started=true;
   const c=message.config;
   const app=spawn(c.command,c.args,{cwd:c.cwd,env:c.env,shell:false,detached:false,stdio:['ignore','inherit','inherit']});
-  app.once('spawn',()=>send({type:'spawned',pid:app.pid}));
+  app.once('spawn',()=>send({type:'spawned',pid:app.pid,launcherBinary:process.execPath}));
   app.once('error',e=>send({type:'error',code:'SPAWN_FAILED',message:e.message}));
   app.once('exit',(code,signal)=>send({type:'app-exit',code,signal}));
 });

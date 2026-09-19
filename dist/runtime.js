@@ -3,10 +3,35 @@ import { createServer, request } from 'node:http';
 import { readdir, readFile, readlink, access } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { join } from 'node:path';
+import { dirname, isAbsolute, join } from 'node:path';
 import { promisify } from 'node:util';
 import { AppHostError, bounded } from './errors.js';
 const exec = promisify(execFile);
+export async function resolveNodeBinary(nodeBinary) {
+  let selected = nodeBinary;
+  if (selected === undefined || selected === null || selected === '') {
+    if (process.versions.electron !== undefined) {
+      throw new AppHostError('NODE_RUNTIME_REQUIRED', 'Electron hosts must configure an external Node.js executable.');
+    }
+    // A plain Node host may use itself. This fallback is intentionally unreachable in Electron.
+    selected = process.execPath;
+  }
+  if (typeof selected !== 'string' || !isAbsolute(selected)) {
+    throw new AppHostError('NODE_RUNTIME_REQUIRED', 'nodeBinary must be an absolute executable path.');
+  }
+  try { await access(selected, constants.X_OK); }
+  catch { throw new AppHostError('NODE_RUNTIME_REQUIRED', 'nodeBinary must be an absolute executable path.'); }
+  return selected;
+}
+export function guardianEnvironment(nodeBinary, source = process.env) {
+  const env = {};
+  for (const key of ['DSH_HOME', 'HOME', 'LANG', 'TMPDIR']) {
+    if (typeof source[key] === 'string' && source[key].length) env[key] = source[key];
+  }
+  if (!env.LANG) env.LANG = 'C.UTF-8';
+  env.PATH = `${dirname(nodeBinary)}:/usr/bin:/bin`;
+  return env;
+}
 export async function freePort() {
   const server = createServer();
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
@@ -89,15 +114,17 @@ function lineSink(stream, write, secrets) {
 }
 export async function spawnOwned(config, { onLog = () => {} } = {}) {
   if (!['linux','darwin'].includes(process.platform)) throw new AppHostError('PLATFORM_UNSUPPORTED', 'Owned runtimes are restricted to POSIX.');
-  const guardian = spawn(process.execPath, [fileURLToPath(new URL('./guardian.js', import.meta.url))], {
-    env: { PATH: '/usr/bin:/bin:/usr/sbin:/sbin', LANG: 'C.UTF-8' },
+  const nodeBinary = await resolveNodeBinary(config.nodeBinary);
+  const launchConfig = { ...config, nodeBinary };
+  const guardian = spawn(nodeBinary, [fileURLToPath(new URL('./guardian.js', import.meta.url))], {
+    env: guardianEnvironment(nodeBinary),
     stdio: ['ignore','pipe','pipe','ipc'], shell: false,
   });
   const secrets = [...Object.entries(config.env).filter(([key]) => /TOKEN|SECRET|PASSWORD|KEY|AUTH|OAUTH|CREDENTIAL/.test(key)).map(([, value]) => value),
     ...(Array.isArray(config.secrets) ? config.secrets : [])];
   lineSink(guardian.stdout, text => onLog('stdout', text), secrets);
   lineSink(guardian.stderr, text => onLog('stderr', text), secrets);
-  let resolveSpawn, rejectSpawn, childPid, groupId, appExit, cleanupConfirmed = false;
+  let resolveSpawn, rejectSpawn, childPid, groupId, guardianBinary, launcherBinary, appExit, cleanupConfirmed = false;
   const spawned = new Promise((resolve, reject) => { resolveSpawn = resolve; rejectSpawn = reject; });
   const exited = new Promise(resolve => {
     guardian.once('exit', (code, signal) => { rejectSpawn(new AppHostError('SPAWN_FAILED','Guardian exited before application launch.')); resolve(appExit ?? { code, signal }); });
@@ -105,8 +132,12 @@ export async function spawnOwned(config, { onLog = () => {} } = {}) {
   });
   guardian.on('message', msg => {
     if (msg.type === 'stopped') cleanupConfirmed = true;
-    if (msg.type === 'guardian-ready') guardian.send({ type: 'launch', config }, error => { if (error) rejectSpawn(error); });
-    if (msg.type === 'spawned') { childPid = msg.pid; groupId = msg.groupId; resolveSpawn(msg.pid); }
+    if (msg.type === 'guardian-ready') guardian.send({ type: 'launch', config: launchConfig }, error => { if (error) rejectSpawn(error); });
+    if (msg.type === 'guardian.refused') rejectSpawn(new AppHostError(msg.code ?? 'NODE_RUNTIME_REQUIRED', msg.message ?? 'Guardian refused its runtime.'));
+    if (msg.type === 'spawned') {
+      childPid = msg.pid; groupId = msg.groupId; guardianBinary = msg.guardianBinary; launcherBinary = msg.launcherBinary;
+      resolveSpawn(msg.pid);
+    }
     if (msg.type === 'app-exit') appExit = { code: msg.code, signal: msg.signal };
     if (msg.type === 'error') rejectSpawn(new AppHostError(msg.code, msg.message));
   });
@@ -127,7 +158,7 @@ export async function spawnOwned(config, { onLog = () => {} } = {}) {
   };
   try { await bounded(spawned, 5_000, 'Process spawn'); }
   catch (error) { await stop().catch(() => {}); throw error; }
-  return { mode: 'owned', pid: childPid, groupId, guardianPid: guardian.pid, exited, stop,
+  return { mode: 'owned', pid: childPid, groupId, guardianPid: guardian.pid, nodeBinary, guardianBinary, launcherBinary, exited, stop,
     isAlive: () => guardian.exitCode === null && guardian.signalCode === null && !appExit };
 }
 export async function waitReady(origin, readiness, { runtime, timeoutMs, signal }) {

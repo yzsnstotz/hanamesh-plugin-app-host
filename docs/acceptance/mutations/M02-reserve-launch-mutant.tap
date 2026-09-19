@@ -1,25 +1,28 @@
-✖ X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data (281.46375ms)
-ℹ tests 1
-ℹ suites 0
-ℹ pass 0
-ℹ fail 1
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 321.687583
-
-✖ failing tests:
-
-test at tests/crash.test.mjs:45:1
-✖ X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data (281.46375ms)
-  AssertionError [ERR_ASSERTION]: RESERVE_BOUNDARY_UNSAFE: real app data exists without durable instance + lease ownership
-      at TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-N8O90f/tests/crash.test.mjs:49:3)
-      at async Test.run (node:internal/test_runner/test:1110:7)
-      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: false,
-    expected: true,
-    operator: '==',
-    diff: 'simple'
-  }
+TAP version 13
+# Subtest: X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data
+not ok 1 - X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data
+  ---
+  duration_ms: 311.811041
+  type: 'test'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-t0KjHY/tests/crash.test.mjs:45:1'
+  failureType: 'testCodeFailure'
+  error: 'RESERVE_BOUNDARY_UNSAFE: real app data exists without durable instance + lease ownership'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-t0KjHY/tests/crash.test.mjs:49:3)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 365.052375

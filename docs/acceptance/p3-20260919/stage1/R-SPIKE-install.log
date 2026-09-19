@@ -1,0 +1,41 @@
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 2, reused 0, downloaded 0, added 0
+ WARN  Issues with peer dependencies found
+.
+└─┬ dsh-coding-subscription-oauth 0.8.5
+  ├── ✕ missing peer @deepseek-ai/dsh-llm@0.1.1-rc.2
+  ├── ✕ missing peer @earendil-works/pi-ai@0.84.2
+  ├── ✕ missing peer @deepseek-ai/schemastery@3.18.1
+  ├── ✕ missing peer @deepseek-ai/dsh-llm-pi-ai@0.1.1-rc.2
+  ├── ✕ missing peer @deepseek-ai/dsh-home-paths@0.1.1-rc.2
+  ├── ✕ missing peer @deepseek-ai/dsh-atomic-write@0.1.1-rc.2
+  └─┬ dsh-coding-oauth-core 0.1.2
+    └── ✕ missing peer @deepseek-ai/dsh-llm@0.1.1-rc.2
+Peer dependencies that should be installed:
+  @deepseek-ai/dsh-atomic-write@0.1.1-rc.2
+  @deepseek-ai/dsh-home-paths@0.1.1-rc.2
+  @deepseek-ai/dsh-llm-pi-ai@0.1.1-rc.2
+  @deepseek-ai/dsh-llm@0.1.1-rc.2
+  @deepseek-ai/schemastery@3.18.1
+  @earendil-works/pi-ai@0.84.2
+
+dependencies:
++ dsh-coding-subscription-oauth 0.8.5
+
+Packages: +3
++++
+
+   ╭─────────────────────────────────────────╮
+   │                                         │
+   │   Update available! 10.33.0 → 12.4.2.   │
+   │   Changelog: https://pnpm.io/v/12.4.2   │
+   │    To update, run: pnpm add -g pnpm     │
+   │                                         │
+   ╰─────────────────────────────────────────╯
+
+Progress: resolved 3, reused 0, downloaded 0, added 0
+Progress: resolved 3, reused 0, downloaded 2, added 2
+ WARN  Tarball download average speed 29 KiB/s (size 3363 KiB) is below 50 KiB/s: https://registry.npmjs.org/dsh-coding-subscription-oauth/-/dsh-coding-subscription-oauth-0.8.5.tgz (GET)
+Progress: resolved 3, reused 0, downloaded 3, added 2
+Progress: resolved 3, reused 0, downloaded 3, added 3, done
+Done in 1m 59.6s using pnpm v10.33.0

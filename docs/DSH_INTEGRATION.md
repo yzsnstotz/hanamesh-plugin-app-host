@@ -1,5 +1,7 @@
 # DSH 集成
 
+> **2026-09-19（rc.10）：** 本包现在声明 DSH bundle。对独立 profile 执行 `dsh plugin --profile <name> add <本包.tgz>` 即会通过 `profile/cordis.patch.yml` 激活包根 `@hanamesh/dsh-app-host`，不要再手写 insert。包根保留核心 API，并以懒加载方式落座 Host；固定版本 `dsh-client-modules` 只有在 loader entry 是包根时才会发现 `./client`。HanaMesh 套件已内含本包；套件用户不要单独安装。若此前装过单包，先 `plugin remove @hanamesh/dsh-app-host` 再安装套件，避免重复 `hanamesh-app-host` loader id。桌面 Electron 壳必须在 config 提供独立可执行 `nodeBinary`。
+
 > **2026-09-12（rc.3）：** 干净安装锁文件和占用 Stop 的 HTTP 409 已修复；五个动作的重新验收证据见 `acceptance/wave01-resolution-report.md`。rc.2 的回收证据保留在下方，不能作为 rc.3 的包摘要。
 
 > **2026-09-12（rc.2）：DSH 侧已实现并在真实 profile 加载。** 入口 `@hanamesh/dsh-app-host/dsh`（`src/dsh.js`）绑定固定版本 DSH 0.1.5-alpha.1 **声明过的**公开 API：`ctx.storageDomain.open()`（single 布局，整个快照是一个 global，`global.set` 即一次整体发布）、`ctx.webServer.register()`（八条 exact 路由）、`ctx.connection.requestRejection()`（与 `/api` 通道相同的 Host/Origin 栅栏 + 浏览器 cookie；主体为本 profile 唯一的本地浏览器会话 `dsh-browser`）、`ctx.provide/ctx.effect`。`inject` 声明三项服务，缺 `connection` 时插件不激活、不会有公开路由。profile 接法：
