@@ -1,6 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.13
+# HanaMesh app-host · 0.1.0-rc.14
 
-**交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4–rc.12 为增量 🧪；rc.13 只补上架前提（MIT 许可证、`repository` 字段、DSH peer 精确钉 `0.1.5-alpha.1`），代码与 rc.12 相同，仍待用户验收。**
+**交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4–rc.12 为增量 🧪；rc.13 只补上架前提（MIT 许可证、`repository` 字段、DSH peer 精确钉 `0.1.5-alpha.1`）；rc.14 删除客户端里对 `hanameshCore` 的死读取（浏览器侧 cordis 上下文不含宿主服务，该读取恒为 null，且把「未安装 HanaMesh Core」误显给已装用户）——本包对 Core 现在零引用，Core 状态只在 Core 自己的设置段；仍待用户验收。**
 
 > 收录不代表审核或推荐。**套件与单包互斥（双向）：** 已单独安装本包的用户装 `hanamesh-core` 前先 `dsh plugin remove @hanamesh/dsh-app-host`；已装套件（core）再显式 `plugin add` 本包同样会以 `duplicate loader entry id` 起不来，移除那次显式安装即恢复。
 
