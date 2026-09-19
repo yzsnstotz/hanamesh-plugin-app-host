@@ -1,6 +1,8 @@
 # DSH 集成
 
-> **2026-09-19（rc.10）：** 本包现在声明 DSH bundle。对独立 profile 执行 `dsh plugin --profile <name> add <本包.tgz>` 即会通过 `profile/cordis.patch.yml` 激活包根 `@hanamesh/dsh-app-host`，不要再手写 insert。包根保留核心 API，并以懒加载方式落座 Host；固定版本 `dsh-client-modules` 只有在 loader entry 是包根时才会发现 `./client`。HanaMesh 套件已内含本包；套件用户不要单独安装。若此前装过单包，先 `plugin remove @hanamesh/dsh-app-host` 再安装套件，避免重复 `hanamesh-app-host` loader id。桌面 Electron 壳必须在 config 提供独立可执行 `nodeBinary`。
+> **2026-09-19（rc.11）：** 本包现在声明 DSH bundle。对独立 profile 执行 `dsh plugin --profile <name> add <本包.tgz>` 即会通过 `profile/cordis.patch.yml` 激活包根 `@hanamesh/dsh-app-host`，不要再手写 insert。包根保留核心 API，并以懒加载方式落座 Host；固定版本 `dsh-client-modules` 只有在 loader entry 是包根时才会发现 `./client`。HanaMesh 套件已内含本包；套件用户不要单独安装。若此前装过单包，先 `plugin remove @hanamesh/dsh-app-host` 再安装套件，避免重复 `hanamesh-app-host` loader id。桌面 Electron 壳必须在 config 提供独立可执行 `nodeBinary`。
+>
+> 应用库浏览可只配置 `library.fixture` 或 `library.sources`。安装/卸载还必须明确给绝对 `library.profileDir`、`library.profileName` 与独立 `nodeBinary`；可选 `library.dshBin`，省略时才从该 profile 的固定依赖解析 DSH `bin.js`。钉版本宿主没有公开 profile-directory 服务，因此不从 cwd、PATH 或个人 `~/.dsh` 猜。目录源与安装契约见 `LIBRARY.md`。
 
 > **2026-09-12（rc.3）：** 干净安装锁文件和占用 Stop 的 HTTP 409 已修复；五个动作的重新验收证据见 `acceptance/wave01-resolution-report.md`。rc.2 的回收证据保留在下方，不能作为 rc.3 的包摘要。
 

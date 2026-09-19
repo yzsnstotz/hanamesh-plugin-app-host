@@ -18,6 +18,14 @@
       "medium": "single-snapshot:hanamesh_app_host",
       "why": "物理清理完成后再原子发布状态和通知；不能用 UI 事件代替已停止事实。",
       "test": "tests/crash.test.mjs:X02 stopped-views"
+    },
+    {
+      "id": "library-install",
+      "name": "runtime 账本记录与受管安装记录一起发布",
+      "facts": ["ledger:item", "installed-record"],
+      "medium": "provision-ledger",
+      "why": "lib-provision 是 runtime 目录与 ownership manifest/ledger 的单写者；应用包已经安装但 runtime 未完成时显式显示 runtime-missing，不冒充可打开。",
+      "test": "tests/library-install.test.mjs:AH-L04/L05"
     }
   ],
   "boundaries": [

@@ -16,6 +16,7 @@
 import z from '@deepseek-ai/schemastery';
 import { z as zod } from 'zod';
 import { join } from 'node:path';
+import { createRequire } from 'node:module';
 import { defineDomain } from '@deepseek-ai/dsh-storage-domain';
 import { AppHost } from './manager.js';
 import { DshDomainSnapshotStore, emptySnapshot } from './store.js';
@@ -25,6 +26,10 @@ import { routerDomainSpec } from './router/domain.js';
 import { createProviderSources } from './router/sources.js';
 import { createRouter } from './router/broker.js';
 import { createRouterHttpHandler, ROUTER_ROUTES } from './router/routes.js';
+import { libraryDomainSpec } from './library/domain.js';
+import { createLibraryService } from './library/service.js';
+import { createLibraryInstaller } from './library/install.js';
+import { createLibraryHttpHandler, LIBRARY_ROUTES } from './library/routes.js';
 
 export const name = 'hanamesh-app-host';
 export const DSH_TARGET = '0.1.5-alpha.1';
@@ -43,6 +48,10 @@ export const Config = z.object({
   /** Standalone Node executable used for guardian/launcher processes; required under Electron. */
   nodeBinary: z.string(),
   router: z.object({ codingOauth: z.object({ mode:z.string() }) }),
+  library: z.object({
+    fixture:z.string(),sources:z.array(z.any()),profileDir:z.string(),profileName:z.string(),dshBin:z.string(),
+    registry:z.string(),allowPrerelease:z.boolean(),
+  }),
   applications: z.array(z.any()).default([]),
   leaseTtlMs: z.number(),
   sweepIntervalMs: z.number(),
@@ -94,7 +103,7 @@ export async function apply(ctx, config) {
   requireCondition(typeof dataRoot === 'string', 'INVALID_ROOT', 'dataRoot is required.');
   const parentOrigin = config.parentOrigin ?? `http://127.0.0.1:${webServer.port}`;
   const domain = await facility.open(appHostDomainSpec);
-  let routerDomain;
+  let routerDomain,libraryDomain,library;
   const store = new DshDomainSnapshotStore(domainBinding(domain));
   const host = new AppHost({ store, dataRoot, parentOrigin,
     ...(config.nodeBinary === undefined ? {} : { nodeBinary: config.nodeBinary }),
@@ -123,11 +132,27 @@ export async function apply(ctx, config) {
     const detachResolver=host.setCredentialResolver(router.credentialResolver),detachObserver=host.subscribe(router.observe);
     const routerHandler=createRouterHttpHandler(router,auth);
     const routerDisposers=ROUTER_ROUTES.map(path=>webServer.register({kind:'exact',path,handler:routerHandler}));
+    libraryDomain=await facility.open(libraryDomainSpec);
+    const libraryConfig=config.library??{};
+    let provisionApi,installer;
+    if(libraryConfig.profileDir&&libraryConfig.profileName&&config.nodeBinary){
+      provisionApi=await import('./provision/index.js');
+      let dshBin=libraryConfig.dshBin;
+      if(!dshBin)dshBin=createRequire(join(libraryConfig.profileDir,'package.json')).resolve('@deepseek-ai/dsh/lib/bin.js');
+      installer=createLibraryInstaller({profileDir:libraryConfig.profileDir,profileName:libraryConfig.profileName,dataRoot,nodeBinary:config.nodeBinary,
+        dshBin,registry:libraryConfig.registry,allowPrerelease:libraryConfig.allowPrerelease,provision:provisionApi.provision,remove:provisionApi.remove,
+        emit:event=>library?.emit(event)});
+    }
+    library=createLibraryService({domain:libraryDomain,host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer});
+    await library.init();
+    const libraryHandler=createLibraryHttpHandler(library,auth);
+    const libraryDisposers=LIBRARY_ROUTES.map(path=>webServer.register({kind:'exact',path,handler:libraryHandler}));
     ctx.effect(() => () => { for (const dispose of disposers.splice(0)) dispose(); }, 'hanameshApps.routes');
     ctx.effect(() => async () => { for(const dispose of routerDisposers.splice(0))dispose();detachResolver();detachObserver();await routerDomain.close(); }, 'hanameshApps.router');
+    ctx.effect(() => async () => { for(const dispose of libraryDisposers.splice(0))dispose();await library.close(); }, 'hanameshApps.library');
     ctx.provide('hanameshApps', host);
   } catch (error) {
-    await routerDomain?.close().catch(()=>{});
+    await library?.close().catch(()=>{});await libraryDomain?.close().catch(()=>{});await routerDomain?.close().catch(()=>{});
     if (initialized) await host.dispose().catch(() => {}); else await store.close().catch(() => {});
     throw error;
   }

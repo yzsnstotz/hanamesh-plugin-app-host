@@ -1,11 +1,11 @@
 {
   "module": "app-host",
-  "version": "0.1.0-rc.10",
+  "version": "0.1.0-rc.11",
   "status": "PARTIAL",
   "generatedAt": "2026-09-19T00:00:00+09:00",
   "testRunner": {
-    "tests": 73,
-    "pass": 71,
+    "tests": 78,
+    "pass": 76,
     "fail": 0,
     "skipped": 2,
     "cancelled": 0
@@ -19,7 +19,7 @@
   "coreBuild": "PASS",
   "demoSmoke": "PASS",
   "realDsh": "PARTIAL: isolated DSH web profile loaded the root plugin entry; p3-20260919/stage1/R-SPIKE-web-dump-config.log",
-  "realBrowser": "PARTIAL: isolated Chrome rendered Settings > 供应商; subscription login and gateway enable were not authorized",
+  "realBrowser": "PARTIAL: isolated session Browser rendered Settings > 供应商 and the fixture-backed 应用库; subscription login and gateway enable were not authorized",
   "matrix": [
     {
       "id": "AH-D1",
@@ -119,9 +119,9 @@
   ],
   "isolatedTarballInstallAndRealProcessSmoke": "PASS",
   "tarball": {
-    "filename": "hanamesh-dsh-app-host-0.1.0-rc.10.tgz",
-    "sha256": "34e6fae09835e7df37410c6f02feb213f5c2e51b7038f3e065f83a845790e776",
-    "npmIntegrity": "sha512-nItgPAQjPL45fI+ndPN+W3bcoNjc/ioB13gTWOrHNbn44Yxhw6y7PArjQbGT4taB87S2Q8pIzV2NTgk9OL3VGg==",
-    "bytes": 58373
+    "filename": "hanamesh-dsh-app-host-0.1.0-rc.11.tgz",
+    "sha256": "86897c5f09ba266508d390eaf5d196a3ebe445b9a8b159b01d18fe441fc374cd",
+    "npmIntegrity": "sha512-G5L51QkT113ccPTt/5Vb8VROa6G7ljOjchdVy8JqfnXX9trFXdCzOh6ixeRz8RJUhPsRyr/DA/jjGV3r3KyyXA==",
+    "bytes": 99254
   }
 }

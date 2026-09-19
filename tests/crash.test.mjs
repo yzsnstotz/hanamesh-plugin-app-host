@@ -25,7 +25,7 @@ async function killAt(t,mode,point){
 }
 test('X01: consistency declaration covers each production group and boundary',async()=>{
   const c=validateDeclaration(JSON.parse(await readFile(new URL('../consistency.json',import.meta.url))));
-  assert.deepEqual(c.groups.map(g=>g.id),['first-lease','stopped-views']);assert.deepEqual(c.boundaries.map(b=>b.id),['reserve-launch','stop-publish']);
+  assert.deepEqual(c.groups.map(g=>g.id),['first-lease','stopped-views','library-install']);assert.deepEqual(c.boundaries.map(b=>b.id),['reserve-launch','stop-publish']);
   assert.throws(()=>validateDeclaration({...c,groups:[]}));
 });
 for(const point of ['snapshot-temp-fsynced','snapshot-published']){

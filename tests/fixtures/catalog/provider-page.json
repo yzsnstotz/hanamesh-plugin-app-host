@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0.0",
+  "revision": "fixture-2026-09-19",
+  "items": [
+    {
+      "id": "com.hanamesh.vibe-trading",
+      "name": "@hanamesh/app-vibe-trading",
+      "displayName": "Vibe Trading",
+      "summary": "HanaMesh Vibe 交易应用。",
+      "latestVersion": "0.1.0",
+      "categories": ["hanamesh-app", "finance"],
+      "package": { "registry": "npm", "name": "@hanamesh/app-vibe-trading" },
+      "publisher": { "name": "HanaMesh" }
+    },
+    {
+      "id": "com.example.repository-only",
+      "name": "repository-only",
+      "displayName": "Repository only",
+      "summary": "只有源码仓库，不能由应用库安装。",
+      "categories": ["hanamesh-app"],
+      "repository": { "url": "https://example.com/repository" },
+      "publisher": { "name": "Example" }
+    },
+    {
+      "id": "com.hanamesh.utility-plugin",
+      "name": "@hanamesh/utility-plugin",
+      "displayName": "Utility plugin",
+      "summary": "普通 DSH 插件，不是 HanaMesh 应用。",
+      "latestVersion": "1.0.0",
+      "categories": ["utility"],
+      "package": { "registry": "npm", "name": "@hanamesh/utility-plugin" },
+      "publisher": { "name": "HanaMesh" }
+    }
+  ],
+  "page": { "total": 3 }
+}

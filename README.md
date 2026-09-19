@@ -1,6 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.10
+# HanaMesh app-host · 0.1.0-rc.11
 
-**交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4–rc.9 为增量 🧪；rc.10 新增 K5 独立 Node 运行时与应用凭据 Router，仍待本轮真实门。**
+**交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4–rc.11 为增量 🧪；rc.11 新增多源应用库、安装接管与 runtime 供给，仍待用户验收。**
 
 > rc.4 增加 `credentialEnv` / `credentialResolver`；rc.5 增加文件投射根与格式；rc.6 增加文件生命周期策略；rc.7 允许停止实例在下次打开时采用新定义；rc.8 增加 `credentialEnv[].sets` 声明。逐项证据见 `docs/acceptance/`。`ACCEPTED` 仍只有用户能给。
 
@@ -15,10 +15,12 @@
 - **交付契约：** ESM 包、TypeScript 声明、工作台侧 `./client` SDK、完整快照存储接口、DSH 插件入口、测试与崩溃一致性声明。
 - **K5：** Electron 宿主必须显式给绝对且可执行的 `nodeBinary`；guardian/launcher 使用同一 Node，只继承 `DSH_HOME/HOME/LANG/TMPDIR/PATH` 白名单。未配置时 fail-closed 为 `NODE_RUNTIME_REQUIRED`。
 - **Router：** 合并授权、撤销、文件投射 ledger 与 `sets`，来源为 DSH credentials/LLM 目录和 coding-oauth gateway；不搬 key 探测、录入或 OAuth 端口。
+- **应用库：** 自带侧栏入口与覆盖页；目录源同一时刻只启用一项；可发现 Community Market/DSH 已安装应用，区分已注册、待重启与缺 runtime，并通过 DSH 自己的安装器装卸。
+- **锁定 runtime 供给：** `@hanamesh/lib-provision` 精确 peer 为 `0.1.0-rc.1`，开发端使用 `file:vendor/`；build 把该零运行时依赖产物内联到 `dist/provision/`，来源与 SHA-256 见 `docs/PROVENANCE.json`。
 
 ## 运行
 
-rc.3 的实测环境是 **macOS arm64 / Node 24.13.1 / npm 11.8.0 / pnpm 10.33.0 / DSH 0.1.5-alpha.1**。干净安装使用锁文件，运行依赖为 `zod 4.5.4`。
+当前实测环境是 **macOS arm64 / Node 24.13.1 / npm 11.8.0 / pnpm 10.33.0 / DSH 0.1.5-alpha.1**。干净安装使用锁文件，运行依赖为 `zod 4.5.4`；私有 `@hanamesh/lib-provision` 不在 `dependencies`，而是精确 peer + vendor 内联产物。
 
 ```bash
 npm ci
@@ -44,9 +46,9 @@ npm run demo -- --smoke
 | 受信宿主代码 | `@hanamesh/dsh-app-host` | `AppHost`、存储、路由、网关 |
 | 工作台顶层页面 | `@hanamesh/dsh-app-host/client` | 明确的 Open 回执、恢复、心跳、Stop；禁止注入应用 iframe |
 | DSH profile 适配 | bundle 自动落座包根；显式适配仍可用 `@hanamesh/dsh-app-host/dsh` | 包根懒加载 Cordis `apply`，使同一个 loader entry 同时被 client-modules 发现；见 `docs/DSH_INTEGRATION.md` |
-| DSH 浏览器 UI | `@hanamesh/dsh-app-host/client-ui` | 设置里的「供应商」段；Node 条件下 `./client` 仍解析到工作台 SDK |
+| DSH 浏览器 UI | `@hanamesh/dsh-app-host/client-ui` | 设置里的「供应商」「应用库来源」，以及侧栏「应用库」与 `shell.overlay` 页面；Node 条件下 `./client` 仍解析到工作台 SDK |
 
-契约详见 [`docs/CONTRACT.md`](docs/CONTRACT.md) 与 [`docs/ROUTER_CONTRACT.md`](docs/ROUTER_CONTRACT.md)，未完成步骤见 [`docs/DSH_INTEGRATION.md`](docs/DSH_INTEGRATION.md)，安全限制见 [`docs/SECURITY.md`](docs/SECURITY.md)。本仓不包含应用适配包、钱包权限或 provider runtime driver。
+契约详见 [`docs/CONTRACT.md`](docs/CONTRACT.md)、[`docs/ROUTER_CONTRACT.md`](docs/ROUTER_CONTRACT.md) 与 [`docs/LIBRARY.md`](docs/LIBRARY.md)，未完成步骤见 [`docs/DSH_INTEGRATION.md`](docs/DSH_INTEGRATION.md)，安全限制见 [`docs/SECURITY.md`](docs/SECURITY.md)。本仓不包含应用适配包、钱包权限或 provider runtime driver。
 
 ## GitHub 与来源
 

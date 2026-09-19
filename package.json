@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/dsh-app-host",
-  "version": "0.1.0-rc.10",
+  "version": "0.1.0-rc.11",
   "description": "HanaMesh application ownership and durable view leases; DSH 0.1.5-alpha.1 plugin",
   "type": "module",
   "license": "UNLICENSED",
@@ -36,8 +36,10 @@
     "AGENTS.md",
     "docs/CONTRACT.md",
     "docs/DSH_INTEGRATION.md",
+    "docs/LIBRARY.md",
     "docs/SECURITY.md",
     "docs/PROVENANCE.json",
+    "schemas",
     "profile"
   ],
   "scripts": {
@@ -65,7 +67,8 @@
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.2",
     "@deepseek-ai/dsh-storage-domain": "^0.1.5-alpha.1",
-    "@deepseek-ai/schemastery": "^3.18.2"
+    "@deepseek-ai/schemastery": "^3.18.2",
+    "@hanamesh/lib-provision": "0.1.0-rc.1"
   },
   "hanamesh": {
     "module": "app-host",
@@ -75,6 +78,7 @@
     "upstreamFilesModified": 0
   },
   "devDependencies": {
+    "@hanamesh/lib-provision": "file:vendor/hanamesh-lib-provision-0.1.0-rc.1.tgz",
     "@deepseek-ai/cordis": "4.0.2",
     "@deepseek-ai/dsh-host-webserver": "0.1.5-alpha.1",
     "@deepseek-ai/dsh-scope": "0.1.5-alpha.1",
