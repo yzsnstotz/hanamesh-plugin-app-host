@@ -16,3 +16,15 @@ test('AH-L10: category, q and cursor reach the provider endpoint', async () => {
   await loadCatalog({sources:[{manifestUrl:'https://market.example/catalog-source.json',enabled:true}],fetchImpl:fetcher(none),category:''});
   assert.equal(new URL(none[1]).searchParams.has('category'),false);
 });
+
+test('AH-L11: library card tracks install/provision/uninstall operations via the event feed and shows failures inline (user 2026-09-20)', async () => {
+  const {readFile} = await import('node:fs/promises');
+  const source = await readFile(new URL('../src/client-ui.js', import.meta.url), 'utf8');
+  assert.match(source, /'\/hanamesh\/library\/events\?after='/, 'polls the event feed');
+  assert.match(source, /event\.operationId!==operationId/, 'matches events by operationId');
+  assert.match(source, /endsWith\('-failed'\)/);
+  assert.match(source, /REGISTRY_LOOKUP_FAILED:'应用包不在当前 registry 上/, 'readable reason for the case the user hit');
+  assert.match(source, /UNSTABLE_VERSION:/);
+  assert.match(source, /'重试安装':'安装'/, 'failed card offers a retry');
+  assert.match(source, /role:op\.failed\?'alert':'status'/, 'outcome is rendered on the card');
+});

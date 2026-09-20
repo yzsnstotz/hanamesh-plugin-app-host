@@ -1,4 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.17
+# HanaMesh app-host · 0.1.0-rc.18
+
+> rc.18（2026-09-20）：应用库卡片跟踪安装/补齐运行时/卸载操作——按钮进入「…中…」，订阅 `/hanamesh/library/events` 直到 `-done`/`-failed`，失败时在卡片上显示错误码与可读原因（如 `REGISTRY_LOOKUP_FAILED`：应用包不在当前 registry），并提供「重试安装」。用户 2026-09-20 实测：点安装无任何反应。宿主逻辑不变。
 
 **交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4–rc.12 为增量 🧪；rc.13 只补上架前提（MIT 许可证、`repository` 字段、DSH peer 精确钉 `0.1.5-alpha.1`）；rc.14 删除客户端里对 `hanameshCore` 的死读取（浏览器侧 cordis 上下文不含宿主服务，该读取恒为 null，且把「未安装 HanaMesh Core」误显给已装用户）——本包对 Core 现在零引用，Core 状态只在 Core 自己的设置段；仍待用户验收。**
 
