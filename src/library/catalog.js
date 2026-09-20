@@ -72,7 +72,7 @@ async function sameOriginFetch(start,fetchImpl,label){
   }
 }
 
-export async function loadCatalog({fixture,sources=[],fetchImpl=globalThis.fetch,query='',cursor}={}){
+export async function loadCatalog({fixture,sources=[],fetchImpl=globalThis.fetch,query='',category='',cursor}={}){
   if(fixture){
     requireCondition(typeof fixture==='string','INVALID_FIXTURE','Catalog fixture path is required.');
     let value;try{value=JSON.parse(await readFile(fixture,'utf8'));}catch(error){throw new AppHostError('INVALID_FIXTURE','Catalog fixture could not be read.',{code:error.code});}
@@ -85,7 +85,7 @@ export async function loadCatalog({fixture,sources=[],fetchImpl=globalThis.fetch
   const manifest=validateCatalogManifest(await responseJson(manifestResponse.response,'Catalog manifest'));
   const endpoint=validateManifestUrl(manifest.transport.endpoint);
   requireCondition(endpoint.origin===manifestUrl.origin,'INVALID_CATALOG_MANIFEST','Catalog endpoint must share the manifest origin.');
-  if(query)endpoint.searchParams.set('q',String(query).slice(0,200));if(cursor)endpoint.searchParams.set('cursor',String(cursor).slice(0,2048));endpoint.searchParams.set('limit','50');
+  if(query)endpoint.searchParams.set('q',String(query).slice(0,200));if(category)endpoint.searchParams.set('category',String(category).slice(0,64));if(cursor)endpoint.searchParams.set('cursor',String(cursor).slice(0,2048));endpoint.searchParams.set('limit','50');
   const pageResponse=await sameOriginFetch(endpoint,fetchImpl,'Catalog page');
   return{source:{kind:'remote',manifestUrl:manifestUrl.href,manifest},...validateProviderPage(await responseJson(pageResponse.response,'Catalog page'))};
 }

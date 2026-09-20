@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/dsh-app-host",
-  "version": "0.1.0-rc.15",
+  "version": "0.1.0-rc.16",
   "description": "HanaMesh application ownership and durable view leases; DSH 0.1.5-alpha.1 plugin",
   "type": "module",
   "license": "MIT",

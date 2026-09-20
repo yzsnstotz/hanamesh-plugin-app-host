@@ -1,4 +1,4 @@
-# 公开契约 v1（候选，0.1.0-rc.15；rc.15 目录条目校验补 updatedAt；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
+# 公开契约 v1（候选，0.1.0-rc.16；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
 
 ## 身份与所有权
 

@@ -28,3 +28,10 @@
 ## 锁定产物
 
 私有依赖同时保留精确 peer 与 `file:vendor/` 开发依赖。build 从 vendor tgz 提取 `lib/**` 到 `dist/provision/`，并带入 notices 与 `LICENSE` 标记；来源和 SHA-256 记录在 `docs/PROVENANCE.json`。
+
+
+## rc.16 · 浏览语义（2026-09-20 线上目录门后定）
+
+- `GET /hanamesh/library?q=&category=&cursor=`：`category` 缺省为 `hanamesh-app`（本页是**应用库**，只列应用条目）；显式 `category=`（空）列出来源的全部条目；`q` 与 `cursor` 原样透传给目录源的 `/v1/plugins`（`limit=50`）。未知参数 → `UNKNOWN_FIELDS`。
+- 客户端：搜索框（回车/「搜索」）、「只看应用」开关（默认开）、「更多」按 `page.nextCursor` 追加。
+- 背景：真实来源 `market.hanamesh.com` 有 12,121 条，rc.15 之前只显示按更新时间排序的前 50 条且无搜索，应用条目实际不可达。
