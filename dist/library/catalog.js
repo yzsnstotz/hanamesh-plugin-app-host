@@ -28,7 +28,8 @@ export function validateCatalogManifest(value){
 }
 
 function validateItem(item){
-  requireCondition(own(item,['id','name','displayName','summary','description','homepage','latestVersion','license','categories','keywords','capabilities','compatibility','repository','installSource','package','publisher','media'])&&
+  // Key set = schemas/catalog-provider-page.schema.json `item` (incl. optional `updatedAt`; the production source emits it — 2026-09-20).
+  requireCondition(own(item,['id','name','displayName','summary','description','homepage','latestVersion','license','categories','keywords','capabilities','compatibility','repository','installSource','package','publisher','media','updatedAt'])&&(item.updatedAt===undefined||(typeof item.updatedAt==='string'&&Number.isFinite(Date.parse(item.updatedAt))))&&
     plain(item.id)&&item.id.length<=160&&plain(item.name)&&plain(item.displayName)&&plain(item.summary)&&
     (item.categories===undefined||(Array.isArray(item.categories)&&new Set(item.categories).size===item.categories.length&&item.categories.every(x=>/^[a-z0-9][a-z0-9._:-]{0,63}$/.test(x))))&&
     (item.package===undefined||(own(item.package,['registry','name'])&&item.package.registry==='npm'&&/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(item.package.name))),

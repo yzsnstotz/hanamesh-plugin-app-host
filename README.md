@@ -1,4 +1,4 @@
-# HanaMesh app-host · 0.1.0-rc.14
+# HanaMesh app-host · 0.1.0-rc.15
 
 **交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4–rc.12 为增量 🧪；rc.13 只补上架前提（MIT 许可证、`repository` 字段、DSH peer 精确钉 `0.1.5-alpha.1`）；rc.14 删除客户端里对 `hanameshCore` 的死读取（浏览器侧 cordis 上下文不含宿主服务，该读取恒为 null，且把「未安装 HanaMesh Core」误显给已装用户）——本包对 Core 现在零引用，Core 状态只在 Core 自己的设置段；仍待用户验收。**
 
