@@ -1,5 +1,7 @@
-# HanaMesh app-host · 0.1.0-rc.21
+# HanaMesh app-host · 0.1.0-rc.22
 
+> rc.22（2026-09-21）：「供应商」页压成两张表（来源目录 + 应用×槽位路由表），可扩展到多个应用；去掉网关开关（归 oauth 插件自己的设置页）和「应用自管」切换（自动路由 + 应用内设置优先已消解冲突）。
+>
 > rc.21（2026-09-21，用户定契约）：Router **自动路由**——托管模式下，profile 里已配置、且应用声明接受的供应商在启动时直接注入，不再要求用户在宿主「供应商」页逐槽位选择；显式 grant 优先，「停用」= 该槽位退出自动路由；应用内部自己的设置优先于宿主注入。`coding-oauth-gateway`（dsh-coding-subscription-oauth 的本地 OpenAI 兼容 API）作为 `openai` 槽位的兜底候选。宿主「供应商」页改为：来源目录 + 网关开关（写明它只服务应用，DSH 对话不需要）+ 每个应用的只读路由状态（停用/恢复）。AH-R02/R02b 测试。
 >
 > rc.20（2026-09-21）：在 rc.19 之上再修两处（同一个「桌面壳里打开应用空白」，在真实 WKWebView 抓到的请求头证实）：① 引导 303 不再带 `referrer-policy: no-referrer`——它作用于跳转那一跳，`/` 导航到达时没有 Referer，rc.19 的无 cookie 授权路径永远匹配不上；② 新增配置 `frameAncestors: string[]`（壳自己的 webview origin，如 `tauri://localhost`）——`frame-ancestors` 对**所有**祖先生效，壳 → DSH → 应用三层时只写 DSH origin 会被 webview 拒绝渲染。H16 测试。rc.19 未发布到任何地方以外的 registry。

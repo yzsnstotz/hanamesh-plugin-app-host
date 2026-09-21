@@ -1,4 +1,4 @@
-# Router contract · rc.21
+# Router contract · rc.22
 
 ## 1. 来源模型与状态
 
@@ -13,6 +13,8 @@ Provider 只来自 `dsh-models` 或 `coding-oauth-gateway`，形状为 `{id, sou
 `hanamesh_router` storage-domain 保存每个 app 的 `mode`、`grants`、文件投射 `ledger` 与撤销标记。grant subject 为 `api-key/ref`、`provider/providerId` 或兼容旧 OAuth 的 `grant/key`；可另存 model。明文、gateway key 和 provider token 永不进入 domain。
 
 文件投射沿用 v1.1 生命周期：新版本 `overwrite`，同版本及应用已自行轮换时 `if-absent`，撤销或切换 app-owned 时一次 `remove`；只有宿主的 `credential.injected` / `credential.file-removed` 事件推进 ledger。
+
+**宿主「供应商」页（rc.22）：** 只有两张表——来源目录（名称/来源/状态/Key 提示/模型）与路由表（应用 × 槽位 → 供应商 / 状态 / 停用·恢复），随应用数量按行增长；**不放**网关开关（归 dsh-coding-subscription-oauth 自己的设置页）与「应用自管」切换（自动路由 + 应用内设置优先已经消解了冲突；`/mode` 路由保留给 API 兼容，UI 不暴露）。
 
 ## 3. Resolver 与 `sets`
 
