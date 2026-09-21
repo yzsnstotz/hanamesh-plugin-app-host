@@ -1,5 +1,7 @@
-# HanaMesh app-host · 0.1.0-rc.18
+# HanaMesh app-host · 0.1.0-rc.19
 
+> rc.19（2026-09-21）：网关不再只认 cookie——嵌入式 webview（HanaMesh 桌面 Tauri/WKWebView、开了跟踪防护的 WebView2）里应用 iframe 相对壳的顶层 origin 是第三方，`SameSite=Strict` 的引导 cookie 被丢弃，303 之后每个请求都 403（响应带 `frame-ancestors 'none'`）→ 用户看到空白 iframe（2026-09-21 桌面 rc.4 + Vibe 实测）。rc.19 在 cookie 缺席时改用 Fetch Metadata：`sec-fetch-site: same-origin`（应用自身子资源/XHR）、或 `same-site` + `iframe` + 父 origin referer（引导后的框架导航）、或应用 origin 的 WebSocket 握手，且必须已有一张为仍在有效期 lease 消费过的引导票；cross-site / `none`（地址栏）一律拒绝。H15 三条测试；浏览器直开仍走 cookie。
+>
 > rc.18（2026-09-20）：应用库卡片跟踪安装/补齐运行时/卸载操作——按钮进入「…中…」，订阅 `/hanamesh/library/events` 直到 `-done`/`-failed`，失败时在卡片上显示错误码与可读原因（如 `REGISTRY_LOOKUP_FAILED`：应用包不在当前 registry），并提供「重试安装」。用户 2026-09-20 实测：点安装无任何反应。宿主逻辑不变。
 
 **交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4–rc.12 为增量 🧪；rc.13 只补上架前提（MIT 许可证、`repository` 字段、DSH peer 精确钉 `0.1.5-alpha.1`）；rc.14 删除客户端里对 `hanameshCore` 的死读取（浏览器侧 cordis 上下文不含宿主服务，该读取恒为 null，且把「未安装 HanaMesh Core」误显给已装用户）——本包对 Core 现在零引用，Core 状态只在 Core 自己的设置段；仍待用户验收。**

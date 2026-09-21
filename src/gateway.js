@@ -69,12 +69,40 @@ export class FixedGateway {
   }
   #authorized(req) {
     if (!this.#requestShape(req)) return false;
-    // Cookie capability + live lease are mandatory. Origin/loopback alone never authenticate.
+    // Cookie capability + live lease. Origin/loopback alone never authenticate.
     for (const [name,value] of cookies(req.headers.cookie)) {
       if (!name.startsWith(this.cookiePrefix)) continue;
       const grant = this.grants.get(value);
       if (grant?.cookieName === name && this.isLeaseActive(grant.viewKey)) return true;
     }
+    return this.#embeddedAuthorized(req);
+  }
+  /**
+   * Embedded webviews (Tauri/WKWebView, WebView2 with tracking prevention) never return
+   * the bootstrap cookie: the app frame is a third party under the shell's own top-level
+   * origin, so `SameSite=Strict`/third-party cookies are dropped and every request after
+   * the 303 arrived without a grant → 403 with `frame-ancestors 'none'` → a blank frame
+   * (2026-09-21, HanaMesh desktop rc.4 + Vibe). Fall back to Fetch Metadata, which the
+   * same webviews do send: a request is accepted without a cookie only when it comes from
+   * inside an app document already served by this gateway (`same-origin`), or is the
+   * post-bootstrap frame navigation initiated by the registered parent (`same-site` +
+   * `iframe` + parent referer), and a bootstrap ticket for a still-live lease has been
+   * consumed for this instance. Cross-site and address-bar (`none`) requests stay denied.
+   */
+  #embeddedAuthorized(req) {
+    if (!this.#liveGrantExists()) return false;
+    const site = req.headers['sec-fetch-site'];
+    if (site === 'same-origin') return true;
+    // WebSocket handshakes: every browser sets `Origin` on them (not spoofable from web content); some
+    // WebKit builds omit Fetch Metadata there. The app's own origin is equivalent to same-origin.
+    if (req.headers.upgrade?.toLowerCase() === 'websocket' && req.headers.origin === this.origin) return true;
+    if (site !== 'same-site' || req.headers['sec-fetch-dest'] !== 'iframe') return false;
+    let referer;
+    try { referer = new URL(req.headers.referer).origin; } catch { return false; }
+    return referer === this.parentOrigin;
+  }
+  #liveGrantExists() {
+    for (const [value,g] of this.grants) { if (this.isLeaseActive(g.viewKey)) return true; this.grants.delete(value); }
     return false;
   }
   #headers(req, upgrade = false) {

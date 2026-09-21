@@ -55,3 +55,46 @@ test('AH gateway: real WebSocket upgrade preserves frame bytes',async t=>{
     socket.on('error',reject);
   });assert(raw.headers.startsWith('HTTP/1.1 101'));assert.deepEqual(raw.frame,Buffer.from([0x81,2,0x4f,0x4b]));
 });
+
+test('H15: embedded webview without third-party cookies — Fetch Metadata capability after a consumed bootstrap ticket',async t=>{
+  const {g,active}=await gateway(t);
+  // The frame navigation that follows the 303: same-site (loopback, other port), iframe destination, parent referer, no cookie.
+  const framed={referer:parentOrigin+'/workspace','sec-fetch-dest':'iframe','sec-fetch-site':'same-site'};
+  assert.equal((await http(g.origin+'/',{headers:framed})).status,200);
+  // Sub-resources and XHR issued by the app document itself.
+  assert.equal((await http(g.origin+'/app.js',{headers:{'sec-fetch-site':'same-origin','sec-fetch-dest':'script'}})).status,200);
+  assert.equal((await http(g.origin+'/api',{headers:{'sec-fetch-site':'same-origin','sec-fetch-dest':'empty','sec-fetch-mode':'cors',origin:g.origin}})).status,200);
+  // Never: cross-site pages, address-bar / top-level, same-site frames from an unregistered parent, or missing metadata.
+  for(const headers of [
+    {'sec-fetch-site':'cross-site','sec-fetch-dest':'iframe',referer:'https://attacker.invalid/'},
+    {'sec-fetch-site':'none','sec-fetch-dest':'iframe'},
+    {'sec-fetch-site':'same-site','sec-fetch-dest':'iframe',referer:'http://127.0.0.1:1/'},
+    {'sec-fetch-site':'same-site','sec-fetch-dest':'script',referer:parentOrigin},
+    {},
+  ])assert.equal((await http(g.origin+'/',{headers})).status,403,JSON.stringify(headers));
+  // The capability dies with the lease that was bootstrapped.
+  active.delete('alice:view-a');
+  assert.equal((await http(g.origin+'/',{headers:framed})).status,403);
+  assert.equal((await http(g.origin+'/app.js',{headers:{'sec-fetch-site':'same-origin'}})).status,403);
+});
+
+test('H15: no bootstrap ever consumed → Fetch Metadata alone never authorizes',async t=>{
+  const {origin:upstream}=await external(t);
+  const g=new FixedGateway({upstream,parentOrigin,isLeaseActive:()=>true});await g.start();t.after(()=>g.close());
+  assert.equal((await http(g.origin+'/',{headers:{referer:parentOrigin,'sec-fetch-dest':'iframe','sec-fetch-site':'same-site'}})).status,403);
+  assert.equal((await http(g.origin+'/x',{headers:{'sec-fetch-site':'same-origin'}})).status,403);
+});
+
+test('H15: embedded WebSocket handshake authorizes by the app origin without a cookie; foreign origin denied',async t=>{
+  const {g,active}=await gateway(t);const u=new URL(g.origin);
+  const handshake=(origin)=>new Promise((resolve,reject)=>{
+    const socket=connect(Number(u.port),u.hostname);let data='';const timer=setTimeout(()=>{socket.destroy();reject(new Error('WebSocket timeout'));},3000);
+    socket.on('connect',()=>socket.write(`GET /socket HTTP/1.1\r\nHost: ${u.host}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: ${randomBytes(16).toString('base64')}\r\nSec-WebSocket-Version: 13\r\nOrigin: ${origin}\r\n\r\n`));
+    socket.on('data',chunk=>{data+=chunk.toString();if(data.includes('\r\n\r\n')){clearTimeout(timer);socket.destroy();resolve(data.split('\r\n')[0]);}});
+    socket.on('error',reject);
+  });
+  assert.match(await handshake(g.origin),/^HTTP\/1\.1 101/);
+  assert.match(await handshake(parentOrigin),/^HTTP\/1\.1 403/);
+  active.delete('alice:view-a');
+  assert.match(await handshake(g.origin),/^HTTP\/1\.1 403/);
+});
