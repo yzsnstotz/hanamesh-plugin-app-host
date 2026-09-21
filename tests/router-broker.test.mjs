@@ -8,13 +8,13 @@ const entries=[
   {env:'LANGCHAIN_PROVIDER'},
   {path:'auth/token.json',base:'dataDir',projection:'file',kind:'grant',format:'oauth-cli-kit',sets:{LANGCHAIN_PROVIDER:'openai_codex'}},
 ];
-function fixture(){
+function fixture(declared=entries){
   const values=new Map([['OPENAI_API_KEY','secret-openai']]),state={schema:1,apps:{}};
   const credentials={describe:async ref=>({configured:values.has(ref),writable:true,source:values.has(ref)?'file':undefined}),
     resolve:async ref=>values.has(ref)?{value:values.get(ref),source:'file'}:undefined,
     describeRecord:async()=>({configured:true,kind:'grant',writable:true})};
   const domain={global:{get:()=>structuredClone(state),set:async next=>Object.assign(state,structuredClone(next))}};
-  const apps={list:()=>({apps:[{id:'vibe-trading',deployments:[{id:'local',mode:'owned',credentialEnv:entries}]}]}),
+  const apps={list:()=>({apps:[{id:'vibe-trading',deployments:[{id:'local',mode:'owned',credentialEnv:declared}]}]}),
     subscribe(listener){this.listener=listener;return()=>{this.listener=null;};}};
   const oauth={version:1,providers:async()=>[{id:'openai-chatgpt',riskNotice:{summary:'risk',details:[],revokeHint:'revoke'}}],
     project:async function(){return{format:'oauth-cli-kit',version:this.version,content:'{"access":"sensitive"}'};}};
@@ -29,7 +29,7 @@ function fixture(){
     enableGateway:async enabled=>({enabled}),
   };
   const router=createRouter({credentials,domain,apps,sources,oauth:()=>oauth});
-  const launch=()=>router.credentialResolver({appId:'vibe-trading',deploymentId:'local',instanceId:'one',principalId:'dsh-browser',credentialEnv:entries});
+  const launch=()=>router.credentialResolver({appId:'vibe-trading',deploymentId:'local',instanceId:'one',principalId:'dsh-browser',credentialEnv:declared});
   return{router,launch,apps,oauth,values,state,credentials,sources};
 }
 
@@ -98,4 +98,21 @@ test('AH-R05 sets default applies and empty baseUrl is omitted',async()=>{
   ];apps.list=()=>({apps:[{id:'vibe-trading',deployments:[{mode:'owned',credentialEnv:declared}]}]});
   await router.grant('vibe-trading','env:DEEPSEEK_API_KEY',{kind:'api-key',ref:'DEEPSEEK_API_KEY'});const out=await router.credentialResolver({appId:'vibe-trading',instanceId:'one',credentialEnv:declared});
   assert.equal(out.env.MODEL,'gpt-5.5');assert(!('BASE'in out.env));
+});
+
+test('AH-R02c auto-route keeps the app\'s declared default model and never routes a derived slot',async()=>{
+  const declared=[
+    {env:'LANGCHAIN_PROVIDER',kind:'api-key',purpose:'derived'},
+    {env:'LANGCHAIN_MODEL_NAME',kind:'api-key',purpose:'optional model override'},
+    {env:'OPENAI_API_KEY',kind:'api-key',providers:['openai'],sets:{LANGCHAIN_PROVIDER:'{{provider}}',LANGCHAIN_MODEL_NAME:'{{model|gpt-5.5}}',OPENAI_BASE_URL:'{{baseUrl}}'}},
+  ];
+  const{router,launch,values}=fixture(declared);values.delete('OPENAI_API_KEY');
+  // gateway lists gpt-5.3-codex-spark first (fixture models are irrelevant: no models[0] fallback may exist)
+  const env=(await launch()).env;
+  assert.equal(env.OPENAI_API_KEY,'gateway-secret');assert.equal(env.LANGCHAIN_MODEL_NAME,'gpt-5.5');assert.equal(env.LANGCHAIN_PROVIDER,'coding-oauth-gateway');
+  const plan=await router.plan('vibe-trading');
+  assert.deepEqual(plan.items.map(i=>[i.entry.env,i.state,i.derived===true]),[['LANGCHAIN_PROVIDER','missing',true],['LANGCHAIN_MODEL_NAME','missing',true],['OPENAI_API_KEY','auto',false]]);
+  // an explicit grant that names a model still wins over the app default
+  await router.grant('vibe-trading','env:OPENAI_API_KEY',{kind:'provider',providerId:'coding-oauth-gateway'},{model:'gpt-5.6-sol'});
+  assert.equal((await launch()).env.LANGCHAIN_MODEL_NAME,'gpt-5.6-sol');
 });

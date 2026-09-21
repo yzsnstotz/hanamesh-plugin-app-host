@@ -2,9 +2,9 @@ TAP version 13
 # Subtest: AH-K5-2: Electron self-hosting refuses fallback and persists a failed instance event
 not ok 1 - AH-K5-2: Electron self-hosting refuses fallback and persists a failed instance event
   ---
-  duration_ms: 9.456375
+  duration_ms: 9.542792
   type: 'test'
-  location: '/private/tmp/hm-app-host-mutation-44DHLD/tests/node-runtime.test.mjs:34:1'
+  location: '/private/tmp/hm-app-host-mutation-sA4jWn/tests/node-runtime.test.mjs:34:1'
   failureType: 'testCodeFailure'
   error: 'Missing expected rejection.'
   code: 'ERR_ASSERTION'
@@ -13,7 +13,7 @@ not ok 1 - AH-K5-2: Electron self-hosting refuses fallback and persists a failed
     code: 'NODE_RUNTIME_REQUIRED'
   operator: 'rejects'
   stack: |-
-    async TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-44DHLD/tests/node-runtime.test.mjs:40:5)
+    async TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-sA4jWn/tests/node-runtime.test.mjs:40:5)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -25,4 +25,4 @@ not ok 1 - AH-K5-2: Electron self-hosting refuses fallback and persists a failed
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 48.555375
+# duration_ms 47.841917

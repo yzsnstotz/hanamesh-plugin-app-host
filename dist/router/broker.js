@@ -44,6 +44,8 @@ export function createRouter({credentials,domain,apps,sources,oauth=()=>undefine
    *  is the last resort. Explicit grants and `app-owned` mode always take precedence. */
   function autoSubject(entry,app,providers){
     const id=entryId(entry);if(entry.kind!=='api-key'||entry.projection==='file'||app.revoked?.[id])return undefined;
+    // A slot that names no provider is filled by a sibling's `sets` (or by the app itself); the Router never guesses for it.
+    if(!entry.providers?.length)return undefined;
     const configured=providers.filter(p=>p.state==='configured'&&accepts(entry,p.id));
     const ordered=[...(entry.providers??[]).map(pid=>configured.find(p=>p.id===pid)).filter(Boolean),...configured.filter(p=>p.id==='coding-oauth-gateway')];
     const found=ordered[0]??configured[0];if(!found)return undefined;
@@ -61,8 +63,10 @@ export function createRouter({credentials,domain,apps,sources,oauth=()=>undefine
     async plan(appId){
       const entries=declaration(appId),app=appState(appId),oauthProvider=oauth(),providers=await providerDirectory();
       const oauthInfos=oauthProvider?await oauthProvider.providers():[];
+      const derived=new Set(entries.flatMap(entry=>Object.keys(entry.sets??{})));
       const items=await Promise.all(entries.map(async entry=>{
         const id=entryId(entry),grant=app.grants[id],item={entry,state:'missing'};
+        if(entry.env&&derived.has(entry.env))item.derived=true;
         if(app.mode==='app-owned'){item.state='app-owned';return item;}
         if(grant){item.granted=grant.subject;if(grant.model)item.model=grant.model;
           let present=false;
@@ -107,8 +111,9 @@ export function createRouter({credentials,domain,apps,sources,oauth=()=>undefine
         }else if(entry.env&&['api-key','provider'].includes(grant.subject.kind)){
           const resolved=await sources.resolve(grant.subject);if(!resolved?.value)continue;
           env[entry.env]=resolved.value;secrets.push(resolved.value);
-          const provider=resolved.provider??{},model=grant.model??provider.models?.[0]??'';
-          applySets(entry,{provider:provider.id??'',baseUrl:provider.baseUrl??'',model});
+          // Model choice belongs to the app (`{{model|<app default>}}`); the Router only carries an explicitly granted model.
+          const provider=resolved.provider??{};
+          applySets(entry,{provider:provider.id??'',baseUrl:provider.baseUrl??'',model:grant.model??''});
         }else if(entry.env&&grant.subject.kind==='grant'&&oauth()){
           const projection=await oauth().project(grant.subject.key,'env');if(projection.format==='env'&&typeof projection.env[entry.env]==='string'){
             env[entry.env]=projection.env[entry.env];secrets.push(projection.env[entry.env]);applySets(entry,{provider:KEY.exec(grant.subject.key)?.[1]??'',baseUrl:'',model:grant.model??''});

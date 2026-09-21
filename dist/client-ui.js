@@ -18,8 +18,8 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     const subjectText=item=>item.granted?(item.granted.kind==='provider'?item.granted.providerId:item.granted.ref??item.granted.key):'—';
     const acceptable=entry=>providers.find(p=>p.state==='configured'&&(!entry.providers?.length||entry.providers.includes(p.id)||(p.id==='coding-oauth-gateway'&&entry.providers.includes('openai'))));
     // One compact table for every app: app × slot → routed provider. Scales to many apps; no per-app card, no manual picker.
-    const routeRows=apps.flatMap(app=>{const plan=plans[app.id];if(!plan)return[];return(plan.items??[]).map((item,index)=>{const id=entryId(item.entry);
-      return h('tr',{key:`${app.id}:${id}`},index===0?h('td',{rowSpan:plan.items.length},app.name):null,h('td',null,item.entry.env??item.entry.path),h('td',null,item.entry.purpose??'—'),h('td',null,subjectText(item)),h('td',null,stateText[item.state]??item.state),
+    const routeRows=apps.flatMap(app=>{const plan=plans[app.id];if(!plan)return[];const slots=(plan.items??[]).filter(item=>!item.derived);return slots.map((item,index)=>{const id=entryId(item.entry);
+      return h('tr',{key:`${app.id}:${id}`},index===0?h('td',{rowSpan:slots.length},app.name):null,h('td',null,item.entry.env??item.entry.path),h('td',null,item.entry.purpose??'—'),h('td',null,subjectText(item)),h('td',null,stateText[item.state]??item.state),
         h('td',null,item.state==='revoked'?h('button',{type:'button',onClick:()=>{const provider=acceptable(item.entry);if(provider)void mutate('/hanamesh/router/grant',{appId:app.id,entryId:id,subject:provider.ref?{kind:'api-key',ref:provider.ref}:{kind:'provider',providerId:provider.id}});}},'恢复'):
           (item.state==='auto'||item.state==='granted')?h('button',{type:'button',onClick:()=>void mutate('/hanamesh/router/revoke',{appId:app.id,entryId:id})},'停用'):null));});});
     return h('section',{className:'hm-providers'},h('h2',null,'供应商'),h('p',null,'这里只显示来源、状态、提示与模型，不读取或展示密钥值。'),error?h('p',{role:'alert'},error):null,
