@@ -23,7 +23,8 @@ interface OwnedDeploymentBase extends DeploymentBase { mode:'owned'; args:string
 export type OwnedDeployment = OwnedDeploymentBase & ({ command:string; runtime?:never }|{ command?:never; runtime:RuntimeSelection });
 export interface AttachedDeployment extends DeploymentBase { mode:'attach'; url:string; }
 export type Deployment = OwnedDeployment|AttachedDeployment;
-export interface AppDefinition { id:string; name:string; singleInstanceOnly?:boolean; deployments:Deployment[]; }
+/** rc.27 `packageName`: the npm package shipping this app — the usage-evidence `hanaRef`. Optional; the installed-package scan binds it otherwise (`AppHost.bindPackageName`). */
+export interface AppDefinition { id:string; name:string; singleInstanceOnly?:boolean; packageName?:string; deployments:Deployment[]; }
 export interface InstanceRecord {
   id:string; appId:string; deploymentId:string; dataId:string; principalId:string; dataDir:string; mode:'owned'|'attach';
   definitionHash:string; status:InstanceStatus; runtimeId:string|null; endpoint:string|null; gatewayOrigin:string|null;
@@ -32,6 +33,8 @@ export interface InstanceRecord {
 export interface ViewLease { principalId:string; viewId:string; instanceId:string; generation:number; status:LeaseStatus; expiresAt:number; createdAt:number; originalSessionId:string|null; }
 export interface StoredLease extends ViewLease { tokenHash:string; }
 export interface HostEvent { sequence:number; at:number; type:string; instanceId:string; principalId:string; viewId?:string; generation?:number; [key:string]:unknown; }
+/** rc.27: a request the instance's gateway forwarded for an authorized view (never bootstrap, denials, 401/403 or host probes). In-memory only. */
+export interface InstanceActivity { type:'instance.activity'; instanceId:string; appId:string; deploymentId:string; principalId:string; at:number; }
 export interface Snapshot { schema:1; revision:number; sequence:number; instances:InstanceRecord[]; leases:StoredLease[]; events:HostEvent[]; }
 export interface SnapshotStore { init():Promise<void>; load():Promise<Snapshot>; save(snapshot:Snapshot):Promise<void>; close():Promise<void>; }
 export interface OpenRequest { appId:string; deploymentId:string; viewId:string; leaseToken?:string; instanceId?:string; originalSessionId?:string; }
@@ -39,7 +42,7 @@ export interface LeaseRequest { viewId:string; leaseToken:string; }
 export interface RecoverRequest { viewId:string; instanceId:string; confirm:true; }
 export interface OpenReceipt { instance:InstanceRecord; lease:ViewLease; leaseToken:string; uiUrl:string|null; originalSessionId:string|null; }
 export interface AppListing {
-  contractVersion:1; apps:Array<{id:string;name:string;singleInstanceOnly:boolean;deployments:Array<{id:string;dataId:string;mode:'owned'|'attach';embedding:'direct'|'gateway';credentialEnv:CredentialEnvEntry[]}>}>;
+  contractVersion:1; apps:Array<{id:string;name:string;singleInstanceOnly:boolean;packageName:string|null;deployments:Array<{id:string;dataId:string;mode:'owned'|'attach';embedding:'direct'|'gateway';credentialEnv:CredentialEnvEntry[]}>}>;
   instances:InstanceRecord[]; views:ViewLease[]; sequence:number;
 }
 export interface EventPage { events:HostEvent[]; sequence:number; resetRequired:boolean; }
@@ -53,6 +56,12 @@ export class AppHost {
   /** rc.4: seat or clear the credential broker; returns a disposer that clears it only if still the same function. */
   setCredentialResolver(resolver:CredentialResolver|null):()=>void;
   register(definition:AppDefinition):{appId:string;definitionHash:string}; init():Promise<this>;
+  /** rc.27: bind the npm package that ships `appId` (from the installed scan); a definition-declared `packageName` wins. */
+  bindPackageName(appId:string,packageName:string):void;
+  /** Usage-evidence `hanaRef` for an app, or null when unknown (then no evidence is reported for it). */
+  packageName(appId:string):string|null;
+  /** rc.27: real gateway activity per instance; not persisted, not in `eventsSince`. Returns a disposer. */
+  onActivity(listener:(activity:InstanceActivity)=>void):()=>void;
   beginOpen(input:OpenRequest,principalId?:string):Promise<OpenReceipt>;
   open(input:OpenRequest,principalId?:string):Promise<OpenReceipt>; start(input:OpenRequest,principalId?:string):Promise<OpenReceipt>;
   resume(input:LeaseRequest,principalId?:string,options?:{waitForReady?:boolean}):Promise<OpenReceipt>;
@@ -84,12 +93,23 @@ export interface HttpOptions<Request=unknown> {
 }
 export function createHttpHandler<Request=unknown,Response=unknown>(host:AppHost,options:HttpOptions<Request>):(request:Request,response:Response)=>Promise<void>;
 export class FixedGateway {
-  constructor(options:{upstream:string;parentOrigin:string;isLeaseActive:(viewKey:string)=>boolean;cookieAllowlist?:string[];allowAppAuthorization?:boolean;maxUploadBytes?:number});
+  constructor(options:{upstream:string;parentOrigin:string;isLeaseActive:(viewKey:string)=>boolean;cookieAllowlist?:string[];allowAppAuthorization?:boolean;maxUploadBytes?:number;frameAncestors?:string[];
+    /** rc.27: called once per forwarded request the upstream answered with anything but 401/403 (and per accepted WebSocket upgrade). */
+    onForward?:()=>void});
   origin:string; start():Promise<string>; issue(viewKey:string):string; close():Promise<void>;
 }
 export function rewriteCsp(value:string,parentOrigin:string):string;
 export function embeddingHeaders(rawHeaders:string[],parentOrigin:string):string[];
 export function validateDefinition(input:AppDefinition):AppDefinition;
+/** rc.27 usage evidence: `open` once per instance reaching ready, `use` once per app per UTC hour of real gateway activity, through the optional usage seat. */
+export const SOURCE_PLUGIN:'@hanamesh/dsh-app-host';
+export function hourBucket(ms:number):string;
+export interface UsageRecordInput { hanaRef:string; action:'open'|'use'; occurredAt?:string; idempotencyKey:string; sourcePlugin:string; }
+export interface UsageRecordResult { disposition:'recorded'|'duplicate'|'withheld'|'rejected'; eventId?:string; code?:string; }
+export interface UsageSeat { record(input:UsageRecordInput):Awaitable<UsageRecordResult>; }
+export function createUsageEvidence(options:{host:AppHost;seat:()=>UsageSeat|unknown;logger?:{debug?:(...args:unknown[])=>void}}):{
+  trackedInstances():number; settle():Promise<void>; close():void;
+};
 export const name:'hanamesh-app-host';
 export const inject:readonly ['webServer','storageDomain','connection'];
 export function apply(ctx:unknown,config?:import('./dsh.js').DshPluginConfig):Promise<void>;

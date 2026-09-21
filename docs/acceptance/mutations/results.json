@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-21T09:23:37.973Z",
+  "generatedAt": "2026-09-21T13:34:18.486Z",
   "results": [
     {
       "id": "M01-single-instance",
@@ -8,8 +8,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "d46dfebe69410eaaf6b54090f89660d618a7d02fa42a8f3e3573af50dceb37aa",
-      "mutatedSourceSha256": "165c39c4cb9563f263ed693493e8eb811d00e48770e3efa40d6dcd9b1d877032"
+      "originalSourceSha256": "b990da2bb2e57dec584e0e7d1ba5dbf5062d651482c7a008ab6dc6c6212bb61e",
+      "mutatedSourceSha256": "141b76866805f5f531b866a5a05337a9ae7952809b8d04de6d1731e548927658"
     },
     {
       "id": "M02-reserve-launch",
@@ -38,8 +38,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "d46dfebe69410eaaf6b54090f89660d618a7d02fa42a8f3e3573af50dceb37aa",
-      "mutatedSourceSha256": "81865de6df46833476865fd2f797d00368131662b934b2c65e0f7fee7a024697"
+      "originalSourceSha256": "b990da2bb2e57dec584e0e7d1ba5dbf5062d651482c7a008ab6dc6c6212bb61e",
+      "mutatedSourceSha256": "c10ce6dbf548e633f411c0e3e19aa09c6abc756171ad3c3724242e046c6a6c0b"
     },
     {
       "id": "M04-socket-ownership",
@@ -68,8 +68,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "fe7481fa951c3189f296bcec6b4349bbbd3f241ff7f36eab2bd2a9c5e36d34f4",
-      "mutatedSourceSha256": "4d84bdb35fbd12df9bdb1b85d22d9738631627ed2ea0655fff183124f8578b61"
+      "originalSourceSha256": "294d10b20f7dde614f4a9e7d492c6668ed6c47be8d026822896aefdcdd7cdd1e",
+      "mutatedSourceSha256": "2bf411530744a841a0bb81dca395eb9e1b5a9d453d61403743cd437e91942dee"
     },
     {
       "id": "M09-runtime-lock-unproven-orphan",
@@ -90,6 +90,26 @@
       "killed": true,
       "originalSourceSha256": "35dd3e090992e0eb7960027e64c14726ff351a888e1505a3f907c7f0812eb9b9",
       "mutatedSourceSha256": "ddc655ab327552d81d578337a7a0f2d4d4ab38d7c63bc745f593568a81b7c912"
+    },
+    {
+      "id": "M11-usage-denied-counts",
+      "test": "tests/usage-evidence.test.mjs",
+      "pattern": "^AH-U02:",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "049d1cbf16f54a51960bc241a43ad86b56724c421892a26cadd6cb26c16e0a68",
+      "mutatedSourceSha256": "86d3c0ca98ed6f4b3e85cac12c940f8088095b5242ed2fa2723ef04a771904da"
+    },
+    {
+      "id": "M12-usage-hour-bucket",
+      "test": "tests/usage-evidence.test.mjs",
+      "pattern": "^AH-U02:",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "1acd349c87a7eb83867ba844b15d007ce392f20e384862f1765e9b1aea8fb50f",
+      "mutatedSourceSha256": "52ce296593ed10ef534f7f68e9e3cdee50740de569e5ec3a6c5e903a5de3c15f"
     },
     {
       "id": "M08-node-runtime-electron",

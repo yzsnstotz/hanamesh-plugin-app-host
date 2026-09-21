@@ -54,13 +54,15 @@ function fail(res, status, code) {
 
 /** Fixed upstream only. Bootstrap is our own response, not a rewritten app document. */
 export class FixedGateway {
-  constructor({ upstream, parentOrigin, isLeaseActive, cookieAllowlist = [], allowAppAuthorization = false, maxUploadBytes = 32 * 1024 * 1024, frameAncestors = [] }) {
+  constructor({ upstream, parentOrigin, isLeaseActive, cookieAllowlist = [], allowAppAuthorization = false, maxUploadBytes = 32 * 1024 * 1024, frameAncestors = [], onForward = () => {} }) {
     this.upstream = loopbackOrigin(upstream); this.parentOrigin = loopbackOrigin(parentOrigin);
     requireCondition(Array.isArray(frameAncestors) && frameAncestors.length <= 8, 'INVALID_FRAME_ANCESTOR', 'frameAncestors must be a short list of origins.');
     this.ancestors = frameAncestorsValue(this.parentOrigin, frameAncestors.map(ancestorOrigin));
     requireCondition(typeof isLeaseActive === 'function','INVALID_GATEWAY','A live lease authorization check is required.');
     this.isLeaseActive = isLeaseActive; this.cookieAllowlist = new Set(cookieAllowlist);
     this.allowAppAuthorization = allowAppAuthorization; this.maxUploadBytes = maxUploadBytes;
+    requireCondition(typeof onForward === 'function','INVALID_GATEWAY','onForward must be a function.');
+    this.onForward = onForward;
     this.tickets = new Map(); this.grants = new Map(); this.sockets = new Set(); this.upstreams = new Set();
     this.cookiePrefix = `hm_app_${token().slice(0,12)}_`;
   }
@@ -163,6 +165,13 @@ export class FixedGateway {
     });
     res.end();
   }
+  /**
+   * rc.27 usage evidence: one call per request this gateway actually forwarded for an authorized view and the
+   * app answered with anything but 401/403. Bootstrap tickets and every gateway denial never reach here; the
+   * host's own readiness probes go to the upstream directly, never through the gateway. A throwing hook must
+   * never break the proxied response.
+   */
+  #forwarded() { try { this.onForward(); } catch {} }
   #handle(req,res) {
     if (!this.#requestShape(req)) return fail(res,403,'GATEWAY_REQUEST_DENIED');
     if (req.url.startsWith('/__hanamesh_bootstrap/')) return this.#bootstrap(req,res);
@@ -170,6 +179,7 @@ export class FixedGateway {
     if (!['GET','HEAD','POST','PUT','PATCH','DELETE','OPTIONS'].includes(req.method)) return fail(res,405,'METHOD_NOT_ALLOWED');
     if (Number(req.headers['content-length']) > this.maxUploadBytes) return fail(res,413,'UPLOAD_TOO_LARGE');
     const upstream = request(this.upstream + req.url,{ method:req.method,headers:this.#headers(req) }, response => {
+      if (response.statusCode !== 401 && response.statusCode !== 403) this.#forwarded();
       res.writeHead(response.statusCode, embeddingHeaders(response.rawHeaders,this.ancestors));
       response.pipe(res, { end:false });
       response.once('error', () => res.destroy());
@@ -194,7 +204,7 @@ export class FixedGateway {
     this.upstreams.add(upstream); upstream.once('close',() => this.upstreams.delete(upstream));
     const timer = setTimeout(() => { upstream.destroy(); socket.destroy(); },10_000);
     upstream.once('upgrade',(res,peer,upHead) => {
-      clearTimeout(timer); this.sockets.add(peer); peer.once('close',() => this.sockets.delete(peer));
+      clearTimeout(timer); this.sockets.add(peer); peer.once('close',() => this.sockets.delete(peer)); this.#forwarded();
       const lines = [`HTTP/1.1 ${res.statusCode} ${res.statusMessage}`];
       for (let i=0;i<res.rawHeaders.length;i+=2) lines.push(`${res.rawHeaders[i]}: ${res.rawHeaders[i+1]}`);
       socket.write(lines.join('\r\n')+'\r\n\r\n'); if (upHead.length) socket.write(upHead); if (head.length) peer.write(head);

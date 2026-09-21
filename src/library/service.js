@@ -20,6 +20,8 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
     async install({itemId}){requireCondition(installer,'LIBRARY_INSTALL_UNAVAILABLE','Install requires absolute profileDir, nodeBinary, dshBin and profileName.',{},503);const page=await catalog();const item=page.items.find(row=>row.id===itemId);requireCondition(item,'CATALOG_ITEM_MISSING','Catalog item was not found.',{},404);return await operation('install',()=>installer.install(item));},
     async provision(input){requireCondition(installer,'LIBRARY_INSTALL_UNAVAILABLE','Runtime provision is unavailable.',{},503);return await operation('provision',()=>installer.provisionRuntime(input));},
     async uninstall(input){requireCondition(installer,'LIBRARY_INSTALL_UNAVAILABLE','Uninstall is unavailable.',{},503);const runningNow=host.instanceList().some(instance=>instance.appId===input.appId&&!['stopped','failed','interrupted'].includes(instance.status));return await operation('uninstall',()=>installer.uninstall({...input,running:runningNow}));},
+    /** Installed application packages of the profile (empty without `profileDir`); rc.27 binds package names for usage evidence. */
+    installed,
     events(after=0){requireCondition(Number.isSafeInteger(after)&&after>=0,'INVALID_CURSOR','Invalid library event cursor.');return{events:events.filter(event=>event.sequence>after),sequence,operations:[...running.keys()]};},
     async close(){await Promise.allSettled([...running.values()]);await domain.close();},emit,
   };

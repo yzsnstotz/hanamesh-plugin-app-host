@@ -1,4 +1,4 @@
-# 公开契约 v1（候选，0.1.0-rc.26；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
+# 公开契约 v1（候选，0.1.0-rc.27；rc.27 应用使用证据经 usage 插件 record 座位上报（见「应用使用证据」）；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
 
 ## 身份与所有权
 
@@ -135,3 +135,18 @@ DSH 绑定必须提供同一个 `single` domain 的一次完整镜像 publish �
 | `nodeBinary`（库操作用） | `process.execPath`，仅当 `process.versions.electron === undefined` | Electron（K5 fail-closed `NODE_RUNTIME_REQUIRED`） |
 
 推断结果以一行结构化日志 `hanamesh-app-host library: inferred {…}` 打出（只含路径与来源 URL，不含凭据）。不从 cwd、`PATH` 或个人 `~/.dsh` 猜。
+
+## 应用使用证据（rc.27，用户 2026-09-21 定，STATUS `P2-USE-EVENTS`）
+
+应用的 `open` / `use` 使用证据由 **app-host** 经 usage 插件的 record 座位上报；app-host 自己不存事件、不签名、不上传。三插件互不 import：`ctx.inject(['hanameshUsage'], …)` 以**可选**服务取得 `ctx.hanameshUsage`，只鸭子类型地要求 `record(input): Promise<{disposition:'recorded'|'duplicate'|'withheld'|'rejected', eventId?, code?}>`。座位缺席、形状不符、抛错或返回 `rejected`，一律**只打 debug 日志**，不抛、不阻止应用启动或网关转发；`withheld`（用户未同意）与 `duplicate`（重复）是正常结果，同样只 debug。
+
+| 事件 | 触发点 | `idempotencyKey` | `occurredAt` |
+|---|---|---|---|
+| `open` | 实例到达 `ready`（视图真被服务）——每次成功启动一次；同一实例的第二个 view 不重复 | `open:<appId>:<instanceId>` | 就绪时刻 |
+| `use` | 该实例的网关**真的转发**了一个已授权请求且应用回应不是 401/403（含成功的 WebSocket 升级）；每应用每 UTC 小时最多一次 | `use:<appId>:<YYYYMMDDHH>` | 该小时桶内第一个被转发请求的时刻 |
+
+不计入 `use` 的：引导票据 `/__hanamesh_bootstrap/*`、网关拒绝（403 `GATEWAY_*`）、应用自己的 401/403 回应、宿主的就绪探针（探针直连上游，不经网关）、`embedding:'direct'` 部署（没有网关，没有活动信号）。每实例只记一个「上次小时桶」，实例 `stopped`/`failed`/`interrupted` 即丢弃，map 以活实例数为界。
+
+`hanaRef` = 应用的 **npm 包名**（与 usage `validHana` 同形：`@scope/name` 或 `name`，≤128 字符），`sourcePlugin` = `@hanamesh/dsh-app-host`。包名来源按序：① 描述符可选字段 `packageName`（rc.27 新增，`validateDefinition` 校验形状；不带则完全向后兼容）；② 宿主启动时的已安装扫描（`<profile>/node_modules/<pkg>/app.json` → `id`）经 `host.bindPackageName(appId, packageName)` 绑定——应用包只注册纯 `app.json`，扫描先于应用包注册发生，所以绑定不要求 appId 已注册；③ 都没有 → 该应用不产生证据（debug 日志），启动照常。`list().apps[].packageName` 带出当前解析结果（无则 `null`）。
+
+新的宿主面：`host.bindPackageName(appId,name)`、`host.packageName(appId)`、`host.onActivity(listener)`（内存内活动通知 `{type:'instance.activity',instanceId,appId,deploymentId,principalId,at}`，不落 `eventsSince`）；`FixedGateway({ onForward })`；`createUsageEvidence({ host, seat:()=>ctx.hanameshUsage, logger })` 是把二者接到 record 座位的适配器（`dsh.js` 已装好；`close()` 随插件卸载）。

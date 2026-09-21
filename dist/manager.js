@@ -3,7 +3,7 @@ import { join, resolve, dirname } from 'node:path';
 import { access, mkdir, writeFile, rm } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { AppHostError, requireCondition, SerialQueue, copy } from './errors.js';
-import { validateDefinition, identifier, fingerprint, expand, loopbackOrigin } from './descriptor.js';
+import { validateDefinition, identifier, fingerprint, expand, loopbackOrigin, packageName as validPackageName } from './descriptor.js';
 import { secureDirectory } from './store.js';
 import { freePort, spawnOwned, waitReady } from './runtime.js';
 import { FixedGateway, ancestorOrigin } from './gateway.js';
@@ -22,6 +22,7 @@ const isTerminal = s => ['stopped','failed','interrupted'].includes(s);
 /** Sole owner of instance records and view leases. No session-log mutation. */
 export class AppHost {
   #queue = new SerialQueue(); #definitions = new Map(); #controls = new Map(); #listeners = new Set();
+  #packageNames = new Map(); #activityListeners = new Set();
   #logs = new Map(); #state; #initialized = false; #closing = false; #poisoned = false; #timer; #disposing;
   #credentialResolver = null; #nodeBinary; #runtimeLedgerReader;
   constructor({ store, dataRoot, parentOrigin, frameAncestors = [], leaseTtlMs = 90_000, sweepIntervalMs = 15_000,
@@ -82,6 +83,37 @@ export class AppHost {
     requireCondition(!this.#definitions.has(d.id),'DUPLICATE_APP','An app definition cannot be replaced in a running host.');
     this.#definitions.set(d.id,d);
     return { appId:d.id, definitionHash:fingerprint(d) };
+  }
+  /**
+   * rc.27: the npm package that ships an app, as the installed-package scan saw it (`<profile>/node_modules/<pkg>/app.json`
+   * → `id`). Bound before or after `register` — app bundles register themselves once `hanameshApps` is provided, the
+   * scan runs earlier. A `packageName` declared in the definition itself always wins. Bounded by installed packages.
+   */
+  bindPackageName(appId,name) {
+    identifier(appId,'appId');
+    requireCondition(validPackageName(name),'INVALID_PACKAGE_NAME','packageName must be an npm package name.');
+    requireCondition(this.#packageNames.size < 1_024 || this.#packageNames.has(appId),'CAPACITY_LIMIT','Package binding capacity reached.');
+    this.#packageNames.set(appId,name);
+  }
+  /** Usage-evidence `hanaRef` for an app: definition `packageName`, else the bound installed package, else null (no evidence). */
+  packageName(appId) {
+    return this.#definitions.get(appId)?.packageName ?? this.#packageNames.get(appId) ?? null;
+  }
+  /**
+   * rc.27: real application activity — a request the instance's gateway forwarded for an authorized view (not
+   * bootstrap, not a denial, not the host's own readiness probe). Not persisted, not part of `eventsSince`;
+   * the usage-evidence adapter buckets it per UTC hour. Listener errors are swallowed.
+   */
+  onActivity(listener) {
+    requireCondition(typeof listener === 'function','INVALID_LISTENER','Activity listener must be a function.');
+    this.#activityListeners.add(listener);return () => this.#activityListeners.delete(listener);
+  }
+  #activity(id) {
+    if (this.#activityListeners.size === 0) return;
+    const record = this.#state?.instances.find(i => i.id === id);
+    if (!record || record.status !== 'ready') return;
+    const activity = { type:'instance.activity', instanceId:id, appId:record.appId, deploymentId:record.deploymentId, principalId:record.principalId, at:this.clock() };
+    for (const listener of this.#activityListeners) { try { listener({ ...activity }); } catch {} }
   }
   async init() {
     requireCondition(!this.#initialized,'ALREADY_INITIALIZED','Host is already initialized.');
@@ -363,7 +395,7 @@ export class AppHost {
       if (control.abort.signal.aborted) throw new AppHostError('START_CANCELLED','Launch was cancelled.');
       if (deployment.embedding === 'gateway') {
         control.gateway=new FixedGateway({upstream:control.origin,parentOrigin:this.parentOrigin,frameAncestors:this.frameAncestors,
-          ...deployment.gateway,isLeaseActive:key => {
+          ...deployment.gateway,onForward:() => this.#activity(id),isLeaseActive:key => {
             const [principal,view,generation]=JSON.parse(key),lease=this.#findLease(this.#state,principal,view);
             const instance=this.#state.instances.find(i=>i.id===id);
             return Boolean(lease && lease.instanceId===id && lease.generation===generation && active(lease,this.clock()) && instance?.status==='ready');
@@ -533,7 +565,7 @@ export class AppHost {
   }
   instanceList(principalId='host') {return (this.#state?.instances ?? []).filter(i=>i.principalId===principalId).map(publicInstance);}
   list(principalId='host') {
-    return {contractVersion:1,apps:[...this.#definitions.values()].map(d=>({id:d.id,name:d.name,singleInstanceOnly:d.singleInstanceOnly,
+    return {contractVersion:1,apps:[...this.#definitions.values()].map(d=>({id:d.id,name:d.name,singleInstanceOnly:d.singleInstanceOnly,packageName:this.packageName(d.id),
       deployments:d.deployments.map(p=>({id:p.id,dataId:p.dataId,mode:p.mode,embedding:p.embedding,credentialEnv:copy(p.credentialEnv??[])}))})),
       instances:this.instanceList(principalId),views:(this.#state?.leases??[]).filter(l=>l.principalId===principalId).map(publicLease),
       sequence:this.#state?.sequence??0};
@@ -558,7 +590,7 @@ export class AppHost {
       try{await this.stopAll();}catch(error){failure=error;}
       // Release the medium even when a stop could not be confirmed; the failure is still reported.
       try{await this.#queue.drained();await this.store.close();}catch(error){failure??=error;}
-      this.#initialized=false;this.#listeners.clear();
+      this.#initialized=false;this.#listeners.clear();this.#activityListeners.clear();
       if(failure)throw failure;
     })();
     return await this.#disposing;

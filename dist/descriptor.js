@@ -14,10 +14,14 @@ export function loopbackOrigin(value) {
     'INVALID_ORIGIN', 'Only an explicit http://127.0.0.1:<port> origin is supported by this candidate.');
   return url.origin;
 }
+/** npm package name (optionally scoped), at most 128 characters — the same shape the usage plugin accepts as `hanaRef`. */
+export const packageName = value => typeof value === 'string' && value.length <= 128 && /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(value);
 export function validateDefinition(input) {
   const d = copy(input);
   identifier(d.id, 'appId');
   requireCondition(typeof d.name === 'string' && d.name.length > 0 && d.name.length <= 160, 'INVALID_DEFINITION', 'Application name is required.');
+  // rc.27: the npm package that ships this app (usage evidence `hanaRef`). Optional — the installed scan supplies it otherwise.
+  if (d.packageName !== undefined) requireCondition(packageName(d.packageName), 'INVALID_DEFINITION', 'packageName must be an npm package name.');
   d.singleInstanceOnly ??= true;
   requireCondition(typeof d.singleInstanceOnly === 'boolean' && Array.isArray(d.deployments) && d.deployments.length > 0,
     'INVALID_DEFINITION', 'Expected deployment definitions.');

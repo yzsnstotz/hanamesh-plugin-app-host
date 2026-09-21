@@ -167,3 +167,47 @@ test('AH-L07 (plugin): an unconfigured library seeds the HanaMesh catalog source
   const install = await plain.post('/hanamesh/library/install', { itemId: 'x' });
   assert.equal(install.status, 503); assert.equal(install.json.error.code, 'LIBRARY_INSTALL_UNAVAILABLE');
 });
+
+test('AH-U07 (plugin): usage evidence reaches ctx.hanameshUsage.record when that sibling is provided — before or after this plugin — and its absence changes nothing', async t => {
+  const seat = { calls: [], record: async input => { seat.calls.push(structuredClone(input)); return { disposition: 'recorded', eventId: input.idempotencyKey }; } };
+  const app = { ...definition({ embedding: 'gateway' }), packageName: '@hanamesh/app-example' };
+  // (1) Seat provided first (the usage plugin loaded earlier in the profile).
+  const first = await boot(t, { withPlugin: false });
+  first.ctx.provide('hanameshUsage', seat);
+  first.fiber = first.ctx.plugin(appHost, { dataRoot: join(first.root, 'app-data'), applications: [app] });
+  await until(() => first.ctx.get('hanameshApps') !== undefined);
+  const opened = await first.post('/apps/open', { appId: 'example', deploymentId: 'local', viewId: 'view-u07' });
+  assert.equal(opened.status, 200, JSON.stringify(opened.json));
+  const ready = await until(async () => (await first.get('/hanamesh/apps')).json.instances.find(i => i.status === 'ready'));
+  await until(() => seat.calls.some(c => c.action === 'open'));
+  assert.deepEqual(seat.calls.filter(c => c.action === 'open').map(c => ({ ...c, occurredAt: undefined })),
+    [{ hanaRef: '@hanamesh/app-example', action: 'open', occurredAt: undefined, idempotencyKey: `open:example:${ready.id}`, sourcePlugin: '@hanamesh/dsh-app-host' }]);
+  assert.equal((await first.get('/hanamesh/apps')).json.apps[0].packageName, '@hanamesh/app-example');
+  // Real traffic through the gateway (bootstrap ticket → grant cookie → app document) is one `use` for this UTC hour.
+  const resumed = await first.post('/apps/resume', { viewId: 'view-u07', leaseToken: opened.json.leaseToken });
+  assert.equal(resumed.status, 200, JSON.stringify(resumed.json)); assert.ok(resumed.json.uiUrl);
+  const boot303 = await http(resumed.json.uiUrl, { headers: { referer: first.origin + '/', 'sec-fetch-dest': 'iframe' } });
+  assert.equal(boot303.status, 303);
+  const cookie = boot303.headers['set-cookie'][0].split(';')[0], appOrigin = new URL(resumed.json.uiUrl).origin;
+  assert.equal((await http(appOrigin + '/', { headers: { cookie } })).status, 200);
+  assert.equal((await http(appOrigin + '/second', { headers: { cookie } })).status, 200);
+  await until(() => seat.calls.some(c => c.action === 'use'));
+  const uses = seat.calls.filter(c => c.action === 'use');
+  assert.equal(uses.length, 1); assert.match(uses[0].idempotencyKey, /^use:example:\d{10}$/); assert.equal(uses[0].hanaRef, '@hanamesh/app-example');
+  // (2) No usage plugin at all: the app opens and serves exactly the same; nothing is recorded anywhere.
+  const alone = await boot(t, { applications: [app] });
+  const solo = await alone.post('/apps/open', { appId: 'example', deploymentId: 'local', viewId: 'view-u07b' });
+  assert.equal(solo.status, 200, JSON.stringify(solo.json));
+  await until(async () => (await alone.get('/hanamesh/apps')).json.instances.find(i => i.status === 'ready'));
+  // (3) Seat provided AFTER this plugin (usage loaded later): the optional inject picks it up for the next open.
+  const late = { calls: [], record: async input => { late.calls.push(input); return { disposition: 'withheld' }; } };
+  alone.ctx.provide('hanameshUsage', late);
+  await until(() => alone.ctx.get('hanameshUsage') !== undefined);
+  const closed = await alone.post('/apps/close', { viewId: 'view-u07b', leaseToken: solo.json.leaseToken });
+  assert.equal(closed.status, 200, JSON.stringify(closed.json));
+  await until(async () => (await alone.get('/hanamesh/apps')).json.instances.every(i => i.status === 'stopped'));
+  const reopened = await alone.post('/apps/open', { appId: 'example', deploymentId: 'local', viewId: 'view-u07c' });
+  assert.equal(reopened.status, 200, JSON.stringify(reopened.json));
+  await until(() => late.calls.some(c => c.action === 'open'));
+  assert.equal(late.calls[0].hanaRef, '@hanamesh/app-example');
+});

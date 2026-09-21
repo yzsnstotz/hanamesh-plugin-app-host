@@ -34,6 +34,8 @@ const server=createServer(async(req,res)=>{
   if(req.url==='/sse'){
     res.writeHead(200,{'content-type':'text/event-stream','cache-control':'no-cache'});res.write('data: one\n\n');setTimeout(()=>res.end('data: two\n\n'),70);return;
   }
+  if(req.url==='/forbidden'){res.writeHead(403);res.end('no');return;}
+  if(req.url==='/unauthorized'){res.writeHead(401);res.end('who');return;}
   if(req.url==='/redirect'){res.writeHead(302,{location:'http://example.invalid/never-followed'});res.end();return;}
   if(req.url==='/gzip'){
     const {gzipSync}=await import('node:zlib');res.writeHead(200,{'content-encoding':'gzip','content-type':'text/html'});res.end(gzipSync(html));return;

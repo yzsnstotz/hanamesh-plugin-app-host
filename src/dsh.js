@@ -8,6 +8,8 @@
  *   ctx.connection.requestRejection() @deepseek-ai/dsh-client-connection — Host/Origin fence and
  *                                     the browser session cookie; the same gate the /api channel uses
  *   ctx.provide / ctx.effect          @deepseek-ai/cordis — service seat and disposal
+ *   ctx.inject([optional], child)     @deepseek-ai/cordis — optional sibling services (credentials, llm,
+ *                                     hanameshOAuth, hanameshUsage) are read duck-typed when/if they appear
  *
  * `inject` lists all three services, so the plugin only activates once they exist: without the
  * connection service there is no authentication and therefore no route (H11/H14 fail closed).
@@ -31,6 +33,7 @@ import { createLibraryService } from './library/service.js';
 import { createLibraryInstaller } from './library/install.js';
 import { resolveLibraryLocations } from './library/locate.js';
 import { createLibraryHttpHandler, LIBRARY_ROUTES } from './library/routes.js';
+import { createUsageEvidence } from './usage-evidence.js';
 
 export const name = 'hanamesh-app-host';
 export const DSH_TARGET = '0.1.5-alpha.1';
@@ -125,8 +128,12 @@ export async function apply(ctx, config) {
     const auth = { parentOrigin, ...browserAuthentication(connection) };
     const handler = createHttpHandler(host, auth);
     const disposers = ROUTES.map(path => webServer.register({ kind: 'exact', path, handler }));
-    let credentialService, llmService, oauthService;
+    let credentialService, llmService, oauthService, usageService;
     ctx.inject(['credentials'], injected => { credentialService=injected.get('credentials');return()=>{credentialService=undefined;}; });
+    // rc.27: usage evidence goes through the usage plugin's record seat when (and only when) that plugin is loaded.
+    ctx.inject(['hanameshUsage'], injected => { usageService=injected.get('hanameshUsage');return()=>{usageService=undefined;}; });
+    const evidence = createUsageEvidence({ host, seat:()=>usageService, logger:ctx.logger });
+    ctx.effect(() => () => evidence.close(), 'hanameshApps.usage');
     ctx.inject(['llm'], injected => { llmService=injected.get('llm');return()=>{llmService=undefined;}; });
     ctx.inject(['hanameshOAuth'], injected => { oauthService=injected.get('hanameshOAuth');return()=>{oauthService=undefined;}; });
     const credentials = {
@@ -160,6 +167,10 @@ export async function apply(ctx, config) {
     }
     library=createLibraryService({domain:libraryDomain,host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer});
     await library.init();
+    // rc.27: app bundles register plain `app.json` (no package name); the installed scan knows which npm package ships
+    // which appId, and that package name is the usage-evidence `hanaRef`. Scan failure only costs evidence, never startup.
+    try { for (const row of await library.installed()) if (row.appId && row.packageName) { try { host.bindPackageName(row.appId,row.packageName); } catch {} } }
+    catch (error) { if (typeof ctx.logger?.debug === 'function') ctx.logger.debug('hanamesh-app-host usage: installed scan unavailable (%s)', error?.code ?? error?.message); }
     const libraryHandler=createLibraryHttpHandler(library,auth);
     const libraryDisposers=LIBRARY_ROUTES.map(path=>webServer.register({kind:'exact',path,handler:libraryHandler}));
     ctx.effect(() => () => { for (const dispose of disposers.splice(0)) dispose(); }, 'hanameshApps.routes');

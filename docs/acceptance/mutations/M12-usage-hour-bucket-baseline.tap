@@ -1,0 +1,16 @@
+TAP version 13
+# Subtest: AH-U02: use is one per app per UTC hour of real gateway activity; bootstrap, denials and 401/403 answers never count
+ok 1 - AH-U02: use is one per app per UTC hour of real gateway activity; bootstrap, denials and 401/403 answers never count
+  ---
+  duration_ms: 333.338625
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 374.188791
