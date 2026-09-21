@@ -7,13 +7,13 @@
 ## 目录源
 
 - `library.fixture` 只用于受控验收；内容必须符合 `schemas/catalog-provider-page.schema.json`。
-- `library.sources` 可有多项，但浏览时必须恰好启用一项。远端 manifest 只接受标准端口 HTTPS、无凭据/query/fragment；endpoint 必须同源。
+- `library.sources` **未配置**时默认为 HanaMesh 目录源 `https://market.hanamesh.com/catalog-source.json`（rc.26；显式 `[]` = 不要来源）；可有多项，但浏览时必须恰好启用一项。远端 manifest 只接受标准端口 HTTPS、无凭据/query/fragment；endpoint 必须同源。
 - 请求固定 `Accept: application/json` 与 `Accept-Encoding: identity`；最多三次同源跳转，拒绝压缩响应与超过 2 MiB 的响应。
 - 只有 `categories` 含 `hanamesh-app` 且 `package.registry` 为 `npm` 的条目可安装；repository-only 与普通插件只展示。
 
 ## Profile 与安装
 
-钉版本 DSH 没有向插件公开 profile 目录或 profile 名，因此启用安装时 `library.profileDir`（绝对路径）和 `library.profileName` 必填。Electron 下还必须由 dsh-runtime/core 提供绝对 `nodeBinary`；应用库不会回退到 `process.execPath`。
+钉版本 DSH 没有向插件公开 profile 目录或 profile 名。桌面壳通过 overlay 显式给出 `library.profileDir`（绝对路径）、`library.profileName`、`library.dshBin` 与 `nodeBinary`，显式值永远优先。**纯 DSH CLI profile（rc.26）** 下缺省值按 `CONTRACT.md`「应用库配置」推断：`profileDir` 来自本包自身真实安装位置所属的 profile、`profileName` 为其目录名、`dshBin` 只取启动本进程的 `@deepseek-ai/dsh/lib/bin.js`、`nodeBinary` 只在非 Electron 进程取 `process.execPath`。Electron 下仍必须由 dsh-runtime/core 提供绝对 `nodeBinary`；应用库不会在 Electron 里回退到 `process.execPath`。
 
 安装先向 registry 的 `latest` 端点复核精确稳定版本，再用显式 Node 执行 DSH 自己的 `bin.js plugin --profile <name> add --save-exact <package>@<version>`。成功后读取包内 `app.json`；如果描述符声明 runtime，则调用随包内联的锁定 `@hanamesh/lib-provision@0.1.0-rc.1`。生产默认拒绝 prerelease；隔离 Verdaccio 验收可显式设 `allowPrerelease: true`。
 

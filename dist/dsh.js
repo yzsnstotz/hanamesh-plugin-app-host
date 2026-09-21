@@ -29,6 +29,7 @@ import { createRouterHttpHandler, ROUTER_ROUTES } from './router/routes.js';
 import { libraryDomainSpec } from './library/domain.js';
 import { createLibraryService } from './library/service.js';
 import { createLibraryInstaller } from './library/install.js';
+import { resolveLibraryLocations } from './library/locate.js';
 import { createLibraryHttpHandler, LIBRARY_ROUTES } from './library/routes.js';
 
 export const name = 'hanamesh-app-host';
@@ -52,7 +53,12 @@ export const Config = z.object({
   nodeBinary: z.string(),
   router: z.object({ codingOauth: z.object({ mode:z.string() }) }),
   library: z.object({
-    fixture:z.string(),sources:z.array(z.any()),profileDir:z.string(),profileName:z.string(),dshBin:z.string(),
+    fixture:z.string(),
+    /** Undefined (not configured) → the HanaMesh catalog source; an explicit `[]` → no source. schemastery would
+     *  coerce a missing array to `[]`, so the union keeps "unset" distinguishable from "deliberately empty". */
+    sources:z.union([z.array(z.any()),z.const(undefined)]),
+    /** All four are set by the desktop shell overlay; on plain DSH they are inferred (see library/locate.js). */
+    profileDir:z.string(),profileName:z.string(),dshBin:z.string(),
     registry:z.string(),allowPrerelease:z.boolean(),
   }),
   applications: z.array(z.any()).default([]),
@@ -136,15 +142,21 @@ export async function apply(ctx, config) {
     const routerHandler=createRouterHttpHandler(router,auth);
     const routerDisposers=ROUTER_ROUTES.map(path=>webServer.register({kind:'exact',path,handler:routerHandler}));
     libraryDomain=await facility.open(libraryDomainSpec);
-    const libraryConfig=config.library??{};
+    // Explicit config wins; on plain DSH (no shell overlay) the profile, DSH bin and Node are inferred from this process.
+    const locations=await resolveLibraryLocations(config.library??{},{nodeBinary:config.nodeBinary});
+    const libraryConfig={...(config.library??{}),sources:locations.sources,profileDir:locations.profileDir,profileName:locations.profileName};
+    if(locations.inferred.length&&typeof ctx.logger?.info==='function')ctx.logger.info('hanamesh-app-host library: inferred %s',JSON.stringify(Object.fromEntries(
+      locations.inferred.map(key=>[key,key==='sources'?locations.sources.map(source=>source.manifestUrl):locations[key]]))));
     let provisionApi,installer;
-    if(libraryConfig.profileDir&&libraryConfig.profileName&&config.nodeBinary){
-      provisionApi=await import('./provision/index.js');
-      let dshBin=libraryConfig.dshBin;
-      if(!dshBin)dshBin=createRequire(join(libraryConfig.profileDir,'package.json')).resolve('@deepseek-ai/dsh/lib/bin.js');
-      installer=createLibraryInstaller({profileDir:libraryConfig.profileDir,profileName:libraryConfig.profileName,dataRoot,nodeBinary:config.nodeBinary,
-        dshBin,registry:libraryConfig.registry,allowPrerelease:libraryConfig.allowPrerelease,provision:provisionApi.provision,remove:provisionApi.remove,
-        emit:event=>library?.emit(event)});
+    if(locations.profileDir&&locations.profileName&&locations.nodeBinary){
+      let dshBin=locations.dshBin;
+      if(!dshBin)try{dshBin=createRequire(join(locations.profileDir,'package.json')).resolve('@deepseek-ai/dsh/lib/bin.js');}catch{dshBin=undefined;}
+      if(dshBin){
+        provisionApi=await import('./provision/index.js');
+        installer=createLibraryInstaller({profileDir:locations.profileDir,profileName:locations.profileName,dataRoot,nodeBinary:locations.nodeBinary,
+          dshBin,registry:libraryConfig.registry,allowPrerelease:libraryConfig.allowPrerelease,provision:provisionApi.provision,remove:provisionApi.remove,
+          emit:event=>library?.emit(event)});
+      }
     }
     library=createLibraryService({domain:libraryDomain,host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer});
     await library.init();

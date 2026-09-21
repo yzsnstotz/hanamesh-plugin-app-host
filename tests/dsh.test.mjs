@@ -23,7 +23,7 @@ import { definition, temporary, http, until, pidAlive } from './helpers.mjs';
 function connectionDouble(token) {
   return { requestRejection: request => request.headers?.authorization === `Bearer ${token}` ? undefined : { status: 401 } };
 }
-async function boot(t, { token = 'browser-session', withPlugin = true, applications = [definition()] } = {}) {
+async function boot(t, { token = 'browser-session', withPlugin = true, applications = [definition()], config = {} } = {}) {
   const root = await temporary();
   const ctx = new Context();
   ctx.plugin(Storage);
@@ -39,7 +39,7 @@ async function boot(t, { token = 'browser-session', withPlugin = true, applicati
   const origin = `http://127.0.0.1:${ctx.get('webServer').port}`;
   let fiber;
   if (withPlugin) {
-    fiber = ctx.plugin(appHost, { dataRoot: join(root, 'app-data'), applications });
+    fiber = ctx.plugin(appHost, { dataRoot: join(root, 'app-data'), applications, ...config });
     await until(() => ctx.get('hanameshApps') !== undefined);
   }
   const headers = { origin, authorization: `Bearer ${token}`, 'content-type': 'application/json', 'x-hanamesh-client': 'workspace-v1' };
@@ -144,4 +144,26 @@ test('teardown: a whole-root unload (profile shutdown) never orphans an owned pr
   assert.ok(pidAlive(inst.pid));
   await h.ctx.fiber.dispose();
   await until(() => !pidAlive(inst.pid), { timeout: 8_000 });
+});
+
+test('AH-L07 (plugin): an unconfigured library seeds the HanaMesh catalog source through the real Config schema; an explicit [] does not', async t => {
+  const plain = await boot(t, { withPlugin: false });
+  const logged = [];
+  plain.ctx.logger.exporter({ export: message => logged.push(message) });
+  plain.fiber = plain.ctx.plugin(appHost, { dataRoot: join(plain.root, 'app-data'), applications: [definition()] });
+  await until(() => plain.ctx.get('hanameshApps') !== undefined);
+  const seeded = await plain.get('/hanamesh/library/sources');
+  assert.equal(seeded.status, 200, JSON.stringify(seeded.json));
+  assert.deepEqual(seeded.json.sources, [{ manifestUrl: 'https://market.hanamesh.com/catalog-source.json', enabled: true }]);
+  const none = await boot(t, { config: { library: { sources: [] } } });
+  const empty = await none.get('/hanamesh/library/sources');
+  assert.equal(empty.status, 200, JSON.stringify(empty.json));
+  assert.deepEqual(empty.json.sources, []);
+  // One structured line names exactly what was inferred (this checkout has no profile above it, so no profileDir/dshBin).
+  const line = logged.find(message => message.type === 'info' && String(message.args[0]).startsWith('hanamesh-app-host library: inferred'));
+  assert.ok(line, JSON.stringify(logged.map(m => m.args[0])));
+  assert.deepEqual(JSON.parse(line.args[1]), { nodeBinary: process.execPath, sources: ['https://market.hanamesh.com/catalog-source.json'] });
+  // Plain DSH without a profile above this checkout: the installer stays unavailable, nothing is guessed from cwd or ~/.dsh.
+  const install = await plain.post('/hanamesh/library/install', { itemId: 'x' });
+  assert.equal(install.status, 503); assert.equal(install.json.error.code, 'LIBRARY_INSTALL_UNAVAILABLE');
 });

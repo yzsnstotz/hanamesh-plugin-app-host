@@ -8,6 +8,8 @@ export const Config: unknown;
 export const appHostDomainSpec: { readonly name: 'hanamesh_app_host'; readonly version: 1; readonly layout: 'single' };
 export interface DshPluginConfig {
   dataRoot?: string; parentOrigin?: string; nodeBinary?: string; router?:{codingOauth?:{mode?:'http'|'file'}};
+  /** `sources` undefined → the HanaMesh catalog source; explicit `[]` → none. `profileDir`/`profileName`/`dshBin` (and
+   *  `nodeBinary`) are inferred on plain DSH when undefined — see docs/CONTRACT.md 「应用库配置」; explicit values win. */
   library?:{fixture?:string;sources?:Array<{manifestUrl:string;enabled?:boolean}>;profileDir?:string;profileName?:string;dshBin?:string;registry?:string;allowPrerelease?:boolean};
   applications?: AppDefinition[]; leaseTtlMs?: number; sweepIntervalMs?: number;
 }

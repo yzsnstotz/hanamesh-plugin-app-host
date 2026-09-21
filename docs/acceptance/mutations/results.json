@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-21T08:17:40.832Z",
+  "generatedAt": "2026-09-21T09:23:37.973Z",
   "results": [
     {
       "id": "M01-single-instance",
@@ -80,6 +80,16 @@
       "killed": true,
       "originalSourceSha256": "3daa98b79de16823c7e0540dc2ec62649718263bbc79b781c0ff4c3fa54543ea",
       "mutatedSourceSha256": "1638547290c2d027bdd2d91e4c3813462d2764fa3bcc491d79b2f542041f9792"
+    },
+    {
+      "id": "M10-library-node-electron",
+      "test": "tests/library-locate.test.mjs",
+      "pattern": "^AH-L09:",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "35dd3e090992e0eb7960027e64c14726ff351a888e1505a3f907c7f0812eb9b9",
+      "mutatedSourceSha256": "ddc655ab327552d81d578337a7a0f2d4d4ab38d7c63bc745f593568a81b7c912"
     },
     {
       "id": "M08-node-runtime-electron",

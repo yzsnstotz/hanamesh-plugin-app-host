@@ -1,4 +1,4 @@
-# 公开契约 v1（候选，0.1.0-rc.16；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
+# 公开契约 v1（候选，0.1.0-rc.26；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
 
 ## 身份与所有权
 
@@ -120,3 +120,18 @@ SDK 只用于工作台顶层页面，不给应用 iframe。采用 same-origin cr
 DSH 绑定必须提供同一个 `single` domain 的一次完整镜像 publish 与 writer 排他权。两次 API 写入不等于事务。没有 Session.append 自定义事件。
 
 候选容量：256个持久实例、2048个视图历史、1024条通知、每实例128条内存日志。达到容量拒绝新建而不偷偷删除未审计历史；尚无自动归档/迁移工具。默认租约90秒、扫描15秒；`sweepIntervalMs:0` 仅用于手动驱动/测试，生产必须启用扫描或可靠外部调用。
+
+## 应用库配置（rc.26）
+
+`library.sources` **未配置**（undefined）→ 默认 `[{manifestUrl:"https://market.hanamesh.com/catalog-source.json",enabled:true}]`；显式 `[]` → 无来源（`CATALOG_SOURCE_REQUIRED`，由用户在「应用库来源」里添加）。默认只在存储为空的首启播种；已保存的来源永不被默认覆盖。
+
+`library.profileDir` / `profileName` / `dshBin` 与 `nodeBinary`：显式配置永远优先。缺省时按下列规则推断，推不出即留空（安装不可用 `LIBRARY_INSTALL_UNAVAILABLE`，浏览与已安装扫描仍照常）：
+
+| 键 | 推断来源 | 拒绝条件 |
+|---|---|---|
+| `profileDir` | 本包真实安装根（`import.meta.url` 向上到 `@hanamesh/dsh-app-host` 包根，`realpath`）之上第一个 `node_modules/@hanamesh/dsh-app-host` 解析到该根、且 `package.json` 的 `dependencies` 或 `dsh.profile.bundles` 提到 hanamesh 的祖先目录 | pnpm `.pnpm` 存储目录（无 profile 清单）、非 hanamesh profile、源码 checkout |
+| `profileName` | `basename(profileDir)` | 无 `profileDir` |
+| `dshBin` | `process.argv[1]`，仅当以 `/@deepseek-ai/dsh/lib/bin.js` 结尾且为绝对路径；否则再尝试从 profile 解析 `@deepseek-ai/dsh/lib/bin.js` | 任何其它脚本 |
+| `nodeBinary`（库操作用） | `process.execPath`，仅当 `process.versions.electron === undefined` | Electron（K5 fail-closed `NODE_RUNTIME_REQUIRED`） |
+
+推断结果以一行结构化日志 `hanamesh-app-host library: inferred {…}` 打出（只含路径与来源 URL，不含凭据）。不从 cwd、`PATH` 或个人 `~/.dsh` 猜。
