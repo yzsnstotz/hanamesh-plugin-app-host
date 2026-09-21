@@ -6,7 +6,7 @@ import { AppHostError, requireCondition, SerialQueue, copy } from './errors.js';
 import { validateDefinition, identifier, fingerprint, expand, loopbackOrigin } from './descriptor.js';
 import { secureDirectory } from './store.js';
 import { freePort, spawnOwned, waitReady } from './runtime.js';
-import { FixedGateway } from './gateway.js';
+import { FixedGateway, ancestorOrigin } from './gateway.js';
 import { reserveBeforeLaunch, stopBeforePublish } from './consistency.js';
 
 const hash = token => createHash('sha256').update(token).digest('hex');
@@ -24,7 +24,7 @@ export class AppHost {
   #queue = new SerialQueue(); #definitions = new Map(); #controls = new Map(); #listeners = new Set();
   #logs = new Map(); #state; #initialized = false; #closing = false; #poisoned = false; #timer; #disposing;
   #credentialResolver = null; #nodeBinary; #runtimeLedgerReader;
-  constructor({ store, dataRoot, parentOrigin, leaseTtlMs = 90_000, sweepIntervalMs = 15_000,
+  constructor({ store, dataRoot, parentOrigin, frameAncestors = [], leaseTtlMs = 90_000, sweepIntervalMs = 15_000,
     checkpoint = async () => {}, clock = () => Date.now(), credentialResolver = null, nodeBinary,
     runtimeLedgerReader = async root => (await import('./provision/index.js')).ledger(root) }) {
     requireCondition(store && ['init','load','save','close'].every(k => typeof store[k] === 'function'),
@@ -33,7 +33,7 @@ export class AppHost {
     requireCondition(Number.isSafeInteger(leaseTtlMs) && leaseTtlMs >= 100 && leaseTtlMs <= 3_600_000 &&
       Number.isSafeInteger(sweepIntervalMs) && sweepIntervalMs >= 0 && sweepIntervalMs <= 3_600_000,
       'INVALID_TIMEOUT','Invalid lease or sweep timing.');
-    this.store = store; this.dataRoot = dataRoot; this.parentOrigin = loopbackOrigin(parentOrigin);
+    this.store = store; this.dataRoot = dataRoot; this.parentOrigin = loopbackOrigin(parentOrigin); this.frameAncestors = frameAncestors.map(ancestorOrigin);
     this.leaseTtlMs = leaseTtlMs; this.sweepIntervalMs = sweepIntervalMs; this.checkpoint = checkpoint; this.clock = clock;
     this.#nodeBinary = nodeBinary;
     requireCondition(typeof runtimeLedgerReader === 'function','INVALID_RUNTIME','runtimeLedgerReader must be a function.');
@@ -362,7 +362,7 @@ export class AppHost {
       await waitReady(control.origin,deployment.readiness,{runtime:control.runner,timeoutMs:deployment.startTimeoutMs,signal:control.abort.signal});
       if (control.abort.signal.aborted) throw new AppHostError('START_CANCELLED','Launch was cancelled.');
       if (deployment.embedding === 'gateway') {
-        control.gateway=new FixedGateway({upstream:control.origin,parentOrigin:this.parentOrigin,
+        control.gateway=new FixedGateway({upstream:control.origin,parentOrigin:this.parentOrigin,frameAncestors:this.frameAncestors,
           ...deployment.gateway,isLeaseActive:key => {
             const [principal,view,generation]=JSON.parse(key),lease=this.#findLease(this.#state,principal,view);
             const instance=this.#state.instances.find(i=>i.id===id);

@@ -45,6 +45,9 @@ export const Config = z.object({
   dataRoot: z.string().default(join(process.env.DSH_HOME ?? process.env.HOME ?? '.', 'data', 'hanamesh-apps')),
   /** Exact loopback workspace origin; defaults to the running web server's own origin. */
   parentOrigin: z.string(),
+  /** Extra origins allowed as frame ancestors of app views — the desktop shell's own webview origin
+   *  (e.g. `tauri://localhost`) when the DSH workspace itself runs inside the shell's iframe. */
+  frameAncestors: z.array(z.string()),
   /** Standalone Node executable used for guardian/launcher processes; required under Electron. */
   nodeBinary: z.string(),
   router: z.object({ codingOauth: z.object({ mode:z.string() }) }),
@@ -105,7 +108,7 @@ export async function apply(ctx, config) {
   const domain = await facility.open(appHostDomainSpec);
   let routerDomain,libraryDomain,library;
   const store = new DshDomainSnapshotStore(domainBinding(domain));
-  const host = new AppHost({ store, dataRoot, parentOrigin,
+  const host = new AppHost({ store, dataRoot, parentOrigin, frameAncestors: config.frameAncestors ?? [],
     ...(config.nodeBinary === undefined ? {} : { nodeBinary: config.nodeBinary }),
     ...(config.leaseTtlMs === undefined ? {} : { leaseTtlMs: config.leaseTtlMs }),
     ...(config.sweepIntervalMs === undefined ? {} : { sweepIntervalMs: config.sweepIntervalMs }) });

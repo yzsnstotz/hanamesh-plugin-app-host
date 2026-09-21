@@ -1,5 +1,7 @@
-# HanaMesh app-host · 0.1.0-rc.19
+# HanaMesh app-host · 0.1.0-rc.20
 
+> rc.20（2026-09-21）：在 rc.19 之上再修两处（同一个「桌面壳里打开应用空白」，在真实 WKWebView 抓到的请求头证实）：① 引导 303 不再带 `referrer-policy: no-referrer`——它作用于跳转那一跳，`/` 导航到达时没有 Referer，rc.19 的无 cookie 授权路径永远匹配不上；② 新增配置 `frameAncestors: string[]`（壳自己的 webview origin，如 `tauri://localhost`）——`frame-ancestors` 对**所有**祖先生效，壳 → DSH → 应用三层时只写 DSH origin 会被 webview 拒绝渲染。H16 测试。rc.19 未发布到任何地方以外的 registry。
+>
 > rc.19（2026-09-21）：网关不再只认 cookie——嵌入式 webview（HanaMesh 桌面 Tauri/WKWebView、开了跟踪防护的 WebView2）里应用 iframe 相对壳的顶层 origin 是第三方，`SameSite=Strict` 的引导 cookie 被丢弃，303 之后每个请求都 403（响应带 `frame-ancestors 'none'`）→ 用户看到空白 iframe（2026-09-21 桌面 rc.4 + Vibe 实测）。rc.19 在 cookie 缺席时改用 Fetch Metadata：`sec-fetch-site: same-origin`（应用自身子资源/XHR）、或 `same-site` + `iframe` + 父 origin referer（引导后的框架导航）、或应用 origin 的 WebSocket 握手，且必须已有一张为仍在有效期 lease 消费过的引导票；cross-site / `none`（地址栏）一律拒绝。H15 三条测试；浏览器直开仍走 cookie。
 >
 > rc.18（2026-09-20）：应用库卡片跟踪安装/补齐运行时/卸载操作——按钮进入「…中…」，订阅 `/hanamesh/library/events` 直到 `-done`/`-failed`，失败时在卡片上显示错误码与可读原因（如 `REGISTRY_LOOKUP_FAILED`：应用包不在当前 registry），并提供「重试安装」。用户 2026-09-20 实测：点安装无任何反应。宿主逻辑不变。

@@ -98,3 +98,16 @@ test('H15: embedded WebSocket handshake authorizes by the app origin without a c
   active.delete('alice:view-a');
   assert.match(await handshake(g.origin),/^HTTP\/1\.1 403/);
 });
+
+test('H16: frame-ancestors lists the shell webview origin as well as the workspace; bogus ancestors are refused',async t=>{
+  const {origin:upstream}=await external(t);const active=new Set(['alice:view-a']);
+  const g=new FixedGateway({upstream,parentOrigin,isLeaseActive:key=>active.has(key),frameAncestors:['tauri://localhost','http://tauri.localhost']});
+  await g.start();t.after(()=>g.close());
+  const ticket=g.issue('alice:view-a');const boot=await http(ticket,{headers:{referer:parentOrigin+'/workspace','sec-fetch-dest':'iframe'}});
+  assert.equal(boot.status,303);assert.equal(boot.headers['content-security-policy'],`default-src 'none'; frame-ancestors ${parentOrigin} tauri://localhost http://tauri.localhost`);
+  const cookie=boot.headers['set-cookie'][0].split(';')[0];
+  const page=await http(g.origin+'/',{headers:{cookie}});
+  assert.equal(page.status,200);assert.match(page.headers['content-security-policy'],new RegExp(`frame-ancestors ${parentOrigin} tauri://localhost http://tauri.localhost(;|$)`));
+  for(const bad of ['tauri://localhost/app','http://evil.test/?x','javascript:alert(1)','not a url',''])
+    assert.throws(()=>new FixedGateway({upstream,parentOrigin,isLeaseActive:()=>true,frameAncestors:[bad]}),error=>error.code==='INVALID_FRAME_ANCESTOR',bad);
+});

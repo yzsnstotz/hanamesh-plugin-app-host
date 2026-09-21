@@ -3,20 +3,40 @@ import { randomBytes, createHash } from 'node:crypto';
 import { AppHostError, requireCondition, bounded } from './errors.js';
 import { loopbackOrigin } from './descriptor.js';
 
-export function rewriteCsp(value, parentOrigin) {
-  if (/(?:^|;)\s*frame-ancestors\b/i.test(value))
-    return value.replace(/(^|;)(\s*)frame-ancestors\b[^;]*/ig, (_, delimiter, whitespace) => `${delimiter}${whitespace}frame-ancestors ${parentOrigin}`);
-  return `${value}${value.trimEnd().endsWith(';') ? '' : ';'} frame-ancestors ${parentOrigin}`;
+/**
+ * `frame-ancestors` is matched against EVERY ancestor, not just the direct parent. Inside a
+ * desktop shell the chain is `<shell origin>` → DSH workspace → app frame, so the shell's own
+ * webview origin (e.g. `tauri://localhost`) must be listed too or the app document is served
+ * and then refused by the webview — a blank frame (HanaMesh desktop rc.4, 2026-09-21). The
+ * value is `parentOrigin` plus the configured extra ancestors, space-separated.
+ */
+export function frameAncestorsValue(parentOrigin, frameAncestors = []) {
+  return [parentOrigin, ...frameAncestors.filter(origin => origin !== parentOrigin)].join(' ');
 }
-export function embeddingHeaders(rawHeaders, parentOrigin) {
+/** Only exact origins of a scheme a webview can actually host a top-level document on. */
+export function ancestorOrigin(value) {
+  let url;
+  try { url = new URL(value); } catch { requireCondition(false, 'INVALID_FRAME_ANCESTOR', 'Expected an explicit ancestor origin.'); }
+  requireCondition(['http:', 'https:', 'tauri:', 'asset:', 'file:'].includes(url.protocol) && !url.username && !url.password &&
+    (url.pathname === '/' || url.pathname === '') && !url.search && !url.hash && (url.protocol === 'file:' || url.hostname),
+    'INVALID_FRAME_ANCESTOR', 'Only scheme://host[:port] ancestor origins are accepted.');
+  // `URL.origin` is the string "null" for non-special schemes such as tauri:; rebuild it.
+  return url.protocol === 'file:' ? 'file://' : `${url.protocol}//${url.host}`;
+}
+export function rewriteCsp(value, ancestors) {
+  if (/(?:^|;)\s*frame-ancestors\b/i.test(value))
+    return value.replace(/(^|;)(\s*)frame-ancestors\b[^;]*/ig, (_, delimiter, whitespace) => `${delimiter}${whitespace}frame-ancestors ${ancestors}`);
+  return `${value}${value.trimEnd().endsWith(';') ? '' : ';'} frame-ancestors ${ancestors}`;
+}
+export function embeddingHeaders(rawHeaders, ancestors) {
   const output = []; let hasCsp = false;
   for (let i = 0; i < rawHeaders.length; i += 2) {
     const key = rawHeaders[i], value = rawHeaders[i + 1];
     if (key.toLowerCase() === 'x-frame-options') continue;
-    if (key.toLowerCase() === 'content-security-policy') { output.push(key, rewriteCsp(value, parentOrigin)); hasCsp = true; }
+    if (key.toLowerCase() === 'content-security-policy') { output.push(key, rewriteCsp(value, ancestors)); hasCsp = true; }
     else output.push(key, value);
   }
-  if (!hasCsp) output.push('Content-Security-Policy', `frame-ancestors ${parentOrigin}`);
+  if (!hasCsp) output.push('Content-Security-Policy', `frame-ancestors ${ancestors}`);
   return output;
 }
 const token = () => randomBytes(32).toString('hex');
@@ -34,8 +54,10 @@ function fail(res, status, code) {
 
 /** Fixed upstream only. Bootstrap is our own response, not a rewritten app document. */
 export class FixedGateway {
-  constructor({ upstream, parentOrigin, isLeaseActive, cookieAllowlist = [], allowAppAuthorization = false, maxUploadBytes = 32 * 1024 * 1024 }) {
+  constructor({ upstream, parentOrigin, isLeaseActive, cookieAllowlist = [], allowAppAuthorization = false, maxUploadBytes = 32 * 1024 * 1024, frameAncestors = [] }) {
     this.upstream = loopbackOrigin(upstream); this.parentOrigin = loopbackOrigin(parentOrigin);
+    requireCondition(Array.isArray(frameAncestors) && frameAncestors.length <= 8, 'INVALID_FRAME_ANCESTOR', 'frameAncestors must be a short list of origins.');
+    this.ancestors = frameAncestorsValue(this.parentOrigin, frameAncestors.map(ancestorOrigin));
     requireCondition(typeof isLeaseActive === 'function','INVALID_GATEWAY','A live lease authorization check is required.');
     this.isLeaseActive = isLeaseActive; this.cookieAllowlist = new Set(cookieAllowlist);
     this.allowAppAuthorization = allowAppAuthorization; this.maxUploadBytes = maxUploadBytes;
@@ -130,10 +152,14 @@ export class FixedGateway {
     const cookieName = this.cookiePrefix + suffix;
     for (const [old,g] of this.grants) if (g.cookieName === cookieName) this.grants.delete(old);
     this.grants.set(value,{ viewKey:item.viewKey, cookieName });
+    // No `referrer-policy: no-referrer` here: browsers apply it to the redirect hop, so the
+    // `/` navigation that follows arrives without a Referer and the cookie-less embedded path
+    // (parent-referer + same-site iframe) can never match (WKWebView, 2026-09-21). The Referer
+    // of that hop is the parent document, never this ticket URL, so nothing leaks upstream.
     res.writeHead(303, {
       location:'/', 'set-cookie':`${cookieName}=${value}; Path=/; HttpOnly; SameSite=Strict`,
-      'cache-control':'no-store', 'referrer-policy':'no-referrer',
-      'content-security-policy':`default-src 'none'; frame-ancestors ${this.parentOrigin}`,
+      'cache-control':'no-store',
+      'content-security-policy':`default-src 'none'; frame-ancestors ${this.ancestors}`,
     });
     res.end();
   }
@@ -144,7 +170,7 @@ export class FixedGateway {
     if (!['GET','HEAD','POST','PUT','PATCH','DELETE','OPTIONS'].includes(req.method)) return fail(res,405,'METHOD_NOT_ALLOWED');
     if (Number(req.headers['content-length']) > this.maxUploadBytes) return fail(res,413,'UPLOAD_TOO_LARGE');
     const upstream = request(this.upstream + req.url,{ method:req.method,headers:this.#headers(req) }, response => {
-      res.writeHead(response.statusCode, embeddingHeaders(response.rawHeaders,this.parentOrigin));
+      res.writeHead(response.statusCode, embeddingHeaders(response.rawHeaders,this.ancestors));
       response.pipe(res, { end:false });
       response.once('error', () => res.destroy());
       response.once('end', () => { if (Object.keys(response.trailers).length) res.addTrailers(response.trailers); res.end(); });
