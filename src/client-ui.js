@@ -18,15 +18,19 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     React.useEffect(()=>{void load();},[load]);
     const mutate=async(path,body)=>{try{setError('');await request(path,{method:'POST',body:JSON.stringify(body)});await load();}catch(e){setError(String(e.message??e));}};
     const sourceRows=providers.map(provider=>h('tr',{key:provider.id},h('td',null,provider.displayName),h('td',null,provider.source),h('td',null,provider.state),h('td',null,provider.keyHint??'—'),h('td',null,(provider.models??[]).join('、')||'—')));
+    const stateText={auto:'自动路由',granted:'已手动指定',missing:'未路由：没有可用的供应商',revoked:'已停用（不自动路由）','app-owned':'应用自管'};
+    const subjectText=item=>item.granted?(item.granted.kind==='provider'?item.granted.providerId:item.granted.ref??item.granted.key):'';
     const cards=apps.map(app=>{const plan=plans[app.id];if(!plan)return null;return h('section',{className:'hm-provider-card',key:app.id},h('h3',null,app.name),
+      h('p',{className:'hm-provider-hint'},'路由是自动的：profile 里已配置、且应用声明接受的供应商会在应用启动时直接注入；应用内部自己的设置优先于这里。'),
       ...groups(plan.items??[]).map(([purpose,items])=>h('div',{className:'hm-provider-purpose',key:purpose},h('strong',null,purpose),...items.map(item=>{
-        const id=entryId(item.entry),choices=providers.filter(provider=>!item.entry.providers?.length||item.entry.providers.includes(provider.id));
-        return h('div',{className:'hm-provider-row',key:id},h('span',null,item.entry.env??item.entry.path),h('span',null,item.state),
-          h('select',{defaultValue:'',onChange:event=>{const provider=choices.find(row=>row.id===event.target.value);if(provider)void mutate('/hanamesh/router/grant',{appId:app.id,entryId:id,subject:provider.ref?{kind:'api-key',ref:provider.ref}:{kind:'provider',providerId:provider.id},model:provider.models?.[0]});}},h('option',{value:''},'选择供应商'),...choices.map(provider=>h('option',{value:provider.id,key:provider.id},provider.displayName))),
-          item.granted?h('button',{type:'button',onClick:()=>void mutate('/hanamesh/router/revoke',{appId:app.id,entryId:id})},'撤销'):null);
-      }))),h('details',null,h('summary',null,'高级'),h('button',{type:'button',onClick:()=>void mutate('/hanamesh/router/mode',{appId:app.id,mode:plan.mode==='managed'?'app-owned':'managed'})},plan.mode==='managed'?'切换为应用自管':'切换为托管')));});
+        const id=entryId(item.entry);
+        return h('div',{className:'hm-provider-row',key:id},h('span',null,item.entry.env??item.entry.path),h('span',null,`${stateText[item.state]??item.state}${item.granted?` ← ${subjectText(item)}`:''}`),
+          item.state==='revoked'?h('button',{type:'button',onClick:()=>{const provider=providers.find(p=>p.state==='configured'&&(!item.entry.providers?.length||item.entry.providers.includes(p.id)||(p.id==='coding-oauth-gateway'&&item.entry.providers.includes('openai'))));if(provider)void mutate('/hanamesh/router/grant',{appId:app.id,entryId:id,subject:provider.ref?{kind:'api-key',ref:provider.ref}:{kind:'provider',providerId:provider.id}});}},'恢复'):
+          (item.state==='auto'||item.state==='granted')?h('button',{type:'button',onClick:()=>void mutate('/hanamesh/router/revoke',{appId:app.id,entryId:id})},'停用'):null);
+      }))),h('details',null,h('summary',null,'高级'),h('button',{type:'button',onClick:()=>void mutate('/hanamesh/router/mode',{appId:app.id,mode:plan.mode==='managed'?'app-owned':'managed'})},plan.mode==='managed'?'切换为应用自管（不注入任何供应商）':'切换为托管（自动路由）')));});
     return h('section',{className:'hm-providers'},h('h2',null,'供应商'),h('p',null,'这里只显示来源、状态、提示与模型，不读取或展示密钥值。'),error?h('p',{role:'alert'},error):null,
-      h('button',{type:'button',onClick:()=>void mutate('/hanamesh/router/gateway',{enabled:true})},'启用网关'),
+      h('p',{className:'hm-provider-hint'},'「Coding OAuth Gateway」是 dsh-coding-subscription-oauth 插件的本地 OpenAI 兼容 API（127.0.0.1 端口 + 一把本地 key）。DSH 自己的对话直接走订阅，不需要它；只有像 Vibe 这样按 OpenAI API 说话的应用才需要。开启后它会自动路由到应用的 OPENAI_API_KEY 槽位（没有真实 OpenAI key 时）。'),
+      h('button',{type:'button',onClick:()=>void mutate('/hanamesh/router/gateway',{enabled:true})},'启用 Coding OAuth 本地网关'),
       h('table',null,h('thead',null,h('tr',null,...['名称','来源','状态','Key 提示','模型'].map(label=>h('th',{key:label},label)))),h('tbody',null,...sourceRows)),...cards);
   }
   let libraryVisible=false;const libraryListeners=new Set();

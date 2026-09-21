@@ -36,13 +36,30 @@ function fixture(){
 test('AH-R01 directory reports configured references but never exposes values',async()=>{
   const{router}=fixture(),json=JSON.stringify(await router.providers());assert(json.includes('OPENAI_API_KEY'));assert(!json.includes('secret-openai'));
 });
-test('AH-R02 only explicitly granted declared entries are injected and re-resolved at each launch',async()=>{
-  const{router,launch,values}=fixture();assert.equal(await launch(),undefined);
-  await assert.rejects(router.grant('vibe-trading','env:NOT_DECLARED',{kind:'api-key',ref:'OPENAI_API_KEY'}),{code:'ENTRY_UNKNOWN'});
-  await router.grant('vibe-trading','env:OPENAI_API_KEY',{kind:'api-key',ref:'OPENAI_API_KEY'});
+test('AH-R02 a configured provider the entry accepts is auto-routed; revoke opts out; explicit grant overrides',async()=>{
+  const{router,launch,values}=fixture();
+  // auto-route: the profile already holds OPENAI_API_KEY → injected without any grant, re-resolved at each launch
   assert.deepEqual((await launch()).env,{OPENAI_API_KEY:'secret-openai',LANGCHAIN_PROVIDER:'openai'});
+  let plan=await router.plan('vibe-trading');assert.equal(plan.items[0].state,'auto');assert.deepEqual(plan.items[0].granted,{kind:'api-key',ref:'OPENAI_API_KEY'});
   values.set('OPENAI_API_KEY','rotated-sensitive');assert.equal((await launch()).env.OPENAI_API_KEY,'rotated-sensitive');
+  await assert.rejects(router.grant('vibe-trading','env:NOT_DECLARED',{kind:'api-key',ref:'OPENAI_API_KEY'}),{code:'ENTRY_UNKNOWN'});
+  // revoke = opt out of auto-route until the user grants again
   await router.revoke('vibe-trading','env:OPENAI_API_KEY');assert.equal(await launch(),undefined);
+  plan=await router.plan('vibe-trading');assert.equal(plan.items[0].state,'revoked');
+  await router.grant('vibe-trading','env:OPENAI_API_KEY',{kind:'api-key',ref:'OPENAI_API_KEY'});
+  assert.equal((await launch()).env.OPENAI_API_KEY,'rotated-sensitive');assert.equal((await router.plan('vibe-trading')).items[0].state,'granted');
+  // nothing configured → nothing routed, no suggestion needed
+  values.delete('OPENAI_API_KEY');await router.revoke('vibe-trading','env:OPENAI_API_KEY');assert.equal(await launch(),undefined);
+});
+test('AH-R02b the OpenAI-compatible Coding OAuth gateway auto-routes to an `openai` slot only when no OpenAI key exists',async()=>{
+  const{router,launch,values}=fixture();
+  values.delete('OPENAI_API_KEY');
+  const env=(await launch()).env;assert.equal(env.OPENAI_API_KEY,'gateway-secret');assert.equal(env.LANGCHAIN_PROVIDER,'coding-oauth-gateway');
+  assert.deepEqual((await router.plan('vibe-trading')).items[0].granted,{kind:'provider',providerId:'coding-oauth-gateway'});
+  values.set('OPENAI_API_KEY','secret-openai');assert.equal((await launch()).env.OPENAI_API_KEY,'secret-openai');
+  // explicit grant of the gateway is also accepted for the openai slot
+  await router.grant('vibe-trading','env:OPENAI_API_KEY',{kind:'provider',providerId:'coding-oauth-gateway'});
+  assert.equal((await launch()).env.OPENAI_API_KEY,'gateway-secret');
 });
 test('AH-R01 grant keeps matching-consumer risk acknowledgement for legacy grant slots',async()=>{
   const{router}=fixture(),subject={kind:'grant',key:'hanamesh-auth-oauth/openai-chatgpt--app-vibe-trading'};
@@ -57,7 +74,8 @@ test('AH-R01 absent OAuth leaves a selected grant missing without reading its re
 test('AH-R01/AK11 file projection lifecycle follows host events and app-owned cleanup',async()=>{
   const{router,launch,oauth}=fixture(),subject={kind:'grant',key:'hanamesh-auth-oauth/openai-chatgpt--app-vibe-trading'};
   await router.grant('vibe-trading','file:dataDir:auth/token.json',subject,{riskAcknowledged:true});assert.equal((await launch()).files[0].policy,'overwrite');
-  assert.deepEqual((await launch()).env,{LANGCHAIN_PROVIDER:'openai_codex'});await router.observe({type:'credential.injected',instanceId:'one',names:['file:auth/token.json']});
+  // the auto-routed OpenAI key rides along; the later file grant's `sets` wins for LANGCHAIN_PROVIDER
+  assert.deepEqual((await launch()).env,{OPENAI_API_KEY:'secret-openai',LANGCHAIN_PROVIDER:'openai_codex'});await router.observe({type:'credential.injected',instanceId:'one',names:['file:auth/token.json']});
   assert.equal((await launch()).files[0].policy,'if-absent');oauth.version=2;assert.equal((await launch()).files[0].policy,'overwrite');
   await router.setMode('vibe-trading','app-owned');assert.deepEqual((await launch()).files,[{path:'auth/token.json',policy:'remove'}]);
 });

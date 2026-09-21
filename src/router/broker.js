@@ -32,9 +32,23 @@ export function createRouter({credentials,domain,apps,sources,oauth=()=>undefine
     if(subject.kind==='grant'){
       const match=KEY.exec(subject.key);if(!match||match[2]!==appId)throw error('CONSUMER_MISMATCH');provider=match[1];
     }
-    if(entry.providers?.length&&!entry.providers.includes(provider))throw error('PROVIDER_MISMATCH');
+    if(!accepts(entry,provider))throw error('PROVIDER_MISMATCH');
   }
   async function providerDirectory(){return await sources.list();}
+  /** Providers an api-key entry accepts: its declared ids, plus the OpenAI-compatible Coding OAuth
+   *  gateway wherever `openai` is accepted (same wire protocol, `{{baseUrl}}` carries the difference). */
+  const accepts=(entry,providerId)=>!entry.providers?.length||entry.providers.includes(providerId)
+    ||(providerId==='coding-oauth-gateway'&&entry.providers.includes('openai'));
+  /** Auto-route (2026-09-21 contract): when the profile already holds a configured provider the entry accepts
+   *  and the user has not revoked it, the Router grants it without a click. Declared order wins; the gateway
+   *  is the last resort. Explicit grants and `app-owned` mode always take precedence. */
+  function autoSubject(entry,app,providers){
+    const id=entryId(entry);if(entry.kind!=='api-key'||entry.projection==='file'||app.revoked?.[id])return undefined;
+    const configured=providers.filter(p=>p.state==='configured'&&accepts(entry,p.id));
+    const ordered=[...(entry.providers??[]).map(pid=>configured.find(p=>p.id===pid)).filter(Boolean),...configured.filter(p=>p.id==='coding-oauth-gateway')];
+    const found=ordered[0]??configured[0];if(!found)return undefined;
+    return found.ref?{kind:'api-key',ref:found.ref}:{kind:'provider',providerId:found.id};
+  }
   function template(value,vars){
     return value.replace(/\{\{(provider|baseUrl|model)(?:\|([^}]*))?\}\}/g,(_,name,fallback)=>vars[name]||fallback||'');
   }
@@ -57,9 +71,10 @@ export function createRouter({credentials,domain,apps,sources,oauth=()=>undefine
           if(grant.subject.kind==='grant')present=!!oauthProvider&&(await credentials.describeRecord(grant.subject.key)).configured;
           item.state=present?'granted':'missing';
           if(grant.subject.kind==='grant'){item.riskNotice=oauthInfos.find(x=>x.id===KEY.exec(grant.subject.key)?.[1])?.riskNotice;item.projectedVersion=app.ledger[id]?.projectedVersion;}
-        }else if(entry.kind==='api-key'&&!app.revoked?.[id]){
-          const found=providers.find(p=>p.state==='configured'&&entry.providers?.includes(p.id));
-          if(found){item.suggestion=found.ref?{kind:'api-key',ref:found.ref}:{kind:'provider',providerId:found.id};item.state='suggested';}
+        }else{
+          const auto=autoSubject(entry,app,providers);
+          if(auto){item.granted=auto;item.auto=true;item.state='auto';}
+          else if(app.revoked?.[id])item.state='revoked';
         }
         return item;
       }));return{appId,mode:app.mode,items};
@@ -80,8 +95,10 @@ export function createRouter({credentials,domain,apps,sources,oauth=()=>undefine
         return files.length?{files}:undefined;
       }
       const applySets=(entry,vars)=>{for(const[name,value]of Object.entries(entry.sets??{}))if(byId.has('env:'+name)){const expanded=template(value,vars);if(expanded)env[name]=expanded;}};
+      const directory=await providerDirectory();
       for(const entry of input.credentialEnv){
-        const id=entryId(entry),matched=byId.get(id),grant=app.grants[id];if(!matched||!grant||JSON.stringify(matched)!==JSON.stringify(entry))continue;validSubject(entry,grant.subject,appId);
+        const id=entryId(entry),matched=byId.get(id);if(!matched||JSON.stringify(matched)!==JSON.stringify(entry))continue;
+        const auto=app.grants[id]?undefined:autoSubject(matched,app,directory),grant=app.grants[id]??(auto?{subject:auto}:undefined);if(!grant)continue;validSubject(entry,grant.subject,appId);
         if(entry.projection==='file'){
           if(grant.subject.kind!=='grant'||!oauth())continue;if(!(await credentials.describeRecord(grant.subject.key)).configured)continue;
           const projection=await oauth().project(grant.subject.key,entry.format);if(typeof projection.content!=='string')continue;

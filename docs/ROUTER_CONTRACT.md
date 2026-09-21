@@ -1,4 +1,4 @@
-# Router contract · rc.10
+# Router contract · rc.21
 
 ## 1. 来源模型与状态
 
@@ -7,6 +7,8 @@ Provider 只来自 `dsh-models` 或 `coding-oauth-gateway`，形状为 `{id, sou
 `coding-oauth-gateway` 默认经当前 DSH web 的 `/plugins/dsh-grok-build/gateway` 查询；404 代表未安装且不出现在目录。启用操作只转发 PATCH。reveal 值只留在 resolver 内存和 `secrets`。`router.codingOauth.mode:'file'` 是 0600 文件备选，路径为隔离 `DSH_HOME/.coding-oauth-gateway.json`。
 
 ## 2. 授权表与 ledger
+
+**自动路由（rc.21，2026-09-21 用户定）：** 托管模式下，声明了 `api-key` 槽位的应用在每次启动时，若 profile 里已有一个该槽位接受的 `configured` 供应商且用户未对该槽位「停用」，Router 直接注入，不需要显式 grant；候选顺序 = 描述符 `providers` 声明顺序，`coding-oauth-gateway` 作为 `openai` 槽位的 OpenAI 兼容兜底排最后。显式 grant 优先于自动；`revoke` = 停用该槽位的自动路由（`revoked` 标记）；`app-owned` 模式不注入。OAuth 文件投射（`grant/key`）仍需显式授权与风险确认。应用内部自己的 provider 设置优先于宿主注入——宿主只负责把可用的送到，不替应用决定。`plan` 的 `state` 取 `auto | granted | missing | revoked | app-owned`（`suggested` 已移除）。
 
 `hanamesh_router` storage-domain 保存每个 app 的 `mode`、`grants`、文件投射 `ledger` 与撤销标记。grant subject 为 `api-key/ref`、`provider/providerId` 或兼容旧 OAuth 的 `grant/key`；可另存 model。明文、gateway key 和 provider token 永不进入 domain。
 

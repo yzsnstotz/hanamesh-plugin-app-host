@@ -2,7 +2,7 @@ TAP version 13
 # Subtest: AH-K5-2: Electron self-hosting refuses fallback and persists a failed instance event
 ok 1 - AH-K5-2: Electron self-hosting refuses fallback and persists a failed instance event
   ---
-  duration_ms: 41.373167
+  duration_ms: 35.103166
   type: 'test'
   ...
 1..1
@@ -13,4 +13,4 @@ ok 1 - AH-K5-2: Electron self-hosting refuses fallback and persists a failed ins
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 79.220583
+# duration_ms 74.016583
