@@ -19,15 +19,18 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     const acceptable=entry=>providers.find(p=>p.state==='configured'&&(!entry.providers?.length||entry.providers.includes(p.id)||(p.id==='coding-oauth-gateway'&&entry.providers.includes('openai'))));
     // One compact table for every app: app × slot → routed provider. Scales to many apps; no per-app card, no manual picker.
     const routeRows=apps.flatMap(app=>{const plan=plans[app.id];if(!plan)return[];const slots=(plan.items??[]).filter(item=>!item.derived);return slots.map((item,index)=>{const id=entryId(item.entry);
-      return h('tr',{key:`${app.id}:${id}`},index===0?h('td',{rowSpan:slots.length},app.name):null,h('td',null,item.entry.env??item.entry.path),h('td',null,item.entry.purpose??'—'),h('td',null,subjectText(item)),h('td',null,stateText[item.state]??item.state),
+      const routed=item.state==='auto'||item.state==='granted',current=item.model??'',options=[...new Set([...(item.models??[]),...(current?[current]:[])])];
+      const modelCell=!routed?'—':options.length?h('select',{value:current,onChange:e=>void mutate('/hanamesh/router/model',{appId:app.id,entryId:id,model:e.target.value})},h('option',{value:''},item.defaultModel?`应用默认（${item.defaultModel}）`:'应用默认'),...options.map(m=>h('option',{key:m,value:m},m))):
+        h('input',{type:'text',defaultValue:current,placeholder:item.defaultModel?`应用默认（${item.defaultModel}）`:'应用默认',onBlur:e=>{if(e.target.value.trim()!==current)void mutate('/hanamesh/router/model',{appId:app.id,entryId:id,model:e.target.value.trim()});}});
+      return h('tr',{key:`${app.id}:${id}`},index===0?h('td',{rowSpan:slots.length},app.name):null,h('td',null,item.entry.env??item.entry.path),h('td',null,item.entry.purpose??'—'),h('td',null,subjectText(item)),h('td',null,modelCell),h('td',null,stateText[item.state]??item.state),
         h('td',null,item.state==='revoked'?h('button',{type:'button',onClick:()=>{const provider=acceptable(item.entry);if(provider)void mutate('/hanamesh/router/grant',{appId:app.id,entryId:id,subject:provider.ref?{kind:'api-key',ref:provider.ref}:{kind:'provider',providerId:provider.id}});}},'恢复'):
           (item.state==='auto'||item.state==='granted')?h('button',{type:'button',onClick:()=>void mutate('/hanamesh/router/revoke',{appId:app.id,entryId:id})},'停用'):null));});});
     return h('section',{className:'hm-providers'},h('h2',null,'供应商'),h('p',null,'这里只显示来源、状态、提示与模型，不读取或展示密钥值。'),error?h('p',{role:'alert'},error):null,
       h('table',null,h('thead',null,h('tr',null,...['名称','来源','状态','Key 提示','模型'].map(label=>h('th',{key:label},label)))),h('tbody',null,...sourceRows)),
       h('p',{className:'hm-provider-hint'},'来源的开关在各自的地方：API key 在 DSH「Models」，Coding OAuth 本地网关在该插件自己的设置页（DSH 对话不需要它，只有按 OpenAI API 说话的应用需要）。'),
       h('h3',null,'路由'),
-      h('p',{className:'hm-provider-hint'},'自动：profile 里已配置、且应用声明接受的供应商在应用启动时直接注入；应用内部自己的设置优先。「停用」让某一槽位退出自动路由。'),
-      routeRows.length?h('table',null,h('thead',null,h('tr',null,...['应用','槽位','用途','供应商','状态',''].map((label,index)=>h('th',{key:index},label)))),h('tbody',null,...routeRows)):h('p',{className:'hm-provider-hint'},'还没有安装任何声明了供应商槽位的应用。'));
+      h('p',{className:'hm-provider-hint'},'自动：profile 里已配置、且应用声明接受的供应商在应用启动时直接注入；模型随路由一起在这里选（留「应用默认」则用应用清单里的默认值）。「停用」让某一槽位退出自动路由。'),
+      routeRows.length?h('table',null,h('thead',null,h('tr',null,...['应用','槽位','用途','供应商','模型','状态',''].map((label,index)=>h('th',{key:index},label)))),h('tbody',null,...routeRows)):h('p',{className:'hm-provider-hint'},'还没有安装任何声明了供应商槽位的应用。'));
   }
   let libraryVisible=false;const libraryListeners=new Set();
   const setLibraryVisible=value=>{libraryVisible=value;for(const listener of libraryListeners)listener(value);};

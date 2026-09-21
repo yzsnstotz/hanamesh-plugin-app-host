@@ -1,4 +1,4 @@
-# Router contract · rc.23
+# Router contract · rc.24
 
 ## 1. 来源模型与状态
 
@@ -14,7 +14,7 @@ Provider 只来自 `dsh-models` 或 `coding-oauth-gateway`，形状为 `{id, sou
 
 文件投射沿用 v1.1 生命周期：新版本 `overwrite`，同版本及应用已自行轮换时 `if-absent`，撤销或切换 app-owned 时一次 `remove`；只有宿主的 `credential.injected` / `credential.file-removed` 事件推进 ledger。
 
-**模型归应用（rc.23）：** Router 只路由供应商，**不选模型**。`sets` 里的 `{{model|<应用默认>}}` 在没有显式 grant 指定模型时展开为应用自己声明的默认值；rc.21/rc.22 曾把供应商模型列表的第一项（网关列出的 `gpt-5.3-codex-spark`）塞给应用，这是错的，已删。没有声明 `providers` 的槽位（如 `LANGCHAIN_PROVIDER`/`LANGCHAIN_MODEL_NAME`/`OPENAI_BASE_URL` 这类由同伴 `sets` 派生的变量）永远不自动路由，plan 里标 `derived:true`，路由表不显示。玩家要换模型：在应用自己的设置里换（Vibe：Settings → LLM → Model）。
+**模型随路由（rc.24，用户 2026-09-21 定）：** 走 Router 的槽位，**模型也在 Router 的这一行选**——路由表的「模型」列列出所路由供应商的模型（网关 `/v1/models` 或 DSH Models 目录），留「应用默认」则用应用清单 `{{model|<默认>}}`；`POST /hanamesh/router/model {appId, entryId, model}`（`''` = 应用默认；自动路由的行选了模型后变成同一供应商的显式 grant）。rc.23 的「模型只能在应用里改」是误读，已撤。Router 仍然**不**替应用猜模型：`sets` 里的 `{{model|<应用默认>}}` 在没有显式 grant 指定模型时展开为应用自己声明的默认值；rc.21/rc.22 曾把供应商模型列表的第一项（网关列出的 `gpt-5.3-codex-spark`）塞给应用，这是错的，已删。没有声明 `providers` 的槽位（如 `LANGCHAIN_PROVIDER`/`LANGCHAIN_MODEL_NAME`/`OPENAI_BASE_URL` 这类由同伴 `sets` 派生的变量）永远不自动路由，plan 里标 `derived:true`，路由表不显示。玩家要换模型：在应用自己的设置里换（Vibe：Settings → LLM → Model）。
 
 **宿主「供应商」页（rc.22）：** 只有两张表——来源目录（名称/来源/状态/Key 提示/模型）与路由表（应用 × 槽位 → 供应商 / 状态 / 停用·恢复），随应用数量按行增长；**不放**网关开关（归 dsh-coding-subscription-oauth 自己的设置页）与「应用自管」切换（自动路由 + 应用内设置优先已经消解了冲突；`/mode` 路由保留给 API 兼容，UI 不暴露）。
 

@@ -51,6 +51,11 @@ export function createRouter({credentials,domain,apps,sources,oauth=()=>undefine
     const found=ordered[0]??configured[0];if(!found)return undefined;
     return found.ref?{kind:'api-key',ref:found.ref}:{kind:'provider',providerId:found.id};
   }
+  /** The app's own default from `sets: {X:'{{model|<default>}}'}` — shown as「应用默认」in the routing table. */
+  function declaredDefaultModel(entry){
+    for(const value of Object.values(entry.sets??{})){const match=/\{\{model\|([^}]*)\}\}/.exec(value);if(match)return match[1];}
+    return undefined;
+  }
   function template(value,vars){
     return value.replace(/\{\{(provider|baseUrl|model)(?:\|([^}]*))?\}\}/g,(_,name,fallback)=>vars[name]||fallback||'');
   }
@@ -67,6 +72,7 @@ export function createRouter({credentials,domain,apps,sources,oauth=()=>undefine
       const items=await Promise.all(entries.map(async entry=>{
         const id=entryId(entry),grant=app.grants[id],item={entry,state:'missing'};
         if(entry.env&&derived.has(entry.env))item.derived=true;
+        const defaultModel=declaredDefaultModel(entry);if(defaultModel)item.defaultModel=defaultModel;
         if(app.mode==='app-owned'){item.state='app-owned';return item;}
         if(grant){item.granted=grant.subject;if(grant.model)item.model=grant.model;
           let present=false;
@@ -80,6 +86,8 @@ export function createRouter({credentials,domain,apps,sources,oauth=()=>undefine
           if(auto){item.granted=auto;item.auto=true;item.state='auto';}
           else if(app.revoked?.[id])item.state='revoked';
         }
+        const routed=item.granted&&(item.granted.kind==='provider'?providers.find(p=>p.id===item.granted.providerId):item.granted.kind==='api-key'?providers.find(p=>p.ref===item.granted.ref):undefined);
+        if(routed?.models?.length)item.models=routed.models;
         return item;
       }));return{appId,mode:app.mode,items};
     },
@@ -88,6 +96,15 @@ export function createRouter({credentials,domain,apps,sources,oauth=()=>undefine
       if(subject.kind==='grant'&&opts.riskAcknowledged!==true)throw error('RISK_NOT_ACKNOWLEDGED');
       if(subject.kind==='provider'&&!((await providerDirectory()).some(p=>p.id===subject.providerId)))throw error('ROUTER_PROVIDER_ABSENT');
       await updateApp(appId,app=>{app.grants[id]={subject,...(opts.model?{model:opts.model}:{}),grantedAt:new Date().toISOString(),riskAcknowledged:opts.riskAcknowledged===true};delete app.revoked?.[id];});
+      return await api.plan(appId);
+    },
+    /** Model rides with the route: set it on the routed slot (an auto-routed slot becomes an explicit grant of the same provider). '' = app default. */
+    async setModel(appId,id,model){
+      const entry=declared(appId,id);if(!entry)throw error('ENTRY_UNKNOWN');
+      if(typeof model!=='string'||model.length>200||/[\s]/.test(model))throw error('INVALID_MODEL');
+      const app=appState(appId),subject=app.grants[id]?.subject??autoSubject(entry,app,await providerDirectory());
+      if(!subject)throw error('ENTRY_NOT_ROUTED');
+      await updateApp(appId,app=>{const grant=app.grants[id]??{subject,grantedAt:new Date().toISOString(),riskAcknowledged:false};if(model)grant.model=model;else delete grant.model;app.grants[id]=grant;delete app.revoked?.[id];});
       return await api.plan(appId);
     },
     async revoke(appId,id){if(!declared(appId,id))throw error('ENTRY_UNKNOWN');await updateApp(appId,app=>{delete app.grants[id];app.revoked??={};app.revoked[id]=true;});return await api.plan(appId);},

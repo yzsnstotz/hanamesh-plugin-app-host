@@ -43,7 +43,7 @@ test('AH-R09 file gateway requires mode 0600 and returns the same provider contr
 });
 
 test('AH-R08 every router route rejects missing client header, wrong origin, iframe and unauthenticated calls',async t=>{
-  const router={providers:async()=>[],plan:async()=>({}),grant:async()=>({}),revoke:async()=>({}),setMode:async()=>{},enableGateway:async()=>({})};
+  const router={providers:async()=>[],plan:async()=>({}),grant:async()=>({}),revoke:async()=>({}),setModel:async()=>({}),setMode:async()=>{},enableGateway:async()=>({})};
   let handler;const server=createServer((req,res)=>handler(req,res));await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const origin=`http://127.0.0.1:${server.address().port}`;t.after(()=>new Promise(resolve=>{server.closeAllConnections();server.close(resolve);}));
   handler=createRouterHttpHandler(router,{parentOrigin:origin,authenticate:req=>req.headers.authorization==='Bearer owner'?{principalId:'owner'}:null,authorize:()=>true});

@@ -112,7 +112,13 @@ test('AH-R02c auto-route keeps the app\'s declared default model and never route
   assert.equal(env.OPENAI_API_KEY,'gateway-secret');assert.equal(env.LANGCHAIN_MODEL_NAME,'gpt-5.5');assert.equal(env.LANGCHAIN_PROVIDER,'coding-oauth-gateway');
   const plan=await router.plan('vibe-trading');
   assert.deepEqual(plan.items.map(i=>[i.entry.env,i.state,i.derived===true]),[['LANGCHAIN_PROVIDER','missing',true],['LANGCHAIN_MODEL_NAME','missing',true],['OPENAI_API_KEY','auto',false]]);
-  // an explicit grant that names a model still wins over the app default
-  await router.grant('vibe-trading','env:OPENAI_API_KEY',{kind:'provider',providerId:'coding-oauth-gateway'},{model:'gpt-5.6-sol'});
+  assert.equal(plan.items[2].defaultModel,'gpt-5.5');assert.deepEqual(plan.items[2].models,['gpt-5.5']);
+  // the model is chosen on the routed slot itself: an auto row becomes an explicit grant of the same provider + model
+  await router.setModel('vibe-trading','env:OPENAI_API_KEY','gpt-5.6-sol');
   assert.equal((await launch()).env.LANGCHAIN_MODEL_NAME,'gpt-5.6-sol');
+  const after=(await router.plan('vibe-trading')).items[2];assert.equal(after.state,'granted');assert.equal(after.model,'gpt-5.6-sol');assert.deepEqual(after.granted,{kind:'provider',providerId:'coding-oauth-gateway'});
+  // '' returns to the app default; a slot with nothing routed rejects a model; whitespace/oversize rejected
+  await router.setModel('vibe-trading','env:OPENAI_API_KEY','');assert.equal((await launch()).env.LANGCHAIN_MODEL_NAME,'gpt-5.5');
+  await assert.rejects(router.setModel('vibe-trading','env:LANGCHAIN_PROVIDER','x'),{code:'ENTRY_NOT_ROUTED'});
+  await assert.rejects(router.setModel('vibe-trading','env:OPENAI_API_KEY','a b'),{code:'INVALID_MODEL'});
 });

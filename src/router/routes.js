@@ -3,7 +3,7 @@ import { AppHostError, requireCondition } from '../errors.js';
 import { loopbackOrigin } from '../descriptor.js';
 
 export const ROUTER_ROUTES=Object.freeze(['/hanamesh/router/providers','/hanamesh/router/plan','/hanamesh/router/grant',
-  '/hanamesh/router/revoke','/hanamesh/router/mode','/hanamesh/router/gateway']);
+  '/hanamesh/router/revoke','/hanamesh/router/model','/hanamesh/router/mode','/hanamesh/router/gateway']);
 async function body(req){
   requireCondition(req.headers['content-type']?.split(';')[0].trim()==='application/json','CONTENT_TYPE_REQUIRED','Expected application/json.',{},415);
   const chunks=[];let total=0;for await(const chunk of req){total+=chunk.length;requireCondition(total<=16_384,'BODY_TOO_LARGE','Request body is too large.',{},413);chunks.push(chunk);}
@@ -12,7 +12,7 @@ async function body(req){
 function send(res,status,value){res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store',
   'x-content-type-options':'nosniff','content-security-policy':"default-src 'none'; frame-ancestors 'none'"});res.end(JSON.stringify(value));}
 const statusFor=code=>({APP_NOT_FOUND:404,ENTRY_UNKNOWN:404,ROUTER_PROVIDER_ABSENT:404,RISK_NOT_ACKNOWLEDGED:403,
-  CONSUMER_MISMATCH:403,GATEWAY_OFF:409,GATEWAY_UNREACHABLE:503}[code]??400);
+  CONSUMER_MISMATCH:403,ENTRY_NOT_ROUTED:409,GATEWAY_OFF:409,GATEWAY_UNREACHABLE:503}[code]??400);
 
 export function createRouterHttpHandler(router,{parentOrigin,authenticate,authorize}){
   parentOrigin=loopbackOrigin(parentOrigin);requireCondition(typeof authenticate==='function'&&typeof authorize==='function','AUTH_BINDING_REQUIRED','Router authentication is required.');
@@ -36,6 +36,7 @@ export function createRouterHttpHandler(router,{parentOrigin,authenticate,author
     if(path==='/hanamesh/router/plan')result=await router.plan(input.appId);
     if(path==='/hanamesh/router/grant')result=await router.grant(input.appId,input.entryId,input.subject,{model:input.model,riskAcknowledged:input.riskAcknowledged});
     if(path==='/hanamesh/router/revoke')result=await router.revoke(input.appId,input.entryId);
+    if(path==='/hanamesh/router/model')result=await router.setModel(input.appId,input.entryId,input.model??'');
     if(path==='/hanamesh/router/mode'){await router.setMode(input.appId,input.mode);result=await router.plan(input.appId);}
     if(path==='/hanamesh/router/gateway')result=await router.enableGateway(input.enabled===true);
     send(res,200,{...result,traceId});
