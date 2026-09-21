@@ -91,6 +91,35 @@ export async function ownsLoopbackPort(pid, port) {
   throw new AppHostError('PLATFORM_UNSUPPORTED', 'Owned process/socket verification currently supports POSIX Linux and macOS only.');
 }
 
+// Identity of a live process: a start token (pid reuse guard) and its executable when the
+// platform can say. Unknown fields stay null so callers fail closed; a dead or zombie pid is null.
+let bootId;
+export async function processIdentity(pid) {
+  if (!Number.isSafeInteger(pid) || pid <= 1) return null;
+  try { process.kill(pid, 0); }
+  catch (error) { if (error.code === 'ESRCH') return null; if (error.code !== 'EPERM') throw error; }
+  if (process.platform === 'linux') {
+    try {
+      const stat = await readFile(`/proc/${pid}/stat`, 'utf8');
+      const rest = stat.slice(stat.lastIndexOf(')') + 2).split(' ');
+      if (rest[0] === 'Z' || rest[0] === 'X') return null;
+      bootId ??= (await readFile('/proc/sys/kernel/random/boot_id', 'utf8').catch(() => '')).trim();
+      return { pid, start: `${bootId}:${rest[19]}`, command: await readlink(`/proc/${pid}/exe`).catch(() => null) }; // field 22: starttime
+    } catch (error) { if (['ENOENT', 'ESRCH'].includes(error.code)) return null; if (error.code !== 'EACCES') throw error; }
+  }
+  if (process.platform !== 'win32') {
+    for (const binary of ['/bin/ps', '/usr/bin/ps']) {
+      let stdout;
+      try { ({ stdout } = await exec(binary, ['-o', 'stat=', '-o', 'lstart=', '-o', 'comm=', '-p', String(pid)], { timeout: 1_000 })); }
+      catch (error) { if (error.code === 'ENOENT') continue; if (typeof error.code === 'number') return null; throw error; }
+      const fields = stdout.trim().split(/\s+/);
+      if (fields.length < 6 || fields[0].startsWith('Z')) return null;
+      return { pid, start: fields.slice(1, 6).join(' '), command: fields.slice(6).join(' ') || null };
+    }
+  }
+  return { pid, start: null, command: null };
+}
+
 export function redact(line, secrets = []) {
   for (const secret of secrets) if (typeof secret === 'string' && secret.length >= 4) line = line.split(secret).join('[REDACTED]');
   return line.replace(/(\bBearer\s+)[^\s"',;]+/gi, '$1[REDACTED]')
@@ -139,7 +168,7 @@ export async function spawnOwned(config, { onLog = () => {} } = {}) {
       resolveSpawn(msg.pid);
     }
     if (msg.type === 'app-exit') appExit = { code: msg.code, signal: msg.signal };
-    if (msg.type === 'error') rejectSpawn(new AppHostError(msg.code, msg.message));
+    if (msg.type === 'error') rejectSpawn(new AppHostError(msg.code, msg.message, msg.details ?? {}));
   });
   let stopping;
   const stop = () => {

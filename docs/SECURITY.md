@@ -10,7 +10,22 @@
 
 每个 owned runtime 使用独立 guardian 及锚定进程组的 launcher。宿主 IPC 断开会触发 guardian 清理；清理仅对该精确子进程创建的进程组，绝不按名称匹配或复用磁盘 PID 发 kill。收到清理确认才发布 stopped。attach 无 guardian、无 kill 路径。
 
-主机断电、guardian/launcher 同时被 SIGKILL、内核崩溃、存储损坏、恶意 daemon 脱离进程组不在此次证明范围。guardian 意外消失导致无法确认清理时保留所有权/锁并失败关闭，不自动删除 runtime lock 或认领旧 PID。需要人工核实精确进程和记录后维修；不要 `pkill node` 或直接删除锁“修复”。
+主机断电、内核崩溃、存储损坏、恶意 daemon 脱离进程组不在此次证明范围。
+
+### runtime lock 的死主接管（rc.25）
+
+每个 owned 数据根下的 `.runtime.lock` 由 guardian 持有，记录 `{pid, start, id, children:[{pid,start,command,role,group}], port}`：`start` 是进程启动时间令牌（macOS/Linux 由 `ps -o lstart=` 或 `/proc/<pid>/stat` + boot_id 得到），`children` 是 guardian 自己创建的 launcher（进程组组长）与应用进程。launcher 在收到 launch 指令之前就已被记录，所以它还没机会派生任何东西时锁里已经有它。
+
+guardian 被强杀（桌面壳整棵树被 kill、`kill -9`）后，下一次 acquire 的判定顺序固定为：
+
+1. **owner 活着**（pid 存在且启动令牌一致，或旧格式无令牌但 pid 存在）→ `DATA_ROOT_BUSY`，`details = {pid, start, reason:'owner-alive', port}`，不发任何信号。
+2. **owner 死了**（pid 不存在，或同 pid 启动令牌不同 = pid 被复用）→ 逐个核对 `children`：
+   - pid 不存在、或启动令牌与记录不同（pid 被无关进程复用）→ 视为已消失，**不发信号**；
+   - pid + 启动令牌 + 可执行文件（realpath 比较）三者一致 → **可证明是我们的孤儿**，先 SIGTERM（进程组组长连同 `-pid` 组一起），等 `stopGraceMs`，再 SIGKILL，确认退出后接管；
+   - 活着但证明不了（记录或平台缺启动令牌、可执行文件不同）→ `DATA_ROOT_BUSY`，`details = {pid, pids, ownerPid, reason:'orphan-unproven', children}`，不发信号，锁原样保留。
+3. 接管仍走原有的 `.recovery` 独占标记序列化；损坏的锁文件依旧 `LOCK_RECOVERY_REQUIRED`，不自动删。
+
+Windows 与无 `ps` 的环境退化为只判 pid 存活：活着的进程永远无法被证明是我们的，只会 `DATA_ROOT_BUSY`，不会接管。绝不按进程名匹配，不 `pkill node`；人工维修时先看 `details.pid`。
 
 Linux 的 socket 所有权检查已实际运行；macOS lsof 路径未实测；Windows owned 在 spawn 前拒绝。平台声明不是跨平台验收。
 

@@ -1,5 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.24
+# HanaMesh app-host · 0.1.0-rc.25
 
+> rc.25（2026-09-21，STATUS `APP-RUNTIME-LOCK`）：桌面壳整棵进程树被强杀（DSH + guardian 一起死）后，应用数据根下的 `.runtime.lock` 不再永久卡住下一次「打开」。锁记录现在带 owner pid + 进程启动时间令牌、guardian 创建的子进程（launcher / app 的 pid + 启动令牌 + 可执行文件）和端口；再次 acquire 时：owner 活着 → 仍 `DATA_ROOT_BUSY`，`details.pid` 给出活着的 pid；owner 死了（pid 不存在，或同 pid 但启动时间不同 = pid 复用）→ 逐个核对记录的子进程：已消失或被别的进程复用 pid 的忽略，**只有 pid + 启动令牌 + 可执行文件三者都对得上的孤儿**才被 SIGTERM→SIGKILL 后接管锁；活着但证明不了是我们的 → 仍 `DATA_ROOT_BUSY`，`details.pid`/`details.ownerPid` 指出该进程。只用 Node 内建（macOS/Linux 用 `ps -o lstart=` / `/proc`，Windows 退化为只判 pid 存活、永不接管活进程）。AH-L01–L06 测试（L05/L06 真 SIGKILL guardian + 宿主后再开），M09 变异。
 > rc.24（2026-09-21）：模型随路由——路由表加「模型」列（所路由供应商的模型列表 / 文本框；「应用默认」= 清单默认值），`POST /hanamesh/router/model`；自动路由行选模型即成为同供应商的显式 grant。
 > rc.23（2026-09-21）：Router 不再替应用选模型——自动路由时 `{{model|默认}}` 落到应用声明的默认值，不再取供应商模型列表第一项（用户在 Vibe 里被塞了 `gpt-5.3-codex-spark` 的根因）；无 `providers` 的派生槽位不自动路由、plan 标 `derived`、路由表不显示。
 > rc.22（2026-09-21）：「供应商」页压成两张表（来源目录 + 应用×槽位路由表），可扩展到多个应用；去掉网关开关（归 oauth 插件自己的设置页）和「应用自管」切换（自动路由 + 应用内设置优先已消解冲突）。

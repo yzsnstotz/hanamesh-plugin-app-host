@@ -2,9 +2,9 @@ TAP version 13
 # Subtest: X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive
 not ok 1 - X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive
   ---
-  duration_ms: 314.235208
+  duration_ms: 375.984125
   type: 'test'
-  location: '/private/tmp/hm-app-host-mutation-SrXAoN/tests/crash.test.mjs:54:1'
+  location: '/private/tmp/hm-app-host-mutation-Nysfqr/tests/crash.test.mjs:54:1'
   failureType: 'testCodeFailure'
   error: 'STOP_BOUNDARY_UNSAFE: stopped was published while its owned app still ran at the actual crash cut'
   code: 'ERR_ASSERTION'
@@ -13,7 +13,7 @@ not ok 1 - X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped w
   actual: false
   operator: '=='
   stack: |-
-    TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-SrXAoN/tests/crash.test.mjs:57:3)
+    TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-Nysfqr/tests/crash.test.mjs:57:3)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -25,4 +25,4 @@ not ok 1 - X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped w
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 353.80525
+# duration_ms 425.781959

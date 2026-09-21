@@ -4,7 +4,7 @@
 
 `appId` 是已注册应用；`deploymentId + dataId` 是部署与数据身份；`instance.id` 是持久槽位；`runtimeId` 是每次真实运行的新身份；`principalId + viewId + generation` 是视图租约。`originalSessionId` 只保存原应用的 opaque 标识，本宿主**没有**因此实现原应用文档/会话的自动恢复。端口、PID、gateway URL 都是易变诊断信息，不能拿来恢复身份。
 
-单实例范围是 **principal + app + deployment + data**，不是跨用户全局共享进程。一个 AtomicFileStore 根只允许一个活跃 host writer；该进程内并发启动合并，另有每数据根 runtime lock 防止第二宿主同时占用。多实例每次新 view 默认新槽位，明确传入 owned `instanceId` 才共享已有槽位。
+单实例范围是 **principal + app + deployment + data**，不是跨用户全局共享进程。一个 AtomicFileStore 根只允许一个活跃 host writer；该进程内并发启动合并，另有每数据根 runtime lock 防止第二宿主同时占用（rc.25 起该锁记录 owner/子进程的 pid + 启动令牌，guardian 被强杀后按 `SECURITY.md`「死主接管」规则安全回收；活着的 owner 或证明不了归属的孤儿仍 `DATA_ROOT_BUSY` 并在 `details.pid` 给出活 pid）。多实例每次新 view 默认新槽位，明确传入 owned `instanceId` 才共享已有槽位。
 
 ## 注册描述符（仅受信宿主）
 

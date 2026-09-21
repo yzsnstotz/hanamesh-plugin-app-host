@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FileLock } from './store.js';
-import { guardianEnvironment } from './runtime.js';
+import { guardianEnvironment, processIdentity } from './runtime.js';
 if (process.versions.electron !== undefined) {
   const refusal = { type:'guardian.refused', code:'NODE_RUNTIME_REQUIRED', message:'Guardian requires a standalone Node.js runtime.' };
   if (process.connected) await new Promise(resolve => process.send(refusal, () => resolve()));
@@ -59,7 +59,7 @@ async function cleanup(reason) {
     if (lock) await lock.release();
     if (process.connected) await new Promise(resolve => process.send({ type:'stopped', reason }, () => resolve()));
     process.exit(0);
-  })().catch(error => { send({ type: 'error', code: error.code ?? 'GUARDIAN_FAILURE', message: error.message }); process.exit(1); });
+  })().catch(error => { send({ type: 'error', code: error.code ?? 'GUARDIAN_FAILURE', message: error.message, details: error.details ?? {} }); process.exit(1); });
   return stopping;
 }
 process.on('disconnect', () => void cleanup('host-disconnected'));
@@ -71,7 +71,10 @@ process.on('message', async message => {
   config = message.config;
   try {
     if (!process.connected || stopping) return;
-    lock = new FileLock(join(config.dataDir, '.runtime.lock'), { reclaimDead: false });
+    // A force-killed guardian leaves this lock behind. The record names this pid + start token and
+    // the children created below, so the next guardian can prove the stale owner dead (or its
+    // orphans ours) instead of failing DATA_ROOT_BUSY until a human deletes the file.
+    lock = new FileLock(join(config.dataDir, '.runtime.lock'), { reclaimDead: true, orphanGraceMs: config.stopGraceMs });
     await lock.acquire();
     if (!process.connected || stopping) { await lock.release(); return; }
     child = spawn(config.nodeBinary, [fileURLToPath(new URL('./launcher.js', import.meta.url))], {
@@ -79,12 +82,18 @@ process.on('message', async message => {
       detached: true, stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
     });
     child.stdout.pipe(process.stdout); child.stderr.pipe(process.stderr);
-    child.once('spawn', () => child.send({type:'launch',config}, error => {
+    const record = async (pid, role, command, group) => {
+      const live = await processIdentity(pid);
+      await lock.annotate({ child: { pid, role, command, group, start: live?.start ?? null }, port: config.port ?? null });
+    };
+    // The launcher (group leader) is recorded before it is told to launch anything.
+    child.once('spawn', () => record(child.pid, 'launcher', config.nodeBinary, true).then(() => child.send({type:'launch',config}, error => {
       if(error){send({type:'error',code:'SPAWN_FAILED',message:error.message});void cleanup('ipc-error');}
-    }));
+    }), error => { send({type:'error',code:error.code ?? 'SPAWN_FAILED',message:error.message}); void cleanup('lock-annotate-error'); }));
     child.on('message', message => {
-      if(message.type==='spawned')send({type:'spawned',pid:message.pid,groupId:child.pid,
-        guardianBinary:process.execPath,launcherBinary:message.launcherBinary});
+      if(message.type==='spawned')record(message.pid,'app',config.command,false).then(()=>send({type:'spawned',pid:message.pid,groupId:child.pid,
+        guardianBinary:process.execPath,launcherBinary:message.launcherBinary}),
+        error=>{send({type:'error',code:error.code ?? 'GUARDIAN_FAILURE',message:error.message});void cleanup('lock-annotate-error');});
       if(message.type==='app-exit'){send(message);if(!stopping)void cleanup('app-exited');}
       if(message.type==='error'){send(message);void cleanup('spawn-error');}
     });
@@ -93,7 +102,7 @@ process.on('message', async message => {
       if(!stopping){send({type:'app-exit',code,signal});void cleanup('group-leader-exited');}
     });
   } catch (error) {
-    send({ type: 'error', code: error.code ?? 'SPAWN_FAILED', message: error.message });
+    send({ type: 'error', code: error.code ?? 'SPAWN_FAILED', message: error.message, details: error.details ?? {} });
     void cleanup('setup-error');
   }
 });

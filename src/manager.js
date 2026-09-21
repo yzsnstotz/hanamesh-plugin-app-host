@@ -347,7 +347,7 @@ export class AppHost {
     };
     control.origin=`http://127.0.0.1:${port}`;
     control.runner=await spawnOwned({ nodeBinary:this.#nodeBinary,command,args:deployment.args.map(value => expand(value,values)),
-      cwd:deployment.cwd ?? instance.dataDir,dataDir:instance.dataDir,env,stopGraceMs:deployment.stopGraceMs,secrets:credentials.secrets },{
+      cwd:deployment.cwd ?? instance.dataDir,dataDir:instance.dataDir,port,env,stopGraceMs:deployment.stopGraceMs,secrets:credentials.secrets },{
       onLog:(stream,text) => {
         const records=this.#logs.get(instance.id) ?? [];
         records.push({at:this.clock(),stream,text}); if(records.length>128)records.shift(); this.#logs.set(instance.id,records);
