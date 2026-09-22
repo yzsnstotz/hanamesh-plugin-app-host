@@ -1,4 +1,4 @@
-# 公开契约 v1（候选，0.1.0-rc.27；rc.27 应用使用证据经 usage 插件 record 座位上报（见「应用使用证据」）；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
+# 公开契约 v1（候选，0.1.0-rc.28；rc.28 HanaMesh 市场：插件与应用同路径装卸、已装含插件、可升级/需重启、`installedPlugins` 与 `plugins/*` 路由、`LIB-PROVISION-INPUT` 400（见「市场」）；rc.27 应用使用证据经 usage 插件 record 座位上报（见「应用使用证据」）；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
 
 ## 身份与所有权
 
@@ -135,6 +135,22 @@ DSH 绑定必须提供同一个 `single` domain 的一次完整镜像 publish �
 | `nodeBinary`（库操作用） | `process.execPath`，仅当 `process.versions.electron === undefined` | Electron（K5 fail-closed `NODE_RUNTIME_REQUIRED`） |
 
 推断结果以一行结构化日志 `hanamesh-app-host library: inferred {…}` 打出（只含路径与来源 URL，不含凭据）。不从 cwd、`PATH` 或个人 `~/.dsh` 猜。
+
+## 市场（rc.28，设计定案 2026-09-22 §4）
+
+`/hanamesh/library*` 路由全部保留，语义只增不改：
+
+| 路由 | 方法 | 输入 | 输出 |
+|---|---|---|---|
+| `/hanamesh/library` | GET | `q`、`category`（缺省 `hanamesh-app`；`category=` 空 = 全部）、`cursor` | `{source, items[], categories[], installed[], plugins[], restartRequired, page}`；`items[]` 每条目在目录字段之外加 `kind`（`application` = `hanamesh-app` + npm 包；`plugin` = 其它 npm 包；`listing` = 无 npm 包，仅收录）、`application`（兼容）、`installed`（应用行或插件行，或 `null`）、`upgradeAvailable`（目录 `latestVersion` 严格新于已装 `version`；已装行处于 `uninstalled-not-unloaded` 时恒 false）；`categories` = 本页条目出现过的类别（目录契约没有类别清单端点） |
+| `/hanamesh/library/installedPlugins` | GET（POST → 405） | 无参数 | `{plugins[], apps[], restartRequired}`；`plugins[]`：`{packageName, version, kind:'plugin', bundle, active, state, errorCode?}`，`state` ∈ `installed` / `installed-not-loaded`（启动后新增）/ `uninstalled-not-unloaded`（启动后移除，进程仍加载）/ `invalid`（依赖里有、`node_modules` 里读不到）；`apps[]` = 原已安装应用扫描行（`registered` / `installed-not-loaded` / `runtime-missing` / `invalid`） |
+| `/hanamesh/library/install` | POST | `{itemId, packageName?}` | 202 `{operationId,status:'started'}`；`packageName` 给出时用它精确查目录（`q=<包名>&category=`）再按 `itemId` 匹配；应用与插件同一路径 `dsh plugin add --save-exact <包>@<registry latest>`，应用另外供给 runtime；也是升级路径 |
+| `/hanamesh/library/plugins/install` | POST | `{packageName}` | 202；包必须在启用目录里能搜到（否则 404 `CATALOG_ITEM_MISSING`）；目录条目是应用则走应用路径 |
+| `/hanamesh/library/plugins/uninstall` | POST | `{packageName}` | 202；`dsh plugin remove <包>`；若该包是已装应用则转应用卸载（runtime 清理 + 运行中 `INSTANCE_IN_USE` 409） |
+| `/hanamesh/library/provision` | POST | `{appId, packageName, runtimeItem}` 三者必填 | 202；缺字段/非法 → 400 `INVALID_INPUT`（`LIB-PROVISION-INPUT`） |
+| `/hanamesh/library/uninstall` | POST | `{appId, packageName, runtimeItem?}` | 202；缺字段/非法 → 400 `INVALID_INPUT` |
+
+事件流 `library.install-*` 增加 `kind`；`install-done.result` 对插件为 `{status:'restart-required', kind:'plugin', packageName, version}`。受保护包（`hanamesh-core`、`hanamesh-usage`、`@hanamesh/dsh-app-host` 及旧写法 `@hanamesh/dsh-core`、`@hanamesh/dsh-usage`）任何路径都 `PACKAGE_DENIED`：`plugins/*` 在启动操作前同步答 403，目录条目路径在操作内以 `-failed` 事件给出。「需重启」判定只来自本进程启动时的 profile 依赖快照（钉版本内核不暴露已加载插件集合）；快照不可读时一切已装计为已加载。客户端在壳内（`window.self !== window.top`）给 `hanamesh://restart` 深链，官方 DSH 直开时只提示文字；本包不重启 DSH。
 
 ## 应用使用证据（rc.27，用户 2026-09-21 定，STATUS `P2-USE-EVENTS`）
 

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-21T13:34:18.486Z",
+  "generatedAt": "2026-09-22T05:19:26.182Z",
   "results": [
     {
       "id": "M01-single-instance",
@@ -110,6 +110,26 @@
       "killed": true,
       "originalSourceSha256": "1acd349c87a7eb83867ba844b15d007ce392f20e384862f1765e9b1aea8fb50f",
       "mutatedSourceSha256": "52ce296593ed10ef534f7f68e9e3cdee50740de569e5ec3a6c5e903a5de3c15f"
+    },
+    {
+      "id": "M13-market-suite-protected",
+      "test": "tests/library-market.test.mjs",
+      "pattern": "^AH-M02:",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "2e3ce1522f5bff1fbb7730c6faf964632e871201f26b61c47831d7da3869fea6",
+      "mutatedSourceSha256": "f4738847d948fcb76ecf2b5f2d7135fd8ad69b606d9452b9f01e5ae63c0951a8"
+    },
+    {
+      "id": "M14-provision-input-400",
+      "test": "tests/library-market.test.mjs",
+      "pattern": "^AH-M06",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "ddc4cfc9486af7ed6ea6c65ec46ec7f27f18e884e7c786ba06dd6b867a49a275",
+      "mutatedSourceSha256": "17ff0ed57cbc5c2def81f090b600ee26769c6c67cf84e942aade04ec525474ad"
     },
     {
       "id": "M08-node-runtime-electron",

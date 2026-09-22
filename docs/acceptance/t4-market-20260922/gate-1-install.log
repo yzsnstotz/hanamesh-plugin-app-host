@@ -1,0 +1,21 @@
+cookie exchange: 303 (cookie name dsh-auth-lOMXFh2LutFZiUEYO5WRtRTkJsA9TG3LkzHrqYGRUZw)
+-- installedPlugins before
+{"status":200,"plugins":["@hanamesh/dsh-app-host@0.1.0-rc.28 state=installed bundle=true active=true"],"restartRequired":false}
+-- market search q=dsh-bloom-theme&category=
+{"status":200,"categories":["theme"],"item":{"id":"0ccf959b-6b10-4701-83cb-a1e845e6c3f3","kind":"plugin","latestVersion":"0.13.4","installed":null,"upgradeAvailable":false}}
+-- market all categories page 1
+{"status":200,"count":50,"kinds":{"application":0,"plugin":50,"listing":0},"categories":["dev","docs","fun","git","market","notify","remote","security","skill","voice","workflow"],"total":12260}
+-- LIB-PROVISION-INPUT: provision missing fields
+{"status":400,"json":{"error":{"code":"INVALID_INPUT","message":"packageName is required.","details":{}},"traceId":"79fb76ce-af87-4f5b-9f47-ea3fd5ebb5a9"}}
+-- plugins/uninstall missing packageName
+{"status":400,"json":{"error":{"code":"INVALID_INPUT","message":"packageName is required.","details":{}},"traceId":"bc52d82f-df28-454b-b973-e61ddd52e123"}}
+-- plugins/uninstall of app-host itself
+{"started":{"status":403,"json":{"error":{"code":"PACKAGE_DENIED","message":"The HanaMesh suite is not managed through the market.","details":{"packageName":"@hanamesh/dsh-app-host"}},"traceId":"56c9effe-631c-4dd1-821a-6df7f95e5f0a"}},"outcome":null}
+-- plugins/install dsh-bloom-theme
+{"status":202,"json":{"operationId":"b126308f-92f3-4720-95dc-61db0abe3d60","status":"started","traceId":"27ec75e1-d396-4806-b658-69750b6046ab"}}
+-- operation outcome
+{"type":"library.install-done","result":{"status":"restart-required","kind":"plugin","packageName":"dsh-bloom-theme","version":"0.13.4"}}
+-- installedPlugins after install
+{"plugins":["@hanamesh/dsh-app-host@0.1.0-rc.28 state=installed bundle=true active=true","dsh-bloom-theme@0.13.4 state=installed-not-loaded bundle=true active=true"],"restartRequired":true}
+-- card after install
+{"installed":{"packageName":"dsh-bloom-theme","version":"0.13.4","kind":"plugin","bundle":true,"active":true,"state":"installed-not-loaded"},"upgradeAvailable":false}

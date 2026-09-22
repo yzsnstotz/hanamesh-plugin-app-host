@@ -1,0 +1,9 @@
+page url: http://127.0.0.1:34281/
+sidebar entry buttons: ["市场"]
+overlay h1: HanaMesh 市场
+filter options: ["全部","应用","插件","dev","docs","fun","git","market","notify","remote","security","skill","voice","workflow"]
+restart notice: {"text":"需重启 DSH 插件更改在 DSH 重启后生效。 请手动重启 DSH。","link":null}
+installed list: ["插件 · @hanamesh/dsh-app-host 0.1.0-rc.28 · 已安装","插件 · dsh-bloom-theme 0.13.4 · 需重启"]
+screenshot market-before-restart-all.png
+cards: [{"item":"0ccf959b-6b10-4701-83cb-a1e845e6c3f3","kind":"plugin","state":"installed-not-loaded","buttons":[],"text":"已安装，重启 DSH 后生效"}]
+screenshot market-before-restart-search.png

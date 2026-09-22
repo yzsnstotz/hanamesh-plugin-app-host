@@ -1,0 +1,11 @@
+cookie exchange: 303 (cookie name dsh-auth-lOMXFh2LutFZiUEYO5WRtRTkJsA9TG3LkzHrqYGRUZw)
+-- installedPlugins after DSH restart
+{"plugins":["@hanamesh/dsh-app-host@0.1.0-rc.28 state=installed bundle=true active=true","dsh-bloom-theme@0.13.4 state=installed bundle=true active=true"],"restartRequired":false}
+-- plugins/uninstall dsh-bloom-theme
+{"status":202,"json":{"operationId":"09e926a4-2669-4c8c-893c-8ab14b998083","status":"started","traceId":"7d0c1f72-a41e-4345-ac98-c8d929bebc69"}}
+-- operation outcome
+{"type":"library.uninstall-done","result":{"status":"restart-required","kind":"plugin","packageName":"dsh-bloom-theme"}}
+-- installedPlugins after uninstall
+{"plugins":["@hanamesh/dsh-app-host@0.1.0-rc.28 state=installed bundle=true active=true","dsh-bloom-theme@0.13.4 state=uninstalled-not-unloaded bundle=true active=false"],"restartRequired":true}
+-- card after uninstall
+{"installed":{"packageName":"dsh-bloom-theme","version":"0.13.4","kind":"plugin","bundle":true,"active":false,"state":"uninstalled-not-unloaded"},"upgradeAvailable":false}

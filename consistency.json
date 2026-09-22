@@ -24,7 +24,7 @@
       "name": "runtime 账本记录与受管安装记录一起发布",
       "facts": ["ledger:item", "installed-record"],
       "medium": "provision-ledger",
-      "why": "lib-provision 是 runtime 目录与 ownership manifest/ledger 的单写者；应用包已经安装但 runtime 未完成时显式显示 runtime-missing，不冒充可打开。",
+      "why": "lib-provision 是 runtime 目录与 ownership manifest/ledger 的单写者；应用包已经安装但 runtime 未完成时显式显示 runtime-missing，不冒充可打开。rc.28 插件走同一 dsh plugin add/remove 路径但不涉及账本：只有 profile package.json 一处事实。",
       "test": "tests/library-install.test.mjs:AH-L04/L05"
     }
   ],

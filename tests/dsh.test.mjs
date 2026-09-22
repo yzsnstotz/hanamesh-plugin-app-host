@@ -211,3 +211,18 @@ test('AH-U07 (plugin): usage evidence reaches ctx.hanameshUsage.record when that
   await until(() => late.calls.some(c => c.action === 'open'));
   assert.equal(late.calls[0].hanaRef, '@hanamesh/app-example');
 });
+
+test('AH-M08 (plugin): rc.28 market routes are registered on the real web server behind the same auth chain; without an installer the plugin seats answer 503, never 500', async t => {
+  const plain = await boot(t);
+  const anonymous = await plain.get('/hanamesh/library/installedPlugins', { authorization: undefined });
+  assert.equal(anonymous.status, 401);
+  const list = await plain.get('/hanamesh/library/installedPlugins');
+  assert.equal(list.status, 200, JSON.stringify(list.json));
+  assert.deepEqual({ plugins: list.json.plugins, apps: list.json.apps, restartRequired: list.json.restartRequired }, { plugins: [], apps: [], restartRequired: false });
+  for (const path of ['/hanamesh/library/plugins/install', '/hanamesh/library/plugins/uninstall', '/hanamesh/library/provision', '/hanamesh/library/uninstall']) {
+    const response = await plain.post(path, {});
+    assert.equal(response.status, 503, `${path}: ${JSON.stringify(response.json)}`); assert.equal(response.json.error.code, 'LIBRARY_INSTALL_UNAVAILABLE');
+  }
+  const csrf = await plain.post('/hanamesh/library/plugins/install', { packageName: 'dsh-plugin-tether' }, { 'x-hanamesh-client': undefined });
+  assert.equal(csrf.status, 403); assert.equal(csrf.json.error.code, 'CSRF_DENIED');
+});

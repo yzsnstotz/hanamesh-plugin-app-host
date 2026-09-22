@@ -1,0 +1,4 @@
+
+> @hanamesh/dsh-app-host@0.1.0-rc.28 test:types
+> tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext tests/consumer.mts
+

@@ -1,0 +1,17 @@
+{
+  "name": "dsh-profile-web",
+  "private": true,
+  "dependencies": {
+    "@hanamesh/dsh-app-host": "file:/Users/yzliu/work/projects/hanamesh/hanamesh-plugin-app-host/artifacts/hanamesh-dsh-app-host-0.1.0-rc.28.tgz"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "@hanamesh/dsh-app-host"
+      ],
+      "patchReload": "live"
+    }
+  }
+}

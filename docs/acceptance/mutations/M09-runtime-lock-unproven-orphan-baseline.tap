@@ -1,9 +1,9 @@
 TAP version 13
-# AH-L04 orphan handling: {"unproven":81558,"terminated":81593,"death":{"code":null,"signal":"SIGKILL"}}
+# AH-L04 orphan handling: {"unproven":39398,"terminated":39432,"death":{"code":null,"signal":"SIGKILL"}}
 # Subtest: AH-L04: a surviving recorded child blocks unless provably ours; provably-ours orphans are terminated first
 ok 1 - AH-L04: a surviving recorded child blocks unless provably ours; provably-ours orphans are terminated first
   ---
-  duration_ms: 234.128958
+  duration_ms: 234.210708
   type: 'test'
   ...
 1..1
@@ -14,4 +14,4 @@ ok 1 - AH-L04: a surviving recorded child blocks unless provably ours; provably-
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 275.176875
+# duration_ms 278.012833

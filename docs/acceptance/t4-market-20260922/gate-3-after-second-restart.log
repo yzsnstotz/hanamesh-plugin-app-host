@@ -1,0 +1,2 @@
+== boot 3 (after uninstall + restart): GET /hanamesh/library/installedPlugins
+{"plugins":[{"packageName":"@hanamesh/dsh-app-host","version":"0.1.0-rc.28","kind":"plugin","bundle":true,"active":true,"state":"installed"}],"apps":[],"restartRequired":false,"traceId":"5d3611b9-e248-4097-a675-e6acb267ba22"}

@@ -1,4 +1,6 @@
-# HanaMesh 应用库
+# HanaMesh 市场（原应用库）
+
+> rc.28：入口改名「市场」，插件与应用同一入口、同一 `dsh plugin add/remove` 路径；已装列表含插件；可升级 / 需重启；新路由与响应形状见 `CONTRACT.md`「市场」。下文旧称「应用库」的段落仍然成立。
 
 ## 范围
 
@@ -9,7 +11,7 @@
 - `library.fixture` 只用于受控验收；内容必须符合 `schemas/catalog-provider-page.schema.json`。
 - `library.sources` **未配置**时默认为 HanaMesh 目录源 `https://market.hanamesh.com/catalog-source.json`（rc.26；显式 `[]` = 不要来源）；可有多项，但浏览时必须恰好启用一项。远端 manifest 只接受标准端口 HTTPS、无凭据/query/fragment；endpoint 必须同源。
 - 请求固定 `Accept: application/json` 与 `Accept-Encoding: identity`；最多三次同源跳转，拒绝压缩响应与超过 2 MiB 的响应。
-- 只有 `categories` 含 `hanamesh-app` 且 `package.registry` 为 `npm` 的条目可安装；repository-only 与普通插件只展示。
+- `categories` 含 `hanamesh-app` 且 `package.registry` 为 `npm` 的条目是应用（安装后读 `app.json`、供给 runtime）；其它 `package.registry` 为 `npm` 的条目是插件（rc.28 起同样可装卸，只跑 `dsh plugin add/remove`）；无 npm 包的条目（repository-only）只展示。
 
 ## Profile 与安装
 
@@ -21,7 +23,7 @@
 
 ## 状态与路由
 
-已安装扫描给出 `registered`、`installed-not-loaded`、`runtime-missing` 或 `invalid`。浏览器路由为 `/hanamesh/library`、`/hanamesh/library/sources`、`/hanamesh/library/install`、`/hanamesh/library/provision`、`/hanamesh/library/uninstall` 和 `/hanamesh/library/events`，全部复用 app-host 的 Host/Origin/iframe/auth/CSRF 防护链。
+已安装应用扫描给出 `registered`、`installed-not-loaded`、`runtime-missing` 或 `invalid`；已安装插件扫描（rc.28）给出 `installed`、`installed-not-loaded`、`uninstalled-not-unloaded` 或 `invalid`。浏览器路由为 `/hanamesh/library`、`/hanamesh/library/sources`、`/hanamesh/library/install`、`/hanamesh/library/provision`、`/hanamesh/library/uninstall`、`/hanamesh/library/events`、`/hanamesh/library/installedPlugins`、`/hanamesh/library/plugins/install` 和 `/hanamesh/library/plugins/uninstall`，全部复用 app-host 的 Host/Origin/iframe/auth/CSRF 防护链。
 
 应用打开仍只走 app-host 的视图租约 API；页面只保存临时 receipt，不拥有第二份实例状态。
 
@@ -35,3 +37,9 @@
 - `GET /hanamesh/library?q=&category=&cursor=`：`category` 缺省为 `hanamesh-app`（本页是**应用库**，只列应用条目）；显式 `category=`（空）列出来源的全部条目；`q` 与 `cursor` 原样透传给目录源的 `/v1/plugins`（`limit=50`）。未知参数 → `UNKNOWN_FIELDS`。
 - 客户端：搜索框（回车/「搜索」）、「只看应用」开关（默认开）、「更多」按 `page.nextCursor` 追加。
 - 背景：真实来源 `market.hanamesh.com` 有 12,121 条，rc.15 之前只显示按更新时间排序的前 50 条且无搜索，应用条目实际不可达。
+
+## rc.28 · 市场浏览语义
+
+- 市场页默认 `category=`（全部）；筛选：全部 / 应用（`hanamesh-app`）/ 插件（客户端视图：本页非应用的 npm 条目）/ 目录页里出现过的类别（累积自 `categories`）。路由 `/hanamesh/library` 的缺省 `category=hanamesh-app` 不变（向后兼容）。
+- 卡片：`kind · 发布者 · latestVersion · 类别`；已装行显示状态与版本；「升级到 x.y.z」出现在 `upgradeAvailable` 时；插件「卸载」走 `plugins/uninstall`。页面底部「已安装」列出应用与插件（含 bundle 未启用为 profile 层的提示）。
+- 「需重启 DSH」横幅：任一装卸操作完成后，或列表 `restartRequired` 为真时显示；壳内为 `hanamesh://restart` 链接，官方 DSH 直开为文字提示。

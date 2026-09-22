@@ -1,0 +1,416 @@
+[
+  {
+    "id": "@hanamesh/dsh-app-host@0.1.0-rc.28",
+    "name": "@hanamesh/dsh-app-host",
+    "version": "0.1.0-rc.28",
+    "size": 131548,
+    "unpackedSize": 413240,
+    "shasum": "2dbe726f0c0f2feca543d0e2d94c4cd18ec47793",
+    "integrity": "sha512-8UzPZgFiV01KSxOjAdbv6/4VATuxdUrgUZtUi0wm5p6YmaTXB3K6Ew6tP/dTVeP9FZaxXY1oQKpSGTTWFGYuig==",
+    "filename": "hanamesh-dsh-app-host-0.1.0-rc.28.tgz",
+    "files": [
+      {
+        "path": "AGENTS.md",
+        "size": 2322,
+        "mode": 420
+      },
+      {
+        "path": "LICENSE",
+        "size": 1065,
+        "mode": 420
+      },
+      {
+        "path": "README.md",
+        "size": 17103,
+        "mode": 420
+      },
+      {
+        "path": "consistency.json",
+        "size": 2697,
+        "mode": 420
+      },
+      {
+        "path": "dist/client-ui.d.ts",
+        "size": 552,
+        "mode": 420
+      },
+      {
+        "path": "dist/client-ui.js",
+        "size": 22663,
+        "mode": 420
+      },
+      {
+        "path": "dist/client.d.ts",
+        "size": 1470,
+        "mode": 420
+      },
+      {
+        "path": "dist/client.js",
+        "size": 3295,
+        "mode": 420
+      },
+      {
+        "path": "dist/consistency.js",
+        "size": 591,
+        "mode": 420
+      },
+      {
+        "path": "dist/descriptor.js",
+        "size": 11314,
+        "mode": 420
+      },
+      {
+        "path": "dist/dsh.d.ts",
+        "size": 2134,
+        "mode": 420
+      },
+      {
+        "path": "dist/dsh.js",
+        "size": 13298,
+        "mode": 420
+      },
+      {
+        "path": "dist/errors.js",
+        "size": 923,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway.js",
+        "size": 14642,
+        "mode": 420
+      },
+      {
+        "path": "dist/guardian.js",
+        "size": 6530,
+        "mode": 420
+      },
+      {
+        "path": "dist/index.d.ts",
+        "size": 11874,
+        "mode": 420
+      },
+      {
+        "path": "dist/index.js",
+        "size": 768,
+        "mode": 420
+      },
+      {
+        "path": "dist/launcher.js",
+        "size": 931,
+        "mode": 420
+      },
+      {
+        "path": "dist/library/catalog.js",
+        "size": 8676,
+        "mode": 420
+      },
+      {
+        "path": "dist/library/domain.js",
+        "size": 449,
+        "mode": 420
+      },
+      {
+        "path": "dist/library/install.js",
+        "size": 7888,
+        "mode": 420
+      },
+      {
+        "path": "dist/library/installed.js",
+        "size": 4966,
+        "mode": 420
+      },
+      {
+        "path": "dist/library/locate.js",
+        "size": 4799,
+        "mode": 420
+      },
+      {
+        "path": "dist/library/routes.js",
+        "size": 4351,
+        "mode": 420
+      },
+      {
+        "path": "dist/library/service.js",
+        "size": 10259,
+        "mode": 420
+      },
+      {
+        "path": "dist/manager.js",
+        "size": 40836,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/archive.d.ts",
+        "size": 1108,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/archive.js",
+        "size": 2134,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/check.d.ts",
+        "size": 419,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/check.js",
+        "size": 2498,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/checkpoints.d.ts",
+        "size": 779,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/checkpoints.js",
+        "size": 843,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/cli.d.ts",
+        "size": 63,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/cli.js",
+        "size": 6981,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/download.d.ts",
+        "size": 836,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/download.js",
+        "size": 10440,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/errors.d.ts",
+        "size": 588,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/errors.js",
+        "size": 381,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/extract.d.ts",
+        "size": 752,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/extract.js",
+        "size": 5771,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/fsutil.d.ts",
+        "size": 619,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/fsutil.js",
+        "size": 1953,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/index.d.ts",
+        "size": 496,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/index.js",
+        "size": 438,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/ledger.d.ts",
+        "size": 969,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/ledger.js",
+        "size": 1968,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/LICENSE",
+        "size": 75,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/manifest.d.ts",
+        "size": 620,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/manifest.js",
+        "size": 7597,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/paths.d.ts",
+        "size": 1611,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/paths.js",
+        "size": 3444,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/platform.d.ts",
+        "size": 283,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/platform.js",
+        "size": 259,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/provision.d.ts",
+        "size": 1071,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/provision.js",
+        "size": 19132,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/tar.d.ts",
+        "size": 369,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/tar.js",
+        "size": 5892,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/THIRD_PARTY_NOTICES.md",
+        "size": 650,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/types.d.ts",
+        "size": 5643,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/types.js",
+        "size": 219,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/zip.d.ts",
+        "size": 314,
+        "mode": 420
+      },
+      {
+        "path": "dist/provision/zip.js",
+        "size": 8559,
+        "mode": 420
+      },
+      {
+        "path": "dist/router/broker.js",
+        "size": 12953,
+        "mode": 420
+      },
+      {
+        "path": "dist/router/domain.js",
+        "size": 1013,
+        "mode": 420
+      },
+      {
+        "path": "dist/router/routes.js",
+        "size": 4727,
+        "mode": 420
+      },
+      {
+        "path": "dist/router/sources.js",
+        "size": 6078,
+        "mode": 420
+      },
+      {
+        "path": "dist/routes.js",
+        "size": 5222,
+        "mode": 420
+      },
+      {
+        "path": "dist/runtime.js",
+        "size": 12416,
+        "mode": 420
+      },
+      {
+        "path": "dist/store.js",
+        "size": 14251,
+        "mode": 420
+      },
+      {
+        "path": "dist/usage-evidence.js",
+        "size": 5255,
+        "mode": 420
+      },
+      {
+        "path": "docs/APP_PACKAGE.md",
+        "size": 2439,
+        "mode": 420
+      },
+      {
+        "path": "docs/CONTRACT.md",
+        "size": 20319,
+        "mode": 420
+      },
+      {
+        "path": "docs/DSH_INTEGRATION.md",
+        "size": 5973,
+        "mode": 420
+      },
+      {
+        "path": "docs/LIBRARY.md",
+        "size": 5285,
+        "mode": 420
+      },
+      {
+        "path": "docs/PROVENANCE.json",
+        "size": 2039,
+        "mode": 420
+      },
+      {
+        "path": "docs/SECURITY.md",
+        "size": 5828,
+        "mode": 420
+      },
+      {
+        "path": "package.json",
+        "size": 3924,
+        "mode": 420
+      },
+      {
+        "path": "profile/cordis.patch.yml",
+        "size": 86,
+        "mode": 420
+      },
+      {
+        "path": "schemas/catalog-provider-page.schema.json",
+        "size": 8829,
+        "mode": 420
+      },
+      {
+        "path": "schemas/catalog-source.schema.json",
+        "size": 4433,
+        "mode": 420
+      }
+    ],
+    "entryCount": 80,
+    "bundled": []
+  }
+]

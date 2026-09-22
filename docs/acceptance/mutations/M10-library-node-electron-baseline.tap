@@ -2,7 +2,7 @@ TAP version 13
 # Subtest: AH-L09: nodeBinary is this process only outside Electron; explicit configuration always wins
 ok 1 - AH-L09: nodeBinary is this process only outside Electron; explicit configuration always wins
   ---
-  duration_ms: 4.532625
+  duration_ms: 4.280708
   type: 'test'
   ...
 1..1
@@ -13,4 +13,4 @@ ok 1 - AH-L09: nodeBinary is this process only outside Electron; explicit config
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 34.528833
+# duration_ms 36.318875

@@ -1,4 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.27
+# HanaMesh app-host · 0.1.0-rc.28
+
+> rc.28（2026-09-22，设计定案 §4「HanaMesh 市场」，T4）：**「应用库」升级为 HanaMesh 市场——插件与应用同一入口、同一安装路径。** 侧栏入口与页面标题改为「市场」/「HanaMesh 市场」，设置段「应用库来源」改名「市场目录源」。目录默认列出**全部**类别（客户端显式 `category=`），筛选 = 全部 / 应用（`hanamesh-app`）/ 插件（客户端视图：非应用的 npm 条目）/ 目录页里出现过的每个类别；搜索、「更多」保留。每条目带 `kind`（`application` / `plugin` / `listing`）、`installed`（已装行）与 `upgradeAvailable`（目录 `latestVersion` 严格新于已装版本，内建 semver 比较，无依赖）。卡片状态：未装「安装」/ 已装（应用「打开」「卸载」，插件「卸载」）/ 可升级「升级到 x.y.z」（同一 `dsh plugin add --save-exact` 路径）/ 需重启。**已装列表含插件**：扫 profile `package.json` 的 `dependencies`（减去应用包），`bundle`（声明 `dsh.bundle`）与 `active`（在 `dsh.profile.bundles`）；「需重启」由本插件启动时的依赖快照推出：启动后新增 → `installed-not-loaded`，启动后移除 → `uninstalled-not-unloaded`。任一操作完成或列表含上述状态时页面顶部出现「需重启 DSH」：在桌面壳内（DSH 页在壳 iframe 里）给出 `hanamesh://restart` 深链按钮，官方 DSH 直开浏览器时只提示「请手动重启 DSH」。新路由：`GET /hanamesh/library/installedPlugins` → `{plugins,apps,restartRequired}`；`POST /hanamesh/library/plugins/install {packageName}`（须在启用目录里能搜到该包；应用包走应用路径）与 `POST /hanamesh/library/plugins/uninstall {packageName}`（应用包转应用卸载：runtime + 运行中检查）→ 202 + 事件流；`POST /hanamesh/library/install` 现接受 `{itemId, packageName?}`（`packageName` 用于目录精确查找，插件条目也可装）。旧路由全部保留。**修 `LIB-PROVISION-INPUT`**：`provision` / `uninstall` / `plugins/*` 缺字段或字段非法 → 400 `INVALID_INPUT`，操作不启动（此前 TypeError → 事件 `LIBRARY_OPERATION_FAILED`）。受保护包 `hanamesh-core` / `hanamesh-usage` / `@hanamesh/dsh-app-host`（含旧写法）永不经市场装卸（`PACKAGE_DENIED`；rc.27 前阻止名单写的是从未存在过的 `@hanamesh/dsh-core`）。不做 T5（`provide('market')`、dshmarket 互斥、recommender 接线）。AH-M01–M08 测试，M13/M14 变异；真实门见 `docs/acceptance/t4-market-20260922/`。
 
 > rc.27（2026-09-21，用户定，STATUS `P2-USE-EVENTS`）：**应用的使用证据由 app-host 上报。** 此前 app-host 从不调用 usage 插件的 record 座位，应用既没有 `open` 也没有 `use` 事件。现在：`ctx.inject(['hanameshUsage'])` 可选取得座位（鸭子类型 `record()`，三插件仍互不 import；缺席/不兼容/抛错/`rejected` 只 debug 日志，永不阻止启动或转发）；`open` = 实例到达 `ready` 一次（`open:<appId>:<instanceId>`）；`use` = 该实例网关真正转发了已授权请求且应用回应非 401/403，每应用每 UTC 小时一次（`use:<appId>:<YYYYMMDDHH>`，时间取桶内第一个请求）；引导票据、网关拒绝、宿主就绪探针不计。`hanaRef` = 应用 npm 包名：描述符新增可选 `packageName`（向后兼容），缺省由启动时的已安装扫描 `host.bindPackageName()` 绑定，两者都没有则该应用不产生证据。`sourcePlugin = '@hanamesh/dsh-app-host'`。新面：`host.packageName/bindPackageName/onActivity`、`FixedGateway({onForward})`、`createUsageEvidence()`、`list().apps[].packageName`。契约见 `docs/CONTRACT.md`「应用使用证据」；AH-U01–U07 测试（U07 为真实 Cordis 根，座位先于/后于本插件提供两种顺序），M11/M12 变异。
 
@@ -33,7 +35,7 @@
 - **交付契约：** ESM 包、TypeScript 声明、工作台侧 `./client` SDK、完整快照存储接口、DSH 插件入口、测试与崩溃一致性声明。
 - **K5：** Electron 宿主必须显式给绝对且可执行的 `nodeBinary`；guardian/launcher 使用同一 Node，只继承 `DSH_HOME/HOME/LANG/TMPDIR/PATH` 白名单。未配置时 fail-closed 为 `NODE_RUNTIME_REQUIRED`。
 - **Router：** 合并授权、撤销、文件投射 ledger 与 `sets`，来源为 DSH credentials/LLM 目录和 coding-oauth gateway；不搬 key 探测、录入或 OAuth 端口。
-- **应用库：** 自带侧栏入口与覆盖页；目录源同一时刻只启用一项；可发现 Community Market/DSH 已安装应用，区分已注册、待重启与缺 runtime，并通过 DSH 自己的安装器装卸。
+- **市场（原应用库）：** 自带侧栏入口与覆盖页；目录源同一时刻只启用一项；插件与应用同一入口、同一 `dsh plugin add/remove` 路径；已装列表含插件；区分已注册、待重启、可升级与缺 runtime。
 - **锁定 runtime 供给：** `@hanamesh/lib-provision` 精确 peer 为 `0.1.0-rc.1`，开发端使用 `file:vendor/`；build 把该零运行时依赖产物内联到 `dist/provision/`，来源与 SHA-256 见 `docs/PROVENANCE.json`。
 
 ## 运行
@@ -64,7 +66,7 @@ npm run demo -- --smoke
 | 受信宿主代码 | `@hanamesh/dsh-app-host` | `AppHost`、存储、路由、网关 |
 | 工作台顶层页面 | `@hanamesh/dsh-app-host/client` | 明确的 Open 回执、恢复、心跳、Stop；禁止注入应用 iframe |
 | DSH profile 适配 | bundle 自动落座包根；显式适配仍可用 `@hanamesh/dsh-app-host/dsh` | 包根懒加载 Cordis `apply`，使同一个 loader entry 同时被 client-modules 发现；见 `docs/DSH_INTEGRATION.md` |
-| DSH 浏览器 UI | `@hanamesh/dsh-app-host/client-ui` | 设置里的「供应商」「应用库来源」，以及侧栏「应用库」与 `shell.overlay` 页面；Node 条件下 `./client` 仍解析到工作台 SDK |
+| DSH 浏览器 UI | `@hanamesh/dsh-app-host/client-ui` | 设置里的「供应商」「市场目录源」，以及侧栏「市场」（HanaMesh 市场）与 `shell.overlay` 页面；Node 条件下 `./client` 仍解析到工作台 SDK |
 
 契约详见 [`docs/CONTRACT.md`](docs/CONTRACT.md)、[`docs/ROUTER_CONTRACT.md`](docs/ROUTER_CONTRACT.md) 与 [`docs/LIBRARY.md`](docs/LIBRARY.md)，未完成步骤见 [`docs/DSH_INTEGRATION.md`](docs/DSH_INTEGRATION.md)，安全限制见 [`docs/SECURITY.md`](docs/SECURITY.md)。本仓不包含应用适配包、钱包权限或 provider runtime driver。
 

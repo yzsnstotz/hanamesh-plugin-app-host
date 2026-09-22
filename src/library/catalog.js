@@ -45,6 +45,23 @@ export function validateProviderPage(value){
 }
 
 export function isApplication(item){return Boolean(item?.categories?.includes('hanamesh-app')&&item?.package?.registry==='npm');}
+/** rc.28 market: an npm-backed entry that is not a HanaMesh application installs as a plain DSH plugin (`dsh plugin add`). */
+export function isPlugin(item){return Boolean(item?.package?.registry==='npm'&&!isApplication(item));}
+/** `application` | `plugin` | `listing` (repository-only / no npm package: browse only). */
+export function itemKind(item){return isApplication(item)?'application':isPlugin(item)?'plugin':'listing';}
+
+/** Exact semver compare without a dependency: numeric core, then a prerelease sorts below its release; unparsable → 0. */
+export function compareVersions(a,b){
+  const parse=value=>{const m=/^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/.exec(String(value??'').trim());return m&&{core:[+m[1],+m[2],+m[3]],pre:m[4]?m[4].split('.'):null};};
+  const x=parse(a),y=parse(b);if(!x||!y)return 0;
+  for(let i=0;i<3;i++)if(x.core[i]!==y.core[i])return x.core[i]<y.core[i]?-1:1;
+  if(!x.pre&&!y.pre)return 0;if(!x.pre)return 1;if(!y.pre)return -1;
+  for(let i=0;i<Math.max(x.pre.length,y.pre.length);i++){const p=x.pre[i],q=y.pre[i];if(p===undefined)return -1;if(q===undefined)return 1;const np=/^\d+$/.test(p),nq=/^\d+$/.test(q);
+    if(np&&nq){if(+p!==+q)return +p<+q?-1:1;}else if(np!==nq)return np?-1:1;else if(p!==q)return p<q?-1:1;}
+  return 0;
+}
+/** `latestVersion` of the catalog entry is strictly newer than the installed version. */
+export function upgradeAvailable(latestVersion,installedVersion){return compareVersions(latestVersion,installedVersion)>0;}
 
 async function responseJson(response,label){
   requireCondition(response.ok,'CATALOG_HTTP_ERROR',`${label} returned HTTP ${response.status}.`,{status:response.status},502);
