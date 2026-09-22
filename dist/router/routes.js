@@ -3,7 +3,7 @@ import { AppHostError, requireCondition } from '../errors.js';
 import { loopbackOrigin } from '../descriptor.js';
 
 export const ROUTER_ROUTES=Object.freeze(['/hanamesh/router/providers','/hanamesh/router/plan','/hanamesh/router/grant',
-  '/hanamesh/router/revoke','/hanamesh/router/model','/hanamesh/router/mode','/hanamesh/router/gateway']);
+  '/hanamesh/router/revoke','/hanamesh/router/model','/hanamesh/router/mode','/hanamesh/router/gateway','/hanamesh/router/receipts']);
 async function body(req){
   requireCondition(req.headers['content-type']?.split(';')[0].trim()==='application/json','CONTENT_TYPE_REQUIRED','Expected application/json.',{},415);
   const chunks=[];let total=0;for await(const chunk of req){total+=chunk.length;requireCondition(total<=16_384,'BODY_TOO_LARGE','Request body is too large.',{},413);chunks.push(chunk);}
@@ -20,7 +20,7 @@ export function createRouterHttpHandler(router,{parentOrigin,authenticate,author
     requireCondition(req.headers.host===new URL(parentOrigin).host,'HOST_DENIED','Unrecognized request host.',{},403);
     requireCondition(req.url?.startsWith('/')&&!req.url.startsWith('//')&&!req.url.includes('\\'),'BAD_TARGET','Invalid request target.');
     const url=new URL(req.url,parentOrigin),path=url.pathname;requireCondition(ROUTER_ROUTES.includes(path),'NOT_FOUND','Unknown router route.',{},404);
-    const readOnly=['/hanamesh/router/providers','/hanamesh/router/plan'].includes(path);
+    const readOnly=['/hanamesh/router/providers','/hanamesh/router/plan','/hanamesh/router/receipts'].includes(path);
     requireCondition(req.method===(readOnly?'GET':'POST'),'METHOD_NOT_ALLOWED','State changes require POST.',{},405);
     requireCondition(!req.headers.origin||req.headers.origin===parentOrigin,'ORIGIN_DENIED','Unapproved browser origin.',{},403);
     requireCondition(req.headers['sec-fetch-dest']!=='iframe'&&req.headers['sec-fetch-site']!=='cross-site','FRAME_CONTROL_DENIED','An application frame cannot control the router.',{},403);
@@ -30,10 +30,12 @@ export function createRouterHttpHandler(router,{parentOrigin,authenticate,author
     const input=readOnly?Object.fromEntries(url.searchParams):await body(req);
     if(path==='/hanamesh/router/providers')requireCondition(Object.keys(input).length===0,'UNKNOWN_FIELDS','No provider parameters are accepted.');
     if(path==='/hanamesh/router/plan')requireCondition(Object.keys(input).every(key=>key==='appId')&&typeof input.appId==='string','UNKNOWN_FIELDS','Plan accepts only appId.');
+    if(path==='/hanamesh/router/receipts')requireCondition(Object.keys(input).every(key=>key==='appId'),'UNKNOWN_FIELDS','Receipts accept only an optional appId.');
     requireCondition(await authorize(subject,path,input)===true,'FORBIDDEN','Operation is not authorized.',{},403);
     let result;
     if(path==='/hanamesh/router/providers')result={providers:await router.providers()};
     if(path==='/hanamesh/router/plan')result=await router.plan(input.appId);
+    if(path==='/hanamesh/router/receipts')result=await router.receipts(input.appId);
     if(path==='/hanamesh/router/grant')result=await router.grant(input.appId,input.entryId,input.subject,{model:input.model,riskAcknowledged:input.riskAcknowledged});
     if(path==='/hanamesh/router/revoke')result=await router.revoke(input.appId,input.entryId);
     if(path==='/hanamesh/router/model')result=await router.setModel(input.appId,input.entryId,input.model??'');

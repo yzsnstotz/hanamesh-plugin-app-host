@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-22T05:19:26.182Z",
+  "generatedAt": "2026-09-22T05:45:40.610Z",
   "results": [
     {
       "id": "M01-single-instance",
@@ -58,8 +58,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "72758b7797ab2ae3e84d99eb28135855c3988d795396c9d5e0a8de9ce1a4bca1",
-      "mutatedSourceSha256": "cd7b150352e6acc11568412c41febc09e58c6e79c17c3dea8ee582c30502d6b5"
+      "originalSourceSha256": "9c24e70fe7bae62d20510a15fb21f9a07c387a6e0fbf75d4f8cc349fa22e5734",
+      "mutatedSourceSha256": "226239551d2d358f8fca0eda519f5991fe2a36c1e598406b7a84ffb10d1d7e2c"
     },
     {
       "id": "M07-runtime-exec-traversal",
@@ -108,8 +108,28 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "1acd349c87a7eb83867ba844b15d007ce392f20e384862f1765e9b1aea8fb50f",
-      "mutatedSourceSha256": "52ce296593ed10ef534f7f68e9e3cdee50740de569e5ec3a6c5e903a5de3c15f"
+      "originalSourceSha256": "602db8c1e7b0371019978539ee7c5120823c04f9e9eabf2c3a54f3ad76acdd97",
+      "mutatedSourceSha256": "87c3d9e981c7be542863542c44b3c2118ea87bdef507c624be949ea35a075746"
+    },
+    {
+      "id": "M15-receipt-count-not-accumulated",
+      "test": "tests/usage-evidence.test.mjs",
+      "pattern": "^AH-U08",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "602db8c1e7b0371019978539ee7c5120823c04f9e9eabf2c3a54f3ad76acdd97",
+      "mutatedSourceSha256": "d8eae82ade66bd066e6f0c4a32c9e31103c0ec15ff0b6611ca6ce18aef18aa37"
+    },
+    {
+      "id": "M16-router-inject-observer-blocks-launch",
+      "test": "tests/router-broker.test.mjs",
+      "pattern": "^AH-R12",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "9c24e70fe7bae62d20510a15fb21f9a07c387a6e0fbf75d4f8cc349fa22e5734",
+      "mutatedSourceSha256": "76a5b820e86552dc151ab18be5522e9bade098d75be1f4389335971b089622f9"
     },
     {
       "id": "M13-market-suite-protected",

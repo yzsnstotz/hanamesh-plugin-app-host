@@ -48,7 +48,7 @@ test('AH-R08 every router route rejects missing client header, wrong origin, ifr
   const origin=`http://127.0.0.1:${server.address().port}`;t.after(()=>new Promise(resolve=>{server.closeAllConnections();server.close(resolve);}));
   handler=createRouterHttpHandler(router,{parentOrigin:origin,authenticate:req=>req.headers.authorization==='Bearer owner'?{principalId:'owner'}:null,authorize:()=>true});
   for(const path of ROUTER_ROUTES){
-    const read=path.endsWith('/providers')||path.endsWith('/plan'),url=origin+path+(path.endsWith('/plan')?'?appId=vibe-trading':'');
+    const read=path.endsWith('/providers')||path.endsWith('/plan')||path.endsWith('/receipts'),url=origin+path+(path.endsWith('/plan')?'?appId=vibe-trading':'');
     const call=headers=>http(url,{method:read?'GET':'POST',headers:{...(read?{}:{'content-type':'application/json'}),...headers},...(read?{}:{body:JSON.stringify({appId:'vibe-trading',entryId:'env:OPENAI_API_KEY',subject:{kind:'api-key',ref:'OPENAI_API_KEY'},mode:'managed',enabled:true})})});
     assert.equal((await call({origin,authorization:'Bearer owner'})).status,403,path+' client');
     assert.equal((await call({origin:'http://attacker.invalid','x-hanamesh-client':'workspace-v1',authorization:'Bearer owner'})).status,403,path+' origin');

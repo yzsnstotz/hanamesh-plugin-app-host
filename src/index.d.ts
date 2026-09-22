@@ -104,11 +104,27 @@ export function validateDefinition(input:AppDefinition):AppDefinition;
 /** rc.27 usage evidence: `open` once per instance reaching ready, `use` once per app per UTC hour of real gateway activity, through the optional usage seat. */
 export const SOURCE_PLUGIN:'@hanamesh/dsh-app-host';
 export function hourBucket(ms:number):string;
-export interface UsageRecordInput { hanaRef:string; action:'open'|'use'; occurredAt?:string; idempotencyKey:string; sourcePlugin:string; }
+/** T6 usage receipt riding on a `use` event: provider × model × forwarded-request count of that UTC hour; never content. */
+export interface UsageReceipt { providerId:string; model:string|null; count:number; }
+export interface UsageRecordInput { hanaRef:string; action:'open'|'use'; occurredAt?:string; idempotencyKey:string; sourcePlugin:string; sourceHanaRef?:string; targetRef?:string; receipt?:UsageReceipt; }
 export interface UsageRecordResult { disposition:'recorded'|'duplicate'|'withheld'|'rejected'; eventId?:string; code?:string; }
 export interface UsageSeat { record(input:UsageRecordInput):Awaitable<UsageRecordResult>; }
-export function createUsageEvidence(options:{host:AppHost;seat:()=>UsageSeat|unknown;logger?:{debug?:(...args:unknown[])=>void}}):{
-  trackedInstances():number; settle():Promise<void>; close():void;
+/** T6 receipt ledger (storage domain `hanamesh_router_receipts`): hourly rows per app × Router route, reported through the usage seat when the hour closes. */
+export interface ReceiptRoute { providerId:string; model:string|null; }
+export interface ReceiptRow { appId:string; providerId:string|null; model:string|null; hour:string; count:number; injections:number; firstAt:string; lastAt:string; reported:boolean; }
+export interface ReceiptLedger {
+  inject(input:{appId:string;instanceId:string;routes?:readonly {providerId:string;model?:string|null}[];at?:number}):Record<string,unknown>|null;
+  activity(input:{appId:string;instanceId:string;at?:number}):Record<string,unknown>;
+  forget(instanceId:string):void; routeOf(instanceId:string):ReceiptRoute|null;
+  pending(options?:{appId?:string;includeCurrent?:boolean;now?:number}):{appId:string;hour:string;occurredAt:number;count:number;receipt:UsageReceipt|null}[];
+  markReported(appId:string,hour:string):number; list(options?:{appId?:string}):ReceiptRow[]; size():number;
+  persist():Promise<void>; close():Promise<void>;
+}
+export function createReceiptLedger(options?:{domain?:{global:{get():unknown;set(value:unknown):Promise<void>}};clock?:()=>number;persistDelayMs?:number;maxItems?:number;retentionMs?:number}):ReceiptLedger;
+export function normalizeRoute(route:unknown):ReceiptRoute|null;
+export const receiptsDomainSpec:unknown;
+export function createUsageEvidence(options:{host:AppHost;seat:()=>UsageSeat|unknown;receipts?:ReceiptLedger;logger?:{debug?:(...args:unknown[])=>void};clock?:()=>number;sweepIntervalMs?:number}):{
+  flush(options?:{appId?:string;includeCurrent?:boolean}):Promise<void>; settle():Promise<void>; receipts:ReceiptLedger; close():void;
 };
 export const name:'hanamesh-app-host';
 export const inject:readonly ['webServer','storageDomain','connection'];

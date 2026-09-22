@@ -28,9 +28,10 @@ function fixture(declared=entries){
       subject.kind==='provider'?{value:'gateway-secret',provider:{id:'coding-oauth-gateway',baseUrl:'http://127.0.0.1:18080/v1',models:['gpt-5.5']}}:undefined,
     enableGateway:async enabled=>({enabled}),
   };
-  const router=createRouter({credentials,domain,apps,sources,oauth:()=>oauth});
+  const injections=[];
+  const router=createRouter({credentials,domain,apps,sources,oauth:()=>oauth,onInject:event=>injections.push(structuredClone(event)),receiptLedger:{list:({appId}={})=>[{appId:appId??'vibe-trading',providerId:'openai',model:null,hour:'2026092210',count:1,injections:1,firstAt:'2026-09-22T10:00:00.000Z',lastAt:'2026-09-22T10:00:00.000Z',reported:false}]}});
   const launch=()=>router.credentialResolver({appId:'vibe-trading',deploymentId:'local',instanceId:'one',principalId:'dsh-browser',credentialEnv:declared});
-  return{router,launch,apps,oauth,values,state,credentials,sources};
+  return{router,launch,apps,oauth,values,state,credentials,sources,injections};
 }
 
 test('AH-R01 directory reports configured references but never exposes values',async()=>{
@@ -121,4 +122,25 @@ test('AH-R02c auto-route keeps the app\'s declared default model and never route
   await router.setModel('vibe-trading','env:OPENAI_API_KEY','');assert.equal((await launch()).env.LANGCHAIN_MODEL_NAME,'gpt-5.5');
   await assert.rejects(router.setModel('vibe-trading','env:LANGCHAIN_PROVIDER','x'),{code:'ENTRY_NOT_ROUTED'});
   await assert.rejects(router.setModel('vibe-trading','env:OPENAI_API_KEY','a b'),{code:'INVALID_MODEL'});
+});
+
+test('AH-R12 (T6) every injection tells the receipt observer the routed provider and model — never the value — and local receipts are readable per app',async()=>{
+  const declared=[{env:'OPENAI_API_KEY',kind:'api-key',providers:['openai','deepseek'],sets:{MODEL:'{{model|gpt-4o-mini}}'}},{env:'MODEL'},{env:'DEEPSEEK_API_KEY',kind:'api-key',providers:['deepseek']}];
+  const{router,launch,values,injections}=fixture(declared);
+  // Auto-routed OpenAI key: provider id + the app's declared default model; the second slot has no key and is not a route.
+  const first=await launch();assert.equal(first.env.OPENAI_API_KEY,'secret-openai');
+  assert.deepEqual(injections,[{appId:'vibe-trading',instanceId:'one',routes:[{providerId:'openai',model:'gpt-4o-mini'}]}]);
+  assert(!JSON.stringify(injections).includes('secret'));
+  // An explicit model grant rides along; a second configured key becomes a second route in declaration order.
+  await router.setModel('vibe-trading','env:OPENAI_API_KEY','gpt-4.1');values.set('DEEPSEEK_API_KEY','secret-deepseek');
+  await launch();assert.deepEqual(injections[1].routes,[{providerId:'openai',model:'gpt-4.1'},{providerId:'deepseek',model:null}]);
+  // app-owned mode injects nothing → no observer call; a throwing observer never breaks the launch.
+  await router.setMode('vibe-trading','app-owned');await launch();assert.equal(injections.length,2);await router.setMode('vibe-trading','managed');
+  const throwing=createRouter({credentials:{describe:async()=>({configured:true}),resolve:async()=>({value:'v'}),describeRecord:async()=>({configured:false})},domain:{global:{get:()=>({schema:1,apps:{}}),set:async()=>{}}},
+    apps:{list:()=>({apps:[{id:'vibe-trading',deployments:[{id:'local',mode:'owned',credentialEnv:declared}]}]})},sources:{list:async()=>[{id:'openai',source:'dsh-models',kind:'api-key',ref:'OPENAI_API_KEY',state:'configured'}],resolve:async()=>({value:'v',provider:{id:'openai'}}),enableGateway:async()=>({})},onInject:()=>{throw new Error('observer down');}});
+  const resolved=await throwing.credentialResolver({appId:'vibe-trading',deploymentId:'local',instanceId:'two',principalId:'dsh-browser',credentialEnv:declared});assert.equal(resolved.env.OPENAI_API_KEY,'v');
+  // Local receipts: per app (validated id) or all; unknown app is APP_NOT_FOUND; rows never carry values.
+  assert.deepEqual(router.receipts('vibe-trading').items.map(i=>[i.providerId,i.count]),[['openai',1]]);assert.equal(router.receipts().items.length,1);
+  await assert.rejects(async()=>router.receipts('nobody'),{code:'APP_NOT_FOUND'});await assert.rejects(async()=>router.receipts('../x'),{code:'INVALID_APP'});
+  assert.deepEqual(createRouter({credentials:{},domain:{global:{get:()=>({schema:1,apps:{}}),set:async()=>{}}},apps:{list:()=>({apps:[]})},sources:{}}).receipts(),{items:[]});
 });

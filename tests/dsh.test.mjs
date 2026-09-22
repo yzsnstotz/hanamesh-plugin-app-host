@@ -191,9 +191,21 @@ test('AH-U07 (plugin): usage evidence reaches ctx.hanameshUsage.record when that
   const cookie = boot303.headers['set-cookie'][0].split(';')[0], appOrigin = new URL(resumed.json.uiUrl).origin;
   assert.equal((await http(appOrigin + '/', { headers: { cookie } })).status, 200);
   assert.equal((await http(appOrigin + '/second', { headers: { cookie } })).status, 200);
+  // T6: the hour's `use` (with the receipt count) is reported when the hour closes or the app's last instance ends.
+  // Until then the local receipt ledger already shows the hour: two forwarded requests, no Router route → no provider.
+  const localReceipts = await first.get('/hanamesh/router/receipts?appId=example');
+  assert.equal(localReceipts.status, 200, JSON.stringify(localReceipts.json));
+  assert.deepEqual(localReceipts.json.items.map(i => ({ appId: i.appId, providerId: i.providerId, model: i.model, count: i.count, reported: i.reported })), [{ appId: 'example', providerId: null, model: null, count: 2, reported: false }]);
+  assert.equal(seat.calls.filter(c => c.action === 'use').length, 0);
+  const closedFirst = await first.post('/apps/close', { viewId: 'view-u07', leaseToken: opened.json.leaseToken });
+  assert.equal(closedFirst.status, 200, JSON.stringify(closedFirst.json));
+  const stopped = await first.post('/apps/stop', { instanceId: ready.id, confirm: true });
+  assert.equal(stopped.status, 200, JSON.stringify(stopped.json));
   await until(() => seat.calls.some(c => c.action === 'use'));
   const uses = seat.calls.filter(c => c.action === 'use');
   assert.equal(uses.length, 1); assert.match(uses[0].idempotencyKey, /^use:example:\d{10}$/); assert.equal(uses[0].hanaRef, '@hanamesh/app-example');
+  assert.equal(uses[0].targetRef, 'example'); assert.equal('receipt' in uses[0], false, 'no Router route → no receipt');
+  await until(async () => (await first.get('/hanamesh/router/receipts?appId=example')).json.items[0].reported === true);
   // (2) No usage plugin at all: the app opens and serves exactly the same; nothing is recorded anywhere.
   const alone = await boot(t, { applications: [app] });
   const solo = await alone.post('/apps/open', { appId: 'example', deploymentId: 'local', viewId: 'view-u07b' });

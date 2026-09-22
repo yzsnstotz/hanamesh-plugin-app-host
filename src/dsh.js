@@ -34,6 +34,7 @@ import { createLibraryInstaller } from './library/install.js';
 import { resolveLibraryLocations } from './library/locate.js';
 import { createLibraryHttpHandler, LIBRARY_ROUTES } from './library/routes.js';
 import { createUsageEvidence } from './usage-evidence.js';
+import { createReceiptLedger, receiptsDomainSpec } from './router/receipts.js';
 
 export const name = 'hanamesh-app-host';
 export const DSH_TARGET = '0.1.5-alpha.1';
@@ -115,7 +116,7 @@ export async function apply(ctx, config) {
   requireCondition(typeof dataRoot === 'string', 'INVALID_ROOT', 'dataRoot is required.');
   const parentOrigin = config.parentOrigin ?? `http://127.0.0.1:${webServer.port}`;
   const domain = await facility.open(appHostDomainSpec);
-  let routerDomain,libraryDomain,library;
+  let routerDomain,receiptsDomain,receipts,libraryDomain,library;
   const store = new DshDomainSnapshotStore(domainBinding(domain));
   const host = new AppHost({ store, dataRoot, parentOrigin, frameAncestors: config.frameAncestors ?? [],
     ...(config.nodeBinary === undefined ? {} : { nodeBinary: config.nodeBinary }),
@@ -132,8 +133,11 @@ export async function apply(ctx, config) {
     ctx.inject(['credentials'], injected => { credentialService=injected.get('credentials');return()=>{credentialService=undefined;}; });
     // rc.27: usage evidence goes through the usage plugin's record seat when (and only when) that plugin is loaded.
     ctx.inject(['hanameshUsage'], injected => { usageService=injected.get('hanameshUsage');return()=>{usageService=undefined;}; });
-    const evidence = createUsageEvidence({ host, seat:()=>usageService, logger:ctx.logger });
-    ctx.effect(() => () => evidence.close(), 'hanameshApps.usage');
+    // T6: hourly usage receipts live in app-host's own domain; the usage `use` event carries the hour's receipt.
+    receiptsDomain = await facility.open(receiptsDomainSpec);
+    receipts = createReceiptLedger({ domain:receiptsDomain });
+    const evidence = createUsageEvidence({ host, seat:()=>usageService, receipts, logger:ctx.logger });
+    ctx.effect(() => async () => { evidence.close(); await evidence.settle(); await receipts.close(); await receiptsDomain.close(); }, 'hanameshApps.usage');
     ctx.inject(['llm'], injected => { llmService=injected.get('llm');return()=>{llmService=undefined;}; });
     ctx.inject(['hanameshOAuth'], injected => { oauthService=injected.get('hanameshOAuth');return()=>{oauthService=undefined;}; });
     const credentials = {
@@ -144,7 +148,8 @@ export async function apply(ctx, config) {
     routerDomain = await facility.open(routerDomainSpec);
     const sources = createProviderSources({ credentials, apps:host, llm:()=>llmService,
       webOrigin:`http://127.0.0.1:${webServer.port}`, codingOauth:config.router?.codingOauth });
-    const router = createRouter({ credentials, domain:routerDomain, apps:host, sources, oauth:()=>oauthService });
+    const router = createRouter({ credentials, domain:routerDomain, apps:host, sources, oauth:()=>oauthService, receiptLedger:receipts,
+      onInject:({ appId, instanceId, routes }) => { receipts.inject({ appId, instanceId, routes }); } });
     const detachResolver=host.setCredentialResolver(router.credentialResolver),detachObserver=host.subscribe(router.observe);
     const routerHandler=createRouterHttpHandler(router,auth);
     const routerDisposers=ROUTER_ROUTES.map(path=>webServer.register({kind:'exact',path,handler:routerHandler}));
@@ -178,7 +183,7 @@ export async function apply(ctx, config) {
     ctx.effect(() => async () => { for(const dispose of libraryDisposers.splice(0))dispose();await library.close(); }, 'hanameshApps.library');
     ctx.provide('hanameshApps', host);
   } catch (error) {
-    await library?.close().catch(()=>{});await libraryDomain?.close().catch(()=>{});await routerDomain?.close().catch(()=>{});
+    await library?.close().catch(()=>{});await libraryDomain?.close().catch(()=>{});await routerDomain?.close().catch(()=>{});await receipts?.close().catch(()=>{});await receiptsDomain?.close().catch(()=>{});
     if (initialized) await host.dispose().catch(() => {}); else await store.close().catch(() => {});
     throw error;
   }

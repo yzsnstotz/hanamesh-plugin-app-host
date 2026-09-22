@@ -9,7 +9,9 @@ const error=code=>Object.assign(new Error(code),{code});
 export const entryId=entry=>entry.projection==='file'?`file:${entry.base??'home'}:${entry.path}`:`env:${entry.env}`;
 const emptyApp=()=>({mode:'managed',grants:{},ledger:{},revoked:{}});
 
-export function createRouter({credentials,domain,apps,sources,oauth=()=>undefined}) {
+/** `onInject` (T6): called once per credentialResolver run that resolved at least one env route, with the routes in
+ *  declaration order `{providerId, model|null}` — the receipt ledger binds the instance to the first one. Never sees values. */
+export function createRouter({credentials,domain,apps,sources,oauth=()=>undefined,onInject=()=>{},receiptLedger}) {
   let writing=Promise.resolve(); const instancePending=new Map();
   const snapshot=()=>domain.global.get();
   const appState=appId=>snapshot().apps[appId]??emptyApp();
@@ -107,10 +109,12 @@ export function createRouter({credentials,domain,apps,sources,oauth=()=>undefine
       await updateApp(appId,app=>{const grant=app.grants[id]??{subject,grantedAt:new Date().toISOString(),riskAcknowledged:false};if(model)grant.model=model;else delete grant.model;app.grants[id]=grant;delete app.revoked?.[id];});
       return await api.plan(appId);
     },
+    /** T6: local receipt rows (hourly, content-free) for one app or all apps. */
+    receipts(appId){if(appId!==undefined)declaration(appId);return {items:receiptLedger?receiptLedger.list(appId===undefined?{}:{appId}):[]};},
     async revoke(appId,id){if(!declared(appId,id))throw error('ENTRY_UNKNOWN');await updateApp(appId,app=>{delete app.grants[id];app.revoked??={};app.revoked[id]=true;});return await api.plan(appId);},
     async credentialResolver(input){
       await writing;const{appId,instanceId}=input,current=declaration(appId),byId=new Map(current.map(e=>[entryId(e),e]));
-      const app=appState(appId),env={},files=[],secrets=[],pending=new Map();
+      const app=appState(appId),env={},files=[],secrets=[],pending=new Map(),routes=[];
       if(app.mode==='app-owned'){
         for(const[id,ledger]of Object.entries(app.ledger))if(byId.has(id)&&id.startsWith('file:')&&(ledger.pendingVersion??ledger.projectedVersion)!==undefined&&ledger.removedForVersion!==(ledger.pendingVersion??ledger.projectedVersion))files.push({path:byId.get(id).path,policy:'remove'});
         return files.length?{files}:undefined;
@@ -131,14 +135,18 @@ export function createRouter({credentials,domain,apps,sources,oauth=()=>undefine
           // Model choice belongs to the app (`{{model|<app default>}}`); the Router only carries an explicitly granted model.
           const provider=resolved.provider??{};
           applySets(entry,{provider:provider.id??'',baseUrl:provider.baseUrl??'',model:grant.model??''});
+          if(provider.id)routes.push({providerId:provider.id,model:grant.model??declaredDefaultModel(entry)??null});
         }else if(entry.env&&grant.subject.kind==='grant'&&oauth()){
           const projection=await oauth().project(grant.subject.key,'env');if(projection.format==='env'&&typeof projection.env[entry.env]==='string'){
             env[entry.env]=projection.env[entry.env];secrets.push(projection.env[entry.env]);applySets(entry,{provider:KEY.exec(grant.subject.key)?.[1]??'',baseUrl:'',model:grant.model??''});
+            const oauthProvider=KEY.exec(grant.subject.key)?.[1];if(oauthProvider)routes.push({providerId:oauthProvider,model:grant.model??declaredDefaultModel(entry)??null});
           }
         }
       }
       for(const[id,ledger]of Object.entries(app.ledger))if(id.startsWith('file:')&&byId.has(id)&&!app.grants[id]&&(ledger.pendingVersion??ledger.projectedVersion)!==undefined&&ledger.removedForVersion!==(ledger.pendingVersion??ledger.projectedVersion))files.push({path:byId.get(id).path,policy:'remove'});
       if(pending.size){await updateApp(appId,app=>{for(const[id,version]of pending)app.ledger[id]={...app.ledger[id],pendingVersion:version,pendingInstanceId:instanceId};});instancePending.set(instanceId,{appId,pending});}
+      // T6: receipts learn the route here, never the value. A failing observer must not block the launch.
+      if(routes.length){try{onInject({appId,instanceId,routes});}catch{}}
       return Object.keys(env).length||files.length?{env,files,secrets}:undefined;
     },
     async observe(event){
