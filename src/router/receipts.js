@@ -22,7 +22,6 @@
  * Without a storage domain (library use, tests) the ledger is memory-only and behaves identically.
  */
 import { z } from 'zod';
-import { defineDomain } from '@deepseek-ai/dsh-storage-domain';
 import { requireCondition } from '../errors.js';
 
 const pad = n => String(n).padStart(2,'0');
@@ -47,10 +46,10 @@ export function normalizeRoute(route) {
 }
 const row = z.object({ appId:z.string(), providerId:z.string().nullable(), model:z.string().nullable(), hour:z.string(),
   count:z.number().int().nonnegative(), injections:z.number().int().nonnegative(), firstAt:z.number().int().nonnegative(), lastAt:z.number().int().nonnegative(), reported:z.boolean() });
-export const receiptsDomainSpec = defineDomain({
-  name:'hanamesh_router_receipts', version:1, layout:'single', tables:{},
-  global:{ schema:z.object({ schema:z.literal(1), items:z.record(z.string(),row) }), initial:{ schema:1, items:{} } },
-});
+/** Shape of the persisted global; the storage-domain spec itself lives in `./receipts-domain.js`
+ * so the library entry never pulls a DSH-only peer into a plain consumer's import graph. */
+export const receiptsGlobalSchema = z.object({ schema:z.literal(1), items:z.record(z.string(),row) });
+export const receiptsGlobalInitial = { schema:1, items:{} };
 const key = (appId,providerId,model,hour) => `${appId}|${providerId ?? ''}|${model ?? ''}|${hour}`;
 const DAY = 86_400_000;
 

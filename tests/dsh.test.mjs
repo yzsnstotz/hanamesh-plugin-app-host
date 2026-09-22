@@ -238,3 +238,21 @@ test('AH-M08 (plugin): rc.28 market routes are registered on the real web server
   const csrf = await plain.post('/hanamesh/library/plugins/install', { packageName: 'dsh-plugin-tether' }, { 'x-hanamesh-client': undefined });
   assert.equal(csrf.status, 403); assert.equal(csrf.json.error.code, 'CSRF_DENIED');
 });
+
+test('the library entry never pulls a DSH-only peer into a plain consumer import graph', async () => {
+  // A plain npm consumer (an application package such as @hanamesh/app-vibe-trading) installs this
+  // package without the DSH kernel, so nothing reachable from `dist/index.js` may import @deepseek-ai/*.
+  const {readFile}=await import('node:fs/promises');
+  const seen=new Set(); const offenders=[];
+  const walk=async url=>{
+    if(seen.has(url.href))return; seen.add(url.href);
+    const source=await readFile(url,'utf8');
+    for(const [,specifier] of source.matchAll(/(?:from|import)\s*['"]([^'"]+)['"]/gu)){
+      if(specifier.startsWith('@deepseek-ai/')){offenders.push(`${url.pathname.split('/dist/')[1]} → ${specifier}`);continue;}
+      if(specifier.startsWith('.'))await walk(new URL(specifier,url));
+    }
+  };
+  await walk(new URL('../dist/index.js',import.meta.url));
+  assert.deepEqual(offenders,[],'the library entry graph must stay free of DSH-only peers');
+  assert.ok(seen.size>5);
+});

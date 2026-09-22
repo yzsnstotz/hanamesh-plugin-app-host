@@ -122,7 +122,6 @@ export interface ReceiptLedger {
 }
 export function createReceiptLedger(options?:{domain?:{global:{get():unknown;set(value:unknown):Promise<void>}};clock?:()=>number;persistDelayMs?:number;maxItems?:number;retentionMs?:number}):ReceiptLedger;
 export function normalizeRoute(route:unknown):ReceiptRoute|null;
-export const receiptsDomainSpec:unknown;
 export function createUsageEvidence(options:{host:AppHost;seat:()=>UsageSeat|unknown;receipts?:ReceiptLedger;logger?:{debug?:(...args:unknown[])=>void};clock?:()=>number;sweepIntervalMs?:number}):{
   flush(options?:{appId?:string;includeCurrent?:boolean}):Promise<void>; settle():Promise<void>; receipts:ReceiptLedger; close():void;
 };

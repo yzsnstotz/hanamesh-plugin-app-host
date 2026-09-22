@@ -1,0 +1,194 @@
+
+> @hanamesh/dsh-app-host@0.1.0-rc.31 check
+> npm run build && npm run check:consistency && npm test && npm run test:mutation
+
+
+> @hanamesh/dsh-app-host@0.1.0-rc.31 build
+> node scripts/build.mjs
+
+Build completed: self-contained ESM modules and public type declarations.
+
+> @hanamesh/dsh-app-host@0.1.0-rc.31 check:consistency
+> node scripts/check-consistency.mjs
+
+X01 PASS: 4 groups, 3 boundaries
+
+> @hanamesh/dsh-app-host@0.1.0-rc.31 test
+> node --test --test-concurrency=1 tests/*.test.mjs
+
+﹣ H13 REAL_BROWSER: named parent embeds unchanged app; direct top navigation and iframe control calls are denied (1.342792ms) # REAL_BROWSER unavailable: isolated Chromium binary was not found.
+﹣ H10 REAL_BROWSER: SIGKILL browser process group, no unload, lease expiry stops actual owned application (0.39475ms) # REAL_BROWSER unavailable: isolated Chromium binary was not found.
+✔ X01: consistency declaration covers each production group and boundary (3.626583ms)
+X02 first-lease: {"point":"snapshot-temp-fsynced","death":{"code":null,"signal":"SIGKILL"},"facts":[false,false,false],"revision":0}
+✔ X02 first-lease: real SIGKILL at snapshot-temp-fsynced restores all or none (97.414541ms)
+X02 stopped-views: {"point":"snapshot-temp-fsynced","death":{"code":null,"signal":"SIGKILL"},"facts":[false,false,false],"revision":4}
+✔ X02 stopped-views: real SIGKILL at snapshot-temp-fsynced restores all or none (361.454291ms)
+X02 first-lease: {"point":"snapshot-published","death":{"code":null,"signal":"SIGKILL"},"facts":[true,true,true],"revision":1}
+✔ X02 first-lease: real SIGKILL at snapshot-published restores all or none (93.57075ms)
+X02 stopped-views: {"point":"snapshot-published","death":{"code":null,"signal":"SIGKILL"},"facts":[true,true,true],"revision":5}
+✔ X02 stopped-views: real SIGKILL at snapshot-published restores all or none (365.656375ms)
+X03 reserve-launch: {"signal":"SIGKILL","instanceId":"e173e467-f7c1-4515-b219-b5110c39bc68","pid":26392,"appWroteData":true,"durableOwner":true,"guardianCleanup":true}
+✔ X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data (288.8775ms)
+X03 stop-publish: {"signal":"SIGKILL","stateAfterRestart":"stopping","aliveAtCut":false,"aliveAfterRestart":false}
+✔ X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive (381.999625ms)
+H12 real host kill/resume: {"stableInstance":"22c6d65f-9bf0-4952-a093-2c1462ce0398","oldRuntime":"c21025c8-f954-4a83-95b2-c3ac02a3596b","newRuntime":"3598504b-ac6a-43cf-b836-0ffb66310469","dataRetained":true}
+✔ H12/H06: SIGKILL host, guardian cleanup, fresh host exact-identity resume and persisted app data (633.712667ms)
+✔ AH-C1: credentialEnv is validated — host control names, duplicates, static-env repeats and escaping paths are rejected (4.111167ms)
+✔ AH-C2/C3/C4: resolver values reach the child only for declared names; undeclared env and escaping files are rejected with events; logs are redacted (297.427209ms)
+✔ AH-C5: a throwing resolver is recorded and never blocks the launch (293.593208ms)
+✔ AH-C6: without a resolver (or after its disposer ran) nothing is injected and no credential event exists (296.3675ms)
+✔ AH-C7 (rc.6): file policy — if-absent keeps an app-rotated file, overwrite replaces it, remove deletes it; events name each (1161.248167ms)
+✔ AH-P01: runtime deployment is valid without command and participates in the definition fingerprint (0.791459ms)
+✔ AH-P02: runtime item, installTo and exec must remain inside the provisioned tree (0.250958ms)
+✔ AH-P03: host launches the executable selected by the validated runtime and matching ledger (716.126416ms)
+▶ AH-P04: missing, stale or non-executable runtime fails closed as RUNTIME_MISSING
+  ✔ missing-ledger (31.645791ms)
+  ✔ stale-ledger (29.152ms)
+  ✔ missing-exec (30.843583ms)
+  ✔ non-executable (31.309125ms)
+✔ AH-P04: missing, stale or non-executable runtime fails closed as RUNTIME_MISSING (123.909208ms)
+✔ H01 (harness half): the plugin activates on a real Cordis root and provides ctx.hanameshApps (73.990125ms)
+✔ H11: lease/instance state lands in the storage-domain sidecar and DSH still reads its own session (378.894125ms)
+✔ H14/AC-07 on the real web server: unauthenticated, wrong origin and iframe callers are refused (69.608958ms)
+✔ H09/dispose: unloading the plugin removes its routes, stops owned instances, and closes the domain (440.068167ms)
+✔ AC-26 shape: without the connection service the plugin never activates, so no route is public (340.752708ms)
+✔ unit: bare apply() cannot masquerade as a loaded plugin (1.189667ms)
+✔ teardown: a whole-root unload (profile shutdown) never orphans an owned process, even though the storage domain closes concurrently (402.137292ms)
+✔ AH-L07 (plugin): an unconfigured library seeds the HanaMesh catalog source through the real Config schema; an explicit [] does not (139.239667ms)
+✔ AH-U07 (plugin): usage evidence reaches ctx.hanameshUsage.record when that sibling is provided — before or after this plugin — and its absence changes nothing (1152.647875ms)
+✔ AH-M08 (plugin): rc.28 market routes are registered on the real web server behind the same auth chain; without an installer the plugin seats answer 503, never 500 (70.932042ms)
+✔ the library entry never pulls a DSH-only peer into a plain consumer import graph (9.031959ms)
+✔ H13: fixed gateway changes only XFO/frame-ancestors; preserves HTML, gzip and application headers (79.545333ms)
+✔ H14: gateway requires live capability; denies foreign origins, top navigation, arbitrary targets and ticket reuse (35.654208ms)
+✔ H14: gateway strips DSH credentials, control headers and unregistered cookies (39.4605ms)
+✔ AH gateway: uploads, SSE, relative application paths and redirects retain transport semantics (110.715584ms)
+✔ AH gateway: real WebSocket upgrade preserves frame bytes (67.633083ms)
+✔ H15: embedded webview without third-party cookies — Fetch Metadata capability after a consumed bootstrap ticket (69.012041ms)
+✔ H15: no bootstrap ever consumed → Fetch Metadata alone never authorizes (34.567625ms)
+✔ H15: embedded WebSocket handshake authorizes by the app origin without a cookie; foreign origin denied (67.730083ms)
+✔ H16: frame-ancestors lists the shell webview origin as well as the workspace; bogus ancestors are refused (68.120167ms)
+✔ AH-L09: catalog items may carry schema-allowed updatedAt (0.586708ms)
+✔ AH-L01: fixture catalog validates all entries and exposes only installable HanaMesh applications (1.994959ms)
+✔ AH-L02: catalog URLs are standard-port HTTPS and redirects remain same-origin (8.955875ms)
+✔ AH-L04/L05: install uses explicit Node + DSH argv, exact stable registry version, then provisions the declared item (10.230792ms)
+✔ AH-L06: uninstall removes the package and owned runtime but preserves application data (1.849875ms)
+✔ AH-L03: installed scan reports registered, installed-not-loaded and runtime-missing independently of catalog sources (9.052041ms)
+✔ AH-L07: library.sources unset → the HanaMesh catalog source is seeded; an explicit [] stays empty (3.096208ms)
+✔ AH-L08: profileDir/profileName are inferred from the package's own real location inside a `dsh plugin` profile (9.6935ms)
+✔ AH-L09: nodeBinary is this process only outside Electron; explicit configuration always wins (2.374625ms)
+✔ AH-L10: dshBin is taken from argv[1] only when that script is @deepseek-ai/dsh/lib/bin.js (0.515041ms)
+✔ AH-M01: a catalog plugin installs through the same `dsh plugin add --save-exact` path as an application, reads no app.json and provisions nothing (4.618375ms)
+✔ AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite itself is refused both ways (PACKAGE_DENIED) (1.35325ms)
+✔ AH-M03: installed plugins = profile dependencies minus application packages, with restart states from the boot snapshot (9.357708ms)
+✔ AH-M04: upgrade = catalog latestVersion strictly newer than the installed version (semver, prerelease below release) (0.213708ms)
+✔ AH-M05: the market listing annotates every entry with kind / installed row / upgradeAvailable, lists categories, installed plugins and restartRequired (4.443542ms)
+✔ AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall / plugin fields answer 400 INVALID_INPUT before any operation starts; installedPlugins and the plugin routes are served (75.730083ms)
+✔ AH-M07 (client source): the entry is 「市场」, cards carry kind/state/upgrade, and a plugin change shows 「需重启 DSH」 with the hanamesh://restart deep link only inside the shell (0.567917ms)
+✔ AH-L10: category, q and cursor reach the provider endpoint (9.451583ms)
+✔ AH-L11: library card tracks install/provision/uninstall operations via the event feed and shows failures inline (user 2026-09-20) (1.38975ms)
+H02 real process evidence: {"opens":8,"pids":[27118]}
+✔ H02: eight concurrent opens reserve one actual application process (304.198375ms)
+H03 actual directory contents: {"a":{"path":"/private/tmp/hm-app-host-27111-NBLoDd/data/4740ae6347b0172c01254ff5/example/local/data-v1/c5545069-096d-40ab-b006-6ced5b343a81","files":[".runtime.lock","cache","config","home","runtime-evidence.json","state","tmp","write-1f96ab58-db29-4167-a419-95687c29c069.txt"]},"b":{"path":"/private/tmp/hm-app-host-27111-NBLoDd/data/4740ae6347b0172c01254ff5/example/local/data-v1/ab4104d4-7fdb-4428-95e8-4784df89ff5c","files":[".runtime.lock","cache","config","home","runtime-evidence.json","state","tmp","write-34809cbf-555c-49f3-9ee9-e3539534a1a0.txt"]}}
+✔ H03: multi-instance applications write genuinely separate data roots (514.408625ms)
+✔ H04/H05: reopen is idempotent; closing one view does not stop the other (375.326917ms)
+H06 durable slot restore: {"old":"bd81a90c-c623-4566-a121-25530ab2d9e8","restored":"bd81a90c-c623-4566-a121-25530ab2d9e8","originalSessionId":"document-exact-a"}
+✔ H06: restart/resume preserves exact view, deployment, data and original-session identities (918.109708ms)
+✔ H07: forged, expired-generation, and cross-principal close cannot decrement another lease (602.673083ms)
+✔ H08: busy Stop explains occupiers; confirmed stop emits durable notifications for every view (314.799209ms)
+✔ H09: attach close, stopAll and dispose never signal the external process (252.087042ms)
+✔ H10: expired leases converge without any unload request (579.534458ms)
+✔ AH: startup cancellation receipt stops the actual child and does not return false-ready (247.272917ms)
+✔ AH: never-ready startup is bounded, cleans up, and supports an explicit retry (687.4485ms)
+✔ AH: spontaneous application exit cannot leave ready forever (345.065708ms)
+✔ AH: disjoint applications launch independently and cannot rebind an existing view (406.523292ms)
+✔ AH: host secrets are not inherited; logs redact bearer and JSON secrets (293.095792ms)
+✔ AH: confirmed Stop removes a SIGTERM-resistant descendant in its owned group (311.129458ms)
+✔ FIX-01: lost receipt recovery is owner-confirmed, fences old credentials and retains exact identity (310.698541ms)
+✔ FIX-01 gateway: closed/recovered generations never regain iframe capabilities after reopen (336.768416ms)
+✔ AH recovery: tampered data-root bindings cannot redirect application writes (311.475125ms)
+✔ AH-D1: an upgraded descriptor is adopted by a stopped instance across a host restart (593.679334ms)
+✔ AH-K5-1: guardian and launcher use the explicit executable Node runtime (290.088792ms)
+✔ AH-K5-1: internal runtime environment has only the controlled whitelist (0.444625ms)
+✔ AH-K5-2: Electron self-hosting refuses fallback and persists a failed instance event (34.115375ms)
+✔ AH-K5-2: configured nodeBinary must be absolute and executable (0.964458ms)
+✔ AH-K5-3: guardian refuses an Electron runtime with exit 78 and a typed event (38.944375ms)
+✔ AH-R01 directory reports configured references but never exposes values (0.458792ms)
+✔ AH-R02 a configured provider the entry accepts is auto-routed; revoke opts out; explicit grant overrides (2.047666ms)
+✔ AH-R02b the OpenAI-compatible Coding OAuth gateway auto-routes to an `openai` slot only when no OpenAI key exists (0.992417ms)
+✔ AH-R01 grant keeps matching-consumer risk acknowledgement for legacy grant slots (0.274125ms)
+✔ AH-R01 absent OAuth leaves a selected grant missing without reading its record (0.10475ms)
+✔ AH-R01/AK11 file projection lifecycle follows host events and app-owned cleanup (0.598625ms)
+✔ AH-R01 interrupted launch keeps durable file intent (0.166792ms)
+✔ AH-R11/AK11 sets expands provider, baseUrl and model and ignores undeclared or empty targets (0.157208ms)
+✔ AH-R05 sets default applies and empty baseUrl is omitted (0.133833ms)
+✔ AH-R02c auto-route keeps the app's declared default model and never routes a derived slot (0.391ms)
+✔ AH-R12 (T6) every injection tells the receipt observer the routed provider and model — never the value — and local receipts are readable per app (0.349166ms)
+✔ AH-R01/AK09: locked app-host file policies preserve rotated files and remove revoked grants (1798.475083ms)
+✔ AH-R02 dsh-models describes refs without resolving values and adds pinned llm metadata (1.346833ms)
+✔ AH-R03 coding gateway maps 404, off, configured and unreachable without exposing apiKey (1.100334ms)
+✔ AH-R09 file gateway requires mode 0600 and returns the same provider contract (6.059625ms)
+✔ AH-R08 every router route rejects missing client header, wrong origin, iframe and unauthenticated calls (17.151625ms)
+✔ H14: every browser command/env/cwd/path/url override is rejected before spawn (27.514167ms)
+✔ H14: control routes require authentication, CSRF header, exact origin and host (16.032875ms)
+✔ AH routes: startup receipt can be cancelled and tokens are not leaked through list/events (256.918375ms)
+✔ H08: busy Stop is HTTP 409 and names the occupying view (225.690333ms)
+AH-L01 reclaimed stale owner: {"deadPid":28087}
+✔ AH-L01: a runtime lock left by a dead owner is reclaimed (current and legacy record shapes) (77.42ms)
+AH-L02 live owner blocks: {"pid":28153,"start":"Tue Sep 22 23:21:35 2026"}
+✔ AH-L02: a live owner still blocks, names its pid, and is never signalled (95.22475ms)
+AH-L03 pid reuse treated as dead: {"pid":28188,"liveStart":"Tue Sep 22 23:21:35 2026"}
+✔ AH-L03: same pid with a different start token is a reused pid: reclaimed, and the stranger is not signalled (113.52325ms)
+AH-L04 orphan handling: {"unproven":28258,"terminated":28293,"death":{"code":null,"signal":"SIGKILL"}}
+✔ AH-L04: a surviving recorded child blocks unless provably ours; provably-ours orphans are terminated first (245.86825ms)
+AH-L05 reclaimed after tree kill: {"oldGuardian":28335,"oldApp":28340,"newApp":28443,"newGuardian":28432}
+✔ AH-L05: shell tree force-killed -> next open reclaims the stale runtime lock and replaces the orphaned app (683.579041ms)
+AH-L06 unproven orphan keeps the lock: {"launcherPid":28628,"appPid":28630}
+✔ AH-L06: shell tree force-killed but the orphan cannot be proven ours -> open keeps failing DATA_ROOT_BUSY with the live pid (375.7945ms)
+✔ AH store: pre-publish failure preserves prior image; post-publish failure is explicitly uncertain (34.080416ms)
+✔ AH store: a second live owner is rejected and cannot silently overwrite state (23.786083ms)
+✔ AH store: corrupt snapshots and symlinked roots fail closed (8.526917ms)
+✔ AH readiness: unrelated HTTP 200 with the same app marker is not owned readiness (319.75075ms)
+✔ AH descriptors: relative commands, shell-style launch, missing data binding and host env are rejected (1.192583ms)
+✔ H01/H11 guard: bare apply() cannot masquerade as a loaded plugin; the domain binding is a single-image port (0.674375ms)
+✔ AH-U01: open is recorded once per instance reaching ready; hanaRef is the app package name; sourcePlugin is app-host (595.898916ms)
+✔ AH-U02: use is one per app per UTC hour of real gateway activity, reported when the hour closes; bootstrap, denials and 401/403 answers never count (338.20575ms)
+✔ AH-U03: no seat → nothing recorded, no throw; a seat that appears later is used from then on (887.575542ms)
+✔ AH-U04: a rejecting, throwing or withholding seat never breaks the launch or the proxied request (1197.54575ms)
+✔ AH-U05: hanaRef comes from the package — definition packageName, else the installed-scan binding, else no evidence (611.636542ms)
+✔ AH-U06: multiple instances of one app share the hour at the seat; the hour is reported once the last live instance stops (939.348084ms)
+✔ AH-U08 (T6): the Router route becomes the hour receipt {providerId, model, count}; injections and requests are separate; unknown routes report without a receipt (608.29575ms)
+✔ AH-U09 (T6): the receipt ledger persists through one debounced global.set, reloads, reports leftover closed hours on the next start and prunes (61.983042ms)
+ℹ tests 125
+ℹ suites 0
+ℹ pass 123
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 2
+ℹ todo 0
+ℹ duration_ms 27900.929125
+
+> @hanamesh/dsh-app-host@0.1.0-rc.31 test:mutation
+> node scripts/mutations.mjs
+
+M01-single-instance: baseline PASS; mutation DETECTED
+M02-reserve-launch: baseline PASS; mutation DETECTED
+M03-stop-publish: baseline PASS; mutation DETECTED
+M05-credential-declared-only: baseline PASS; mutation DETECTED
+M04-socket-ownership: baseline PASS; mutation DETECTED
+M06-router-sets-declared: baseline PASS; mutation DETECTED
+M07-runtime-exec-traversal: baseline PASS; mutation DETECTED
+M09-runtime-lock-unproven-orphan: baseline PASS; mutation DETECTED
+M10-library-node-electron: baseline PASS; mutation DETECTED
+M11-usage-denied-counts: baseline PASS; mutation DETECTED
+M12-usage-hour-bucket: baseline PASS; mutation DETECTED
+M15-receipt-count-not-accumulated: baseline PASS; mutation DETECTED
+M16-router-inject-observer-blocks-launch: baseline PASS; mutation DETECTED
+M13-market-suite-protected: baseline PASS; mutation DETECTED
+M14-provision-input-400: baseline PASS; mutation DETECTED
+M08-node-runtime-electron: baseline PASS; mutation DETECTED
+Mutation guard PASS: 16/16 genuine source mutations detected.
+npm notice
+npm notice New minor version of npm available! 11.8.0 -> 11.19.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.19.1
+npm notice To update run: npm install -g npm@11.19.1
+npm notice

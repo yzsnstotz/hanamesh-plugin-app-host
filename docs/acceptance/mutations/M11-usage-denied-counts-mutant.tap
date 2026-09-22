@@ -2,9 +2,9 @@ TAP version 13
 # Subtest: AH-U02: use is one per app per UTC hour of real gateway activity, reported when the hour closes; bootstrap, denials and 401/403 answers never count
 not ok 1 - AH-U02: use is one per app per UTC hour of real gateway activity, reported when the hour closes; bootstrap, denials and 401/403 answers never count
   ---
-  duration_ms: 304.614083
+  duration_ms: 313.77875
   type: 'test'
-  location: '/private/tmp/hm-app-host-mutation-uUtipR/tests/usage-evidence.test.mjs:79:1'
+  location: '/private/tmp/hm-app-host-mutation-u6s0m9/tests/usage-evidence.test.mjs:79:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
@@ -17,7 +17,7 @@ not ok 1 - AH-U02: use is one per app per UTC hour of real gateway activity, rep
   actual: 1
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-uUtipR/tests/usage-evidence.test.mjs:94:86)
+    TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-u6s0m9/tests/usage-evidence.test.mjs:94:86)
     process.processTicksAndRejections (node:internal/process/task_queues:103:5)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
@@ -30,4 +30,4 @@ not ok 1 - AH-U02: use is one per app per UTC hour of real gateway activity, rep
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 370.097958
+# duration_ms 379.020375

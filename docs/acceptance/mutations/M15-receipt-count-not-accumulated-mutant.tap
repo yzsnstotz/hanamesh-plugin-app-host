@@ -2,9 +2,9 @@ TAP version 13
 # Subtest: AH-U08 (T6): the Router route becomes the hour receipt {providerId, model, count}; injections and requests are separate; unknown routes report without a receipt
 not ok 1 - AH-U08 (T6): the Router route becomes the hour receipt {providerId, model, count}; injections and requests are separate; unknown routes report without a receipt
   ---
-  duration_ms: 303.506917
+  duration_ms: 303.475667
   type: 'test'
-  location: '/private/tmp/hm-app-host-mutation-MruRNj/tests/usage-evidence.test.mjs:230:1'
+  location: '/private/tmp/hm-app-host-mutation-AcZGME/tests/usage-evidence.test.mjs:230:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:
@@ -38,7 +38,7 @@ not ok 1 - AH-U08 (T6): the Router route becomes the hour receipt {providerId, m
       injections: 1
   operator: 'deepStrictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-MruRNj/tests/usage-evidence.test.mjs:243:10)
+    TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-AcZGME/tests/usage-evidence.test.mjs:243:10)
     process.processTicksAndRejections (node:internal/process/task_queues:103:5)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
@@ -51,4 +51,4 @@ not ok 1 - AH-U08 (T6): the Router route becomes the hour receipt {providerId, m
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 369.553041
+# duration_ms 369.623709

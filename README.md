@@ -1,4 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.30
+# HanaMesh app-host · 0.1.0-rc.31
+
+> rc.31（2026-09-22）：修 rc.30 的回归——库入口 `dist/index.js` 经 `router/receipts.js` 静态引入了 DSH 专属 peer `@deepseek-ai/dsh-storage-domain`，使只装本包的应用包（如 Vibe）`import` 即 `ERR_MODULE_NOT_FOUND`。storage-domain 规格移到 `src/router/receipts-domain.js`（只由插件入口 `src/dsh.js` 打开），并加守卫测试：从 `dist/index.js` 可达的模块图里不得出现 `@deepseek-ai/*`。
 
 > rc.30（2026-09-22）：= rc.28（HanaMesh 市场）+ Router 使用回执：每小时 `{appId, providerId, model, hour, count}` 本地账（storage-domain `hanamesh_router_receipts`、`GET /hanamesh/router/receipts`），在 UTC 整点结束或该应用最后一个活实例停止时，随 `use` 事件经 usage 席位上报（`targetRef=appId` + 该小时请求最多的路由行作 `receipt`）；需 usage ≥ 0.2.0-rc.7。
 

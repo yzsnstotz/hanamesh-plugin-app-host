@@ -2,7 +2,7 @@ TAP version 13
 # Subtest: AH-R12 (T6) every injection tells the receipt observer the routed provider and model — never the value — and local receipts are readable per app
 ok 1 - AH-R12 (T6) every injection tells the receipt observer the routed provider and model — never the value — and local receipts are readable per app
   ---
-  duration_ms: 2.482208
+  duration_ms: 2.951917
   type: 'test'
   ...
 1..1
@@ -13,4 +13,4 @@ ok 1 - AH-R12 (T6) every injection tells the receipt observer the routed provide
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 33.648125
+# duration_ms 35.155625

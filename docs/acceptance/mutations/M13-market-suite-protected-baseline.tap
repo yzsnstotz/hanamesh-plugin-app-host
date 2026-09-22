@@ -2,7 +2,7 @@ TAP version 13
 # Subtest: AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite itself is refused both ways (PACKAGE_DENIED)
 ok 1 - AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite itself is refused both ways (PACKAGE_DENIED)
   ---
-  duration_ms: 3.91725
+  duration_ms: 4.024209
   type: 'test'
   ...
 1..1
@@ -13,4 +13,4 @@ ok 1 - AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suit
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 67.948708
+# duration_ms 68.032459

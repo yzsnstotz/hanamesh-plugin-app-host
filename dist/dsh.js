@@ -34,7 +34,8 @@ import { createLibraryInstaller } from './library/install.js';
 import { resolveLibraryLocations } from './library/locate.js';
 import { createLibraryHttpHandler, LIBRARY_ROUTES } from './library/routes.js';
 import { createUsageEvidence } from './usage-evidence.js';
-import { createReceiptLedger, receiptsDomainSpec } from './router/receipts.js';
+import { createReceiptLedger } from './router/receipts.js';
+import { receiptsDomainSpec } from './router/receipts-domain.js';
 
 export const name = 'hanamesh-app-host';
 export const DSH_TARGET = '0.1.5-alpha.1';
