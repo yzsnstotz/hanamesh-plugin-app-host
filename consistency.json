@@ -6,7 +6,11 @@
     {
       "id": "first-lease",
       "name": "实例、首个租约、对应通知一起发布",
-      "facts": ["instance-record:present", "first-lease:owned", "view.opened:journaled"],
+      "facts": [
+        "instance-record:present",
+        "first-lease:owned",
+        "view.opened:journaled"
+      ],
       "medium": "single-snapshot:hanamesh_app_host",
       "why": "一次完整镜像包含三项事实；本地后端用 fsync + rename；真实 DSH single domain 绑定仍待验证。",
       "test": "tests/crash.test.mjs:X02 first-lease"
@@ -14,7 +18,11 @@
     {
       "id": "stopped-views",
       "name": "已停止状态、撤销全部视图、停止通知一起发布",
-      "facts": ["instance-record:stopped", "all-active-leases:stopped", "view.stopped:journaled"],
+      "facts": [
+        "instance-record:stopped",
+        "all-active-leases:stopped",
+        "view.stopped:journaled"
+      ],
       "medium": "single-snapshot:hanamesh_app_host",
       "why": "物理清理完成后再原子发布状态和通知；不能用 UI 事件代替已停止事实。",
       "test": "tests/crash.test.mjs:X02 stopped-views"
@@ -22,17 +30,34 @@
     {
       "id": "library-install",
       "name": "runtime 账本记录与受管安装记录一起发布",
-      "facts": ["ledger:item", "installed-record"],
+      "facts": [
+        "ledger:item",
+        "installed-record"
+      ],
       "medium": "provision-ledger",
       "why": "lib-provision 是 runtime 目录与 ownership manifest/ledger 的单写者；应用包已经安装但 runtime 未完成时显式显示 runtime-missing，不冒充可打开。rc.28 插件走同一 dsh plugin add/remove 路径但不涉及账本：只有 profile package.json 一处事实。",
       "test": "tests/library-install.test.mjs:AH-L04/L05"
+    },
+    {
+      "id": "receipt-hour",
+      "name": "回执行的计数与已上报标记一起发布",
+      "facts": [
+        "receipt-row:count",
+        "receipt-row:reported"
+      ],
+      "medium": "single-snapshot:hanamesh_router_receipts",
+      "why": "T6：同一 (app, 路由, 小时) 行的 count/injections/firstAt 与 reported 标记在一次去抖后的 global.set 里整体发布；不存在第二张回执表。强杀最多丢最后一个去抖窗口内的计数，永不出现 reported 却没有行。",
+      "test": "tests/usage-evidence.test.mjs:AH-U09"
     }
   ],
   "boundaries": [
     {
       "id": "reserve-launch",
       "name": "持久所有权预留 → 实际进程及应用数据写入",
-      "sides": ["single-snapshot:hanamesh_app_host", "owned-process-and-app-data"],
+      "sides": [
+        "single-snapshot:hanamesh_app_host",
+        "owned-process-and-app-data"
+      ],
       "safeDirection": "single-snapshot:hanamesh_app_host",
       "why": "先记录 owner 和 lease 再 spawn。允许孤儿预留，不允许进程或写出的数据没有记录认领。宿主强杀后独立 guardian 收尾。",
       "test": "tests/crash.test.mjs:X03 reserve-launch"
@@ -40,10 +65,24 @@
     {
       "id": "stop-publish",
       "name": "确认自有进程已退出 → 发布 stopped",
-      "sides": ["confirmed-runtime-termination", "snapshot:stopped-ack"],
+      "sides": [
+        "confirmed-runtime-termination",
+        "snapshot:stopped-ack"
+      ],
       "safeDirection": "confirmed-runtime-termination",
       "why": "宁可已经停了但状态仍是 stopping；不能记录 stopped 时后端仍在运行。attach 仅撤销附着，不参与发信号。",
       "test": "tests/crash.test.mjs:X03 stop-publish"
+    },
+    {
+      "id": "receipt-report",
+      "name": "usage 席位收到小时 use 事件 → 账本标记 reported",
+      "sides": [
+        "usage-seat:use-event",
+        "single-snapshot:hanamesh_router_receipts"
+      ],
+      "safeDirection": "usage-seat:use-event",
+      "why": "先让席位 recorded/duplicate，再标 reported；允许席位已有而账本未标（下次重报得 duplicate），不允许账本已标而席位从未收到。rejected/withheld/席位缺席都不标。",
+      "test": "tests/usage-evidence.test.mjs:AH-U04"
     }
   ],
   "scope": "REAL_PROCESS + LOCAL_ATOMIC_FILE；不是 DSH 加载、真实浏览器、整机断电或 macOS 验收。",

@@ -1,23 +1,23 @@
 TAP version 13
-# Subtest: AH-U02: use is one per app per UTC hour of real gateway activity; bootstrap, denials and 401/403 answers never count
-not ok 1 - AH-U02: use is one per app per UTC hour of real gateway activity; bootstrap, denials and 401/403 answers never count
+# Subtest: AH-U02: use is one per app per UTC hour of real gateway activity, reported when the hour closes; bootstrap, denials and 401/403 answers never count
+not ok 1 - AH-U02: use is one per app per UTC hour of real gateway activity, reported when the hour closes; bootstrap, denials and 401/403 answers never count
   ---
-  duration_ms: 315.816958
+  duration_ms: 325.815208
   type: 'test'
-  location: '/private/tmp/hm-app-host-mutation-sz5Pr6/tests/usage-evidence.test.mjs:77:1'
+  location: '/private/tmp/hm-app-host-mutation-Pr5EpW/tests/usage-evidence.test.mjs:79:1'
   failureType: 'testCodeFailure'
   error: |-
-    Expected values to be strictly equal:
+    the running hour is not reported yet
     
-    5 !== 1
+    1 !== 0
     
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
-  expected: 1
-  actual: 5
+  expected: 0
+  actual: 1
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-sz5Pr6/tests/usage-evidence.test.mjs:104:35)
+    TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-Pr5EpW/tests/usage-evidence.test.mjs:100:10)
     process.processTicksAndRejections (node:internal/process/task_queues:103:5)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
@@ -30,4 +30,4 @@ not ok 1 - AH-U02: use is one per app per UTC hour of real gateway activity; boo
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 358.079792
+# duration_ms 390.875125

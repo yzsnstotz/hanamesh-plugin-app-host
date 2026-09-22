@@ -24,13 +24,15 @@ Router 只投射描述符已声明且已经授权的槽位。`sets` 支持 `{{pr
 
 ## 4. HTTP 路由与错误码
 
-六条 exact 路由：`GET /hanamesh/router/providers`、`GET /hanamesh/router/plan?appId=`、`POST /hanamesh/router/grant`、`/revoke`、`/mode`、`/gateway`。全部经过 app-host 同一 Host、Origin、iframe、认证、授权和 `x-hanamesh-client: workspace-v1` 防护链。响应不含 key 值。
+七条 exact 路由：`GET /hanamesh/router/providers`、`GET /hanamesh/router/plan?appId=`、`GET /hanamesh/router/receipts[?appId=]`（T6，只读：本地使用回执行 `{appId, providerId, model, hour, count, injections, firstAt, lastAt, reported}`）、`POST /hanamesh/router/grant`、`/revoke`、`/mode`、`/gateway`。全部经过 app-host 同一 Host、Origin、iframe、认证、授权和 `x-hanamesh-client: workspace-v1` 防护链。响应不含 key 值。
 
 稳定业务错误：`ROUTER_PROVIDER_ABSENT`、`GATEWAY_OFF`、`GATEWAY_UNREACHABLE`、`RISK_NOT_ACKNOWLEDGED`、`ENTRY_UNKNOWN`。
 
 ## 5. Storage domain
 
 domain 名 `hanamesh_router`，schema version 1，single/global 整体发布。它与 `hanamesh_app_host` 是两个独立 domain，不混写实例租约。
+
+T6 使用回执用第三个 domain `hanamesh_router_receipts`（schema 1，single/global，`{schema:1, items:{<appId>|<providerId>|<model>|<YYYYMMDDHH>: 行}}`，去抖后一次 `global.set` 发布，90 天保留、≤5000 行）。来源：`credentialResolver` 每次解析出 env 路由就把 `{appId, instanceId, routes:[{providerId, model}]}` 交给 `onInject`（声明顺序第一条是该实例的路由；只有 id 与模型名，绝无值），网关每次转发授权请求给该实例的 (app, 路由, 小时) 行 `count+1`。`use` 事件在小时结束、或应用最后一个活实例停止时，经 usage 席位上报，附 `targetRef=appId` 与该小时请求最多的路由行作为 `receipt {providerId, model, count}`；无路由（恢复/附着的实例）只报 `use` 不带回执。
 
 ## 6. 不做
 
