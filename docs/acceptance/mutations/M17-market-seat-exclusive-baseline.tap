@@ -1,0 +1,22 @@
+TAP version 13
+# Subtest: AH-MS02: dshmarket installed in the profile — the seat is left alone, the market page carries the 「只能其一」 notice, and the host logged it
+ok 1 - AH-MS02: dshmarket installed in the profile — the seat is left alone, the market page carries the 「只能其一」 notice, and the host logged it
+  ---
+  duration_ms: 3.139125
+  type: 'test'
+  ...
+# Subtest: AH-MS03: dshmarket already holding the seat is detected before we try to provide it
+ok 2 - AH-MS03: dshmarket already holding the seat is detected before we try to provide it
+  ---
+  duration_ms: 1.155084
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 33.466917

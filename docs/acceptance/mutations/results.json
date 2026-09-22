@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-22T14:21:51.507Z",
+  "generatedAt": "2026-09-22T15:02:06.265Z",
   "results": [
     {
       "id": "M01-single-instance",
@@ -150,6 +150,16 @@
       "killed": true,
       "originalSourceSha256": "ddc4cfc9486af7ed6ea6c65ec46ec7f27f18e884e7c786ba06dd6b867a49a275",
       "mutatedSourceSha256": "17ff0ed57cbc5c2def81f090b600ee26769c6c67cf84e942aade04ec525474ad"
+    },
+    {
+      "id": "M17-market-seat-exclusive",
+      "test": "tests/market-seat.test.mjs",
+      "pattern": "^AH-MS0[23]",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "89cc2438a48a20a0853f5cf0695919353120979aea072f5095a226f4aed42333",
+      "mutatedSourceSha256": "7d1d62d83b73fec81da94085b96850416aed2c7bcc42b07ca20a79b40a8c4832"
     },
     {
       "id": "M08-node-runtime-electron",

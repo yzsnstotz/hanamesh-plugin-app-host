@@ -1,0 +1,15 @@
+{
+    "plugins": [
+        {
+            "packageName": "@hanamesh/dsh-app-host",
+            "version": "0.1.0-rc.32",
+            "kind": "plugin",
+            "bundle": true,
+            "active": true,
+            "state": "installed"
+        }
+    ],
+    "apps": [],
+    "restartRequired": false,
+    "traceId": "b477f6b1-7ca0-468f-91bd-253fac3fc9c2"
+}

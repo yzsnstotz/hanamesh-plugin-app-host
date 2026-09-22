@@ -1,0 +1,35 @@
+dsh: initialized profile web at /private/tmp/hm-t5-fa527d2b/profiles/web
+Progress: resolved 0, reused 0, downloaded 1, added 0
+Progress: resolved 1, reused 0, downloaded 1, added 0
+Progress: resolved 2, reused 0, downloaded 1, added 0
+ WARN  Issues with peer dependencies found
+.
+└─┬ @hanamesh/dsh-app-host 0.1.0-rc.32
+  ├── ✕ missing peer @deepseek-ai/cordis@">=4.0.2 <5"
+  ├── ✕ missing peer @deepseek-ai/dsh-storage-domain@">=0.1.5-alpha.1 <0.2.0"
+  ├── ✕ missing peer @deepseek-ai/schemastery@">=3.18.2 <4"
+  └── ✕ missing peer @hanamesh/lib-provision@0.1.0-rc.1
+Peer dependencies that should be installed:
+  @deepseek-ai/cordis@">=4.0.2 <5"
+  @deepseek-ai/dsh-storage-domain@">=0.1.5-alpha.1 <0.2.0"
+  @deepseek-ai/schemastery@">=3.18.2 <4"
+  @hanamesh/lib-provision@0.1.0-rc.1
+
+dependencies:
++ @hanamesh/dsh-app-host file:/Users/yzliu/work/projects/hanamesh/hanamesh-plugin-app-host/artifacts/hanamesh-dsh-app-host-0.1.0-rc.32.tgz
+
+Packages: +2
+++
+Progress: resolved 2, reused 0, downloaded 1, added 1
+
+   ╭─────────────────────────────────────────╮
+   │                                         │
+   │   Update available! 10.33.0 → 12.5.1.   │
+   │   Changelog: https://pnpm.io/v/12.5.1   │
+   │    To update, run: pnpm add -g pnpm     │
+   │                                         │
+   ╰─────────────────────────────────────────╯
+
+Progress: resolved 2, reused 0, downloaded 2, added 1
+Progress: resolved 2, reused 0, downloaded 2, added 2, done
+Done in 7.8s using pnpm v10.33.0

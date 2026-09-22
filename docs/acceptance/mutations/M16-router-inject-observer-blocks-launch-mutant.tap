@@ -2,16 +2,16 @@ TAP version 13
 # Subtest: AH-R12 (T6) every injection tells the receipt observer the routed provider and model — never the value — and local receipts are readable per app
 not ok 1 - AH-R12 (T6) every injection tells the receipt observer the routed provider and model — never the value — and local receipts are readable per app
   ---
-  duration_ms: 2.54075
+  duration_ms: 2.378458
   type: 'test'
-  location: '/private/tmp/hm-app-host-mutation-ECHM2i/tests/router-broker.test.mjs:127:1'
+  location: '/private/tmp/hm-app-host-mutation-p5LpU8/tests/router-broker.test.mjs:127:1'
   failureType: 'testCodeFailure'
   error: 'observer down'
   code: 'ERR_TEST_FAILURE'
   stack: |-
-    onInject (file:///private/tmp/hm-app-host-mutation-ECHM2i/tests/router-broker.test.mjs:140:332)
-    Object.credentialResolver (file:///private/tmp/hm-app-host-mutation-ECHM2i/src/router/broker.js:149:25)
-    async TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-ECHM2i/tests/router-broker.test.mjs:141:18)
+    onInject (file:///private/tmp/hm-app-host-mutation-p5LpU8/tests/router-broker.test.mjs:140:332)
+    Object.credentialResolver (file:///private/tmp/hm-app-host-mutation-p5LpU8/src/router/broker.js:149:25)
+    async TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-p5LpU8/tests/router-broker.test.mjs:141:18)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -23,4 +23,4 @@ not ok 1 - AH-R12 (T6) every injection tells the receipt observer the routed pro
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 34.678875
+# duration_ms 32.989833

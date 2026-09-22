@@ -1,4 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.31
+# HanaMesh app-host · 0.1.0-rc.32
+
+> rc.32（2026-09-22，设计定案 §4，T5）：**客户端 `market` 席位 + dshmarket 互斥。** 客户端模块在 cordis 客户端上下文 `provide('market', {render(options), setSettingsVisible(visible)})`——席位名与形状取自钉死的壳面板 `dsh-tauri-panel-extension@1.0.0`（随包在 `hanamesh-desktop-tauri/src-tauri/resources/node_modules/`）：它 `ctx.reflect.get('market')`，只在 `typeof value.render==='function'` 时认账，用 `render({preferredSubsectionId:'installed'})` 画「扩展管理 · 市场」标签页，并在自己接管期间 `setSettingsVisible(false)`、dispose 时 `true`。`render` 返回的就是原来的「HanaMesh 市场」页（`embedded`：常显、无「关闭」、`preferredSubsectionId==='installed'` 时「已安装」排在目录前）；`setSettingsVisible(false)` 收起我们自己的侧栏「市场」入口与覆盖页。**互斥**：占座前先读 `reflect.get('market',false)`，再问一次 `GET /hanamesh/library/installedPlugins` 看 `dshmarket` 在不在，两者任一命中就不 provide（cordis 对同名第二次 `provide` 直接抛错，抢座会把对方打挂），改在宿主日志与市场页顶部给一条「两者只能其一」的提示，其它功能照常；库路由答不上来时 fail open。**重启**：壳 iframe 内的 `hanamesh://restart` 改走壳已有的入站 postMessage 桥（`window.parent.postMessage({type:'hanamesh://restart'},'*')`，与 `hanamesh://bound-refresh` 同一命名空间）——WKWebView 不会把 iframe 内发起的自定义 scheme 导航交给系统；`hanamesh://restart` 这个 URL 仍是系统级入口，由壳 rc.13 的 `deep_link.rs` 处理。市场本身的功能未改。AH-MS01–MS05 测试、M17 变异、X01 新增边界 `market-seat-exclusive`。
 
 > rc.31（2026-09-22）：修 rc.30 的回归——库入口 `dist/index.js` 经 `router/receipts.js` 静态引入了 DSH 专属 peer `@deepseek-ai/dsh-storage-domain`，使只装本包的应用包（如 Vibe）`import` 即 `ERR_MODULE_NOT_FOUND`。storage-domain 规格移到 `src/router/receipts-domain.js`（只由插件入口 `src/dsh.js` 打开），并加守卫测试：从 `dist/index.js` 可达的模块图里不得出现 `@deepseek-ai/*`。
 

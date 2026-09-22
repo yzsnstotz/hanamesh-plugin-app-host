@@ -1,0 +1,34 @@
+{
+  "marketButton": 1,
+  "overlayTitle": "HanaMesh 市场",
+  "conflictNotice": null,
+  "cards": 50,
+  "filters": [
+    "全部",
+    "应用",
+    "插件",
+    "dev",
+    "fun",
+    "git",
+    "hanamesh-plugin",
+    "market",
+    "memory",
+    "model",
+    "notify",
+    "remote",
+    "security",
+    "session",
+    "skill",
+    "theme",
+    "tools",
+    "ui",
+    "usage",
+    "workflow"
+  ],
+  "installedRows": [
+    "插件 · @hanamesh/dsh-app-host 0.1.0-rc.32 · 已安装"
+  ],
+  "restartNotice": null,
+  "errors": [],
+  "allLogs": []
+}

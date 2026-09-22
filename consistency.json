@@ -83,6 +83,17 @@
       "safeDirection": "usage-seat:use-event",
       "why": "先让席位 recorded/duplicate，再标 reported；允许席位已有而账本未标（下次重报得 duplicate），不允许账本已标而席位从未收到。rejected/withheld/席位缺席都不标。",
       "test": "tests/usage-evidence.test.mjs:AH-U04"
+    },
+    {
+      "id": "market-seat-exclusive",
+      "name": "判定 dshmarket 不在场 → 占用客户端 market 席位",
+      "sides": [
+        "dshmarket-absence-decided",
+        "client-service:market"
+      ],
+      "safeDirection": "dshmarket-absence-decided",
+      "why": "rc.32：壳的「扩展管理」面板只认一个 market 席位（cordis 的 provide 对同名第二次注册直接抛错）。先读席位（reflect.get(\"market\",false)）并问一次 /hanamesh/library/installedPlugins，确认 dshmarket 既没占座也没装，才 provide。宁可席位空着、只留侧栏「市场」入口加一条提示，也不抢座把对方的 provide 打挂；库路由答不上来时 fail open（席位本身不承载持久事实）。",
+      "test": "tests/market-seat.test.mjs:AH-MS01/AH-MS02/AH-MS03"
     }
   ],
   "scope": "REAL_PROCESS + LOCAL_ATOMIC_FILE；不是 DSH 加载、真实浏览器、整机断电或 macOS 验收。",

@@ -2,7 +2,7 @@ TAP version 13
 # Subtest: AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall / plugin fields answer 400 INVALID_INPUT before any operation starts; installedPlugins and the plugin routes are served
 ok 1 - AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall / plugin fields answer 400 INVALID_INPUT before any operation starts; installedPlugins and the plugin routes are served
   ---
-  duration_ms: 83.878458
+  duration_ms: 80.7315
   type: 'test'
   ...
 1..1
@@ -13,4 +13,4 @@ ok 1 - AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall 
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 154.162041
+# duration_ms 141.912542

@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: AH-MS02: dshmarket installed in the profile — the seat is left alone, the market page carries the 「只能其一」 notice, and the host logged it
+not ok 1 - AH-MS02: dshmarket installed in the profile — the seat is left alone, the market page carries the 「只能其一」 notice, and the host logged it
+  ---
+  duration_ms: 3.477708
+  type: 'test'
+  location: '/private/tmp/hm-app-host-mutation-4buY73/tests/market-seat.test.mjs:90:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    the seat is never contested
+    + actual - expected
+    
+    + [
+    +   {
+    +     name: 'market',
+    +     value: {
+    +       render: [Function: render],
+    +       setSettingsVisible: [Function: setSettingsVisible]
+    +     }
+    +   }
+    + ]
+    - []
+    
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: AH-MS03: dshmarket already holding the seat is detected before we try to provide it
+not ok 2 - AH-MS03: dshmarket already holding the seat is detected before we try to provide it
+  ---
+  duration_ms: 1.522833
+  type: 'test'
+  location: '/private/tmp/hm-app-host-mutation-4buY73/tests/market-seat.test.mjs:109:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    a registered seat is never overwritten
+    + actual - expected
+    
+    + [
+    +   {
+    +     name: 'market',
+    +     value: {
+    +       render: [Function: render],
+    +       setSettingsVisible: [Function: setSettingsVisible]
+    +     }
+    +   }
+    + ]
+    - []
+    
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 33.862125

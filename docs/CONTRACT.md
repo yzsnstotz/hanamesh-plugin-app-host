@@ -1,4 +1,4 @@
-# 公开契约 v1（候选，0.1.0-rc.28；rc.28 HanaMesh 市场：插件与应用同路径装卸、已装含插件、可升级/需重启、`installedPlugins` 与 `plugins/*` 路由、`LIB-PROVISION-INPUT` 400（见「市场」）；rc.27 应用使用证据经 usage 插件 record 座位上报（见「应用使用证据」）；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
+# 公开契约 v1（候选，0.1.0-rc.32；rc.32 客户端 `market` 席位与 dshmarket 互斥、壳内重启改走 postMessage 桥（见「市场席位」）；rc.28 HanaMesh 市场：插件与应用同路径装卸、已装含插件、可升级/需重启、`installedPlugins` 与 `plugins/*` 路由、`LIB-PROVISION-INPUT` 400（见「市场」）；rc.27 应用使用证据经 usage 插件 record 座位上报（见「应用使用证据」）；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
 
 ## 身份与所有权
 
@@ -151,6 +151,21 @@ DSH 绑定必须提供同一个 `single` domain 的一次完整镜像 publish �
 | `/hanamesh/library/uninstall` | POST | `{appId, packageName, runtimeItem?}` | 202；缺字段/非法 → 400 `INVALID_INPUT` |
 
 事件流 `library.install-*` 增加 `kind`；`install-done.result` 对插件为 `{status:'restart-required', kind:'plugin', packageName, version}`。受保护包（`hanamesh-core`、`hanamesh-usage`、`@hanamesh/dsh-app-host` 及旧写法 `@hanamesh/dsh-core`、`@hanamesh/dsh-usage`）任何路径都 `PACKAGE_DENIED`：`plugins/*` 在启动操作前同步答 403，目录条目路径在操作内以 `-failed` 事件给出。「需重启」判定只来自本进程启动时的 profile 依赖快照（钉版本内核不暴露已加载插件集合）；快照不可读时一切已装计为已加载。客户端在壳内（`window.self !== window.top`）给 `hanamesh://restart` 深链，官方 DSH 直开时只提示文字；本包不重启 DSH。
+
+## 市场席位（rc.32，设计定案 2026-09-22 §4，T5）
+
+客户端模块（`./client-ui`，浏览器包）在 DSH 客户端的 cordis 上下文上提供服务 **`market`**：
+
+| 成员 | 形状 | 谁调用 |
+|---|---|---|
+| `render(options?)` | `options.preferredSubsectionId?: string` → React 元素 | 壳面板 `dsh-tauri-panel-extension`「扩展管理」的「市场」标签体；今天只传 `'installed'` |
+| `setSettingsVisible(visible)` | `boolean` → `void` | 面板接管市场时 `false`、dispose 时 `true` |
+
+席位名与形状取自钉死的 `dsh-tauri-panel-extension@1.0.0`（随 `hanamesh-desktop-tauri` 发布，`src-tauri/resources/node_modules/`）：它 `ctx.reflect.get('market')` 取值，`typeof value.render !== 'function'` 时当作没有；不是猜的名字。`render()` 返回的就是「HanaMesh 市场」页本身（内嵌形态：常显、无「关闭」按钮、`preferredSubsectionId==='installed'` 时「已安装」排在目录之前）；`setSettingsVisible(false)` 收起侧栏「市场」入口与覆盖页，`true` 恢复。无壳（官方 DSH 浏览器直开）时没有面板读这个席位，`provide` 不生效属正常，市场仍走侧栏入口。
+
+**与 dshmarket 互斥（同名席位只能其一）**：cordis 的 `provide` 对同一名字的第二次注册直接抛 `service "market" has been registered at <…>`，抢座会把对方打挂。因此占座前先做两项判定——`ctx.reflect.get('market', false)`（非严格：尚未 active 的提供者也算占座）与一次 `GET /hanamesh/library/installedPlugins`（`plugins[]` 里有 `dshmarket` 即视为在场，无论是否已加载）。任一命中就**不 provide**，改为：宿主日志一条 warn，市场页顶部一条 `role="status"` 提示（`data-hanamesh-market-conflict="dshmarket"`），写明两者只能其一；其它功能（侧栏入口、覆盖页、安装/卸载/重启提示）全部照常，不报错。库路由答不上来（网络/宿主异常）时 fail open，照常占座——席位不承载任何持久事实。X01 边界 `market-seat-exclusive`。
+
+**壳内重启（rc.32 改）**：`hanamesh://restart` 在壳 iframe 内改走壳已有的入站 postMessage 桥 —— `window.parent.postMessage({type:'hanamesh://restart'}, '*')`，与壳 → iframe 的 `hanamesh://bound-refresh` 同一命名空间；壳按 `event.source`/`event.origin` 校验来源后调用自己的重启。原因：WKWebView 不会把 iframe 内发起的自定义 scheme 导航交给系统，`location.assign('hanamesh://restart')` 在壳内不可达。`hanamesh://restart` 这个 URL 仍是系统级入口（外部浏览器 / `open hanamesh://restart`），由壳 `deep_link.rs` 的 `restart` 分支处理。官方 DSH 直开浏览器时仍只提示「请手动重启 DSH」。
 
 ## 应用使用证据（rc.27，用户 2026-09-21 定，STATUS `P2-USE-EVENTS`）
 

@@ -1,0 +1,45 @@
+{
+  "marketButton": 1,
+  "overlayTitle": "HanaMesh 市场",
+  "conflictNotice": "检测到 DSH Market（dshmarket）：「扩展管理」的市场标签只能由一个插件提供，这次没有由 HanaMesh 市场接管。两者只能其一——要用 HanaMesh 市场请先卸载 dshmarket 并重启 DSH；要用 dshmarket 就从下方侧栏的「市场」入口使用 HanaMesh 市场。",
+  "cards": 50,
+  "filters": [
+    "全部",
+    "应用",
+    "插件",
+    "dev",
+    "fun",
+    "git",
+    "hanamesh-plugin",
+    "market",
+    "memory",
+    "model",
+    "notify",
+    "remote",
+    "security",
+    "session",
+    "skill",
+    "theme",
+    "tools",
+    "ui",
+    "usage",
+    "workflow"
+  ],
+  "installedRows": [
+    "插件 · @hanamesh/dsh-app-host 0.1.0-rc.32 · 已安装",
+    "插件 · dshmarket 1.47.0 · 已安装卸载"
+  ],
+  "restartNotice": null,
+  "errors": [
+    {
+      "kind": "warning",
+      "text": "hanamesh-app-host market: 检测到 DSH Market（dshmarket）：「扩展管理」的市场标签只能由一个插件提供，这次没有由 HanaMesh 市场接管。两者只能其一——要用 HanaMesh 市场请先卸载 dshmarket 并重启 DSH；要用 dshmarket 就从下方侧栏的「市场」入口使用 HanaMesh 市场。"
+    }
+  ],
+  "allLogs": [
+    {
+      "kind": "warning",
+      "text": "hanamesh-app-host market: 检测到 DSH Market（dshmarket）：「扩展管理」的市场标签只能由一个插件提供，这次没有由 HanaMesh 市场接管。两者只能其一——要用 HanaMesh 市场请先卸载 dshmarket 并重启 DSH；要用 dshmarket 就从下方侧栏的「市场」入口使用 HanaMesh 市场。"
+    }
+  ]
+}

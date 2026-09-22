@@ -2,9 +2,9 @@ TAP version 13
 # Subtest: AH-L09: nodeBinary is this process only outside Electron; explicit configuration always wins
 not ok 1 - AH-L09: nodeBinary is this process only outside Electron; explicit configuration always wins
   ---
-  duration_ms: 0.69525
+  duration_ms: 0.649709
   type: 'test'
-  location: '/private/tmp/hm-app-host-mutation-mHoAit/tests/library-locate.test.mjs:78:1'
+  location: '/private/tmp/hm-app-host-mutation-lby8kG/tests/library-locate.test.mjs:78:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
@@ -18,7 +18,7 @@ not ok 1 - AH-L09: nodeBinary is this process only outside Electron; explicit co
   actual: '/Applications/X.app/Contents/MacOS/X'
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-mHoAit/tests/library-locate.test.mjs:80:10)
+    TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-lby8kG/tests/library-locate.test.mjs:80:10)
     Test.runInAsyncScope (node:async_hooks:214:14)
     Test.run (node:internal/test_runner/test:1103:25)
     Test.start (node:internal/test_runner/test:1000:17)
@@ -32,4 +32,4 @@ not ok 1 - AH-L09: nodeBinary is this process only outside Electron; explicit co
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 36.566291
+# duration_ms 33.835834
