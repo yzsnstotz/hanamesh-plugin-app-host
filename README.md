@@ -1,4 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.28
+# HanaMesh app-host · 0.1.0-rc.30
+
+> rc.30（2026-09-22）：= rc.28（HanaMesh 市场）+ Router 使用回执：每小时 `{appId, providerId, model, hour, count}` 本地账（storage-domain `hanamesh_router_receipts`、`GET /hanamesh/router/receipts`），在 UTC 整点结束或该应用最后一个活实例停止时，随 `use` 事件经 usage 席位上报（`targetRef=appId` + 该小时请求最多的路由行作 `receipt`）；需 usage ≥ 0.2.0-rc.7。
 
 > 分支 `t6-usage-receipts`（2026-09-22，设计定案 §3「协议层」，T6，**未发版**，由派发 session 合入下一 rc）：**Router 使用回执。** app-host 自己的 storage domain `hanamesh_router_receipts` 按小时记 `{appId, providerId, model, hour, count}`（Router 每次注入记路由与 `injections`，网关每次转发 `count+1`；不记内容、不记值），`GET /hanamesh/router/receipts[?appId=]` 可查本地账。usage 席位上报的 `use` 事件改为在 **UTC 小时结束或应用最后一个活实例停止时**发出（`occurredAt` 仍是该小时首个转发请求；同 key 一小时一条不变），并附 `targetRef=appId` 与该小时的 `receipt {providerId, model, count}`；无席位只记本地账不报错；宿主死机前未报的小时在下次启动由账本补报（席位按 key 去重）。需要 usage `0.2.0-rc.7`（席位接受三个可选键；更早版本会 `rejected INVALID_RECORD_INPUT`，只 debug 日志）。
 
