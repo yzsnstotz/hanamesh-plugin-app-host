@@ -1,0 +1,110 @@
+
+> @hanamesh/dsh-app-host@0.1.0-rc.34 prepack
+> npm run build
+
+
+> @hanamesh/dsh-app-host@0.1.0-rc.34 build
+> node scripts/build.mjs
+
+Build completed: self-contained ESM modules and public type declarations.
+npm notice
+npm notice 📦  @hanamesh/dsh-app-host@0.1.0-rc.34
+npm notice Tarball Contents
+npm notice 2.3kB AGENTS.md
+npm notice 1.1kB LICENSE
+npm notice 21.5kB README.md
+npm notice 4.8kB consistency.json
+npm notice 1.4kB dist/client-ui.d.ts
+npm notice 31.3kB dist/client-ui.js
+npm notice 1.5kB dist/client.d.ts
+npm notice 3.3kB dist/client.js
+npm notice 591B dist/consistency.js
+npm notice 11.3kB dist/descriptor.js
+npm notice 2.1kB dist/dsh.d.ts
+npm notice 14.0kB dist/dsh.js
+npm notice 923B dist/errors.js
+npm notice 14.6kB dist/gateway.js
+npm notice 6.6kB dist/guardian.js
+npm notice 13.6kB dist/index.d.ts
+npm notice 844B dist/index.js
+npm notice 931B dist/launcher.js
+npm notice 8.7kB dist/library/catalog.js
+npm notice 449B dist/library/domain.js
+npm notice 7.9kB dist/library/install.js
+npm notice 5.0kB dist/library/installed.js
+npm notice 4.8kB dist/library/locate.js
+npm notice 4.4kB dist/library/routes.js
+npm notice 10.3kB dist/library/service.js
+npm notice 40.8kB dist/manager.js
+npm notice 1.1kB dist/provision/archive.d.ts
+npm notice 2.1kB dist/provision/archive.js
+npm notice 419B dist/provision/check.d.ts
+npm notice 2.5kB dist/provision/check.js
+npm notice 779B dist/provision/checkpoints.d.ts
+npm notice 843B dist/provision/checkpoints.js
+npm notice 63B dist/provision/cli.d.ts
+npm notice 7.0kB dist/provision/cli.js
+npm notice 836B dist/provision/download.d.ts
+npm notice 10.4kB dist/provision/download.js
+npm notice 588B dist/provision/errors.d.ts
+npm notice 381B dist/provision/errors.js
+npm notice 752B dist/provision/extract.d.ts
+npm notice 5.8kB dist/provision/extract.js
+npm notice 619B dist/provision/fsutil.d.ts
+npm notice 2.0kB dist/provision/fsutil.js
+npm notice 496B dist/provision/index.d.ts
+npm notice 438B dist/provision/index.js
+npm notice 969B dist/provision/ledger.d.ts
+npm notice 2.0kB dist/provision/ledger.js
+npm notice 75B dist/provision/LICENSE
+npm notice 620B dist/provision/manifest.d.ts
+npm notice 7.6kB dist/provision/manifest.js
+npm notice 1.6kB dist/provision/paths.d.ts
+npm notice 3.4kB dist/provision/paths.js
+npm notice 283B dist/provision/platform.d.ts
+npm notice 259B dist/provision/platform.js
+npm notice 1.1kB dist/provision/provision.d.ts
+npm notice 19.1kB dist/provision/provision.js
+npm notice 369B dist/provision/tar.d.ts
+npm notice 5.9kB dist/provision/tar.js
+npm notice 650B dist/provision/THIRD_PARTY_NOTICES.md
+npm notice 5.6kB dist/provision/types.d.ts
+npm notice 219B dist/provision/types.js
+npm notice 314B dist/provision/zip.d.ts
+npm notice 8.6kB dist/provision/zip.js
+npm notice 13.9kB dist/router/broker.js
+npm notice 1.0kB dist/router/domain.js
+npm notice 430B dist/router/receipts-domain.js
+npm notice 10.9kB dist/router/receipts.js
+npm notice 5.0kB dist/router/routes.js
+npm notice 6.1kB dist/router/sources.js
+npm notice 5.2kB dist/routes.js
+npm notice 13.0kB dist/runtime.js
+npm notice 14.3kB dist/store.js
+npm notice 7.9kB dist/usage-evidence.js
+npm notice 2.4kB docs/APP_PACKAGE.md
+npm notice 23.7kB docs/CONTRACT.md
+npm notice 6.0kB docs/DSH_INTEGRATION.md
+npm notice 5.3kB docs/LIBRARY.md
+npm notice 2.0kB docs/PROVENANCE.json
+npm notice 5.8kB docs/SECURITY.md
+npm notice 3.9kB package.json
+npm notice 86B profile/cordis.patch.yml
+npm notice 8.8kB schemas/catalog-provider-page.schema.json
+npm notice 4.4kB schemas/catalog-source.schema.json
+npm notice Tarball Details
+npm notice name: @hanamesh/dsh-app-host
+npm notice version: 0.1.0-rc.34
+npm notice filename: hanamesh-dsh-app-host-0.1.0-rc.34.tgz
+npm notice package size: 144.1 kB
+npm notice unpacked size: 451.0 kB
+npm notice shasum: f11afbfd1eb4763e3fcd49b5ddade07aa4c79712
+npm notice integrity: sha512-iUvxcUB0G2JUD[...]M6bKnhKi+Y2ZQ==
+npm notice total files: 82
+npm notice
+hanamesh-dsh-app-host-0.1.0-rc.34.tgz
+npm notice
+npm notice New minor version of npm available! 11.8.0 -> 11.20.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.20.0
+npm notice To update run: npm install -g npm@11.20.0
+npm notice

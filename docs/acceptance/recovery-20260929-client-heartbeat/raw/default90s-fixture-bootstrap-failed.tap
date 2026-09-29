@@ -1,0 +1,33 @@
+TAP version 13
+# Subtest: AH-VL08: actual default90s lease survives idle market client and last-view close ends exact owned group
+not ok 1 - AH-VL08: actual default90s lease survives idle market client and last-view close ends exact owned group
+  ---
+  duration_ms: 544.596125
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/_deliveries/product-flow-20260929/branches/apphost-lifecycle/worktree/tests/client-heartbeat-real.test.mjs:10:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    403 !== 303
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 303
+  actual: 403
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/_deliveries/product-flow-20260929/branches/apphost-lifecycle/worktree/tests/client-heartbeat-real.test.mjs:24:54)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 619.555083

@@ -1,0 +1,42 @@
+{
+  "id": "APPHOST.CLIENT-LEASE-20260929",
+  "authority": "USER local necessary origin fix via parent 2026-09-29",
+  "parentPlanSha256": "bb066b5eaacb59ae214e47d578c2f47c400ff7310b9698df4f797646d1f529b5",
+  "origin": "hanamesh-plugin-app-host",
+  "base": "3b1db62249077c87b5f800bd1c84b80c07914e47",
+  "candidate": "0.1.0-rc.34",
+  "productSteps": [
+    "P01-M02",
+    "P01-M06",
+    "P08-U01",
+    "P08-U03"
+  ],
+  "actualConsumer": "existing LibraryOverlay/market app iframe view lease",
+  "combinationNode": "MAC-COMPOSE",
+  "scope": [
+    "consume existing POST /apps/heartbeat with viewId/leaseToken",
+    "stop heartbeat and explicit close on close/hide/unmount",
+    "current receipt expiresAt governs existing TTL renewal cadence",
+    "sequential heartbeat and observed cleanup failure"
+  ],
+  "unchanged": [
+    "manager default leaseTtlMs90000/sweep15000",
+    "runtime/guardian/provider/application UI/hostAPI",
+    "dependencies/configuration",
+    "canonical main/public remote refs"
+  ],
+  "verification": [
+    "meaningful lifecycle RED then GREEN actual source",
+    "own isolated default90000 TTL REAL_PROCESS reproduction and regression, not native profile",
+    "required existing build/types/tests/mutations/package checks"
+  ],
+  "followupMetadata": [
+    "CORE36 pin APPHOST34/USAGE9/PROVISION1",
+    "VIBE29 exactpeer APPHOST34 and dev vendor34"
+  ],
+  "notRun": [
+    "different validator native product REAL_UI",
+    "real provider/Codex",
+    "registry publish/public push"
+  ]
+}

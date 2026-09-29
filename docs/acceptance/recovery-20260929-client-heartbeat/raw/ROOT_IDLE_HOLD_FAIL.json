@@ -1,0 +1,160 @@
+{
+  "observedAt": "2026-09-29T08:43:16.248417+00:00",
+  "evidence": "REAL_UI + LOCAL_STATE + REAL_HOST",
+  "installed": "35/9/33/28",
+  "defaultLeaseMs": 90000,
+  "manualHeartbeat": false,
+  "ui": "actual Runtime navigation import failed after idle; original screenshot preserved",
+  "instances": [
+    {
+      "id": "d2cf7188-bb5e-4d7a-b4b7-57883319d189",
+      "appId": "vibe-trading",
+      "status": "stopped",
+      "updatedAt": 1790671232949
+    }
+  ],
+  "leases": [
+    {
+      "viewId": "hml-0c4a12f8-5aaf-4ac1-b75e-872239dce998",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189",
+      "generation": 1,
+      "status": "expired",
+      "expiresAt": 1790666399159,
+      "createdAt": 1790666301599
+    },
+    {
+      "viewId": "hml-e4385325-df57-4f85-96ab-7592330ee7f8",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189",
+      "generation": 1,
+      "status": "expired",
+      "expiresAt": 1790671218928,
+      "createdAt": 1790671123781
+    }
+  ],
+  "events": [
+    {
+      "sequence": 40,
+      "at": 1790671124976,
+      "type": "view.opened",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 41,
+      "at": 1790671125245,
+      "type": "view.opened",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 42,
+      "at": 1790671125512,
+      "type": "view.opened",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 43,
+      "at": 1790671125778,
+      "type": "view.opened",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 44,
+      "at": 1790671126042,
+      "type": "view.opened",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 45,
+      "at": 1790671126304,
+      "type": "view.opened",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 46,
+      "at": 1790671126566,
+      "type": "view.opened",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 47,
+      "at": 1790671126829,
+      "type": "view.opened",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 48,
+      "at": 1790671127090,
+      "type": "view.opened",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 49,
+      "at": 1790671127351,
+      "type": "view.opened",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 50,
+      "at": 1790671127614,
+      "type": "view.opened",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 51,
+      "at": 1790671127877,
+      "type": "view.opened",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 52,
+      "at": 1790671128140,
+      "type": "view.opened",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 53,
+      "at": 1790671128402,
+      "type": "view.opened",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 54,
+      "at": 1790671128665,
+      "type": "view.opened",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 55,
+      "at": 1790671128733,
+      "type": "instance.ready",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 56,
+      "at": 1790671128928,
+      "type": "view.opened",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 57,
+      "at": 1790671227898,
+      "type": "view.expired",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 58,
+      "at": 1790671227909,
+      "type": "instance.stop-requested",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    },
+    {
+      "sequence": 59,
+      "at": 1790671232949,
+      "type": "instance.stopped",
+      "instanceId": "d2cf7188-bb5e-4d7a-b4b7-57883319d189"
+    }
+  ],
+  "listenersAtCheck": {
+    "34591": false,
+    "64356": false
+  }
+}

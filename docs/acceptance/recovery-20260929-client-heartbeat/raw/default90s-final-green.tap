@@ -1,0 +1,19 @@
+TAP version 13
+# {"evidence":"REAL_PROCESS/REAL_HTTP + HOOK_STANDIN/LIBRARY_STANDIN","phase":"ready","ttlMs":90000,"sweepMs":15000,"ownedPids":3}
+# {"phase":"idle-held","elapsedMs":95007,"heartbeatRequests":3,"leaseRenewed":true,"sameInstance":true,"gatewayStatus":200}
+# {"phase":"closed","ownedGroupGone":true,"leaseCloseRequests":1,"remainingRenewals":0,"productREAL_UI":"NOT_RUN"}
+# Subtest: AH-VL08: actual default90s lease survives idle market client and last-view close ends exact owned group
+ok 1 - AH-VL08: actual default90s lease survives idle market client and last-view close ends exact owned group
+  ---
+  duration_ms: 95836.525292
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 95930.416042

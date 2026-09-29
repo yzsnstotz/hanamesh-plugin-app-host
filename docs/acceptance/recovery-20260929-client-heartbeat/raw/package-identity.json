@@ -1,0 +1,17 @@
+{
+  "package": "@hanamesh/dsh-app-host",
+  "version": "0.1.0-rc.34",
+  "base": "3b1db62249077c87b5f800bd1c84b80c07914e47",
+  "sha256": "49e7bd7d454ec9428d978d063990fe644e9634799199c20f386dbc37682c2273",
+  "clientUIsha256": "e46cbba9eaa43744edb3422aa2adbd8b64917d69495935384552838d49cba755",
+  "changedSourceGeneratedOnly": [
+    "dist/client-ui.js",
+    "src/client-ui.js"
+  ],
+  "archiveFiles": 82,
+  "clientHelperPackagedAndByteIdentical": true,
+  "dependenciesPeersUnchanged": true,
+  "lockOnlyRootVersionChanged": true,
+  "runtimeGuardianUnchanged": true,
+  "provision1Sha256": "386d57361ccc3c8578f54cad8137acc291dd72e01b3ff987e65dfaa716f2e0b0"
+}

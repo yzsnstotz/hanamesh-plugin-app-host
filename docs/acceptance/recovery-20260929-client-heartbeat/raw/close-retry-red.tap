@@ -1,0 +1,32 @@
+TAP version 13
+# Subtest: AH-VL10: failed close can be explicitly retried after network recovery without restarting renewal
+not ok 1 - AH-VL10: failed close can be explicitly retried after network recovery without restarting renewal
+  ---
+  duration_ms: 5.131166
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/_deliveries/product-flow-20260929/branches/apphost-lifecycle/worktree/tests/client-heartbeat.test.mjs:49:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    network recovery allows a new explicit close request
+    
+    1 !== 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/_deliveries/product-flow-20260929/branches/apphost-lifecycle/worktree/tests/client-heartbeat.test.mjs:52:141)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 43.056875

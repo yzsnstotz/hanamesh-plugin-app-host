@@ -1,4 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.33
+# HanaMesh app-host · 0.1.0-rc.34
+
+> rc.34（2026-09-29）：内置市场的活跃应用视图按既有回执 expiresAt 周期消费 `/apps/heartbeat`；关闭视图、隐藏、卸载和 pagehide 取消续租并显式释放原 lease。服务端默认 TTL/sweep、runtime/provider/应用 UI 均未改变；完整产品独立真实 UI 验证另跑，详 `docs/acceptance/recovery-20260929-client-heartbeat/REPORT.md`。
 
 > rc.33（2026-09-29，本机有限修复）：owned 启动将死主锁/孤儿回收与新 launcher/app 握手分阶段限时；回收预算为既有 5s bootstrap + 声明 stopGraceMs + 2s kill 确认，所有权确认之后的新启动仍限 5s。未改安全身份判定、公开配置或 UI；完整 P01/P08 产品验证另由真实 profile 执行。
 

@@ -1,0 +1,16 @@
+TAP version 13
+# Subtest: AH-VL13: late Open receipt after unmount is explicitly closed and never polled or retained
+ok 1 - AH-VL13: late Open receipt after unmount is explicitly closed and never polled or retained
+  ---
+  duration_ms: 5.060042
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 39.310667

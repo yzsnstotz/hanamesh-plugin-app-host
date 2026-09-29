@@ -1,0 +1,76 @@
+TAP version 13
+# Subtest: AH-VL12: late ready Open receipt after hiding is closed without anonymous resume or renewal
+not ok 1 - AH-VL12: late ready Open receipt after hiding is closed without anonymous resume or renewal
+  ---
+  duration_ms: 5.977792
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/_deliveries/product-flow-20260929/branches/apphost-lifecycle/worktree/tests/client-heartbeat.test.mjs:58:42'
+  failureType: 'testCodeFailure'
+  error: |-
+    hidden consumer closes late exact receipt
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/_deliveries/product-flow-20260929/branches/apphost-lifecycle/worktree/tests/client-heartbeat.test.mjs:59:259)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  ...
+# Subtest: AH-VL12: late starting Open receipt after hiding is closed without anonymous resume or renewal
+not ok 2 - AH-VL12: late starting Open receipt after hiding is closed without anonymous resume or renewal
+  ---
+  duration_ms: 2.515709
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/_deliveries/product-flow-20260929/branches/apphost-lifecycle/worktree/tests/client-heartbeat.test.mjs:58:42'
+  failureType: 'testCodeFailure'
+  error: |-
+    hidden consumer closes late exact receipt
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/_deliveries/product-flow-20260929/branches/apphost-lifecycle/worktree/tests/client-heartbeat.test.mjs:59:259)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
+  ...
+# Subtest: AH-VL13: late Open receipt after unmount is explicitly closed and never polled or retained
+not ok 3 - AH-VL13: late Open receipt after unmount is explicitly closed and never polled or retained
+  ---
+  duration_ms: 1.655542
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/_deliveries/product-flow-20260929/branches/apphost-lifecycle/worktree/tests/client-heartbeat.test.mjs:61:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    unmounted consumer closes late exact receipt
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/_deliveries/product-flow-20260929/branches/apphost-lifecycle/worktree/tests/client-heartbeat.test.mjs:62:194)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 0
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 50.569167

@@ -1,4 +1,4 @@
-# 公开契约 v1（候选，0.1.0-rc.33；rc.33 owned 回收与启动握手分阶段限时；rc.32 客户端 `market` 席位与 dshmarket 互斥、壳内重启改走 postMessage 桥（见「市场席位」）；rc.28 HanaMesh 市场：插件与应用同路径装卸、已装含插件、可升级/需重启、`installedPlugins` 与 `plugins/*` 路由、`LIB-PROVISION-INPUT` 400（见「市场」）；rc.27 应用使用证据经 usage 插件 record 座位上报（见「应用使用证据」）；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
+# 公开契约 v1（候选，0.1.0-rc.34；rc.34 内置市场消费 heartbeat/视图清理；rc.33 owned 回收与启动握手分阶段限时；rc.32 客户端 `market` 席位与 dshmarket 互斥、壳内重启改走 postMessage 桥（见「市场席位」）；rc.28 HanaMesh 市场：插件与应用同路径装卸、已装含插件、可升级/需重启、`installedPlugins` 与 `plugins/*` 路由、`LIB-PROVISION-INPUT` 400（见「市场」）；rc.27 应用使用证据经 usage 插件 record 座位上报（见「应用使用证据」）；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
 
 ## 身份与所有权
 
@@ -108,6 +108,7 @@ const receipt = await apps.open({appId:'notes',deploymentId:'local',viewId:'stab
 const ready = await apps.waitUntilReady(receipt);
 iframe.src = ready.uiUrl;
 // 按已配置 TTL 的约 1/3 周期 heartbeat({viewId,leaseToken})。
+// 内置市场视图已消费此契约：按回执 expiresAt 串行续租；关闭/隐藏/卸载取消续租并显式 close。
 // 关闭或停止必须用该 lease；不依赖 unload 做最终回收。
 ```
 

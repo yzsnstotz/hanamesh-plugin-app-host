@@ -1,0 +1,17 @@
+TAP version 13
+# {"evidence":"REAL_PROCESS_ISOLATED","result":"spawned","elapsedMs":5113,"oldOrphanPid":97607,"newGuardianPid":97610,"newAppPid":97798,"lockOwner":97610,"trace":[{"at":1790672169880,"message":"ORPHAN_READY"},{"at":1790672169944,"message":"ORPHAN_TERM_IGNORED"}]}
+# Subtest: AH-L07: proven orphan reclamation gets its declared grace before the launch handshake budget
+ok 1 - AH-L07: proven orphan reclamation gets its declared grace before the launch handshake budget
+  ---
+  duration_ms: 10194.652875
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10266.564334

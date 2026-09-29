@@ -92,9 +92,45 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   // rc.32: the same market page serves two surfaces — the shell overlay behind the sidebar 「市场」 button
   // (`embedded` false) and the Extension Management 「市场」 tab through the `market` seat (`embedded` true,
   // always visible, no close button, `preferredSubsectionId` decides which subsection comes first).
+  // A view is a lease, not a permanent anonymous reference. The host's returned expiry determines
+  // the renew cadence; serial requests use the same credential and cleanup explicitly releases it.
+  function holdViewLease(receipt,onError){
+    const lease={viewId:receipt.lease.viewId,leaseToken:receipt.leaseToken};
+    let expiresAt=receipt.lease.expiresAt,timer,controller,closed=false,closeTask;
+    const terminal=new Set(['LEASE_EXPIRED','LEASE_NOT_OWNED','INSTANCE_NOT_READY','HOST_CLOSED','UNAUTHENTICATED','FORBIDDEN']);
+    const schedule=()=>{if(!closed&&expiresAt>Date.now())timer=setTimeout(()=>void renew(),Math.max(1,Math.floor((expiresAt-Date.now())/3)));};
+    const renew=async()=>{
+      if(closed)return;
+      controller=new AbortController();
+      try{const next=await request('/apps/heartbeat',{method:'POST',body:JSON.stringify(lease),signal:controller.signal});
+        if(closed)return;expiresAt=next.expiresAt;schedule();
+      }catch(error){if(closed)return;const code=String(error.message??error);onError(code);if(!terminal.has(code))schedule();}
+    };
+    schedule();
+    return{close(){
+      closed=true;clearTimeout(timer);controller?.abort();
+      return closeTask??=request('/apps/close',{method:'POST',body:JSON.stringify(lease),keepalive:true}).catch(error=>{closeTask=undefined;throw error;});
+    }};
+  }
   function LibraryOverlay({embedded,preferredSubsectionId}={}){
     const[visible,setVisible]=React.useState(embedded?true:libraryVisible),[snapshot,setSnapshot]=React.useState(null),[error,setError]=React.useState(''),[receipt,setReceipt]=React.useState(null),[query,setQuery]=React.useState(''),[filter,setFilter]=React.useState(''),[extra,setExtra]=React.useState([]),[pending,setPending]=React.useState({}),[seenCategories,setSeenCategories]=React.useState([]),[changed,setChanged]=React.useState(false);
     React.useEffect(()=>{if(embedded)return;libraryListeners.add(setVisible);return()=>libraryListeners.delete(setVisible);},[embedded]);
+    const heldView=React.useRef(null),mounted=React.useRef(true),surfaceVisible=React.useRef(visible),surfaceEpoch=React.useRef(0);
+    surfaceVisible.current=visible;
+    React.useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
+    React.useEffect(()=>{
+      if(!receipt)return;
+      const view=holdViewLease(receipt,setError);
+      if(!visible){void view.close().catch(()=>{});setReceipt(null);return;}
+      heldView.current=view;
+      const release=()=>{void view.close().catch(()=>{});};
+      globalThis.addEventListener?.('pagehide',release);
+      return()=>{if(heldView.current===view)heldView.current=null;globalThis.removeEventListener?.('pagehide',release);release();};
+    },[receipt]);
+    React.useEffect(()=>{
+      surfaceEpoch.current+=1;
+      if(!visible){void heldView.current?.close().catch(()=>{});setReceipt(null);}
+    },[visible]);
     // `plugin` is a client-side view (every npm entry that is not an application); every other filter is a provider category.
     const params=React.useCallback(cursor=>{const p=new URLSearchParams();if(query)p.set('q',query);p.set('category',filter==='plugin'?'':filter);if(cursor)p.set('cursor',cursor);return'?'+p.toString();},[query,filter]);
     const remember=page=>setSeenCategories(list=>[...new Set([...list,...(page.categories??[])])].sort());
@@ -108,8 +144,26 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       if(outcome.ok)setChanged(true);
       setPending(p=>({...p,[key]:outcome.ok?{label,text:label+'完成，重启 DSH 后生效'}:{label,text:label+'失败：'+outcome.code+'（'+failureReason(outcome.code)+'）',failed:true}}));
       await load();}catch(e){setPending(p=>({...p,[key]:{label,text:label+'失败：'+String(e.message??e),failed:true}}));}};
-    const open=async installed=>{try{setError('');const deployment=installed.definition.deployments[0],viewId='hml-'+globalThis.crypto.randomUUID();let next=await request('/apps/open',{method:'POST',body:JSON.stringify({appId:installed.appId,deploymentId:deployment.id,viewId})});const deadline=Date.now()+120000;while(next.instance.status!=='ready'){if(!['reserved','starting'].includes(next.instance.status)||Date.now()>deadline)throw new Error(next.instance.errorCode??'INSTANCE_NOT_READY');await new Promise(resolve=>setTimeout(resolve,250));next=await request('/apps/resume',{method:'POST',body:JSON.stringify({viewId,leaseToken:next.leaseToken})});}setReceipt(next);}catch(e){setError(String(e.message??e));}};
-    const close=async()=>{if(receipt)await request('/apps/close',{method:'POST',body:JSON.stringify({viewId:receipt.lease.viewId,leaseToken:receipt.leaseToken})});setReceipt(null);};
+    const open=async installed=>{
+      const epoch=surfaceEpoch.current;
+      const abandoned=async next=>{
+        if(mounted.current&&surfaceVisible.current&&surfaceEpoch.current===epoch)return false;
+        await request('/apps/close',{method:'POST',body:JSON.stringify({viewId:next.lease.viewId,leaseToken:next.leaseToken}),keepalive:true});return true;
+      };
+      try{setError('');const deployment=installed.definition.deployments[0],viewId='hml-'+globalThis.crypto.randomUUID();
+        let next=await request('/apps/open',{method:'POST',body:JSON.stringify({appId:installed.appId,deploymentId:deployment.id,viewId})});
+        const deadline=Date.now()+120000;
+        while(true){
+          if(await abandoned(next))return;
+          if(next.instance.status==='ready'){setReceipt(next);return;}
+          if(!['reserved','starting'].includes(next.instance.status)||Date.now()>deadline)throw new Error(next.instance.errorCode??'INSTANCE_NOT_READY');
+          await new Promise(resolve=>setTimeout(resolve,250));
+          if(await abandoned(next))return;
+          next=await request('/apps/resume',{method:'POST',body:JSON.stringify({viewId,leaseToken:next.leaseToken})});
+        }
+      }catch(e){if(mounted.current&&surfaceVisible.current)setError(String(e.message??e));}
+    };
+    const close=async()=>{try{await heldView.current?.close();setReceipt(null);setError('');}catch(e){setError(String(e.message??e));}};
     if(!visible)return null;
     const pages=[snapshot,...extra].filter(Boolean),all=pages.flatMap(page=>page.items??[]),items=filter==='plugin'?all.filter(item=>item.kind==='plugin'):all,installed=snapshot?.installed??[],plugins=snapshot?.plugins??[],nextCursor=(extra.at(-1)??snapshot)?.page?.nextCursor??null;
     const restartRequired=changed||Boolean(snapshot?.restartRequired);

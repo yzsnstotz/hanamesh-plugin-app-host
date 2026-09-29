@@ -1,0 +1,10 @@
+M21-market-close-retry-rejected-cache: baseline PASS; mutation DETECTED
+M22-market-late-open-orphan: baseline PASS; mutation NOT DETECTED
+file:///Users/yzliu/work/projects/hanamesh/_deliveries/product-flow-20260929/branches/apphost-lifecycle/worktree/scripts/.client-heartbeat-mutations.mjs:52
+    if(!killed)throw new Error(`${c.id}: mutation did not produce the expected product-invariant failure.`);
+                     ^
+
+Error: M22-market-late-open-orphan: mutation did not produce the expected product-invariant failure.
+    at file:///Users/yzliu/work/projects/hanamesh/_deliveries/product-flow-20260929/branches/apphost-lifecycle/worktree/scripts/.client-heartbeat-mutations.mjs:52:22
+
+Node.js v24.13.1

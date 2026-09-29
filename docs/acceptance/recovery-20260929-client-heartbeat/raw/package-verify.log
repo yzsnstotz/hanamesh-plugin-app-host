@@ -1,0 +1,3 @@
+
+added 2 packages in 278ms
+{"check":"ISOLATED_PACKAGE","status":"PASS","realOwnedPid":99950,"realAppData":true,"installedExports":[".","./client"],"dshEntry":"requires pinned DSH peers; verified separately in the real profile","sourceTreeImports":0}

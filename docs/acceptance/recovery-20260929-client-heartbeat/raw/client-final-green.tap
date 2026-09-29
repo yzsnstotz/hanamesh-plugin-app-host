@@ -1,0 +1,94 @@
+TAP version 13
+# Subtest: AH-VL01: real market client keeps one idle view renewed beyond its original TTL with exact current credential
+ok 1 - AH-VL01: real market client keeps one idle view renewed beyond its original TTL with exact current credential
+  ---
+  duration_ms: 7.605417
+  type: 'test'
+  ...
+# Subtest: AH-VL02: close-last-view cancels renewals immediately and sends one explicit lease close
+ok 2 - AH-VL02: close-last-view cancels renewals immediately and sends one explicit lease close
+  ---
+  duration_ms: 1.74225
+  type: 'test'
+  ...
+# Subtest: AH-VL03: hiding the overlay releases the exact lease and never keeps a hidden view alive
+ok 3 - AH-VL03: hiding the overlay releases the exact lease and never keeps a hidden view alive
+  ---
+  duration_ms: 1.509333
+  type: 'test'
+  ...
+# Subtest: AH-VL04: unmount during in-flight heartbeat aborts it, closes once and ignores its late completion
+ok 4 - AH-VL04: unmount during in-flight heartbeat aborts it, closes once and ignores its late completion
+  ---
+  duration_ms: 2.417583
+  type: 'test'
+  ...
+# Subtest: AH-VL05: transient heartbeat transport failure is observed and retried without creating a new view
+ok 5 - AH-VL05: transient heartbeat transport failure is observed and retried without creating a new view
+  ---
+  duration_ms: 0.90025
+  type: 'test'
+  ...
+# Subtest: AH-VL06: terminal expired lease is not silently resumed or renewed forever
+ok 6 - AH-VL06: terminal expired lease is not silently resumed or renewed forever
+  ---
+  duration_ms: 0.567
+  type: 'test'
+  ...
+# Subtest: AH-VL07: pagehide performs best-effort close, cancels heartbeat and unmount does not duplicate close
+ok 7 - AH-VL07: pagehide performs best-effort close, cancels heartbeat and unmount does not duplicate close
+  ---
+  duration_ms: 0.827417
+  type: 'test'
+  ...
+# Subtest: AH-VL09: clicking close during in-flight heartbeat fences its late response and releases exactly once
+ok 8 - AH-VL09: clicking close during in-flight heartbeat fences its late response and releases exactly once
+  ---
+  duration_ms: 0.545667
+  type: 'test'
+  ...
+# Subtest: AH-VL10: failed close can be explicitly retried after network recovery without restarting renewal
+ok 9 - AH-VL10: failed close can be explicitly retried after network recovery without restarting renewal
+  ---
+  duration_ms: 0.5665
+  type: 'test'
+  ...
+# Subtest: AH-VL11: overlapping explicit closes share the in-flight request and successful cleanup remains idempotent
+ok 10 - AH-VL11: overlapping explicit closes share the in-flight request and successful cleanup remains idempotent
+  ---
+  duration_ms: 1.032583
+  type: 'test'
+  ...
+# Subtest: AH-VL12: late ready Open receipt after hiding is closed without anonymous resume or renewal
+ok 11 - AH-VL12: late ready Open receipt after hiding is closed without anonymous resume or renewal
+  ---
+  duration_ms: 0.623667
+  type: 'test'
+  ...
+# Subtest: AH-VL12: late starting Open receipt after hiding is closed without anonymous resume or renewal
+ok 12 - AH-VL12: late starting Open receipt after hiding is closed without anonymous resume or renewal
+  ---
+  duration_ms: 1.023583
+  type: 'test'
+  ...
+# Subtest: AH-VL13: late Open receipt after unmount is explicitly closed and never polled or retained
+ok 13 - AH-VL13: late Open receipt after unmount is explicitly closed and never polled or retained
+  ---
+  duration_ms: 1.673334
+  type: 'test'
+  ...
+# Subtest: AH-VL14: hiding then reopening market does not resurrect an old pending Open receipt
+ok 14 - AH-VL14: hiding then reopening market does not resurrect an old pending Open receipt
+  ---
+  duration_ms: 1.223041
+  type: 'test'
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 61.901833
