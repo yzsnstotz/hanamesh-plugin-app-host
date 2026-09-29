@@ -70,3 +70,21 @@ test('H12/H06: SIGKILL host, guardian cleanup, fresh host exact-identity resume 
     console.log('H12 real host kill/resume:',JSON.stringify({stableInstance:b.instance.id,oldRuntime:a.instance.runtimeId,newRuntime:b.instance.runtimeId,dataRetained:true}));
   }finally{await host.dispose();}
 });
+test('H12: a stale view from a killed host cannot delay stopping a newly opened view',async t=>{
+  const {root,message:{result:stale}}=await killAt(t,'recovery');await until(()=>!pidMatches(stale.instance.pid,stale.instance.dataDir));
+  const {host}=await setup(null,{root,def:definition({extra:{ignoreTerm:true}})});
+  try{
+    assert.equal(host.instance(stale.instance.id).status,'interrupted');
+    assert.equal(host.list().views.find(v=>v.viewId===stale.lease.viewId).status,'expired');
+    assert(host.eventsSince().events.some(e=>e.type==='view.expired'&&e.viewId===stale.lease.viewId&&e.reason==='host-restart'));
+    const fresh=await host.open({appId:'example',deploymentId:'local',viewId:'fresh-view'});
+    assert.equal(fresh.instance.id,stale.instance.id);
+    await host.close(leaseInput(fresh));
+    assert.equal(host.instance(fresh.instance.id).status,'stopped');
+    assert(!pidMatches(fresh.instance.pid,fresh.instance.dataDir));
+    const resumed=await host.resume(leaseInput(stale));
+    assert.equal(resumed.instance.id,stale.instance.id);
+    assert.notEqual(resumed.leaseToken,stale.leaseToken);
+    await host.close(leaseInput(resumed));
+  }finally{await host.dispose();}
+});

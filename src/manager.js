@@ -121,17 +121,24 @@ export class AppHost {
     try {
       this.#state = await this.store.load();
       const next = copy(this.#state); let changed = false;
+      const interrupted = new Set();
       // A persisted ready bit is not proof of a live endpoint. Resume keeps the slot
       // and data identity, but creates a new runtime ID after guardian cleanup.
       for (const instance of next.instances) {
         if (!isTerminal(instance.status)) {
           instance.status = 'interrupted'; instance.endpoint = null; instance.gatewayOrigin = null;
           instance.updatedAt = this.clock(); changed = true;
+          interrupted.add(instance.id);
           this.#event(next,'instance.interrupted',instance,{ reason:'host-restart' });
         }
       }
-      for (const lease of next.leases) if (lease.status === 'active' && lease.expiresAt <= this.clock()) {
-        lease.status = 'expired'; changed = true;
+      for (const lease of next.leases) if (lease.status === 'active') {
+        const restarted = interrupted.has(lease.instanceId);
+        if (restarted || lease.expiresAt <= this.clock()) {
+          lease.status = 'expired'; changed = true;
+          if (restarted) this.#event(next,'view.expired',next.instances.find(i=>i.id===lease.instanceId),
+            {viewId:lease.viewId,generation:lease.generation,reason:'host-restart'});
+        }
       }
       if (changed) await this.#commit(next);
       this.#initialized = true;
