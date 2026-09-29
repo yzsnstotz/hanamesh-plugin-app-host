@@ -52,7 +52,7 @@ test('AH-VL10: failed close can be explicitly retried after network recovery wit
  await a.clock.advance(30_000);assert.equal(a.renewals().length,0,'closing never renews after failure');await a.client.click('关闭视图');assert.equal(a.closes().length,2,'network recovery allows a new explicit close request');assert(!a.client.find(node=>node.type==='iframe'));
 });
 test('AH-VL11: overlapping explicit closes share the in-flight request and successful cleanup remains idempotent',async t=>{
- let resolveClose;const a=await setup(t,{closeResponder:()=>new Promise(resolve=>{resolveClose=resolve;})});await a.client.click('关闭视图');await a.client.click('关闭视图');assert.equal(a.closes().length,1,'in-flight close is shared');
+ let resolveClose;const a=await setup(t,{closeResponder:()=>new Promise(resolve=>{resolveClose=resolve;})});const originalButton=a.client.find(node=>node.type==='button'&&node.children.includes('关闭视图'));await a.client.click('关闭视图');assert.equal(a.client.find(node=>node.type==='button'&&node.children.includes('关闭中…'))?.props.disabled,true);originalButton.props.onClick();await settle();assert.equal(a.closes().length,1,'in-flight close is shared');
  resolveClose({ok:true,json:async()=>({instance:{status:'stopped'}})});await settle();a.client.unmount();await settle();assert.equal(a.closes().length,1,'successful close stays cached for cleanup');
 });
 for(const status of ['ready','starting'])test('AH-VL12: late '+status+' Open receipt after hiding is closed without anonymous resume or renewal',async t=>{

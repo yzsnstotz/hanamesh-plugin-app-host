@@ -1,4 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.34
+# HanaMesh app-host · 0.1.0-rc.35
+
+> rc.35（2026-09-30，本机有限修复）：内置市场的「打开」和「关闭视图」在请求进行中立即显示「打开中…」「关闭中…」并阻止重复点击。owned 应用进程在 TERM 后已退出时，guardian 依据 launcher 的 `app-exit` 提前结束等待，仍清理并确认整个精确自有进程组，之后才释放锁和发布 stopped；顽固应用仍保留声明的 stopGraceMs。P01-U02/P08 真正客户端组合验收另行记录。
 
 > rc.34（2026-09-29）：内置市场的活跃应用视图按既有回执 expiresAt 周期消费 `/apps/heartbeat`；关闭视图、隐藏、卸载和 pagehide 取消续租并显式释放原 lease。服务端默认 TTL/sweep、runtime/provider/应用 UI 均未改变；完整产品独立真实 UI 验证另跑，详 `docs/acceptance/recovery-20260929-client-heartbeat/REPORT.md`。
 

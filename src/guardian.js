@@ -10,7 +10,8 @@ if (process.versions.electron !== undefined) {
   if (process.connected) await new Promise(resolve => process.send(refusal, () => resolve()));
   process.exit(78);
 }
-let child, lock, stopping, config;
+let child, lock, stopping, config, resolveAppExit;
+const appExited = new Promise(resolve => { resolveAppExit = resolve; });
 // The guardian must outlive a killed host. Its stdout/stderr pipes die with that host;
 // EPIPE is transport loss, not a reason to abandon the exact process group it owns.
 for (const output of [process.stdout,process.stderr]) output.on('error', error => {
@@ -45,7 +46,9 @@ async function cleanup(reason) {
       const ended = child.exitCode !== null || child.signalCode !== null ? Promise.resolve() :
         new Promise(resolve => child.once('close', resolve));
       signalOwned('SIGTERM');
-      await Promise.race([ended, new Promise(resolve => { timer = setTimeout(resolve, config.stopGraceMs); })]);
+      // The launcher deliberately survives TERM to anchor its owned process group.
+      // Its close event therefore cannot be the normal app's graceful-exit signal.
+      await Promise.race([ended, appExited, new Promise(resolve => { timer = setTimeout(resolve, config.stopGraceMs); })]);
       clearTimeout(timer);
       // A descendant can hold the process group after its leader has exited.
       // Kill only the group originally created by this guardian.
@@ -95,7 +98,7 @@ process.on('message', async message => {
       if(message.type==='spawned')record(message.pid,'app',config.command,false).then(()=>send({type:'spawned',pid:message.pid,groupId:child.pid,
         guardianBinary:process.execPath,launcherBinary:message.launcherBinary}),
         error=>{send({type:'error',code:error.code ?? 'GUARDIAN_FAILURE',message:error.message});void cleanup('lock-annotate-error');});
-      if(message.type==='app-exit'){send(message);if(!stopping)void cleanup('app-exited');}
+      if(message.type==='app-exit'){resolveAppExit();send(message);if(!stopping)void cleanup('app-exited');}
       if(message.type==='error'){send(message);void cleanup('spawn-error');}
     });
     child.once('error', error => { send({ type: 'error', code: 'SPAWN_FAILED', message: error.message }); void cleanup('spawn-error'); });

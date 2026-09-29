@@ -113,9 +113,9 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     }};
   }
   function LibraryOverlay({embedded,preferredSubsectionId}={}){
-    const[visible,setVisible]=React.useState(embedded?true:libraryVisible),[snapshot,setSnapshot]=React.useState(null),[error,setError]=React.useState(''),[receipt,setReceipt]=React.useState(null),[query,setQuery]=React.useState(''),[filter,setFilter]=React.useState(''),[extra,setExtra]=React.useState([]),[pending,setPending]=React.useState({}),[seenCategories,setSeenCategories]=React.useState([]),[changed,setChanged]=React.useState(false);
+    const[visible,setVisible]=React.useState(embedded?true:libraryVisible),[snapshot,setSnapshot]=React.useState(null),[error,setError]=React.useState(''),[receipt,setReceipt]=React.useState(null),[query,setQuery]=React.useState(''),[filter,setFilter]=React.useState(''),[extra,setExtra]=React.useState([]),[pending,setPending]=React.useState({}),[seenCategories,setSeenCategories]=React.useState([]),[changed,setChanged]=React.useState(false),[openingAppId,setOpeningAppId]=React.useState(null),[closing,setClosing]=React.useState(false);
     React.useEffect(()=>{if(embedded)return;libraryListeners.add(setVisible);return()=>libraryListeners.delete(setVisible);},[embedded]);
-    const heldView=React.useRef(null),mounted=React.useRef(true),surfaceVisible=React.useRef(visible),surfaceEpoch=React.useRef(0);
+    const heldView=React.useRef(null),mounted=React.useRef(true),surfaceVisible=React.useRef(visible),surfaceEpoch=React.useRef(0),opening=React.useRef(null);
     surfaceVisible.current=visible;
     React.useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
     React.useEffect(()=>{
@@ -129,7 +129,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     },[receipt]);
     React.useEffect(()=>{
       surfaceEpoch.current+=1;
-      if(!visible){void heldView.current?.close().catch(()=>{});setReceipt(null);}
+      if(!visible){opening.current=null;setOpeningAppId(null);void heldView.current?.close().catch(()=>{});setReceipt(null);}
     },[visible]);
     // `plugin` is a client-side view (every npm entry that is not an application); every other filter is a provider category.
     const params=React.useCallback(cursor=>{const p=new URLSearchParams();if(query)p.set('q',query);p.set('category',filter==='plugin'?'':filter);if(cursor)p.set('cursor',cursor);return'?'+p.toString();},[query,filter]);
@@ -145,6 +145,8 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       setPending(p=>({...p,[key]:outcome.ok?{label,text:label+'完成，重启 DSH 后生效'}:{label,text:label+'失败：'+outcome.code+'（'+failureReason(outcome.code)+'）',failed:true}}));
       await load();}catch(e){setPending(p=>({...p,[key]:{label,text:label+'失败：'+String(e.message??e),failed:true}}));}};
     const open=async installed=>{
+      if(opening.current)return;
+      const active={appId:installed.appId};opening.current=active;setOpeningAppId(installed.appId);
       const epoch=surfaceEpoch.current;
       const abandoned=async next=>{
         if(mounted.current&&surfaceVisible.current&&surfaceEpoch.current===epoch)return false;
@@ -162,27 +164,29 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
           next=await request('/apps/resume',{method:'POST',body:JSON.stringify({viewId,leaseToken:next.leaseToken})});
         }
       }catch(e){if(mounted.current&&surfaceVisible.current)setError(String(e.message??e));}
+      finally{if(opening.current===active){opening.current=null;if(mounted.current)setOpeningAppId(null);}}
     };
-    const close=async()=>{try{await heldView.current?.close();setReceipt(null);setError('');}catch(e){setError(String(e.message??e));}};
+    const close=async()=>{if(closing)return;setClosing(true);try{await heldView.current?.close();setReceipt(null);setError('');}catch(e){setError(String(e.message??e));}finally{if(mounted.current)setClosing(false);}};
     if(!visible)return null;
     const pages=[snapshot,...extra].filter(Boolean),all=pages.flatMap(page=>page.items??[]),items=filter==='plugin'?all.filter(item=>item.kind==='plugin'):all,installed=snapshot?.installed??[],plugins=snapshot?.plugins??[],nextCursor=(extra.at(-1)??snapshot)?.page?.nextCursor??null;
     const restartRequired=changed||Boolean(snapshot?.restartRequired);
     const filters=[...BASE_FILTERS,...seenCategories.filter(c=>c!=='hanamesh-app').map(c=>[c,c])];
+    const openButton=row=>h('button',{type:'button',disabled:Boolean(openingAppId),onClick:()=>void open(row)},openingAppId===row.appId?'打开中…':'打开');
     const card=item=>{const row=item.installed,op=pending[item.id],busy=op&&!op.failed&&op.text.endsWith('中…');const installBody={itemId:item.id,...(item.package?.name?{packageName:item.package.name}:{})};
       let action=h('span',null,'仅收录，不可安装'),state=null;
       if(row)state=h('span',{className:'hm-market-state','data-hanamesh-state':row.state},(STATE_TEXT[row.state]??row.state)+(row.version?' '+row.version:''));
       if(busy)action=h('button',{type:'button',disabled:true},op.text);
       else if(item.kind!=='listing'&&!row)action=h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/install',installBody,item.id,'安装')},op?.failed?'重试安装':'安装');
-      else if(row&&item.upgradeAvailable)action=h('span',{className:'hm-market-actions'},h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/install',installBody,item.id,'升级')},'升级到 '+item.latestVersion),row.state==='registered'?h('button',{type:'button',onClick:()=>void open(row)},'打开'):null);
+      else if(row&&item.upgradeAvailable)action=h('span',{className:'hm-market-actions'},h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/install',installBody,item.id,'升级')},'升级到 '+item.latestVersion),row.state==='registered'?openButton(row):null);
       else if(row?.state==='runtime-missing')action=h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/provision',{appId:row.appId,packageName:row.packageName,runtimeItem:row.runtimeItem},item.id,'补齐运行时')},'补齐运行时');
-      else if(row?.state==='registered')action=h('span',{className:'hm-market-actions'},h('button',{type:'button',onClick:()=>void open(row)},'打开'),h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/uninstall',{appId:row.appId,packageName:row.packageName,runtimeItem:row.runtimeItem},item.id,'卸载')},'卸载'));
+      else if(row?.state==='registered')action=h('span',{className:'hm-market-actions'},openButton(row),h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/uninstall',{appId:row.appId,packageName:row.packageName,runtimeItem:row.runtimeItem},item.id,'卸载')},'卸载'));
       else if(row?.state==='installed')action=PROTECTED.has(row.packageName)?h('span',null,'HanaMesh 套件'):h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/plugins/uninstall',{packageName:row.packageName},item.id,'卸载')},'卸载');
       else if(row?.state==='uninstalled-not-unloaded')action=h('span',null,'已卸载，重启 DSH 后生效');
       else if(row)action=h('span',null,'已安装，重启 DSH 后生效');
       return h('article',{key:item.id,'data-hanamesh-library-item':item.id,'data-hanamesh-kind':item.kind},h('h3',null,item.displayName),h('p',null,item.summary),
         h('small',null,KIND_TEXT[item.kind]+' · '+(item.publisher?.name??'未知发布者')+' · '+(item.latestVersion??'—')+((item.categories??[]).length?' · '+item.categories.join('、'):'')),
         state,action,op&&!busy?h('p',{role:op.failed?'alert':'status',className:op.failed?'hm-library-failed':'hm-library-ok'},op.text):null);};
-    const catalogSection=receipt?h('div',{className:'hm-app-frame'},h('div',null,h('strong',null,receipt.instance.appId),h('button',{type:'button',onClick:()=>void close()},'关闭视图')),h('iframe',{src:receipt.uiUrl,title:receipt.instance.appId,sandbox:'allow-forms allow-modals allow-popups allow-same-origin allow-scripts'})):
+    const catalogSection=receipt?h('div',{className:'hm-app-frame'},h('div',null,h('strong',null,receipt.instance.appId),h('button',{type:'button',disabled:closing,onClick:()=>void close()},closing?'关闭中…':'关闭视图')),h('iframe',{src:receipt.uiUrl,title:receipt.instance.appId,sandbox:'allow-forms allow-modals allow-popups allow-same-origin allow-scripts'})):
       h('div',{className:'hm-library-grid',key:'catalog'},...items.map(card));
     const moreButton=nextCursor&&!receipt?h('button',{type:'button',className:'hm-library-more',key:'more',onClick:()=>void more()},'更多'):null;
     const installedSection=!receipt&&(installed.length||plugins.length)?h('section',{className:'hm-market-installed',key:'installed'},h('h2',null,'已安装'),h('ul',null,
