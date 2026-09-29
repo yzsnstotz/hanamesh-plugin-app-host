@@ -1,4 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.32
+# HanaMesh app-host · 0.1.0-rc.33
+
+> rc.33（2026-09-29，本机有限修复）：owned 启动将死主锁/孤儿回收与新 launcher/app 握手分阶段限时；回收预算为既有 5s bootstrap + 声明 stopGraceMs + 2s kill 确认，所有权确认之后的新启动仍限 5s。未改安全身份判定、公开配置或 UI；完整 P01/P08 产品验证另由真实 profile 执行。
 
 > rc.32（2026-09-22，设计定案 §4，T5）：**客户端 `market` 席位 + dshmarket 互斥。** 客户端模块在 cordis 客户端上下文 `provide('market', {render(options), setSettingsVisible(visible)})`——席位名与形状取自钉死的壳面板 `dsh-tauri-panel-extension@1.0.0`（随包在 `hanamesh-desktop-tauri/src-tauri/resources/node_modules/`）：它 `ctx.reflect.get('market')`，只在 `typeof value.render==='function'` 时认账，用 `render({preferredSubsectionId:'installed'})` 画「扩展管理 · 市场」标签页，并在自己接管期间 `setSettingsVisible(false)`、dispose 时 `true`。`render` 返回的就是原来的「HanaMesh 市场」页（`embedded`：常显、无「关闭」、`preferredSubsectionId==='installed'` 时「已安装」排在目录前）；`setSettingsVisible(false)` 收起我们自己的侧栏「市场」入口与覆盖页。**互斥**：占座前先读 `reflect.get('market',false)`，再问一次 `GET /hanamesh/library/installedPlugins` 看 `dshmarket` 在不在，两者任一命中就不 provide（cordis 对同名第二次 `provide` 直接抛错，抢座会把对方打挂），改在宿主日志与市场页顶部给一条「两者只能其一」的提示，其它功能照常；库路由答不上来时 fail open。**重启**：壳 iframe 内的 `hanamesh://restart` 改走壳已有的入站 postMessage 桥（`window.parent.postMessage({type:'hanamesh://restart'},'*')`，与 `hanamesh://bound-refresh` 同一命名空间）——WKWebView 不会把 iframe 内发起的自定义 scheme 导航交给系统；`hanamesh://restart` 这个 URL 仍是系统级入口，由壳 rc.13 的 `deep_link.rs` 处理。市场本身的功能未改。AH-MS01–MS05 测试、M17 变异、X01 新增边界 `market-seat-exclusive`。
 

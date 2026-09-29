@@ -1,4 +1,4 @@
-# 公开契约 v1（候选，0.1.0-rc.32；rc.32 客户端 `market` 席位与 dshmarket 互斥、壳内重启改走 postMessage 桥（见「市场席位」）；rc.28 HanaMesh 市场：插件与应用同路径装卸、已装含插件、可升级/需重启、`installedPlugins` 与 `plugins/*` 路由、`LIB-PROVISION-INPUT` 400（见「市场」）；rc.27 应用使用证据经 usage 插件 record 座位上报（见「应用使用证据」）；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
+# 公开契约 v1（候选，0.1.0-rc.33；rc.33 owned 回收与启动握手分阶段限时；rc.32 客户端 `market` 席位与 dshmarket 互斥、壳内重启改走 postMessage 桥（见「市场席位」）；rc.28 HanaMesh 市场：插件与应用同路径装卸、已装含插件、可升级/需重启、`installedPlugins` 与 `plugins/*` 路由、`LIB-PROVISION-INPUT` 400（见「市场」）；rc.27 应用使用证据经 usage 插件 record 座位上报（见「应用使用证据」）；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
 
 ## 身份与所有权
 
@@ -62,7 +62,7 @@ app 升级会改描述符。宿主只在数据绑定（dataDir/mode，`BINDING_P
 
 `register / beginOpen / open / start / resume / recoverView / heartbeat / close / stop / stopAll / instance / instanceList / list / logTail / eventsSince / subscribe / dispose`。`.d.ts` 是可编译的精确字段定义。宿主方法省略 principal 时是受信 `host` 主体，浏览器路由必须使用认证系统给出的主体，不能从请求体读 principal。
 
-`beginOpen` 在 durable reservation 和 bounded spawn 后返回回执，此时可 `close` 取消尚未就绪的启动；`open/start` 等待就绪，供受信调用者使用。回执包含持久 instance、view lease、`leaseToken`、`uiUrl`（未就绪时 null）。原始 token 不写入 sidecar，仅存哈希；只读列表与事件流不返回 token。
+`beginOpen` 在 durable reservation 和 bounded spawn 后返回回执（owned 所有权回收先按既有 5s bootstrap + stopGraceMs + 2s kill确认限时；仅 acquire 成功后启动后续独立 5s launcher/app握手，错误/guardian退出在两阶段立即失败），此时可 `close` 取消尚未就绪的启动；`open/start` 等待就绪，供受信调用者使用。回执包含持久 instance、view lease、`leaseToken`、`uiUrl`（未就绪时 null）。原始 token 不写入 sidecar，仅存哈希；只读列表与事件流不返回 token。
 
 Open 请求为 `{appId,deploymentId,viewId,leaseToken?,instanceId?,originalSessionId?}`。已知 view 必须带其当前 token；重复 Open/Renew 保持 generation 和引用数，不重复 spawn。inactive/expired lease 显式 resume 时旋转 token/generation。Open 回执丢失不应生成另一个 view 来碰运气。
 

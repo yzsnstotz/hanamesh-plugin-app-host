@@ -1,0 +1,19 @@
+M18-reclaim-spawn-budget: baseline PASS; mutation DETECTED
+M01-single-instance: baseline PASS; mutation DETECTED
+M02-reserve-launch: baseline PASS; mutation DETECTED
+M03-stop-publish: baseline PASS; mutation DETECTED
+M05-credential-declared-only: baseline PASS; mutation DETECTED
+M04-socket-ownership: baseline PASS; mutation DETECTED
+M06-router-sets-declared: baseline PASS; mutation DETECTED
+M07-runtime-exec-traversal: baseline PASS; mutation DETECTED
+M09-runtime-lock-unproven-orphan: baseline PASS; mutation DETECTED
+M10-library-node-electron: baseline PASS; mutation DETECTED
+M11-usage-denied-counts: baseline PASS; mutation DETECTED
+M12-usage-hour-bucket: baseline PASS; mutation DETECTED
+M15-receipt-count-not-accumulated: baseline PASS; mutation DETECTED
+M16-router-inject-observer-blocks-launch: baseline PASS; mutation DETECTED
+M13-market-suite-protected: baseline PASS; mutation DETECTED
+M14-provision-input-400: baseline PASS; mutation DETECTED
+M17-market-seat-exclusive: baseline PASS; mutation DETECTED
+M08-node-runtime-electron: baseline PASS; mutation DETECTED
+Mutation guard PASS: 18/18 genuine source mutations detected.

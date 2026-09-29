@@ -77,6 +77,7 @@ process.on('message', async message => {
     lock = new FileLock(join(config.dataDir, '.runtime.lock'), { reclaimDead: true, orphanGraceMs: config.stopGraceMs });
     await lock.acquire();
     if (!process.connected || stopping) { await lock.release(); return; }
+    send({ type:'ownership-ready' });
     child = spawn(config.nodeBinary, [fileURLToPath(new URL('./launcher.js', import.meta.url))], {
       env: guardianEnvironment(config.nodeBinary), shell: false,
       detached: true, stdio: ['ignore', 'pipe', 'pipe', 'ipc'],

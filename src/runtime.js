@@ -153,7 +153,8 @@ export async function spawnOwned(config, { onLog = () => {} } = {}) {
     ...(Array.isArray(config.secrets) ? config.secrets : [])];
   lineSink(guardian.stdout, text => onLog('stdout', text), secrets);
   lineSink(guardian.stderr, text => onLog('stderr', text), secrets);
-  let resolveSpawn, rejectSpawn, childPid, groupId, guardianBinary, launcherBinary, appExit, cleanupConfirmed = false;
+  let resolveSpawn, rejectSpawn, resolveOwnership, childPid, groupId, guardianBinary, launcherBinary, appExit, cleanupConfirmed = false;
+  const ownershipReady = new Promise(resolve => { resolveOwnership = resolve; });
   const spawned = new Promise((resolve, reject) => { resolveSpawn = resolve; rejectSpawn = reject; });
   const exited = new Promise(resolve => {
     guardian.once('exit', (code, signal) => { rejectSpawn(new AppHostError('SPAWN_FAILED','Guardian exited before application launch.')); resolve(appExit ?? { code, signal }); });
@@ -161,6 +162,7 @@ export async function spawnOwned(config, { onLog = () => {} } = {}) {
   });
   guardian.on('message', msg => {
     if (msg.type === 'stopped') cleanupConfirmed = true;
+    if (msg.type === 'ownership-ready') resolveOwnership();
     if (msg.type === 'guardian-ready') guardian.send({ type: 'launch', config: launchConfig }, error => { if (error) rejectSpawn(error); });
     if (msg.type === 'guardian.refused') rejectSpawn(new AppHostError(msg.code ?? 'NODE_RUNTIME_REQUIRED', msg.message ?? 'Guardian refused its runtime.'));
     if (msg.type === 'spawned') {
@@ -185,7 +187,13 @@ export async function spawnOwned(config, { onLog = () => {} } = {}) {
     })();
     return stopping;
   };
-  try { await bounded(spawned, 5_000, 'Process spawn'); }
+  try {
+    // Ownership recovery may use the declared TERM grace, then 2s KILL confirmation.
+    // Keep the existing 5s bootstrap/probe allowance separate from the launch handshake.
+    // Racing spawned also observes early errors/exits immediately in either phase.
+    await bounded(Promise.race([ownershipReady, spawned]), 5_000 + config.stopGraceMs + 2_000, 'Runtime ownership recovery');
+    await bounded(spawned, 5_000, 'Process spawn');
+  }
   catch (error) { await stop().catch(() => {}); throw error; }
   return { mode: 'owned', pid: childPid, groupId, guardianPid: guardian.pid, nodeBinary, guardianBinary, launcherBinary, exited, stop,
     isAlive: () => guardian.exitCode === null && guardian.signalCode === null && !appExit };

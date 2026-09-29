@@ -1,0 +1,53 @@
+TAP version 13
+# {"evidence":"REAL_PROCESS_ISOLATED","result":"spawned","elapsedMs":5119,"trace":[{"at":1790669367945,"message":"ORPHAN_READY"},{"at":1790669368021,"message":"ORPHAN_TERM_IGNORED"}]}
+# Subtest: AH-L07: proven orphan reclamation gets its declared grace before the launch handshake budget
+ok 1 - AH-L07: proven orphan reclamation gets its declared grace before the launch handshake budget
+  ---
+  duration_ms: 10210.22875
+  type: 'test'
+  ...
+# Subtest: AH-L08: hung ownership guardian is bounded by bootstrap plus declared grace and kill confirmation
+ok 2 - AH-L08: hung ownership guardian is bounded by bootstrap plus declared grace and kill confirmation
+  ---
+  duration_ms: 7062.042625
+  type: 'test'
+  ...
+# Subtest: AH-L09: after ownership-ready a hung launcher handshake keeps its independent five second bound
+ok 3 - AH-L09: after ownership-ready a hung launcher handshake keeps its independent five second bound
+  ---
+  duration_ms: 5347.58175
+  type: 'test'
+  ...
+# Subtest: AH-L10: guardian error before ownership-ready fails immediately
+ok 4 - AH-L10: guardian error before ownership-ready fails immediately
+  ---
+  duration_ms: 381.431791
+  type: 'test'
+  ...
+# Subtest: AH-L10: guardian exit before ownership-ready fails immediately
+ok 5 - AH-L10: guardian exit before ownership-ready fails immediately
+  ---
+  duration_ms: 330.680875
+  type: 'test'
+  ...
+# Subtest: AH-L10: guardian error after ownership-ready fails immediately
+ok 6 - AH-L10: guardian error after ownership-ready fails immediately
+  ---
+  duration_ms: 346.401417
+  type: 'test'
+  ...
+# Subtest: AH-L10: guardian exit after ownership-ready fails immediately
+ok 7 - AH-L10: guardian exit after ownership-ready fails immediately
+  ---
+  duration_ms: 344.098916
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 24116.429042
