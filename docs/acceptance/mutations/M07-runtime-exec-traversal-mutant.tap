@@ -2,19 +2,18 @@ TAP version 13
 # Subtest: AH-P02: runtime item, installTo and exec must remain inside the provisioned tree
 not ok 1 - AH-P02: runtime item, installTo and exec must remain inside the provisioned tree
   ---
-  duration_ms: 1.001875
-  type: 'test'
-  location: '/private/tmp/hm-app-host-mutation-a6IY3n/tests/descriptor-runtime.test.mjs:36:1'
+  duration_ms: 1.349375
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-Ha7Cf6/tests/descriptor-runtime.test.mjs:36:1'
   failureType: 'testCodeFailure'
   error: 'Missing expected exception: /bin/vibe'
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   stack: |-
-    TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-a6IY3n/tests/descriptor-runtime.test.mjs:40:12)
-    Test.runInAsyncScope (node:async_hooks:214:14)
-    Test.run (node:internal/test_runner/test:1103:25)
-    Test.start (node:internal/test_runner/test:1000:17)
-    startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-Ha7Cf6/tests/descriptor-runtime.test.mjs:40:12)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:934:25)
+    Test.start (node:internal/test_runner/test:833:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
   ...
 1..1
 # tests 1
@@ -24,4 +23,4 @@ not ok 1 - AH-P02: runtime item, installTo and exec must remain inside the provi
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 59.733333
+# duration_ms 82.896125

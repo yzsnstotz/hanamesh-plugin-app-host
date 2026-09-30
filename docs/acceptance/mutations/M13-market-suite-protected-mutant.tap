@@ -2,9 +2,8 @@ TAP version 13
 # Subtest: AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite itself is refused both ways (PACKAGE_DENIED)
 not ok 1 - AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite itself is refused both ways (PACKAGE_DENIED)
   ---
-  duration_ms: 3.200458
-  type: 'test'
-  location: '/private/tmp/hm-app-host-mutation-URmOl3/tests/library-market.test.mjs:55:1'
+  duration_ms: 3.474791
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-QVeDJI/tests/library-market.test.mjs:55:1'
   failureType: 'testCodeFailure'
   error: 'Missing expected rejection.'
   code: 'ERR_ASSERTION'
@@ -13,9 +12,9 @@ not ok 1 - AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh 
     code: 'PACKAGE_DENIED'
   operator: 'rejects'
   stack: |-
-    async TestContext.<anonymous> (file:///private/tmp/hm-app-host-mutation-URmOl3/tests/library-market.test.mjs:62:5)
-    async Test.run (node:internal/test_runner/test:1110:7)
-    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+    async TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-QVeDJI/tests/library-market.test.mjs:62:5)
+    async Test.run (node:internal/test_runner/test:935:9)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
   ...
 1..1
 # tests 1
@@ -25,4 +24,4 @@ not ok 1 - AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh 
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 62.343375
+# duration_ms 87.044167

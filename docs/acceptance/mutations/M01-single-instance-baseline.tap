@@ -1,10 +1,9 @@
 TAP version 13
-# H02 real process evidence: {"opens":8,"pids":[12956]}
+# H02 real process evidence: {"opens":8,"pids":[61961]}
 # Subtest: H02: eight concurrent opens reserve one actual application process
 ok 1 - H02: eight concurrent opens reserve one actual application process
   ---
-  duration_ms: 302.553834
-  type: 'test'
+  duration_ms: 332.308416
   ...
 1..1
 # tests 1
@@ -14,4 +13,4 @@ ok 1 - H02: eight concurrent opens reserve one actual application process
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 364.386834
+# duration_ms 427.352917

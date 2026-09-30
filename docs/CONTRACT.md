@@ -1,4 +1,4 @@
-# 公开契约 v1（候选，0.1.0-rc.36；rc.35 市场开关按钮即时反馈、owned 应用已退出时提前结束 TERM 等待并确认精确进程组终止；rc.34 内置市场消费 heartbeat/视图清理；rc.33 owned 回收与启动握手分阶段限时；rc.32 客户端 `market` 席位与 dshmarket 互斥、壳内重启改走 postMessage 桥（见「市场席位」）；rc.28 HanaMesh 市场：插件与应用同路径装卸、已装含插件、可升级/需重启、`installedPlugins` 与 `plugins/*` 路由、`LIB-PROVISION-INPUT` 400（见「市场」）；rc.27 应用使用证据经 usage 插件 record 座位上报（见「应用使用证据」）；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
+# 公开契约 v1（候选，0.1.0-rc.39；rc.39 Market seat 内打开应用时将原有应用帧固定铺满原生窗口并覆盖 Settings，同一回执/租约/关闭动作；rc.38 投射时仅提升 shell.overlay 层级以盖过原生 Settings；rc.35 市场开关按钮即时反馈、owned 应用已退出时提前结束 TERM 等待并确认精确进程组终止；rc.34 内置市场消费 heartbeat/视图清理；rc.33 owned 回收与启动握手分阶段限时；rc.32 客户端 `market` 席位与 dshmarket 互斥、壳内重启改走 postMessage 桥（见「市场席位」）；rc.28 HanaMesh 市场：插件与应用同路径装卸、已装含插件、可升级/需重启、`installedPlugins` 与 `plugins/*` 路由、`LIB-PROVISION-INPUT` 400（见「市场」）；rc.27 应用使用证据经 usage 插件 record 座位上报（见「应用使用证据」）；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
 
 冷恢复中断实例时，将对应旧活跃租约失效并在同一镜像记 `view.expired(reason=host-restart)`；旧视图仍可按原身份恢复并轮换凭据，新视图关闭不受旧租约占用。只有确认进程组退出后才持久发布 `stopped`。
 
@@ -165,6 +165,8 @@ DSH 绑定必须提供同一个 `single` domain 的一次完整镜像 publish �
 | `setSettingsVisible(visible)` | `boolean` → `void` | 面板接管市场时 `false`、dispose 时 `true` |
 
 席位名与形状取自钉死的 `dsh-tauri-panel-extension@1.0.0`（随 `hanamesh-desktop-tauri` 发布，`src-tauri/resources/node_modules/`）：它 `ctx.reflect.get('market')` 取值，`typeof value.render !== 'function'` 时当作没有；不是猜的名字。`render()` 返回的就是「HanaMesh 市场」页本身（内嵌形态：常显、无「关闭」按钮、`preferredSubsectionId==='installed'` 时「已安装」排在目录之前）；`setSettingsVisible(false)` 收起侧栏「市场」入口与覆盖页，`true` 恢复。无壳（官方 DSH 浏览器直开）时没有面板读这个席位，`provide` 不生效属正常，市场仍走侧栏入口。
+
+Market seat 的「打开」保留原 receipt/heartbeat/close owner；应用 iframe 与「关闭视图」固定铺满原生窗口，覆盖 Settings 窄栏。关闭或 seat 卸载时视图清空，原 owner 只释放一次精确租约。无 seat 的侧栏市场仍走原来的 shell.overlay 视图。
 
 **与 dshmarket 互斥（同名席位只能其一）**：cordis 的 `provide` 对同一名字的第二次注册直接抛 `service "market" has been registered at <…>`，抢座会把对方打挂。因此占座前先做两项判定——`ctx.reflect.get('market', false)`（非严格：尚未 active 的提供者也算占座）与一次 `GET /hanamesh/library/installedPlugins`（`plugins[]` 里有 `dshmarket` 即视为在场，无论是否已加载）。任一命中就**不 provide**，改为：宿主日志一条 warn，市场页顶部一条 `role="status"` 提示（`data-hanamesh-market-conflict="dshmarket"`），写明两者只能其一；其它功能（侧栏入口、覆盖页、安装/卸载/重启提示）全部照常，不报错。库路由答不上来（网络/宿主异常）时 fail open，照常占座——席位不承载任何持久事实。X01 边界 `market-seat-exclusive`。
 
