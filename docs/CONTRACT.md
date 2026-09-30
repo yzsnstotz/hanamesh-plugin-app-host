@@ -1,4 +1,4 @@
-# 公开契约 v1（候选，0.1.0-rc.39；rc.39 Market seat 内打开应用时将原有应用帧固定铺满原生窗口并覆盖 Settings，同一回执/租约/关闭动作；rc.38 投射时仅提升 shell.overlay 层级以盖过原生 Settings；rc.35 市场开关按钮即时反馈、owned 应用已退出时提前结束 TERM 等待并确认精确进程组终止；rc.34 内置市场消费 heartbeat/视图清理；rc.33 owned 回收与启动握手分阶段限时；rc.32 客户端 `market` 席位与 dshmarket 互斥、壳内重启改走 postMessage 桥（见「市场席位」）；rc.28 HanaMesh 市场：插件与应用同路径装卸、已装含插件、可升级/需重启、`installedPlugins` 与 `plugins/*` 路由、`LIB-PROVISION-INPUT` 400（见「市场」）；rc.27 应用使用证据经 usage 插件 record 座位上报（见「应用使用证据」）；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
+# 公开契约 v1（候选，0.1.0-rc.40；rc.40 市场只读查询待启动实例，ready 后一次 resume；前台即时 heartbeat 与失效帧显式清理；rc.39 Market seat 内打开应用时将原有应用帧固定铺满原生窗口并覆盖 Settings，同一回执/租约/关闭动作；rc.38 投射时仅提升 shell.overlay 层级以盖过原生 Settings；rc.35 市场开关按钮即时反馈、owned 应用已退出时提前结束 TERM 等待并确认精确进程组终止；rc.34 内置市场消费 heartbeat/视图清理；rc.33 owned 回收与启动握手分阶段限时；rc.32 客户端 `market` 席位与 dshmarket 互斥、壳内重启改走 postMessage 桥（见「市场席位」）；rc.28 HanaMesh 市场：插件与应用同路径装卸、已装含插件、可升级/需重启、`installedPlugins` 与 `plugins/*` 路由、`LIB-PROVISION-INPUT` 400（见「市场」）；rc.27 应用使用证据经 usage 插件 record 座位上报（见「应用使用证据」）；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
 
 冷恢复中断实例时，将对应旧活跃租约失效并在同一镜像记 `view.expired(reason=host-restart)`；旧视图仍可按原身份恢复并轮换凭据，新视图关闭不受旧租约占用。只有确认进程组退出后才持久发布 `stopped`。
 
@@ -97,6 +97,8 @@ close 幂等，只关闭给定代的 owned view；最后一个活跃租约释放
 | `/apps/events?after=0` | GET | 通知游标 |
 
 请求必须命中具名 host，写入必须有准确 Origin、JSON 和 `X-HanaMesh-Client: workspace-v1`，禁止 iframe 控制请求。认证回调先获得主体，授权回调逐请求判断，缺失任意回调拒绝启动。响应隐藏 PID、dataDir、命令和环境，带 traceId。400/401/403/404/405/409/413/415/503/504 分别按实际错误返回；失败并不代表一定没有持久预留，应使用 view 身份检查。
+
+市场客户端待启动时用 GET `/hanamesh/apps` 只读查询精确实例状态，按原回执 `expiresAt` 对 pending lease 续租；看到 ready 才单次 POST `/apps/resume` 取得 URL。已展示视图在页面回到前台时立即尝试续租，终态 `LEASE_EXPIRED` 或 `INSTANCE_NOT_READY` 清除失效 iframe，由用户从市场显式重新打开。关闭/隐藏继续释放租约并停止最后一个自有视图对应进程；不延长 TTL，不静默恢复。
 
 文档原表将 open/close 列在“只读路由”下，但它们会修改租约；本候选使用 POST 保持“GET 无状态变更”边界。原型客户端的 method/descriptor 兼容性待比对，不能无版本地替换原接口。
 

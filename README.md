@@ -1,4 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.39
+# HanaMesh app-host · 0.1.0-rc.40
+
+> rc.40（2026-10-01，P01 关闭→打开/闲置恢复候选）：市场待启动视图每 250ms 只读查询实例状态，实例 ready 后仅调用一次 `/apps/resume` 获取应用 URL；长启动按原 lease TTL 续租，取消或超时释放精确 lease。已打开视图回到前台或 `pageshow` 时立即续租，遇 `LEASE_EXPIRED` / `INSTANCE_NOT_READY` 清除失效应用帧，保留市场「打开」供显式重试。未改租约 TTL、关闭即停机或应用启动路径。需原生 rc.19 + P01 组合独立验证。
 
 > rc.38（2026-09-30）：实机验证发现 DSH Settings 固定层级 1000 遮住工作区默认 overlay 20；仅当应用视图投射时把既有 shell.overlay 提到 1001，关闭后自动恢复默认层级。
 > rc.39（2026-09-30）：原生「扩展管理 › 市场」打开应用时，原有 iframe、关闭按钮和视图租约保持在 app-host Market owner 内，但应用帧固定铺满窗口并覆盖 DSH Settings（设置层 z-index 1000），关闭后返回市场。原版 Vibe 的 Sessions 入口需要至少 768 CSS px；rc.37/38 的 shell.overlay 投射在原生客户端被设置层遮住，均未作为交付版本。完整 P01 仍须实机独立复验。

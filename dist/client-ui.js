@@ -96,18 +96,20 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   // the renew cadence; serial requests use the same credential and cleanup explicitly releases it.
   function holdViewLease(receipt,onError){
     const lease={viewId:receipt.lease.viewId,leaseToken:receipt.leaseToken};
-    let expiresAt=receipt.lease.expiresAt,timer,controller,closed=false,closeTask;
+    let expiresAt=receipt.lease.expiresAt,timer,controller,closed=false,renewing=false,closeTask;
     const terminal=new Set(['LEASE_EXPIRED','LEASE_NOT_OWNED','INSTANCE_NOT_READY','HOST_CLOSED','UNAUTHENTICATED','FORBIDDEN']);
     const schedule=()=>{if(!closed&&expiresAt>Date.now())timer=setTimeout(()=>void renew(),Math.max(1,Math.floor((expiresAt-Date.now())/3)));};
     const renew=async()=>{
-      if(closed)return;
+      if(closed||renewing)return;
+      renewing=true;clearTimeout(timer);
       controller=new AbortController();
       try{const next=await request('/apps/heartbeat',{method:'POST',body:JSON.stringify(lease),signal:controller.signal});
         if(closed)return;expiresAt=next.expiresAt;schedule();
-      }catch(error){if(closed)return;const code=String(error.message??error);onError(code);if(!terminal.has(code))schedule();}
+      }catch(error){if(closed)return;const code=String(error.message??error);onError(code,terminal.has(code));if(!terminal.has(code))schedule();}
+      finally{renewing=false;}
     };
     schedule();
-    return{close(){
+    return{renew,close(){
       closed=true;clearTimeout(timer);controller?.abort();
       return closeTask??=request('/apps/close',{method:'POST',body:JSON.stringify(lease),keepalive:true}).catch(error=>{closeTask=undefined;throw error;});
     }};
@@ -120,12 +122,16 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     React.useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
     React.useEffect(()=>{
       if(!receipt)return;
-      const view=holdViewLease(receipt,setError);
+      const view=holdViewLease(receipt,(code,terminal)=>{setError(code);if(terminal)setReceipt(null);});
       if(!visible){void view.close().catch(()=>{});setReceipt(null);return;}
       heldView.current=view;
       const release=()=>{void view.close().catch(()=>{});};
-      globalThis.addEventListener?.('pagehide',release);
-      return()=>{if(heldView.current===view)heldView.current=null;globalThis.removeEventListener?.('pagehide',release);release();};
+      const pagehide=()=>{release();setReceipt(null);};
+      const foreground=()=>{if(document.visibilityState==='visible')void view.renew();};
+      globalThis.addEventListener?.('pagehide',pagehide);
+      globalThis.addEventListener?.('pageshow',foreground);
+      document.addEventListener?.('visibilitychange',foreground);
+      return()=>{if(heldView.current===view)heldView.current=null;globalThis.removeEventListener?.('pagehide',pagehide);globalThis.removeEventListener?.('pageshow',foreground);document.removeEventListener?.('visibilitychange',foreground);release();};
     },[receipt]);
     React.useEffect(()=>{
       surfaceEpoch.current+=1;
@@ -148,22 +154,37 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       if(opening.current)return;
       const active={appId:installed.appId};opening.current=active;setOpeningAppId(installed.appId);
       const epoch=surfaceEpoch.current;
+      let pendingReceipt=null;
       const abandoned=async next=>{
         if(mounted.current&&surfaceVisible.current&&surfaceEpoch.current===epoch)return false;
-        await request('/apps/close',{method:'POST',body:JSON.stringify({viewId:next.lease.viewId,leaseToken:next.leaseToken}),keepalive:true});return true;
+        await request('/apps/close',{method:'POST',body:JSON.stringify({viewId:next.lease.viewId,leaseToken:next.leaseToken}),keepalive:true});pendingReceipt=null;return true;
       };
       try{setError('');const deployment=installed.definition.deployments[0],viewId='hml-'+globalThis.crypto.randomUUID();
         let next=await request('/apps/open',{method:'POST',body:JSON.stringify({appId:installed.appId,deploymentId:deployment.id,viewId})});
+        pendingReceipt=next;
         const deadline=Date.now()+120000;
+        let renewAt=Date.now()+Math.max(1,Math.floor((next.lease.expiresAt-Date.now())/3));
         while(true){
           if(await abandoned(next))return;
-          if(next.instance.status==='ready'){setReceipt(next);return;}
+          if(next.instance.status==='ready'){setReceipt(next);pendingReceipt=null;return;}
           if(!['reserved','starting'].includes(next.instance.status)||Date.now()>deadline)throw new Error(next.instance.errorCode??'INSTANCE_NOT_READY');
           await new Promise(resolve=>setTimeout(resolve,250));
           if(await abandoned(next))return;
-          next=await request('/apps/resume',{method:'POST',body:JSON.stringify({viewId,leaseToken:next.leaseToken})});
+          if(Date.now()>=renewAt){
+            const lease=await request('/apps/heartbeat',{method:'POST',body:JSON.stringify({viewId,leaseToken:next.leaseToken})});
+            next={...next,lease};renewAt=Date.now()+Math.max(1,Math.floor((lease.expiresAt-Date.now())/3));
+          }
+          const status=await request('/hanamesh/apps');
+          if(await abandoned(next))return;
+          const instance=(status.instances??[]).find(item=>item.id===next.instance.id);
+          if(!instance)throw new Error('INSTANCE_NOT_READY');
+          if(instance.status==='ready'){
+            next=await request('/apps/resume',{method:'POST',body:JSON.stringify({viewId,leaseToken:next.leaseToken})});
+            if(next.instance.status!=='ready')throw new Error(next.instance.errorCode??'INSTANCE_NOT_READY');
+          }
+          else next={...next,instance:{...next.instance,status:instance.status,errorCode:instance.errorCode}};
         }
-      }catch(e){if(mounted.current&&surfaceVisible.current)setError(String(e.message??e));}
+      }catch(e){if(pendingReceipt){const lease=pendingReceipt;pendingReceipt=null;await request('/apps/close',{method:'POST',body:JSON.stringify({viewId:lease.lease.viewId,leaseToken:lease.leaseToken}),keepalive:true}).catch(()=>{});}if(mounted.current&&surfaceVisible.current)setError(String(e.message??e));}
       finally{if(opening.current===active){opening.current=null;if(mounted.current)setOpeningAppId(null);}}
     };
     const close=async()=>{if(closing)return;setClosing(true);try{await heldView.current?.close();setReceipt(null);setError('');}catch(e){setError(String(e.message??e));}finally{if(mounted.current)setClosing(false);}};

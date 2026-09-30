@@ -21,6 +21,35 @@ test('AH-VL01: real market client keeps one idle view renewed beyond its origina
  assert.equal(a.calls.filter(x=>x.path==='/apps/open').length,1);assert.equal(a.calls.filter(x=>x.path==='/apps/resume').length,0);assert.equal(a.closes().length,0);
  assert(a.client.find(node=>node.type==='iframe'),'the existing iframe remains mounted');
 });
+test('AH-VL15: returning to a visible document or pageshow renews immediately before the old timer fires',async t=>{
+ const a=await setup(t);await a.clock.advance(10_000);a.client.visibility('hidden');a.client.visibility('visible');await settle();
+ assert.equal(a.renewals().length,1,'foreground transition must renew before the 30s timer');
+ await a.clock.advance(5_000);a.client.pageshow();await settle();
+ assert.equal(a.renewals().length,2,'pageshow must renew immediately too');
+});
+test('AH-VL16: expired heartbeat removes the stale iframe and offers explicit Market reopen',async t=>{
+ const a=await setup(t,{heartbeat:async()=>({ok:false,status:409,json:async()=>({error:{code:'LEASE_EXPIRED'}})})});
+ await a.clock.advance(30_000);
+ assert(!a.client.find(node=>node.type==='iframe'),'expired application document must not linger');
+ assert(a.client.find(node=>node.type==='button'&&node.children.includes('打开')),'the existing explicit open must remain available');
+ assert.equal(a.calls.filter(x=>x.path==='/apps/open').length,1,'no silent second Open');
+ assert.equal(a.calls.filter(x=>x.path==='/apps/resume').length,0,'no silent resume');
+});
+test('AH-VL17: stopped instance heartbeat clears its unusable frame without reviving it',async t=>{
+ const a=await setup(t,{heartbeat:async()=>({ok:false,status:409,json:async()=>({error:{code:'INSTANCE_NOT_READY'}})})});
+ await a.clock.advance(30_000);
+ assert(!a.client.find(node=>node.type==='iframe'));
+ assert(a.client.find(node=>node.type==='button'&&node.children.includes('打开')));
+ assert.equal(a.calls.filter(x=>x.path==='/apps/open').length,1);
+ assert.equal(a.calls.filter(x=>x.path==='/apps/resume').length,0);
+});
+test('AH-VL18: pagehide closes the lease and pageshow cannot revive its old frame',async t=>{
+ const a=await setup(t);a.client.pagehide();await settle();a.client.pageshow();await settle();
+ assert(!a.client.find(node=>node.type==='iframe'));
+ assert(a.client.find(node=>node.type==='button'&&node.children.includes('打开')));
+ assert.equal(a.closes().length,1);
+ assert.equal(a.calls.filter(x=>x.path==='/apps/resume').length,0);
+});
 test('AH-VL02: close-last-view cancels renewals immediately and sends one explicit lease close',async t=>{
  const a=await setup(t);await a.clock.advance(30_000);assert.equal(a.renewals().length,1,'one heartbeat before close');await a.client.click('关闭视图');assert.equal(a.closes().length,1);
  await a.clock.advance(180_000);assert.equal(a.renewals().length,1);assert.equal(a.closes().length,1);assert(!a.client.find(node=>node.type==='iframe'));
