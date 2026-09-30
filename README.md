@@ -1,4 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.40
+# HanaMesh app-host · 0.1.0-rc.41
+
+> rc.41（2026-10-01，P01-U05-RI 修复）：真实原生市场重装 Vibe 时，受管 Python runtime 卸载后留有32个运行时生成的 `__pycache__/*.pyc`，后续原子提升因目标目录无所有权清单而拒绝（`E_PROMOTE`）。AppHost 在 lib-provision 精确移除受管文件后仅清理由该 runtime 生成的 Python 字节码及空目录；未知残留继续保留并报告 `RUNTIME_RESIDUE`，不以 force 覆盖。两项回归、模块 check/types 通过；仍需固定消费者组合和独立原生产品复验。
 
 > rc.40（2026-10-01，P01 关闭→打开/闲置恢复候选）：市场待启动视图每 250ms 只读查询实例状态，实例 ready 后仅调用一次 `/apps/resume` 获取应用 URL；长启动按原 lease TTL 续租，取消或超时释放精确 lease。已打开视图回到前台或 `pageshow` 时立即续租，遇 `LEASE_EXPIRED` / `INSTANCE_NOT_READY` 清除失效应用帧，保留市场「打开」供显式重试。未改租约 TTL、关闭即停机或应用启动路径。需原生 rc.19 + P01 组合独立验证。
 

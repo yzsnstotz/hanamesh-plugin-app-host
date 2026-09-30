@@ -1,5 +1,5 @@
-import { readFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { readFile, lstat, unlink, rmdir } from 'node:fs/promises';
+import { join, resolve, dirname, sep } from 'node:path';
 import { spawn as nodeSpawn } from 'node:child_process';
 import { AppHostError, requireCondition } from '../errors.js';
 import { validateDefinition } from '../descriptor.js';
@@ -14,6 +14,28 @@ async function json(path){return JSON.parse(await readFile(path,'utf8'));}
 function defaultSpawn(command,args,options){return new Promise((resolvePromise,reject)=>{const child=nodeSpawn(command,args,{...options,env:{HOME:process.env.HOME,DSH_HOME:process.env.DSH_HOME,LANG:process.env.LANG??'C.UTF-8',PATH:`${command.slice(0,command.lastIndexOf('/'))}:/usr/bin:/bin`},stdio:['ignore','pipe','pipe']});let stdout='',stderr='';child.stdout.on('data',chunk=>stdout+=chunk);child.stderr.on('data',chunk=>stderr+=chunk);child.on('error',reject);child.on('exit',(code,signal)=>resolvePromise({code,signal,stdout,stderr}));});}
 
 async function defaults(){return await import('../provision/index.js');}
+
+/** Runtime-created Python import caches are disposable. Preserve every other unowned file. */
+async function clearGeneratedRuntimeCache(result,runtimeRoot){
+  if(!Array.isArray(result?.kept)||result.kept.length===0)return;
+  const target=resolve(result.target??'');
+  requireCondition(target.startsWith(resolve(runtimeRoot)+sep),'RUNTIME_RESIDUE','Runtime cleanup target is outside the application runtime root.');
+  const remaining=[];
+  for(const rel of result.kept){
+    if(typeof rel!=='string'||!/(?:^|\/)__pycache__\/[^/]+\.pyc$/.test(rel)){remaining.push(rel);continue;}
+    const file=resolve(target,rel);
+    if(!file.startsWith(target+sep)){remaining.push(rel);continue;}
+    const info=await lstat(file).catch(error=>error.code==='ENOENT'?null:Promise.reject(error));
+    if(!info?.isFile()){remaining.push(rel);continue;}
+    await unlink(file);
+    for(let dir=dirname(file);dir.startsWith(target+sep);dir=dirname(dir)){
+      try{await rmdir(dir);}catch(error){if(error.code==='ENOTEMPTY'||error.code==='ENOENT')break;throw error;}
+    }
+  }
+  if(remaining.length===0){try{await rmdir(target);}catch(error){if(error.code!=='ENOTEMPTY'&&error.code!=='ENOENT')throw error;}}
+  const residue=await lstat(target).catch(error=>error.code==='ENOENT'?null:Promise.reject(error));
+  requireCondition(remaining.length===0&&residue===null,'RUNTIME_RESIDUE','Runtime has unowned files that require manual review.',{count:remaining.length},409);
+}
 
 export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBinary,dshBin,registry='https://registry.npmjs.org',allowPrerelease=false,
   fetchImpl=globalThis.fetch,spawn=defaultSpawn,provision,remove,emit=()=>{}}){
@@ -58,7 +80,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       catch(error){emit({type:'library.install-failed',packageName:name,kind:'plugin',code:error.code??'INSTALL_FAILED'});throw error;}
     },
     async provisionRuntime({appId,packageName:installedName,runtimeItem}){const record=await installed(installedName);requireCondition(record.definition.id===appId,'APP_ID_MISMATCH','Installed package app id does not match.');const runtime=record.definition.deployments.map(deployment=>deployment.runtime).find(value=>value?.item===runtimeItem);requireCondition(runtime,'RUNTIME_NOT_DECLARED','Runtime item is not declared.');const api=provision?{provision}:{...(await defaults())};const result=await api.provision(runtime.manifest,{root:runtimeRoot(appId),only:[runtime.item],onProgress:event=>emit({type:'library.provision-progress',appId,...event})});return{status:'restart-required',appId,packageName:installedName,result};},
-    async uninstall({packageName:installedName,appId,runtimeItem,running}){permitted(installedName);requireCondition(!running,'INSTANCE_IN_USE','Stop all application instances before uninstalling.',{},409);await run(['remove',installedName]);if(runtimeItem){const api=remove?{remove}:{...(await defaults())};await api.remove(runtimeItem,{root:runtimeRoot(appId)});}return{status:'restart-required',kind:'application',appId,packageName:installedName,dataPreserved:true};},
+    async uninstall({packageName:installedName,appId,runtimeItem,running}){permitted(installedName);requireCondition(!running,'INSTANCE_IN_USE','Stop all application instances before uninstalling.',{},409);await run(['remove',installedName]);if(runtimeItem){const api=remove?{remove}:{...(await defaults())};const result=await api.remove(runtimeItem,{root:runtimeRoot(appId)});await clearGeneratedRuntimeCache(result,runtimeRoot(appId));}return{status:'restart-required',kind:'application',appId,packageName:installedName,dataPreserved:true};},
     /** rc.28: `dsh plugin remove <name>`; the suite itself (PROTECTED_PACKAGES) is refused with PACKAGE_DENIED. */
     async uninstallPlugin({packageName:installedName}){permitted(installedName);await run(['remove',installedName]);return{status:'restart-required',kind:'plugin',packageName:installedName};},
   };

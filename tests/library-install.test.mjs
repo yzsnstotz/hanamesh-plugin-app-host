@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, access } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, access, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createLibraryInstaller } from '../src/library/install.js';
@@ -34,4 +34,26 @@ test('AH-L06: uninstall removes the package and owned runtime but preserves appl
   assert.deepEqual(calls[0].args,['/opt/dsh/bin.js','plugin','--profile','p3','remove','@hanamesh/app-vibe-trading']);
   assert.equal(calls[1].item,'runtime');
   await access(kept);
+});
+
+test('AH-RI01: uninstall clears generated Python bytecode left by provision remove',async()=>{
+  const profile=await mkdtemp(join(tmpdir(),'hm-library-bytecode-')),dataRoot=join(profile,'data');
+  const runtimeRoot=join(dataRoot,'runtimes','vibe'),target=join(runtimeRoot,'vibe-trading');
+  const cache=join(target,'python','lib','__pycache__');await mkdir(cache,{recursive:true});
+  const bytecode=join(cache,'module.cpython-311.pyc');await writeFile(bytecode,'generated');
+  const installer=createLibraryInstaller({profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
+    spawn:async()=>({code:0,stdout:'',stderr:''}),remove:async()=>({target,kept:['python/lib/__pycache__/module.cpython-311.pyc']})});
+  await installer.uninstall({packageName:'@hanamesh/app-vibe-trading',appId:'vibe',runtimeItem:'runtime',running:false});
+  await assert.rejects(stat(bytecode),{code:'ENOENT'});
+  await assert.rejects(stat(target),{code:'ENOENT'});
+});
+
+test('AH-RI02: uninstall preserves unknown runtime residue and reports incomplete cleanup',async()=>{
+  const profile=await mkdtemp(join(tmpdir(),'hm-library-residue-')),dataRoot=join(profile,'data');
+  const target=join(dataRoot,'runtimes','vibe','vibe-trading');await mkdir(target,{recursive:true});
+  const other=join(target,'user.txt');await writeFile(other,'keep');
+  const installer=createLibraryInstaller({profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
+    spawn:async()=>({code:0,stdout:'',stderr:''}),remove:async()=>({target,kept:['user.txt']})});
+  await assert.rejects(installer.uninstall({packageName:'@hanamesh/app-vibe-trading',appId:'vibe',runtimeItem:'runtime',running:false}),error=>error.code==='RUNTIME_RESIDUE');
+  await access(other);
 });
