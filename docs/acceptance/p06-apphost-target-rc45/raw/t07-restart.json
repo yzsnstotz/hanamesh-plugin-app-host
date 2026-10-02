@@ -1,0 +1,36 @@
+{
+  "gate": "T07-unconsumed-target-restart",
+  "profile": "isolated rc45 34984",
+  "at": "2026-10-02T23:16:03.868510+00:00",
+  "pidBefore": 55810,
+  "post": {
+    "status": 202,
+    "body": {
+      "targetId": "f3353eb1-ee5e-4064-b71e-11f5627140ee",
+      "packageName": "dsh-pet",
+      "traceId": "88110997-d110-49ac-b6b9-34d577fd90d9"
+    }
+  },
+  "beforeRestart": {
+    "status": 200,
+    "body": {
+      "target": {
+        "targetId": "f3353eb1-ee5e-4064-b71e-11f5627140ee",
+        "packageName": "dsh-pet",
+        "protected": false
+      },
+      "traceId": "e54272cf-85ee-4a35-a5ce-266600b0ace6"
+    }
+  },
+  "pidAfter": 56409,
+  "afterRestart": {
+    "status": 200,
+    "body": {
+      "target": null,
+      "traceId": "fa6ad747-23a5-499c-94b9-6af441a32a64"
+    }
+  },
+  "result": "PASS",
+  "completedAt": "2026-10-02T23:16:26.793066+00:00",
+  "assertion": "pid changes; unconsumed target existed before TERM; after restart target is null (traceId is ignored)"
+}

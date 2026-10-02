@@ -1,0 +1,14 @@
+{
+  "gate": "final isolated rc45 profile stop receipt",
+  "at": "2026-10-02T23:38:05.633131+00:00",
+  "portsListening": {
+    "34984": false,
+    "34985": false
+  },
+  "t16OwnedProcessPids": {
+    "64585": false,
+    "64593": false,
+    "64601": false
+  },
+  "result": "PASS"
+}

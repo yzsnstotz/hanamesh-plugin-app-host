@@ -1,0 +1,126 @@
+{
+  "gate": "T16 REAL_HOST test-only Cordis consumer using rc45 host service",
+  "source": "isolated DSH 34984; no AppHost source changes",
+  "at": "2026-10-02T23:25:55.301Z",
+  "registrationFirst": {
+    "a": {
+      "appId": "p06-probe-a",
+      "registrationId": "a9118b28-428f-4bb1-95f9-48a88cf40dcb",
+      "definitionHash": "b801a2082062a005ec7752fe20f9eb4bb1274e15e7721cb00825e9298dbb2018"
+    },
+    "b": {
+      "appId": "p06-probe-b",
+      "registrationId": "fe0d7c43-30d4-4b10-841b-e16c0fe36f77",
+      "definitionHash": "2ae960522c01019352a2f8a05470025ed03b6039e43ba75e87aae919b1a41e4e"
+    }
+  },
+  "before": {
+    "a": {
+      "id": "cb259dde-009d-4878-a519-c0c05ccf0647",
+      "appId": "p06-probe-a",
+      "status": "ready",
+      "pid": 64585,
+      "pidAlive": true
+    },
+    "b": {
+      "id": "8926705d-7b99-4a5b-a9b4-2a501c6fac1a",
+      "appId": "p06-probe-b",
+      "status": "ready",
+      "pid": 64593,
+      "pidAlive": true
+    }
+  },
+  "firstUnregister": {
+    "appId": "p06-probe-a",
+    "removed": true,
+    "stopped": 1
+  },
+  "afterFirst": {
+    "a": {
+      "id": "cb259dde-009d-4878-a519-c0c05ccf0647",
+      "appId": "p06-probe-a",
+      "status": "stopped",
+      "pid": 64585,
+      "pidAlive": false
+    },
+    "b": {
+      "id": "8926705d-7b99-4a5b-a9b4-2a501c6fac1a",
+      "appId": "p06-probe-b",
+      "status": "ready",
+      "pid": 64593,
+      "pidAlive": true
+    }
+  },
+  "registrationSecond": {
+    "appId": "p06-probe-a",
+    "registrationId": "5ad0c199-a219-470f-abeb-8fc7896f66d2",
+    "definitionHash": "b801a2082062a005ec7752fe20f9eb4bb1274e15e7721cb00825e9298dbb2018"
+  },
+  "staleUnregister": {
+    "appId": "p06-probe-a",
+    "removed": false,
+    "reason": "registration-replaced",
+    "stopped": 0
+  },
+  "afterStale": {
+    "b": {
+      "id": "8926705d-7b99-4a5b-a9b4-2a501c6fac1a",
+      "appId": "p06-probe-b",
+      "status": "ready",
+      "pid": 64593,
+      "pidAlive": true
+    },
+    "aRegistrationPresent": true
+  },
+  "newOpen": {
+    "id": "cb259dde-009d-4878-a519-c0c05ccf0647",
+    "appId": "p06-probe-a",
+    "status": "ready",
+    "pid": 64601,
+    "pidAlive": true
+  },
+  "currentUnregister": {
+    "appId": "p06-probe-a",
+    "removed": true,
+    "stopped": 1
+  },
+  "afterCurrent": {
+    "a": {
+      "id": "cb259dde-009d-4878-a519-c0c05ccf0647",
+      "appId": "p06-probe-a",
+      "status": "stopped",
+      "pid": 64601,
+      "pidAlive": false
+    },
+    "b": {
+      "id": "8926705d-7b99-4a5b-a9b4-2a501c6fac1a",
+      "appId": "p06-probe-b",
+      "status": "ready",
+      "pid": 64593,
+      "pidAlive": true
+    }
+  },
+  "otherUnregister": {
+    "appId": "p06-probe-b",
+    "removed": true,
+    "stopped": 1
+  },
+  "afterAll": {
+    "a": {
+      "id": "cb259dde-009d-4878-a519-c0c05ccf0647",
+      "appId": "p06-probe-a",
+      "status": "stopped",
+      "pid": 64601,
+      "pidAlive": false
+    },
+    "b": {
+      "id": "8926705d-7b99-4a5b-a9b4-2a501c6fac1a",
+      "appId": "p06-probe-b",
+      "status": "stopped",
+      "pid": 64593,
+      "pidAlive": false
+    }
+  },
+  "result": "PASS",
+  "completedAt": "2026-10-02T23:25:55.974Z"
+}

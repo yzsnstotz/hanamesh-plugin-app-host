@@ -23,7 +23,7 @@
 
 ## 状态与路由
 
-已安装应用扫描给出 `registered`、`installed-not-loaded`、`runtime-missing` 或 `invalid`；已安装插件扫描（rc.28）给出 `installed`、`installed-not-loaded`、`uninstalled-not-unloaded` 或 `invalid`。浏览器路由为 `/hanamesh/library`、`/hanamesh/library/sources`、`/hanamesh/library/install`、`/hanamesh/library/provision`、`/hanamesh/library/uninstall`、`/hanamesh/library/events`、`/hanamesh/library/installedPlugins`、`/hanamesh/library/plugins/install`、`/hanamesh/library/plugins/uninstall`，以及 rc.42 的 `GET/POST /hanamesh/library/target` 与 `POST /hanamesh/library/target/consume`；具体交接语义和 200 字符上限见 `CONTRACT.md`「外部目标交接」。全部复用 app-host 的 Host/Origin/iframe/auth/CSRF 防护链。
+已安装应用扫描给出 `registered`、`installed-not-loaded`、`runtime-missing` 或 `invalid`；已安装插件扫描（rc.28）给出 `installed`、`installed-not-loaded`、`uninstalled-not-unloaded` 或 `invalid`。浏览器路由为 `/hanamesh/library`、`/hanamesh/library/sources`、`/hanamesh/library/install`、`/hanamesh/library/provision`、`/hanamesh/library/uninstall`、`/hanamesh/library/events`、`/hanamesh/library/installedPlugins`、`/hanamesh/library/plugins/install`、`/hanamesh/library/plugins/uninstall`，以及 rc.45 的 `GET/POST /hanamesh/library/target` 与 `POST /hanamesh/library/target/consume`；具体交接语义和 200 字符上限见 `CONTRACT.md`「外部目标交接」。全部复用 app-host 的 Host/Origin/iframe/auth/CSRF 防护链。
 
 应用打开仍只走 app-host 的视图租约 API；页面只保存临时 receipt，不拥有第二份实例状态。
 

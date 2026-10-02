@@ -1,0 +1,148 @@
+{
+  "label": "ui-active-open",
+  "at": 1790983385078,
+  "url": "http://127.0.0.1:34984/",
+  "state": [],
+  "exact": [],
+  "iframe": [
+    {
+      "src": "http://127.0.0.1:57482/__hanamesh_bootstrap/<redacted>",
+      "visible": true
+    }
+  ],
+  "body": "New Session\nWorkspaces\nNo sessions yet\n市场\nHanaMesh\nSettings\nInto the Unknown\nPreview\nChoose workspace\nStandard mode\nChoose a workspace to start\nHanaMesh 市场\n关闭\n\n检测到 DSH Market（dshmarket）：「扩展管理」的市场标签只能由一个插件提供，这次没有由 HanaMesh 市场接管。两者只能其一——要用 HanaMesh 市场请先卸载 dshmarket 并重启 DSH；要用 dshmarket 就从下方侧栏的「市场」入口使用 HanaMesh 市场。\n\n搜索\n全部\n应用\n插件\nfun\ncontract-fixture\n关闭视图",
+  "apps": {
+    "status": 200,
+    "body": {
+      "contractVersion": 1,
+      "apps": [
+        {
+          "id": "contract-fixture",
+          "name": "Contract fixture",
+          "singleInstanceOnly": true,
+          "packageName": "@hanamesh/app-contract-fixture",
+          "deployments": [
+            {
+              "id": "local",
+              "dataId": "default",
+              "mode": "owned",
+              "embedding": "gateway",
+              "credentialEnv": []
+            }
+          ]
+        }
+      ],
+      "instances": [
+        {
+          "id": "0a1a6f09-0164-4caf-b2da-ae0e6248819b",
+          "appId": "contract-fixture",
+          "deploymentId": "local",
+          "dataId": "default",
+          "mode": "owned",
+          "status": "ready",
+          "runtimeId": "fb4dc74f-c44e-450b-a084-f923adfa8291"
+        }
+      ],
+      "views": [
+        {
+          "principalId": "dsh-browser",
+          "viewId": "hml-01116520-20ec-44be-b330-83b90bb806e9",
+          "instanceId": "0a1a6f09-0164-4caf-b2da-ae0e6248819b",
+          "generation": 1,
+          "status": "active",
+          "expiresAt": 1790983431214,
+          "createdAt": 1790983340548,
+          "originalSessionId": null
+        },
+        {
+          "principalId": "dsh-browser",
+          "viewId": "hml-370e266f-81ed-4fb9-8ac2-7ea4d57aa533",
+          "instanceId": "0a1a6f09-0164-4caf-b2da-ae0e6248819b",
+          "generation": 1,
+          "status": "active",
+          "expiresAt": 1790983473054,
+          "createdAt": 1790983383054,
+          "originalSessionId": null
+        }
+      ],
+      "sequence": 5,
+      "traceId": "343cd6ab-26b9-4336-a370-70b1ffe25a24"
+    }
+  },
+  "target": {
+    "status": 200,
+    "body": {
+      "target": null,
+      "traceId": "372699d1-469b-47d1-b20d-fe676ae7a828"
+    }
+  },
+  "events": [
+    {
+      "at": 1790983376371,
+      "method": "GET",
+      "path": "/hanamesh/library/installedPlugins"
+    },
+    {
+      "at": 1790983376402,
+      "method": "GET",
+      "path": "/hanamesh/library/target"
+    },
+    {
+      "at": 1790983377427,
+      "method": "GET",
+      "path": "/hanamesh/library/target"
+    },
+    {
+      "at": 1790983378432,
+      "method": "GET",
+      "path": "/hanamesh/library/target"
+    },
+    {
+      "at": 1790983379436,
+      "method": "GET",
+      "path": "/hanamesh/library/target"
+    },
+    {
+      "at": 1790983380440,
+      "method": "GET",
+      "path": "/hanamesh/library/target"
+    },
+    {
+      "at": 1790983381009,
+      "method": "GET",
+      "path": "/hanamesh/library"
+    },
+    {
+      "at": 1790983381444,
+      "method": "GET",
+      "path": "/hanamesh/library/target"
+    },
+    {
+      "at": 1790983382447,
+      "method": "GET",
+      "path": "/hanamesh/library/target"
+    },
+    {
+      "at": 1790983383053,
+      "method": "POST",
+      "path": "/apps/open"
+    },
+    {
+      "at": 1790983383452,
+      "method": "GET",
+      "path": "/hanamesh/library/target"
+    },
+    {
+      "at": 1790983384455,
+      "method": "GET",
+      "path": "/hanamesh/library/target"
+    }
+  ],
+  "preConsume": [],
+  "installPosts": 0,
+  "redaction": {
+    "field": "iframe.src bootstrap capability",
+    "srcSha256": "33a9479a8b6ee3237297f706c2094937de7ad9a2135136abe291a984dd28669b",
+    "reason": "lease bootstrap capability removed from committed evidence"
+  }
+}

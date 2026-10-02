@@ -1,0 +1,67 @@
+{
+  "before": {
+    "marketButton": 1,
+    "panelExtension": 0
+  },
+  "postStatus": 202,
+  "body": "New Session\nWorkspaces\nNo sessions yet\n市场\nHanaMesh\nSettings\nInto the Unknown\nPreview\nChoose workspace\nStandard mode\nChoose a workspace to start\nHanaMesh 市场\n关闭\n\n检测到 DSH Market（dshmarket）：「扩展管理」的市场标签只能由一个插件提供，这次没有由 HanaMesh 市场接管。两者只能其一——要用 HanaMesh 市场请先卸载 dshmarket 并重启 DSH；要用 dshmarket 就从下方侧栏的「市场」入口使用 HanaMesh 市场。\n\n搜索\n全部\n应用\n插件\nfun\ntools\nui\nworkflow\n\n已定位 dsh-pet，请确认条目后点击安装。\n\ndsh-pet-live2d#dsh-live2d-pet\n\nDSH Web GUI 的 Live2D 桌宠：可拖动、跟随鼠标，跟着会话状态换动作、表情与装扮，右键呼出控制面板。\n\n插件 · A8Chann · 3.1.3 · fun\n安装\ndsh-pet-remielle\n\n蕾米埃尔(绝区零)桌宠：随 DSH 工作状态切换动画表情。\n\n插件 · Gin-7 · 0.4.5 · fun\n安装\ndsh-pet-whale\n\n官方鲸鱼轮廓的桌宠，桌面端和网页端都能用：SVG 动画和表情随 agent 状态切换（思考／工作／完成／报错／等待确认），还能跟随其他在跑的会话并用角标显示个数；可戳可拖、能甩晕、按在屏幕边上会压扁，鼠标在头顶来回蹭就是摸头；7 套色板、4 档大小、合成音效，跟随亮暗主题，附网页预览可直接试玩。\n\n插件 · nzl153 · 1.2.6 · fun\n安装\ndsh-pet#dsh-pet\n\nDSH Web UI 桌面宠物：25 个透明动画、屏幕漫游、点击反应与拖拽，附可复现的素材生成链。\n\n插件 · PC2005-cloud · 0.3.1 · fun\n安装\ndsh-pet\n\n常驻界面的鲸鱼娘：随智能体状态切换动画，可摸头互动、喂小鱼干养亲密度，从幼鲸一路养成。\n\n插件 · zhu1090093659 · 0.4.4 · fun\n安装\ncodex-to-dsh-pet#dsh-codex-pet\n\nDSH 网页 GUI 实时桌宠：可把任何 Codex 桌宠图集（webp/png/gif，v1/v2 自动识别）转换为 DSH 中可拖拽的悬浮桌宠。支持拖拽/挥手/跳跃，v2 桌宠的眼睛实时追踪活动鼠标，随 agent 状态切换姿势；进度气泡反映工作状态；「设置 → 桌宠」图形界面可导入、切换与调整桌宠；内置一只原创示例桌宠（娜斯佳），用户桌宠存放在 ~/.dsh/pets。\n\n插件 · Signalight · 0.3.4 · fun\n安装\ndsh-pet-companion\n\n兼容 WSLg 的 DSH 桌面宠物会根据代理活动切换动画，支持向当前会话发送消息，并可加载 Hatch-Pet v2 图集或透明肖像。\n\n仅收录 · hasan-aghayev · — · fun\n仅收录，不可安装\ndsh-lived-pet#dsh-pet-bridge\n\n把 harness agent 的实时状态（思考、干活、等待、完成、出错）写入状态文件，配套的 Electron Live2D 桌宠轮询该文件，气泡与表情随 agent 的实际动作变化。\n\n仅收录 · deanzhang2026-max · — · ui\n仅收录，不可安装\ndsh-pet-desktop\n\n独立置顶窗口的桌面宠物：直接导入 ~/.codex/pets 的 Codex 宠物，含亲密度段位、会话活动气泡、贴边吸附拖拽、右键可达的智能鼠标穿透；已装 dsh-usage 时自动对齐其当日 token 台账。\n\n仅收录 · qiqibabyy · — · fun\n仅收录，不可安装\nv-manager-dsh-pet\n\nDSH Web UI 桌宠：内置 Vivi（芊芊）Live2D 形象，支持抚摸/喂食、每日小鱼干羁绊经济与情绪驱动表情。\n\n仅收录 · Lolancier · — · fun\n仅收录，不可安装\ndsh-petdex-pet\n\nDSH Web 界面里的桌面宠物：右下角悬浮、可拖拽，随智能体活动切换精灵动画；设置页可管理大小、启停切换、图库搜索与一键安装宠物。内置 4 个全职猎人主角宠物包。\n\n仅收录 · zenglihunter · — · fun\n仅收录，不可安装\ndsh-pets\n\nCodex Pets 风格浮动像素桌宠：内置 10 只 Petdex 兼容宝可梦伙伴，9 状态 agent 状态机（空闲/思考/等待/审查/出错 + 客户端挥手/跳跃/方向动画），可拖拽悬浮、宠物切换与缩放设置、通知气泡，以及 agent 可用的 `pet_say` 工具。\n\n插件 · hellosz · 0.3.1 · fun\n安装\nAwesome-DSH-Pet\n\nDSH Web GUI 的可扩展桌面宠物插件，支持投喂、玩耍、切换角色，并使用 Codex 8x9 spritesheet 添加自定义角色。\n\n仅收录 · Awesome-AI-Pedia · — · fun\n仅收录，不可安装\ndsh-pet-evolve\n\n会随 agent 成长的宠物：真实信号（已验证规则/会话/工具调用/压缩）驱动 5 阶段进化、镜像 agent 状态、一键导出成长分享卡。零依赖、全本地。\n\n仅收录 · zoahdev · — · fun\n仅收录，不可安装\ndsh-pet-ronaldo\n\nDSH 桌宠：Web 界面右下角的 C 罗精灵，动画随 Agent 状态切换——工具执行中颠球、回合中思考、等待审批、出错假摔——回合完成时跳起 SIU 庆祝并由宿主进程播放提示音；支持拖动、悬停注视光标、连点三次假摔，设置面板可管理多只宠物并导入自定义 spritesheet。同时提供一个无边框、始终置顶的原生 Windows 窗口，关掉浏览器也还在：悬停显示当前工作区与对话名，双击用 Edge 打开 Harness 页面，拖动、滚轮改大小、右键菜单都可用，位置/大小/行为与网页设置面板共用同一份状态。素材单格分辨率不限、等比缩放（atlas.scaling: smooth | pixelated）。v2.2 新增视频路线：喂一段视频（绿幕或普通素材都行），里面的真实动作直接变成宠物动作——自动取幕布色、色度抠像带溢色抑制、按运动量切分动作、并集包围盒对齐落格；也支持直接喂已经抽好的 PNG 帧（不需要装视频解码器），并能把视频原声按动作切成音效。宠物还可按 DPSL-1.0 分享协议发布到宠物社区，并从社区一键安装。\n\n仅收录 · Stellum-Waq · — · fun\n仅收录，不可安装\ndsh-pet\n\nDSH Web UI 桌面宠物：精灵图动画、agent 状态联动、拖拽、闹钟（每天/一次）与番茄钟，皮肤下拉选择 + 预览。\n\n仅收录 · zealot00 · — · ui\n仅收录，不可安装\ndsh-pet\n\n跟随 agent 状态的 DSH 原生桌宠，兼容 Codex 桌宠包，并可在插件内直接从 Petdex 导入已审核桌宠，无需 Petdex CLI。\n\n仅收录 · ysyyhhh · — · ui\n仅收录，不可安装\ndsh-pet-sprite\n\n聊天区里的像素小宠物：从蛋孵化三选一，也可用一句话描述让 LLM 画出自定义形象，自动在消息气泡间平台跳跃，支持 WASD 操控与拖拽，用已配置的模型角色扮演陪聊，养成系统（心情/电量/健康、等级、商店）由真实 token 消耗驱动。\n\n仅收录 · BlackBearCC · — · ui\n仅收录，不可安装\nsilverhand-dsh-pet\n\n添加可拖动的桌面宠物，响应代理状态，供娱乐。\n\n仅收录 · Qiao-NEYC · — · fun\n仅收录，不可安装\nplugin\n\n为DeepSeek Harness添加桌面宠物伙伴，带来趣味互动体验。\n\n插件 · LINNoot · — · fun\n安装\npet\n\n桌面宠物随 token 使用成长，含经验经济和自定义精灵图，增添趣味。\n\n插件 · mjw-git · — · fun\n安装\npet-desktop\n\n添加可自定义的像素风桌面宠物，可响应代理活动，并支持在 Web 界面或 Electron 伴生应用中使用。\n\n插件 · Luv061211 · — · fun\n安装\nplugin\n\n持久化桌宠，无需打开网页界面即可查看状态、切换会话、发送消息和处理工具审批。\n\n插件 · SundustYc · — · ui\n安装\ndsh-pet-diet\n\n减肥计划\n\n仅收录 · uckkk · — · tools\n仅收录，不可安装\ndsh-pets\n\n为 Web UI 添加桌面宠物和实时任务面板，娱乐化呈现。\n\n仅收录 · rikfish163-rgb · — · fun\n仅收录，不可安装\ndsh-pet\n\n🐾 DeepSeek Harness 桌宠插件\n\n插件 · levi52 · — · fun\n安装\ndsh-pet-sitting\n\n宠物寄养\n\n仅收录 · uckkk · — · tools\n仅收录，不可安装\ndsh-pet-pill\n\n宠物喂药\n\n仅收录 · uckkk · — · tools\n仅收录，不可安装\ndsh-pet-bath\n\n宠物洗澡频率\n\n仅收录 · uckkk · — · tools\n仅收录，不可安装\ndsh-pet-travel\n\n带宠出行\n\n仅收录 · uckkk · — · tools\n仅收录，不可安装\ndsh-pet-first-aid\n\n宠物急救药品\n\n仅收录 · uckkk · — · tools\n仅收录，不可安装\ndsh-pet-transport\n\n宠物托运\n\n仅收录 · uckkk · — · tools\n仅收录，不可安装\ndsh-pet-maid\n\n将助手变为桌宠，通过面板实时查看未来任务状态，并在对话后发送微信提醒。\n\n仅收录 · skylar-fei · — · fun\n仅收录，不可安装\ndsh-pet-bath2\n\n宠物洗澡\n\n仅收录 · uckkk · — · tools\n仅收录，不可安装\ndsh-pet\n\n一只常驻 DSH 界面的鲸鱼娘女仆长「会话监督挂件」。替主人监督 AI 助手的工作——读工具调用结果做证据，戳破\"口嗨式完成\"，用自然女仆口吻温柔纠偏，并一键给出可直接复制的修正 Prompt。标准 DSH bundle，代码+立绘自包含、开箱即用。\n\n插件 · ALKAERR · — · ui\n安装\nDSH-Pet-Companion\n\n为 DeepSeek Harness 提供一个可爱的动态桌面萌宠\n\n插件 · ToBeWin · — · fun\n安装\ndsh-pet-luotianyi\n\n洛天依桌宠：住在 DSH 里的虚拟歌姬桌宠，可拖动、可互动（抚摸/喂食/睡觉/聊天），预设动作 + 接大模型的 AI 聊天。\n\n仅收录 · bai111111 · — · fun\n仅收录，不可安装\ndsh-pet-in-frame\n\n在 DSH 界面中显示一个虚拟宠物，供娱乐。\n\n插件 · HarmlessFunny · — · fun\n安装\ndsh-pet-frieren\n\n在网页界面显示Q版芙莉莲桌面宠物，增添陪伴乐趣。\n\n仅收录 · dakeshui123 · — · fun\n仅收录，不可安装\ndsh-pet-food-amt\n\n每日食量\n\n仅收录 · uckkk · — · tools\n仅收录，不可安装\ndsh-pet-pack\n\n宠物旅行清单\n\n仅收录 · uckkk · — · tools\n仅收录，不可安装\ndsh-pet-StatusLight\n\nDeepSeek Harne",
+  "states": [
+    {
+      "state": "found",
+      "text": "已定位 dsh-pet，请确认条目后点击安装。"
+    }
+  ],
+  "exact": 4,
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/installedPlugins",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/hanamesh/library/target/consume",
+      "status": 202
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    }
+  ]
+}

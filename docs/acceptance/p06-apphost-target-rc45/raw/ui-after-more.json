@@ -1,0 +1,305 @@
+{
+  "label": "ui-after-more",
+  "url": "/",
+  "title": "DeepSeek Harness",
+  "body": "Into the Unknown\nPreview\nChoose workspace\nStandard mode\nChoose a workspace to start\nBack to app\nGeneral\nModels\nPlugins\n供应商\n市场目录源\nAgent presets\nExtension Management\nHanaMesh\nArchive\nSkills\nMCP\nMarket\nHanaMesh 市场\n搜索\n全部\n应用\n插件\nbrowser\ndev\ndocs\nfun\ngit\nmarket\nmemory\nmodel\nnotify\nremote\nsecurity\nsession\nskill\ntools\nui\nvision\nvoice\nworkflow\n\n已加载的结果里还没有 dsh，点『加载更多』继续查找\n\n已安装\n应用 · Contract fixture · @hanamesh/app-contract-fixture 0.0.4 · 已安装\n插件 · @hanamesh/lib-provision 0.1.0-rc.1 · 已安装卸载\n插件 · dsh-tauri 1.0.0 · 已安装卸载\n插件 · dsh-tauri-model-config 1.0.0 · 已安装卸载\n插件 · dsh-tauri-panel-extension 1.0.0 · 已安装卸载\n插件 · dsh-tauri-panel-scheduler 1.0.0 · 已安装卸载\n插件 · dsh-tauri-pet 0.1.0 · 已安装卸载\n插件 · dsh-tauri-rightclick 1.0.0 · 已安装卸载\n插件 · dsh-tauri-session 1.0.0 · 已安装卸载\n插件 · dsh-tauri-turnrewind 0.3.1 · 已安装卸载\n插件 · dsh-tauri-ui 1.0.0 · 已安装卸载\n插件 · dsh-tauri-worktree 1.0.0 · 已安装卸载\n插件 · hanamesh-core 0.2.0-rc.46 · 已安装\n插件 · zod 4.5.4 · 已安装卸载\nremote-control\n\n通过原生安卓客户端，实现从手机远程控制工具。\n\n插件 · SCSpotato · — · tools\n安装\ndsh-opencode-freeaccess\n\n把 DSH 会话 id 放到出站的模型请求上，使 OpenCode 免费额度接受这些请求：监听 llm/stream waterfall，并向 opencode 主机注入会话头族。无需 API key。已在 dsh 0.2.0-rc.2 上验证。\n\n仅收录 · mubaid · — · session\n仅收录，不可安装\ndsh-fluent-korean\n\n可切换的韩语输出风格：插件注册自己的系统提示段落，要求模型写出自然的韩语，并提供另一种不带编码指引的风格。规则文本来自 snflkd/fluent-korean，在 MIT 下逐字节保留。已在 dsh 0.2.0-rc.2 上验证。\n\n仅收录 · mubaid · — · tools\n仅收录，不可安装\ndsh-region-probe\n\n只读的 Cordis Inspect provider：让 agent 读到运行中的 Harness 壳实际渲染了哪些 UI 区域——outline() 列出每个区域的占用情况、几何与当前/历史失败状态，snapshot() 按 slot key 或 CSS 选择器返回某个区域的渲染节点树（标签、角色、aria-label、自身文本、几何、计算样式），failures() 维护本页的失败历史（哪些区域渲染失败过、失败几次、是否已恢复）。寻址用的是壳为每个 slot 已经写好的锚点，因此不需要区域清单，对以后 DSH 新增的区域或其他插件贡献的区域同样有效。无界面、无工具、无依赖、不发网络请求；每个回答都有界且只读。\n\n仅收录 · orphiczhou · — · ui\n仅收录，不可安装\npricewin-dsh\n\n通过 PriceWin 远程 MCP 服务实时比较 Booking.com、Agoda、Trip.com 和 Traveloka 的酒店与机票价格（美元），无需账号或 API Key，附带搜索 Skill。\n\n仅收录 · PriceDotWin · — · tools\n仅收录，不可安装\ndsh-macos-notify\n\n在任务完成、执行出错或等待审批时触发带提示音的 macOS 原生系统通知。\n\n仅收录 · nijika-boyfriend · — · notify\n仅收录，不可安装\ndsh-listener\n\n安全版本地语音输入插件 for DeepSeek Harness:同源宿主代理 + 127.0.0.1 + token,SenseVoice-Small INT8 ONNX 本地转写,音频不出网。\n\n插件 · Lanzgale · — · ui\n安装\ndsh-mini-remote\n\n给 DeepSeek Harness 用的极简手机遥控器：手机页面上只有你发出的指令和 AI 最后的结论，工具调用、文件读写、子 Agent 调度与思考过程全部留在电脑上；可通过内网、Tailscale 或 Cloudflare 隧道连接，每条路径各配二维码、链接和密码。\n\n插件 · xingzhen199186 · 0.1.8 · remote\n安装\ndsh-lan-gateway\n\n把 DSH Web GUI 发布到局域网/公网，dsh 仍只绑定回环。除显式开启局域网免密外，所有来源均须登录换取 HMAC 会话 Cookie。提供自签名或自定义 TLS、用于明文 HTTP 代理的 secureCookies 覆盖项，以及让局域网纯 HTTP 来源正常打开工作区的 UUID shim。\n\n插件 · rice-awa · 0.7.0 · remote\n安装\ndsh-home-hosted\n\n通过 home-hosted 让 dsh web 随开机自动启动：用随包固定版本的依赖运行该面板，安装或移除其开机自启项（systemd、launchd、XDG autostart、Windows 运行键或任务计划程序），并通过 dsh 设置页与 6 个 agent 工具管理其服务器、自启项与界面。\n\n插件 · NamesMT · 0.7.2 · dev\n安装\ndsh-time-machine\n\n创建本地内容寻址工作区存档，提供差异预览和两阶段确认恢复。\n\n插件 · zjukop · 0.1.0 · dev\n安装\ndsh-version-update\n\nDeepSeek Harness 版本管理：对照各 npm 通道或版本线查看已装版本，一键安装或降级，安装日志实时流出（回滚快照复制进度、npm 提取进度、已运行时长），从本地快照秒级回滚，用策略引擎（静默自动更新、执行时间窗、每日检查）托管整个流程。绝不在安装中途终止 npm——卡死的任务要等一小时才会停止，半提交的全局安装树会被自动检测并从安装前快照修复。检查到新版本时弹窗确认是否立即更新，安装后自动重启宿主，遇到 registry 不可达时自动回退到镜像。\n\n插件 · SuCriss · 1.4.3 · dev\n安装\ndsh-nexttavern\n\n面向 DeepSeek Harness 的角色扮演工作台：人物卡可以导入（SillyTavern／TauriTavern），也可以从零交互式写出一张；长篇 TXT 能改编成可玩的角色卡，精读或粗颗粒度两种读法；主代理按剧情主动查阅世界书，正文在独立的酒馆阅读 TAB 中呈现；同一对话里探索多条世界线（重新生成、改后发送、显式分支）；带作用域的文风预设（16 种自带文风）、角色 Agent 集群、独立决策卡，以及角色卡或小说导出；长篇由固定设定前缀、硬切上下文窗口、可追溯导演笔记与关键词／语义／混合检索撑住，嵌入可用在线服务，也可完全本地运行。面向 Harness 0.1.2-alpha.3，安装需按文档应用显式兼容补丁。\n\n插件 · a86582751 · 0.2.9 · fun\n安装\ndsh-perm-gate\n\nP0–P4 确定性优先权限门控，含 Permissive 档位、学习沉淀与审批历史 UI；凭据/受保护路径硬拒绝，内部只读工具自动放行。\n\n插件 · drscrewdriver · 5.0.4 · security\n安装\ndsh-tm-guard\n\nmacOS 上 DSH 智能体的零干预权限门：可经本地 git 或时间机器回滚的本地写操作自动放行，拦截网络、装包、进程控制与敏感路径读取，并记录完整审计日志。\n\n插件 · ChaoJie0 · 0.2.2 · security\n安装\ndsh-continual-evolve\n\n持续自进化：从会话轨迹沉淀版本化、可审计、可回滚的 harness 状态（提示词/记忆/技能/子代理规格），带审查门禁与技能热加载。\n\n插件 · ZK-Andy · 0.10.6 · dev\n安装\ndsh-market\n\n在 DeepSeek Harness 设置页内浏览、搜索并安装社区插件，支持分类筛选、一键更新与停用，以及主题切换与配置备份。\n\n插件 · dsh-market · 1.66.8 · market\n安装\ndsh-plugin-manager\n\n设置 → 插件里的插件管理页：已装插件中文名与白话描述、一键启停、界面内改备注，支持搜索与筛选。\n\n插件 · 2768651338 · 0.7.0 · market\n安装\ndeepseek-harness-vps\n\n一条命令把 DeepSeek Harness 部署到自有 VPS：零依赖登录网关加自动 HTTPS，反向代理原生 Web 界面，令牌保护的初始化向导，DSH 一键升级且失败自动回滚；作为插件在设置中新增「VPS 部署」页，显示版本、升级与网关状态，DSH 尚未上 VPS 时则给出一键部署命令。\n\n插件 · AIcivilization · 1.10.0 · remote\n安装\ndsh-mobile\n\n通过 Android App 或手机浏览器访问 DeepSeek Harness，支持安全局域网连接、远程访问、持久设备配对和可自定义移动界面。\n\n插件 · saya-ch · 0.5.3 · remote\n安装\ndsh-task-engine\n\n为 DeepSeek Harness 提供预设工程流程：dev_task 工具把阶段流转、产物、验证、审核与提交范围做成硬门禁，并带一个安装项目级与个人级技能和规则的工作台。\n\n插件 · godv61 · 0.29.3 · workflow\n安装\ndsh-notes-plugin#dsh-notes-plugin\n\nDeepSeek Harness 的会话感知本地笔记：在 Apple Notes 风格浮窗里快速记录与选区摘录，由 LLM 自动分类主题，把约定类笔记自动注入系统提示，待办可携带召回上下文派发到活跃会话执行。\n\n插件 · PPawnsir · 0.2.4 · workflow\n安装\ndsh-serverchan-watchdog\n\nDeepSeek Harness 的第三方 Server酱提醒插件：在主机端监控审批、计划评审和问答，超过设定时间仍未处理时发送手机提醒，无需保持浏览器打开。\n\n插件 · MaRi23333 · 0.1.5 · notify\n安装\ndsh-im-connect\n\n把微信、企业微信、钉钉、飞书、Lark、QQ、Telegram 接到本机 DeepSeek Harness，每个 IM 聊天对应一条独立工作区频道。\n\n插件 · MichengAI · 0.1.61 · notify\n安装\ndsh-acp-enhanced\n\n增强版 ACP 服务器：块级与推理流式、用量遥测、模型/推理强度切换、权限预设、会话恢复/归档、每会话 MCP servers、Zed 文件/终端转发。\n\n插件 · grunmin · 0.10.0 · notify\n安装\ndsh-im\n\n通过二维码或机器人凭据将 IM 机器人接入 DeepSeek Harness（支持飞书、微信、钉钉、企业微信、QQ、Slack、Telegram、Discord 和 WhatsApp 共 9 种渠道）。\n\n插件 · xmanrui · 4.34.1 · notify\n安装\ndsh-graph#dsh-graph-host\n\ndsh 目标生命周期管理与可视化看板：目标、判据、执行、评审都在项目内跟踪，由 graph_* 工具驱动，会话视图内渲染二维泳道看板。\n\n插件 · miuzel · 0.18.0 · workflow\n安装\ndsh-worktree-space\n\nWorktree Space：将一个可包含多个 Git 仓库的工作区任务放进独立的任务空间目录——参与的每个仓库使用同一个任务分支各开一个 worktree；空间自动注册为 DSH 工作区，会话直接在其中开工，多个任务并行推进、互不干扰。收尾时可合并回各仓库目标分支、移除 worktree，并把 Git 未跟踪的文件归档到指定目录；结束任务时可选把未提交的变更和合并冲突交给 agent 处理。\n\n插件 · kangtsang · 1.1.0 · git\n安装\ntask-board-plugin#dsh-agent-board\n\nDeepSeek Harness 会话任务看板：主窗口把任务派发给一次性 Worker/Verifier 子代理执行与验收，支持依赖调度、管线分档、歧义上报裁决与预研上下文注入。\n\n插件 · PPawnsir · 1.3.1 · workflow\n安装\ndsh-write-rule-guard\n\n在工具执行前拦截 edit/write 写入内容里匹配配置正则的字符，默认匹配全角圆括号，同一回合命中后连带拦截后续 pwsh，报错文案与正则均可配置。\n\n插件 · better-er · 0.3.3 · dev\n安装\ndsh-slack\n\nSlack 双向通信（notify/channels/inbox/reply/health 五工具），Socket Mode 免公网回调。\n\n插件 · STARDUSTLC666 · 0.3.3 · notify\n安装\ndsh-qqbot\n\n接入 QQ 官方机器人的 DeepSeek Harness 通道(tencent-connect/dsh-qqbot 功能增强 fork): 群/私聊与完整 agent 对话、表情包图库(自动打标+AI 斗图)、群管理(入群审批/禁言)、botplay 互动事件卡与翻页目录、用户扩展注册表(自定义斜杠命令与 QQ 工具)、定时唤醒、QQ 远程审批、悬浮球 dock Web UI。\n\n插件 · gcry13067381632-jpg · 1.5.31 · notify\n安装\ndsh-deepcanary\n\n面向 DeepSeek Harness 的证据优先注意力监督，提供 C0–C3 策略、去重 Inbox 提醒、静默时段和脱敏结果记录。\n\n插件 · Oscar-Williams · 0.1.4-rc.1 · notify\n安装\ndsh-cron\n\n为 DeepSeek Harness 提供定时任务、后台自动化与 Agent 执行。\n\n插件 · GooDAnDReaDY · 0.2.32 · workflow\n安装\nlunheng-article-pipeline-dsh\n\nDSH bundle 技能包：把深度长文生产（学术论文 / 行业分析 / 商业评论）拆成 9 角色流水线——T1 文献 / T2 数据 / T3 案例三线并行检索、T4 分析、T5 写作、T6 批判伙伴、T7 审计、T8 终检（主控亲执行）、T9 同行评审，跨 6 个阶段，含三角验证、M 门 23 项机械终检、G0-G14 独立审计（含中文 AI 痕迹闸）、审稿评分与期刊匹配，以及 4 个人在环节点。以 bundle 分发（`package.json#dsh.bundle.patch` + `lib/index.js` 入口注册技能），`dsh plugin add lunheng-article-pipeline` 即装；随包 T1-T9 角色卡、模板与 11 个零依赖校验脚本，README 五语。\n\n插件 · zuoyunlai · 18.62.4 · skill\n安装\ndsh-simple-worktree-plus\n\n为 DeepSeek Harness 管理 Git Worktree，提供分支删除控制和指定工作区管理。\n\n插件 · GitHub-Xzhi · 1.1.2 · git\n安装\ndsh-suite\n\nSTARDUSTLC 插件全家桶·组合补丁：与 18 个组件插件配套，一条命令统一注入默认配置（办公流/媒体工坊/DevOps/通知/预设）；组件经一行 add 命令直装（扁平化设计，无 git 子依赖）。\n\n插件 · STARDUSTLC666 · 0.2.10 · workflow\n安装\ndsh-runninghub-api\n\n在对话中运行 RunningHub 云端 ComfyUI 工作流：设置卡片、sha256 媒体上传缓存、并发闸门与后台任务台账。\n\n插件 · lucyTrump · 0.1.6 · workflow\n安装\ndsh-web-ding\n\nagent 回合结束时在浏览器标签页里播放一声合成的叮,纯前端 Web Audio 发音,不经过后端、不弹系统通知。\n\n插件 · falling-ts · 0.6.2 · notify\n安装\ndsh-hold-to-talk\n\n输入框上的单手、免键盘输入：鼠标在输入框按住、说话、松手，文字直接进草稿；上滑取消，不留半句。不用去瞄麦克风按钮，也不用记快捷键，手始终不用离开输入区——另一只手正忙的时候，这一点才是关键。识别完全在本机完成（SenseVoice + sherpa-onnx），无需 API key，音频不出本机。\n\n插件 · wangzhanchao883 · 0.1.4 · voice\n安装\ndsh-mattpocock-skills-deck\n\n安装即自带mattpocock/skills v1.2.3的25个工程与效率技能，无需手动装技能。300亿token打造。本插件在原始技能之上提供10倍的开发效率。主力支持GitHub issue；Markdown为预览版；GitLab暂不支持。\n\n插件 · FeatherHunter · 1.7.38 · skill\n安装\ndsh-web-fetch-playwright\n\n为内置 web_fetch 工具提供 Playwright/CDP 后端：用真实浏览器渲染网页，经 Readability + DOMPurify 降噪后返回 Markdown。\n\n插件 · chendefine · 0.2.10 · browser\n安装\ndsh-skills-anywhere\n\n实时技能提供器：把 60+ 个其他 Agent（Claude Code、Codex、Cursor、Gemini CLI、Copilot）的技能目录、Claude Code 插件市场以及任意 git 技能仓库中的技能接入 dsh 目录，零拷贝零软链接；自动去重、修复 frontmatter、处理同名冲突，并附带 CLI（list、add、sync、doctor）。\n\n插件 · noteflowai · 0.17.0 · skill\n安装\nVibe-Mathematics\n\n为 DSH 安装四个多代理数学研究预设：v2（概率驱动流水线 + 多验证器辩论）、v3（论文式 Markdown 知识库 + 规划代理 + 可复用方法库）、v4（常驻自组织成员，靠留言与开会决定一切）、v5（研究所：院士拆解并分派任务、有表决权的研究员、临时工、群聊与 CAS 任务板）；四套均支持断点续跑、人工干预，以及可调档的 Lean 形式化验证（off/encourage/require，一旦跑通，表决转为对 Lean 陈述的忠实性核对）。\n\n插件 · ChongCyrus · 2.7.2 · workflow\n安装\ndsh-voice-call\n\nDSH Web GUI 的个人语音通话助手：可拖拽悬浮球通话面板、浏览器端 VAD（停顿自动发送）、FunASR HTTP 或流式语音识别、MiniMax / OpenAI 兼容 TTS 语音回复、可开关的唤醒词模式（沉默自动休眠），以及把任务分发给独立子代理会话并跟踪进度、停止与完成播报。\n\n插件 · biliye · 0.4.0 · voice\n安装\ndsh-voice\n\nWeb UI 语音输入：按停顿分段的听写与语音消息，各自拥有独立的服务商回退链（Deepgram、Groq、HuggingFace、本地 whisper.cpp 或 OpenAI 兼容接口）。\n\n插件 · GooDAnDReaDY · 0.9.10 · voice\n安装\ndsh-prompt-system\n\n输入框内的提示词优化器：结合对话历史、工作区文件与会话选定模型，把草稿改写为十一节分析式提示词，支持一键撤销。\n\n插件 · yuloong07-star · 0.1.0 · tools\n安装\ndsh-browser\n\nDSH Web 与 Desktop 端的内置浏览器：为 DeepSeek Harness (DSH) 提供的 AI 原生浏览器工作区，融合了多标签浏览、实时页面批注、轻量级代码编辑、工作区预览，以及跨网页和桌面的智能助手辅助迭代功能。\n\n插件 · Nono-neko · 0.4.0 · browser\n安装\ndsh-skills-manager-plugin\n\n根据提示词自动激活已安装的 Skill，应用 Skill 声明的生命周期 Hook 与工具策略，并通过设置页或 skill_manager 工具管理 GitHub 托管的 Skill。\n\n插件 · Wisdoverse · 1.0.6 · skill\n安装\nskills-management\n\n技能市场：一个页面管理本机所有 coding agent 的技能，一键收编进 DSH 用户库；内置 6600+ 技能市场，支持注入开销（≈token）统计与模型可见性治理。\n\n插件 · weibaohui · 0.9.0 · skill\n安装\ndsh-vision-toolkit\n\n让纯文本模型处理视觉任务：粘贴图片后自动切换到 Vision Toolkit 变体，支持图片问答、多图比较、长截图 OCR、截图还原前端 UI、元素定位与像素对比。默认无需 API Key——图片经作者自建的免费服务处理，每台机器每天 100 张；也可改为指向自己的服务商。\n\n插件 · Anionex · 0.1.46 · vision\n安装\nbrewreel#deepseek-harness\n\n从分镜 JSON 生成 1080×1920 竖版宣传片，含 7 个工具（doctor、setup、catalog、guide、validate、render、verify），用 Remotion 本地渲染。\n\n插件 · Finderchangchang · 0.3.0 · skill\n安装\ndsh-search-enhance\n\n提供 Grok-compatible 网页搜索、保留来源分页、Context7 与 Exa 文档检索、有界网页提取、站点映射、离线研究计划和只读诊断。\n\n插件 · umineko987 · 0.2.1 · browser\n安装\ndsh-office-tools\n\n面向 agent 的工作区安全 Office 工具集：创建/读取 Word、创建/读取/更新 Excel、创建/读取 PowerPoint，并支持 PNG/JPG/GIF 图片排版。\n\n插件 · kw78 · 1.0.5 · docs\n安装\ndsh-vision-router\n\n为纯文本 Agent 提供视觉能力：内置免 Key 视觉链 + 像素级视觉工具（看图问答、定位、裁剪、像素对比、取色、OCR、矢量化、抠图、截图）；粘贴图片即可用。\n\n插件 · ysr666 · 2.3.0 · vision\n安装\ndsh-web-search-openrouter\n\n内置 web_search 每次搜索都要在 DeepSeek 自己的端点上消耗一整轮模型调用；本插件改为在 OpenRouter 兼容网关上执行搜索，与对话走同一个账户，模型和价格都由你决定。\n\n仅收录 · vitas · — · browser\n仅收录，不可安装\ndsh-run2skill\n\n将 DSH 会话中明确表达的经验整理为可审核的原生 Skill 草稿，并仅在用户确认后保存。\n\n插件 · qkycir-123 · 0.5.0-alpha.4 · skill\n安装\ndsh-ppt\n\n演示文稿技能与工具：一句话或一篇文档生成 HTML 放映与可编辑 PPTX，7 种页型（含金句与原生 PPTX 表格），演讲者备注（HTML 按 S 呼出 + PPTX 原生备注页），内置 5 套主题，可配置默认主题/语言，中英双语。\n\n插件 · STARDUSTLC666 · 0.6.0 · docs\n安装\ndsh-ponytail\n\nDietrichGebert/ponytail v4.9.0 的 DSH 完整移植：常驻懒人 senior 模式与七阶梯子（YAGNI 到最小实现），含 6 个技能（评审、审计、债务、收益、帮助）且无空 tool。\n\n插件 · Wenaixi · 4.10.0-dsh.3 · skill\n安装\ndsh-taskboard\n\ndsh 的任务看板：创建任务时可指定项目与模型，支持手动执行及定时执行；项目内新建会话会自动拉取该项目的待办任务，完成后移至待验收。\n\n插件 · cloader · 0.8.7 · workflow\n安装\ndsh-free-search\n\nDSH 免费搜索插件：7 个引擎（DuckDuckGo/Bing/SearXNG 免费 + Exa/Perplexity/DeepSeek 付费）、自动回退、设置页 UI（API key 输入 + 官网链接）、web_fetch、引擎测试工具。\n\n插件 · DDDMUC · 0.6.6 · browser\n安装\ndsh-personal-workbench\n\n日历 + 层级任务个人工作台：AI 辅助澄清、咨询、拆解、执行（用户验收）与复盘，支持到期提醒与按任务组织的 AI 会话工作区。\n\n插件 · Dely0 · 1.16.1 · workflow\n安装\ndsh-plugin-roundtable\n\n把 DeepSeek Harness 会话变成可视化圆桌会议：环形专家拓扑、连线协作、汇聚网关、代理思考，以及「针锋相对」红队评审（观点支持/驳回）。\n\n插件 · 9931666 · 1.0.0-rc.2 · workflow\n安装\ndsh-web-search-bing\n\n为内置 web_search 工具提供 Bing 搜索源：直接解析 cn.bing.com 的公开 HTML 结果页，无需 API Key，国内可直连，搜索不再消耗模型自带的搜索额度。端点可配置。\n\n插件 · godchen520 · 1.2.2 · browser\n安装\ndsh-data-insight\n\n把原始数据（CSV / 粘贴表格 / SQL 结果 / DuckDB）转成带业务结论、指标与图表的结构化 Markdown 报告。\n\n插件 · duyanta123 · 0.1.6 · docs\n安装\ndsh-superpower\n\nobra/superpowers 的 DSH 完整移植：通过原生 SkillProvider（rank 550）注入 14 个方法论技能，覆盖需求澄清、计划拆解、TDD、系统化调试、并行分发等，文档全中文化，开箱即用、零构建安装。\n\n插件 · Wenaixi · 7.0.1 · skill\n安装\ndsh-calendar\n\nCalDAV 日历插件：查/建/改/删/搜日程与健康自检，Google/iCloud/Nextcloud/自定义端点，RRULE 重复事件展开；设置页内置月/周/议程面板，连接可在面板内填写并先测后存，周视图支持拖拽改期（15 分钟吸附、5 秒撤销）。\n\n插件 · STARDUSTLC666 · 0.9.3 · tools\n安装\ndsh-tracescope#dsh-tracescope\n\nDSH 右侧栏插件：对比两个 git 提交，根据影响面生成手测清单，支持失败备注、截图、任务附件，以及向云效 / GitHub / GitLab / Webhook 提交缺陷。\n\n插件 · rebornace · 0.2.3 · tools\n安装\ndsh-patch-edit-plus\n\n补丁风格文件编辑：单个 apply_patch 工具，接受 git/unified diff（默认）与 Codex apply_patch 语法（可选开启），在完整只读校验后全量原子应用；删除与移动走沙箱感知路径，并提供 dry-run 模式。\n\n插件 · drscrewdriver · 0.3.2 · tools\n安装\ndsh-disk-manager\n\n扫描整 C 盘,把每个大空间按 A/B/C/D/E/P 分类(无忧缓存/官方可改址/可junction搬/冷废弃软件/配置记忆红线/个人文件),再按需删缓存/junction搬走/引导改址,带强红线保护、dry-run 预览与 undo。未知软件由 LLM 兜底 + 人工确认,动手前先预览、做完可回滚。\n\n插件 · wangzhanchao883 · 0.1.3 · tools\n安装\ndsh-db-tool\n\nDeepSeek Harness 社区插件：在对话中直接管理多数据库（MySQL、PostgreSQL、GaussDB、MongoDB、Redis、Oracle、达梦、SQLite），支持项目级 ro/rw 授权、侧边栏管理面板、结构浏览与数据预览，危险操作需确认后执行。\n\n插件 · mengqi1436 · 1.5.3 · tools\n安装\ndsh-rss\n\nRSS/Atom 订阅九工具（管理/校验/抓取解析/跨订阅搜索/增量抓取/OPML 导入导出/健康自检），游标增量抓取，订阅持久化到 settings。\n\n插件 · STARDUSTLC666 · 0.4.3 · tools\n安装\ndsh-plugin-tool-management\n\nDSH 插件：一个设置面板，统一管理 MCP 服务器、技能、场景、记忆、子智能体人格、AGENTS.md 预设与归档会话——一个场景即可切换整个环境，模型也能帮你驱动这一切。\n\n插件 · ouli-1242 · 0.18.0 · tools\n安装\ndsh-image-gen\n\n提供 generate_image 工具，可接入 FAL 队列、任意 OpenAI 兼容图像 API 或 ChatGPT/Grok 订阅，并在对话中内联显示结果。\n\n插件 · GooDAnDReaDY · 0.11.21 · tools\n安装\ndsh-screenshot-capture\n\n指哪拍哪截图入库：系统级悬浮窗把新截图（或复制图片）一键存入 Obsidian 笔记，支持注释与「重点」标记、通义千问即时 OCR、按天合并，并可在晚间用 AI 整理归类、打双链并生成当日总结。\n\n插件 · wangzhanchao883 · 0.2.4 · tools\n安装\ndsh-resume-screening\n\n面向 HR 的简历筛选插件:把 Word/PDF/Excel 简历统一收进简历库建档(技能/粗分类/入库时间),新简历自动入库、重复自动去重;用大白话下指令即可筛选,硬性条件靠库内规则精准过滤,入围的少数人再由 LLM 精判适配度,结果可导出、可追溯。\n\n插件 · wangzhanchao883 · 0.1.5 · tools\n安装\ndsh-mcp-bridge\n\nDeepSeek Harness 的 MCP 服务器安装与验证工具：交互式 init 会把真实 patch 条目写进 profile，list 与 validate 检查配置，CI 强制的验证器逐个连接精选服务器。\n\n插件 · Edge-Echo · 0.2.1 · tools\n安装\ndsh-gitbash-shell\n\nWindows 插件：将宿主 shell 执行器换成 Git for Windows bash（全部 Agent 模式生效），并物化标准/极简/PTC/创造四个 Git Bash 预设变体（逐文件 sha256 标记、用户修改保留）；发布 gitBash 能力服务，让配套预设自动选用 Git Bash；若装有 dsh-better-sidebar，还会通过对方官方设置补丁口把其终端（UI 标签与模型 terminal_* 工具）一并切到 Git Bash。\n\n插件 · KannaKuron · 0.33.0 · tools\n安装\ndsh-computer-use\n\nmacOS 电脑控制：Accessibility 观测、过期状态拒绝、作用域权限与安全输入。\n\n插件 · Anionex · 0.3.3 · tools\n安装\ndsh-logcat\n\nDSH Web GUI 安卓实机调试工作台：自动附加 logcat 流（级别/关键词过滤、崩溃自动快照），真机屏幕实时投屏与远程点击/滑动/文字操控，内存/进程/frida 逆向工具链，30 个 agent 工具。\n\n插件 · WindyPro-rourou · 0.8.1 · tools\n安装\nDSH-FormatForge#dsh-formatforge\n\nFormatForge：把 30+ 种文件格式（PDF、DOCX、PPTX、XLSX、EML、EPUB、TOML、压缩包）锻造成 AI 可读文本——网页拖拽入箱自动转换，提供 ff_translate/ff_formats/ff_result 工具与 CLI；扫描件回退本地 OCR 或交给会话模型增强。\n\n插件 · Tianbuyu-wwx · 2.0.2 · tools\n安装\ndsh-plugin-gating-hub\n\nDSH 框架升级安全与插件升级门控：升级前跑「会话格式契约预检」（把不兼容的插件与 agent 预设扫出来先适配）、升级失败自动回滚、把拖垮过启动的插件自动隔离；另有环境指纹与公开契约规则库持续守门。内置多源插件市场只作发现层。\n\n插件 · Noob-stupid · 0.5.34 · tools\n安装\ndsh-word-vault\n\n一个或多个孩子的英语生词库：课本/作业照片上被荧光笔或红笔标出的词按标记找出来，翻译后进本机 SQLite，并累计出现次数；剪贴板点选、拍照、对话三种录入进的是同一本库。高频词按次数浮现，连对三次自动标记「已学会」；勾选任意若干词可出记忆卡（拆解块 + 每块真实 IPA 音标 + 荒诞梗，A4 每页 8 张），输出 HTML/PDF/Word，并可出一份四选项按词义互斥的打印试卷作答。 需要 DSH 0.1.7 及以上（1.0.3 起改用 0.1.7 的设置契约）；在 0.1.5 上设置面板不会出现，可改装 dsh-word-vault@1.0.2。\n\n插件 · wangzhanchao883 · 1.0.5 · tools\n安装\ndsh-ecolink#adapter\n\ndsh-ecolink 记忆生态的 dsh 侧组件：浏览器扩展收割 DSM 格式记忆标签并向网页对话注入回忆、零依赖本地服务写入共享记忆池、本 adapter 负责 pre-step 注入与 /ecolink-push 写回，共同打通 chat.deepseek.com 与 DSH；压缩为事务化双池（暂存提交/回滚）。\n\n插件 · Zoria-Lind · 0.2.1 · memory\n安装\ndsh-lost-and-found\n\n本地文件记忆索引：把指定的文件夹记进本机一个 SQLite 库，忘了东西放哪问一句就能找回，不必翻硬盘；缓存、版本库与程序目录整棵跳过。每个目录各有独立增量锚点，后加入的目录首扫回填全部历史。只读，绝不修改、移动或删除你的文件。\n\n插件 · wangzhanchao883 · 0.1.5 · tools\n安装\ntool-guardian\n\n用三个路由工具（list_capabilities、describe_tool、call_tool）代理 stdio MCP 服务器，schema 按需加载，不再随每次请求发送；所有工具结果经过确定性输出阶梯压缩，有损处理前先归档原文（retrieve_spill 可读回）；按 token 为工具分组标价，并可按 agent 隐藏内置分组。桥接到纯标准库的 Python 路由器，需要 Python 3.9+。\n\n插件 · LuminariSoftwares · 0.4.0-beta.2 · tools\n安装\ndsh-cos\n\n提供 COS 云存储浏览与传输、工作区产物上传、临时链接，以及同时保留本地副本和云端对象身份的会话附件，并提供腾讯云 COS、数据万象和 MetaInsight 的 Agent 工具。\n\n插件 · annexwu · 0.3.1 · tools\n安装\ndsh-iris\n\n面向 DeepSeek Harness 的媒体与视觉工作台：文生图、图/文生视频、语音合成与转写、图像问答与元素定位、长图 OCR、像素比对、HTML 截图验证、视频摘要；支持 DashScope 与 OpenAI 兼容供应商，含模型池与工作台客户端。\n\n插件 · mokuyoaxis · 0.2.0 · tools\n安装\ndsh-zotero\n\n面向 Agent 研究工作流的 Zotero 插件：搜索文献、查看元数据与笔记、提取与问题相关的证据段落、打开原文 PDF、生成引用与参考文献表。\n\n插件 · Vncntvx · 0.12.1 · tools\n安装\nOpenViking#examples/dsh-memory-plugin\n\n面向 DeepSeek Harness 的 OpenViking 记忆与上下文插件：pre-step 自动召回与画像注入、会话捕获、`viking://` URI 防护，以及对接 OpenViking 服务端的 recall/write 记忆工具。\n\n插件 · volcengine · 0.5.12 · memory\n安装\ndsh-rollback\n\nTRAE 式「回退到本轮对话发起前」插件：按轮次建立检查点（10 轮滑动窗口），同时回滚工作区文件与原位截断模型上下文，保持同一 session id。回退只能由人发起：/rollback 命令或每轮的 Web 回退按钮（被中断的轮次也可用），弹窗逐条列出受影响文件及其动作（恢复/找回/删除/跳过）。\n\n插件 · domitor-syh · 0.4.0 · session\n安装\ndsh-oh-my-claude\n\n把已登录的 Claude Code CLI 作为 dsh 的模型提供商：实时模型列表、按会话恢复、审批中转、图片、记忆/回退/变更面板，以及远程 SSH 主机上的工作区。\n\n插件 · lcestou · 1.5.2 · model\n安装\ndsh-workbuddy-xdpool\n\n把本机 WorkBuddy 桌面 App 登录过的所有账号自动并入 DSH 模型池：多账号轮换自动容错、实时积分，模型目录按模型标注积分倍率与限时免费 / 夜间折扣。\n\n插件 · XDTrees · 1.7.8 · model\n安装\ndsh-search-index\n\n自带独立索引的侧边栏会话搜索（不再复用 DSH 官方全文索引）：一处入口在标题与内容检索间切换，结果按会话聚合，附最强命中片段与 用户/回复/工具 类型标签；水位驱动增量同步、按归档集合清理已归档会话，整理走影子索引不阻塞在用索引。\n\n插件 · drscrewdriver · 0.6.4 · session\n安装\ndsh-ai-memory\n\nDeepSeek Harness 与 ai-memory 之间的记忆桥梁：DSH 会话结束时调用 ai-memory 的 finalize-session，把已捕获的观察记录转成可检索的 wiki 页面。跳过子代理、排队处理并发结束的会话，并清扫因强制重启而遗留的会话。 需自行安装并运行 ai-memory 服务，并手工接好 DSH 生命周期钩子（ai-memory 自带的 install-hooks 不支持 DSH）；本插件只负责把已经捕获的会话落地成 wiki 页面。\n\n插件 · rasyidmmz · 1.1.1 · memory\n安装\ndsh-maze\n\n执行迷宫：把智能体真实的执行过程——主干推进、失败或扑空的支路、折返、请求重试与子代理分支——画在同一根墙钟时间轴上；泳道下方是与它共用时间轴的三条数据轨道（工具调用密度、Token 脉冲、上下文压力），再下方是确定性的执行分析面板（工具结果矩阵、失败恢复链、耗时分布）；可在会话页签里实时生长，也可上传最多 5 个 session log 做同轴对比。\n\n插件 · lamost423 · 2.3.0 · session\n安装\ndsh-thinking-effort\n\n为 DSH 自定义模型配置思考档位和子 agent 默认思考强度。\n\n插件 · hytime · 0.3.7 · model\n安装\ndsh-codex-subscription\n\n通过 ChatGPT OAuth 在 DSH 中使用 Codex 模型，提供订阅联网搜索、额度与安全重置、图片工具、高速模式和模型感知上下文；无需 API Key 或 Codex CLI。\n\n插件 · WSL043 · 2.5.1 · model\n安装\ndsh-archive-manager\n\n在设置里增加已归档会话页，可按工作区搜索、恢复和删除已归档会话。\n\n插件 · MichengAI · 1.0.11 · session\n安装\ncontext-guardian\n\n为 compaction-basic 提供压缩兜底：当 LLM 摘要抛错、返回空内容或放不进上下文窗口时，改为确定性编译该区段，每行带 seq 指针（内置 dsh-compaction-instant 编译器）。提供 recall、search 工具与 /recall、/context 命令，占用超过窗口 45% 时空闲自动压缩，并将被压缩区段归档到磁盘。引擎以一行配置挂载到 agent preset（见 docs/dsh-integration.md）。\n\n插件 · LuminariSoftwares ",
+  "buttons": [
+    "",
+    "",
+    "New Session",
+    "",
+    "",
+    "",
+    "HanaMesh",
+    "Settings",
+    "Choose workspace",
+    "Standard mode",
+    "",
+    "",
+    "",
+    "Back to app",
+    "General",
+    "Models",
+    "Plugins",
+    "供应商",
+    "市场目录源",
+    "Agent presets",
+    "Extension Management",
+    "HanaMesh",
+    "Archive",
+    "Skills",
+    "MCP",
+    "Market",
+    "Open skills folder",
+    "Import repository",
+    "New skill",
+    "",
+    "搜索",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "安装",
+    "更多"
+  ],
+  "states": [
+    {
+      "state": "not-on-loaded-pages",
+      "text": "已加载的结果里还没有 dsh，点『加载更多』继续查找"
+    }
+  ],
+  "exact": 0,
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/installedPlugins",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/hanamesh/library/target/consume",
+      "status": 202
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/hanamesh/library/target/consume",
+      "status": 202
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/hanamesh/library/target/consume",
+      "status": 202
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    }
+  ]
+}

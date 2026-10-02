@@ -1,0 +1,5 @@
+
+> @hanamesh/dsh-app-host@0.1.0-rc.45 check:consistency
+> node scripts/check-consistency.mjs
+
+X01 PASS: 4 groups, 4 boundaries

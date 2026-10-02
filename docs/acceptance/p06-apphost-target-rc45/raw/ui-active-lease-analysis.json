@@ -1,0 +1,66 @@
+{
+  "gate": "T11 active UI lease and iframe continuity from raw Chrome snapshots",
+  "rows": [
+    {
+      "step": "ui-active-open",
+      "instanceId": "0a1a6f09-0164-4caf-b2da-ae0e6248819b",
+      "instanceStatus": "ready",
+      "activeViewIds": [
+        "hml-01116520-20ec-44be-b330-83b90bb806e9",
+        "hml-370e266f-81ed-4fb9-8ac2-7ea4d57aa533"
+      ],
+      "newestActiveViewId": "hml-370e266f-81ed-4fb9-8ac2-7ea4d57aa533",
+      "iframeSrc": "http://127.0.0.1:57482/__hanamesh_bootstrap/<redacted>",
+      "iframeVisible": true,
+      "exactVisibleIds": []
+    },
+    {
+      "step": "ui-active-found",
+      "instanceId": "0a1a6f09-0164-4caf-b2da-ae0e6248819b",
+      "instanceStatus": "ready",
+      "activeViewIds": [
+        "hml-01116520-20ec-44be-b330-83b90bb806e9",
+        "hml-370e266f-81ed-4fb9-8ac2-7ea4d57aa533"
+      ],
+      "newestActiveViewId": "hml-370e266f-81ed-4fb9-8ac2-7ea4d57aa533",
+      "iframeSrc": "http://127.0.0.1:57482/__hanamesh_bootstrap/<redacted>",
+      "iframeVisible": true,
+      "exactVisibleIds": [
+        "p06-pet-exact-1",
+        "p06-pet-exact-2"
+      ]
+    },
+    {
+      "step": "ui-active-protected",
+      "instanceId": "0a1a6f09-0164-4caf-b2da-ae0e6248819b",
+      "instanceStatus": "ready",
+      "activeViewIds": [
+        "hml-01116520-20ec-44be-b330-83b90bb806e9",
+        "hml-370e266f-81ed-4fb9-8ac2-7ea4d57aa533"
+      ],
+      "newestActiveViewId": "hml-370e266f-81ed-4fb9-8ac2-7ea4d57aa533",
+      "iframeSrc": "http://127.0.0.1:57482/__hanamesh_bootstrap/<redacted>",
+      "iframeVisible": true,
+      "exactVisibleIds": []
+    },
+    {
+      "step": "ui-active-unavailable",
+      "instanceId": "0a1a6f09-0164-4caf-b2da-ae0e6248819b",
+      "instanceStatus": "ready",
+      "activeViewIds": [
+        "hml-01116520-20ec-44be-b330-83b90bb806e9",
+        "hml-370e266f-81ed-4fb9-8ac2-7ea4d57aa533"
+      ],
+      "newestActiveViewId": "hml-370e266f-81ed-4fb9-8ac2-7ea4d57aa533",
+      "iframeSrc": "http://127.0.0.1:57482/__hanamesh_bootstrap/<redacted>",
+      "iframeVisible": true,
+      "exactVisibleIds": []
+    }
+  ],
+  "pass": true,
+  "redaction": {
+    "field": "iframe.src bootstrap capability",
+    "srcSha256": "33a9479a8b6ee3237297f706c2094937de7ad9a2135136abe291a984dd28669b",
+    "reason": "lease bootstrap capability removed from committed evidence"
+  }
+}

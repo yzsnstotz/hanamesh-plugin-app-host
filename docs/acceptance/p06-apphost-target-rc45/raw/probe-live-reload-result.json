@@ -1,0 +1,154 @@
+{
+  "gate": "rc43 v2 fixture live unregister/re-register on rc44",
+  "before": {
+    "apps": [
+      "contract-fixture"
+    ],
+    "instances": [
+      {
+        "appId": "contract-fixture",
+        "status": "stopped"
+      }
+    ],
+    "views": [
+      {
+        "viewId": "hml-01116520-20ec-44be-b330-83b90bb806e9",
+        "status": "expired"
+      },
+      {
+        "viewId": "hml-370e266f-81ed-4fb9-8ac2-7ea4d57aa533",
+        "status": "expired"
+      }
+    ]
+  },
+  "ready": {
+    "apps": [
+      "contract-fixture"
+    ],
+    "instances": [
+      {
+        "appId": "contract-fixture",
+        "status": "ready"
+      }
+    ],
+    "views": [
+      {
+        "viewId": "hml-01116520-20ec-44be-b330-83b90bb806e9",
+        "status": "expired"
+      },
+      {
+        "viewId": "hml-370e266f-81ed-4fb9-8ac2-7ea4d57aa533",
+        "status": "expired"
+      },
+      {
+        "viewId": "p06-live-335d1e702b264c039bad4928de0eb7d4",
+        "status": "active"
+      }
+    ]
+  },
+  "disabled": {
+    "apps": [],
+    "instances": [
+      {
+        "appId": "contract-fixture",
+        "status": "stopped"
+      }
+    ],
+    "views": [
+      {
+        "viewId": "hml-01116520-20ec-44be-b330-83b90bb806e9",
+        "status": "expired"
+      },
+      {
+        "viewId": "hml-370e266f-81ed-4fb9-8ac2-7ea4d57aa533",
+        "status": "expired"
+      },
+      {
+        "viewId": "p06-live-335d1e702b264c039bad4928de0eb7d4",
+        "status": "stopped"
+      }
+    ]
+  },
+  "restored": {
+    "apps": [
+      "contract-fixture"
+    ],
+    "instances": [
+      {
+        "appId": "contract-fixture",
+        "status": "stopped"
+      }
+    ],
+    "views": [
+      {
+        "viewId": "hml-01116520-20ec-44be-b330-83b90bb806e9",
+        "status": "expired"
+      },
+      {
+        "viewId": "hml-370e266f-81ed-4fb9-8ac2-7ea4d57aa533",
+        "status": "expired"
+      },
+      {
+        "viewId": "p06-live-335d1e702b264c039bad4928de0eb7d4",
+        "status": "stopped"
+      }
+    ]
+  },
+  "result": "PASS",
+  "readyAgain": {
+    "apps": [
+      "contract-fixture"
+    ],
+    "instances": [
+      {
+        "appId": "contract-fixture",
+        "status": "ready"
+      }
+    ],
+    "views": [
+      {
+        "viewId": "hml-01116520-20ec-44be-b330-83b90bb806e9",
+        "status": "expired"
+      },
+      {
+        "viewId": "hml-370e266f-81ed-4fb9-8ac2-7ea4d57aa533",
+        "status": "expired"
+      },
+      {
+        "viewId": "p06-live-335d1e702b264c039bad4928de0eb7d4",
+        "status": "stopped"
+      },
+      {
+        "viewId": "p06-live-2-239de59cecb14a4d88a70e231fc9953c",
+        "status": "active"
+      }
+    ]
+  },
+  "events": {
+    "count": 21,
+    "duplicateSequences": 0,
+    "types": [
+      "view.opened",
+      "instance.starting",
+      "instance.ready",
+      "view.opened",
+      "view.opened",
+      "view.expired",
+      "view.expired",
+      "instance.stop-requested",
+      "instance.stopped",
+      "view.opened",
+      "instance.starting",
+      "instance.ready",
+      "instance.stop-requested",
+      "view.stopped",
+      "instance.stopped",
+      "view.opened",
+      "instance.starting",
+      "instance.ready",
+      "view.closed",
+      "instance.stop-requested",
+      "instance.stopped"
+    ]
+  }
+}

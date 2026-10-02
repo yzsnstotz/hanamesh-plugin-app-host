@@ -1,0 +1,20 @@
+{
+  "gate": "T04 complete-auth exploration",
+  "source": "real DSH 34984, --skip-auth absent",
+  "at": "2026-10-02T23:27:37.253316+00:00",
+  "pid": 67662,
+  "checks": [
+    {
+      "label": "no-cookie",
+      "status": 401,
+      "code": "UNAUTHENTICATED"
+    },
+    {
+      "label": "invalid-cookie",
+      "status": 401,
+      "code": "UNAUTHENTICATED"
+    }
+  ],
+  "authorizeBranch": "PARTIAL",
+  "reason": "DSH web session exposes only one authenticated browser principal; app-host browserAuthentication maps every accepted session to BROWSER_PRINCIPAL, which authorize accepts. A different authenticated principal cannot be created through this HTTP chain without changing auth code or test faking a connection. Unit tests cover authorize 403."
+}

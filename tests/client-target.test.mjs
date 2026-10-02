@@ -55,13 +55,13 @@ test('P06A-T08/T10: failure backs off 5000 ms then resumes 1000 ms, protected an
 test('P06A-T11: a target leaves an already open application view lease mounted',async t=>{
   const clock=fakeClock(),calls=[];
   const row={appId:'fixture-app',state:'registered',packageName:'fixture-app',definition:{deployments:[{id:'local'}]}};
-  const page={items:[{...exact,installed:row,kind:'application'}],installed:[row],page:{nextCursor:null}};
+  const page={items:[{...exact,installed:row,kind:'application'},second,substring],installed:[row],page:{nextCursor:null}};
   const receipt={instance:{id:'instance-1',appId:'fixture-app',status:'ready'},lease:{viewId:'view-1',expiresAt:clock.now()+90_000},leaseToken:'fixture-token',uiUrl:'http://127.0.0.1:50001/'};
-  let target=null;
+  let target=null,client,visibleAtConsume=false;
   const fetch=async(path,init={})=>{
     calls.push({path,body:init.body?JSON.parse(init.body):null});
     const value=path==='/hanamesh/library/target'?{target}:
-      path==='/hanamesh/library/target/consume'?{consumed:true}:
+      path==='/hanamesh/library/target/consume'?(visibleAtConsume=Boolean(client.find(node=>node.props?.['data-hanamesh-library-item']==='exact-1'&&node.props?.['data-hanamesh-target']==='exact')&&client.find(node=>node.props?.['data-hanamesh-library-item']==='exact-2'&&node.props?.['data-hanamesh-target']==='exact')),{consumed:true}):
       path.startsWith('/hanamesh/library?')?page:
       path==='/apps/open'?receipt:
       path==='/apps/heartbeat'?{...receipt.lease,expiresAt:clock.now()+90_000}:
@@ -69,10 +69,14 @@ test('P06A-T11: a target leaves an already open application view lease mounted',
     assert.notEqual(value,null,'unexpected route '+path);
     return{ok:true,json:async()=>value};
   };
-  const client=await clientHarness({fetch,clock});t.after(()=>client.unmount());
+  client=await clientHarness({fetch,clock});t.after(()=>client.unmount());
   await client.click('打开');assert(client.find(node=>node.type==='iframe'));
   target={targetId:'t-lease',packageName:'dsh-pet',protected:false};await clock.advance(1000);
   assert(client.find(node=>node.type==='iframe'),'target must preserve the current view');
+  assert.equal(visibleAtConsume,true,'both exact target cards must be rendered before consume');
+  assert(client.find(node=>node.props?.['data-hanamesh-library-item']==='exact-1'&&node.props?.['data-hanamesh-target']==='exact'));
+  assert(client.find(node=>node.props?.['data-hanamesh-library-item']==='exact-2'&&node.props?.['data-hanamesh-target']==='exact'));
+  assert.equal(client.find(node=>node.props?.['data-hanamesh-library-item']==='substring'),undefined);
   assert.equal(calls.filter(call=>call.path==='/apps/close').length,0);
   assert.equal(calls.filter(call=>call.path==='/apps/open').length,1);
   assert.equal(calls.filter(call=>call.path==='/hanamesh/library/target/consume').length,1);

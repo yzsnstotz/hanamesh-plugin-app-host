@@ -39,7 +39,7 @@ test('P06A-T03: N200 passes the existing client search boundary',async()=>{
 });
 
 test('P06A-T01/T04/T05: HTTP target uses existing Host, Origin, frame, CSRF, auth and authorization chain',async t=>{
-  const{service}=fixture();await service.init();
+  const{service,effects}=fixture();await service.init();
   let authenticated=true,authorized=true;
   const server=createServer();await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
   const origin=`http://127.0.0.1:${server.address().port}`;
@@ -52,7 +52,14 @@ test('P06A-T01/T04/T05: HTTP target uses existing Host, Origin, frame, CSRF, aut
   for(const input of [{},{packageName:'a',extra:1},{packageName:7}]){const response=await post(path,input);assert.equal(response.status,400);assert.equal((await get(path)).body.target.targetId,accepted.body.targetId);}
   for(const [headers,code] of [[{host:'localhost:'+server.address().port},'HOST_DENIED'],[{origin:'https://other.example'},'ORIGIN_DENIED'],[{origin:''},'CSRF_DENIED'],[{'x-hanamesh-client':''},'CSRF_DENIED'],[{'sec-fetch-dest':'iframe'},'FRAME_CONTROL_DENIED']]){const response=await post(path,{packageName:'x'},headers);assert.equal(response.status,403,JSON.stringify({headers,response}));assert.equal(response.body.error.code,code);}
   assert.equal((await get(path,{origin:'https://other.example'})).body.error.code,'ORIGIN_DENIED');
-  authenticated=false;assert.equal((await post(path,{packageName:'x'})).status,401);authenticated=true;authorized=false;assert.equal((await post(path,{packageName:'x'})).status,403);authorized=true;
+  authenticated=false;assert.equal((await post(path,{packageName:'x'})).status,401);authenticated=true;authorized=false;
+  for(const [route,body] of [[path,{packageName:'x'}],[consume,{targetId:accepted.body.targetId}]]){
+    const denied=await post(route,body);
+    assert.equal(denied.status,403,route);assert.equal(denied.body.error.code,'FORBIDDEN',route);
+    assert.equal(service.pendingTarget().targetId,accepted.body.targetId,route+' must preserve the target');
+    assert.deepEqual(effects(),{writes:0,fetches:0,installs:0},route+' must have no catalog/install/persistent writes');
+  }
+  authorized=true;
   assert.equal((await post(consume,{targetId:'old'})).body.consumed,false);
   assert.equal((await post(consume,{targetId:accepted.body.targetId})).body.consumed,true);
   assert.equal((await get(path)).body.target,null);

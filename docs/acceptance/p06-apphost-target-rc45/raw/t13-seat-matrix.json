@@ -1,0 +1,51 @@
+{
+  "gate": "T13 current rc45 three UI configurations",
+  "producer": "SIMULATED_PRODUCER_LOCATING_ONLY",
+  "rows": [
+    {
+      "config": "AppHost market seat with dsh-tauri-panel-extension",
+      "artifact": "ui-found.json",
+      "state": [
+        {
+          "state": "found",
+          "text": "已定位 dsh-pet，请确认条目后点击安装。"
+        }
+      ],
+      "exact": 4,
+      "installPostCount": 0,
+      "marketButton": null,
+      "panelExtension": null,
+      "conflictNotice": false
+    },
+    {
+      "config": "dshmarket present, no panel extension",
+      "artifact": "ui-dshmarket.json",
+      "state": [
+        {
+          "state": "found",
+          "text": "已定位 dsh-pet，请确认条目后点击安装。"
+        }
+      ],
+      "exact": 4,
+      "installPostCount": 0,
+      "marketButton": 1,
+      "panelExtension": 0,
+      "conflictNotice": true
+    },
+    {
+      "config": "neither panel extension nor dshmarket",
+      "artifact": "ui-no-panel-clean.json",
+      "state": [
+        {
+          "state": "found",
+          "text": "已定位 dsh-pet，请确认条目后点击安装。"
+        }
+      ],
+      "exact": 4,
+      "installPostCount": 0,
+      "marketButton": 1,
+      "panelExtension": 0,
+      "conflictNotice": false
+    }
+  ]
+}

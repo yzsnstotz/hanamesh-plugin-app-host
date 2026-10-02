@@ -1,0 +1,160 @@
+{
+  "label": "ui-missing-or-page1",
+  "url": "/",
+  "title": "DeepSeek Harness",
+  "body": "Into the Unknown\nPreview\nChoose workspace\nStandard mode\nChoose a workspace to start\nBack to app\nGeneral\nModels\nPlugins\n供应商\n市场目录源\nAgent presets\nExtension Management\nHanaMesh\nArchive\nSkills\nMCP\nMarket\nHanaMesh 市场\n搜索\n全部\n应用\n插件\nbrowser\ndev\nfun\ngit\nmarket\nnotify\nremote\nsecurity\nsession\nskill\ntools\nui\nvoice\nworkflow\n\n目录中没有找到 not-a-real-p06-package-zz。\n\n已安装\n应用 · Contract fixture · @hanamesh/app-contract-fixture 0.0.4 · 已安装\n插件 · @hanamesh/lib-provision 0.1.0-rc.1 · 已安装卸载\n插件 · dsh-tauri 1.0.0 · 已安装卸载\n插件 · dsh-tauri-model-config 1.0.0 · 已安装卸载\n插件 · dsh-tauri-panel-extension 1.0.0 · 已安装卸载\n插件 · dsh-tauri-panel-scheduler 1.0.0 · 已安装卸载\n插件 · dsh-tauri-pet 0.1.0 · 已安装卸载\n插件 · dsh-tauri-rightclick 1.0.0 · 已安装卸载\n插件 · dsh-tauri-session 1.0.0 · 已安装卸载\n插件 · dsh-tauri-turnrewind 0.3.1 · 已安装卸载\n插件 · dsh-tauri-ui 1.0.0 · 已安装卸载\n插件 · dsh-tauri-worktree 1.0.0 · 已安装卸载\n插件 · hanamesh-core 0.2.0-rc.46 · 已安装\n插件 · zod 4.5.4 · 已安装卸载",
+  "buttons": [
+    "",
+    "",
+    "New Session",
+    "",
+    "",
+    "",
+    "HanaMesh",
+    "Settings",
+    "Choose workspace",
+    "Standard mode",
+    "",
+    "",
+    "",
+    "Back to app",
+    "General",
+    "Models",
+    "Plugins",
+    "供应商",
+    "市场目录源",
+    "Agent presets",
+    "Extension Management",
+    "HanaMesh",
+    "Archive",
+    "Skills",
+    "MCP",
+    "Market",
+    "Open skills folder",
+    "Import repository",
+    "New skill",
+    "",
+    "搜索",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载",
+    "卸载"
+  ],
+  "states": [
+    {
+      "state": "missing",
+      "text": "目录中没有找到 not-a-real-p06-package-zz。"
+    }
+  ],
+  "exact": 0,
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/installedPlugins",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/hanamesh/library/target/consume",
+      "status": 202
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/hanamesh/library/target/consume",
+      "status": 202
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hanamesh/library/target",
+      "status": 200
+    }
+  ]
+}

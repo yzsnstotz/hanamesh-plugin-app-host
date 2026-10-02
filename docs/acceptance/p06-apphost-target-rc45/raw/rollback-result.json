@@ -1,0 +1,397 @@
+{
+  "gate": "T15 same isolated profile rollback rc45 to fixed rc43",
+  "at": "2026-10-02T23:30:09.833373+00:00",
+  "pid": 69889,
+  "packageVersion": "0.1.0-rc.43",
+  "tarballSha256": "0867f969f023b281bd2bf2a1aa158c75dc8838cbbcb53f8bb63dfce2a66bffaf",
+  "target": {
+    "status": 404,
+    "body": null
+  },
+  "library": {
+    "status": 200,
+    "body": {
+      "source": {
+        "kind": "fixture",
+        "path": "/Users/yzliu/work/projects/hanamesh/_deliveries/p06-public-consumer-20261003/worker-real-host-rc45/provider-page.json"
+      },
+      "items": [
+        {
+          "id": "p06-fixture-app",
+          "name": "@hanamesh/app-contract-fixture",
+          "displayName": "Contract fixture",
+          "summary": "Test-only v2 application used by the isolated DSH acceptance profile.",
+          "latestVersion": "0.0.4",
+          "categories": [
+            "hanamesh-app"
+          ],
+          "package": {
+            "registry": "npm",
+            "name": "@hanamesh/app-contract-fixture"
+          },
+          "publisher": {
+            "name": "P06 test fixture"
+          },
+          "kind": "application",
+          "application": true,
+          "installed": {
+            "packageName": "@hanamesh/app-contract-fixture",
+            "version": "0.0.4",
+            "appId": "contract-fixture",
+            "name": "Contract fixture",
+            "state": "registered",
+            "definition": {
+              "id": "contract-fixture",
+              "name": "Contract fixture",
+              "singleInstanceOnly": true,
+              "deployments": [
+                {
+                  "id": "local",
+                  "dataId": "default",
+                  "mode": "owned",
+                  "embedding": "gateway",
+                  "command": "/Users/yzliu/work/projects/hanamesh/_deliveries/p06-public-consumer-20261003/worker-real-host-rc44/bin/node",
+                  "args": [
+                    "-e",
+                    "require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).listen(Number(process.argv[1]),'127.0.0.1')",
+                    "{{port}}",
+                    "{{dataDir}}"
+                  ],
+                  "readiness": {
+                    "path": "/",
+                    "status": 200,
+                    "bodyIncludes": "CONTRACT_FIXTURE_READY"
+                  },
+                  "startTimeoutMs": 10000,
+                  "stopGraceMs": 1000,
+                  "env": {},
+                  "envAllowlist": [],
+                  "credentialEnv": [],
+                  "gateway": {
+                    "cookieAllowlist": [],
+                    "allowAppAuthorization": false
+                  }
+                }
+              ]
+            },
+            "contractVersion": 2,
+            "hostLifecycle": "host-optional"
+          },
+          "upgradeAvailable": false
+        },
+        {
+          "id": "p06-pet-exact-1",
+          "name": "dsh-pet",
+          "displayName": "dsh-pet A",
+          "summary": "Test-only exact target card A.",
+          "latestVersion": "1.0.0",
+          "categories": [
+            "fun"
+          ],
+          "package": {
+            "registry": "npm",
+            "name": "dsh-pet"
+          },
+          "publisher": {
+            "name": "P06 test fixture"
+          },
+          "kind": "plugin",
+          "application": false,
+          "installed": null,
+          "upgradeAvailable": false
+        },
+        {
+          "id": "p06-pet-exact-2",
+          "name": "dsh-pet",
+          "displayName": "dsh-pet B",
+          "summary": "Test-only exact target card B.",
+          "latestVersion": "1.0.0",
+          "categories": [
+            "fun"
+          ],
+          "package": {
+            "registry": "npm",
+            "name": "dsh-pet"
+          },
+          "publisher": {
+            "name": "P06 test fixture"
+          },
+          "kind": "plugin",
+          "application": false,
+          "installed": null,
+          "upgradeAvailable": false
+        },
+        {
+          "id": "p06-pet-substring",
+          "name": "dsh-pet-extra",
+          "displayName": "dsh-pet-extra",
+          "summary": "Test-only substring nonmatch.",
+          "latestVersion": "1.0.0",
+          "categories": [
+            "fun"
+          ],
+          "package": {
+            "registry": "npm",
+            "name": "dsh-pet-extra"
+          },
+          "publisher": {
+            "name": "P06 test fixture"
+          },
+          "kind": "plugin",
+          "application": false,
+          "installed": null,
+          "upgradeAvailable": false
+        }
+      ],
+      "categories": [
+        "fun",
+        "hanamesh-app"
+      ],
+      "installed": [
+        {
+          "packageName": "@hanamesh/app-contract-fixture",
+          "version": "0.0.4",
+          "appId": "contract-fixture",
+          "name": "Contract fixture",
+          "state": "registered",
+          "definition": {
+            "id": "contract-fixture",
+            "name": "Contract fixture",
+            "singleInstanceOnly": true,
+            "deployments": [
+              {
+                "id": "local",
+                "dataId": "default",
+                "mode": "owned",
+                "embedding": "gateway",
+                "command": "/Users/yzliu/work/projects/hanamesh/_deliveries/p06-public-consumer-20261003/worker-real-host-rc44/bin/node",
+                "args": [
+                  "-e",
+                  "require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).listen(Number(process.argv[1]),'127.0.0.1')",
+                  "{{port}}",
+                  "{{dataDir}}"
+                ],
+                "readiness": {
+                  "path": "/",
+                  "status": 200,
+                  "bodyIncludes": "CONTRACT_FIXTURE_READY"
+                },
+                "startTimeoutMs": 10000,
+                "stopGraceMs": 1000,
+                "env": {},
+                "envAllowlist": [],
+                "credentialEnv": [],
+                "gateway": {
+                  "cookieAllowlist": [],
+                  "allowAppAuthorization": false
+                }
+              }
+            ]
+          },
+          "contractVersion": 2,
+          "hostLifecycle": "host-optional"
+        }
+      ],
+      "plugins": [
+        {
+          "packageName": "@hanamesh/lib-provision",
+          "version": "0.1.0-rc.1",
+          "kind": "plugin",
+          "bundle": false,
+          "active": false,
+          "state": "installed"
+        },
+        {
+          "packageName": "dsh-tauri",
+          "version": "1.0.0",
+          "kind": "plugin",
+          "bundle": true,
+          "active": true,
+          "state": "installed"
+        },
+        {
+          "packageName": "dsh-tauri-model-config",
+          "version": "1.0.0",
+          "kind": "plugin",
+          "bundle": true,
+          "active": true,
+          "state": "installed"
+        },
+        {
+          "packageName": "dsh-tauri-panel-scheduler",
+          "version": "1.0.0",
+          "kind": "plugin",
+          "bundle": true,
+          "active": true,
+          "state": "installed"
+        },
+        {
+          "packageName": "dsh-tauri-pet",
+          "version": "0.1.0",
+          "kind": "plugin",
+          "bundle": true,
+          "active": true,
+          "state": "installed"
+        },
+        {
+          "packageName": "dsh-tauri-rightclick",
+          "version": "1.0.0",
+          "kind": "plugin",
+          "bundle": true,
+          "active": true,
+          "state": "installed"
+        },
+        {
+          "packageName": "dsh-tauri-session",
+          "version": "1.0.0",
+          "kind": "plugin",
+          "bundle": true,
+          "active": true,
+          "state": "installed"
+        },
+        {
+          "packageName": "dsh-tauri-turnrewind",
+          "version": "0.3.1",
+          "kind": "plugin",
+          "bundle": true,
+          "active": true,
+          "state": "installed"
+        },
+        {
+          "packageName": "dsh-tauri-ui",
+          "version": "1.0.0",
+          "kind": "plugin",
+          "bundle": true,
+          "active": true,
+          "state": "installed"
+        },
+        {
+          "packageName": "dsh-tauri-worktree",
+          "version": "1.0.0",
+          "kind": "plugin",
+          "bundle": true,
+          "active": true,
+          "state": "installed"
+        },
+        {
+          "packageName": "dshmarket",
+          "version": "1.47.0",
+          "kind": "plugin",
+          "bundle": true,
+          "active": true,
+          "state": "installed"
+        },
+        {
+          "packageName": "hanamesh-core",
+          "version": "0.2.0-rc.46",
+          "kind": "plugin",
+          "bundle": true,
+          "active": true,
+          "state": "installed"
+        },
+        {
+          "packageName": "zod",
+          "version": "4.5.4",
+          "kind": "plugin",
+          "bundle": false,
+          "active": false,
+          "state": "installed"
+        }
+      ],
+      "restartRequired": false,
+      "page": {
+        "total": 4
+      },
+      "traceId": "c85085d8-fc8c-41a2-9ba7-be241c49fadd"
+    }
+  },
+  "apps": {
+    "status": 200,
+    "body": {
+      "contractVersion": 1,
+      "apps": [
+        {
+          "id": "contract-fixture",
+          "name": "Contract fixture",
+          "singleInstanceOnly": true,
+          "packageName": "@hanamesh/app-contract-fixture",
+          "deployments": [
+            {
+              "id": "local",
+              "dataId": "default",
+              "mode": "owned",
+              "embedding": "gateway",
+              "credentialEnv": []
+            }
+          ]
+        }
+      ],
+      "instances": [
+        {
+          "id": "0a1a6f09-0164-4caf-b2da-ae0e6248819b",
+          "appId": "contract-fixture",
+          "deploymentId": "local",
+          "dataId": "default",
+          "mode": "owned",
+          "status": "stopped",
+          "runtimeId": "1d1abd8e-9fa6-44be-a79b-3cab45251cad"
+        }
+      ],
+      "views": [
+        {
+          "principalId": "dsh-browser",
+          "viewId": "hml-01116520-20ec-44be-b330-83b90bb806e9",
+          "instanceId": "0a1a6f09-0164-4caf-b2da-ae0e6248819b",
+          "generation": 1,
+          "status": "expired",
+          "expiresAt": 1790983431214,
+          "createdAt": 1790983340548,
+          "originalSessionId": null
+        },
+        {
+          "principalId": "dsh-browser",
+          "viewId": "hml-370e266f-81ed-4fb9-8ac2-7ea4d57aa533",
+          "instanceId": "0a1a6f09-0164-4caf-b2da-ae0e6248819b",
+          "generation": 1,
+          "status": "expired",
+          "expiresAt": 1790983473054,
+          "createdAt": 1790983383054,
+          "originalSessionId": null
+        },
+        {
+          "principalId": "dsh-browser",
+          "viewId": "p06-live-335d1e702b264c039bad4928de0eb7d4",
+          "instanceId": "0a1a6f09-0164-4caf-b2da-ae0e6248819b",
+          "generation": 1,
+          "status": "stopped",
+          "expiresAt": 1790983669655,
+          "createdAt": 1790983579655,
+          "originalSessionId": null
+        },
+        {
+          "principalId": "dsh-browser",
+          "viewId": "p06-live-2-239de59cecb14a4d88a70e231fc9953c",
+          "instanceId": "0a1a6f09-0164-4caf-b2da-ae0e6248819b",
+          "generation": 1,
+          "status": "closed",
+          "expiresAt": 1790983671819,
+          "createdAt": 1790983581819,
+          "originalSessionId": null
+        },
+        {
+          "principalId": "dsh-browser",
+          "viewId": "p06-fixture-e5e954b6edd741bf9bc0eb3f787320d5",
+          "instanceId": "0a1a6f09-0164-4caf-b2da-ae0e6248819b",
+          "generation": 1,
+          "status": "closed",
+          "expiresAt": 1790983679737,
+          "createdAt": 1790983589737,
+          "originalSessionId": null
+        }
+      ],
+      "sequence": 45,
+      "traceId": "f365279f-e6fa-408a-9db2-4f3e763675d7"
+    }
+  },
+  "result": "PASS"
+}
