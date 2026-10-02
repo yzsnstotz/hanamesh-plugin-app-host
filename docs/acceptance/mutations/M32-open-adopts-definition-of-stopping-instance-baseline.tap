@@ -1,16 +1,16 @@
 TAP version 13
-# (node:44539) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:58272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-PK12 (QUALITY R-Q1 ordering) bundle reload, same definition: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime
 ok 1 - AH-PK12 (QUALITY R-Q1 ordering) bundle reload, same definition: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime
   ---
-  duration_ms: 506.63725
+  duration_ms: 503.562833
   type: 'test'
   ...
 # Subtest: AH-PK12 (QUALITY R-Q1 ordering) bundle reload, upgraded definition: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime
 ok 2 - AH-PK12 (QUALITY R-Q1 ordering) bundle reload, upgraded definition: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime
   ---
-  duration_ms: 479.139208
+  duration_ms: 476.791834
   type: 'test'
   ...
 1..2
@@ -21,6 +21,6 @@ ok 2 - AH-PK12 (QUALITY R-Q1 ordering) bundle reload, upgraded definition: an Op
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 1062.405709
-(node:44538) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 1058.663542
+(node:58271) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

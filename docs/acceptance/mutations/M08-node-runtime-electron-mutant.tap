@@ -1,12 +1,12 @@
 TAP version 13
-# (node:44172) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:57902) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-K5-2: Electron self-hosting refuses fallback and persists a failed instance event
 not ok 1 - AH-K5-2: Electron self-hosting refuses fallback and persists a failed instance event
   ---
-  duration_ms: 14.094375
+  duration_ms: 14.376958
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-zu26ue/tests/node-runtime.test.mjs:34:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-yKxIuY/tests/node-runtime.test.mjs:34:1'
   failureType: 'testCodeFailure'
   error: 'Missing expected rejection.'
   code: 'ERR_ASSERTION'
@@ -15,7 +15,7 @@ not ok 1 - AH-K5-2: Electron self-hosting refuses fallback and persists a failed
     code: 'NODE_RUNTIME_REQUIRED'
   operator: 'rejects'
   stack: |-
-    async TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-zu26ue/tests/node-runtime.test.mjs:40:5)
+    async TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-yKxIuY/tests/node-runtime.test.mjs:40:5)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -27,6 +27,6 @@ not ok 1 - AH-K5-2: Electron self-hosting refuses fallback and persists a failed
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 75.678584
-(node:44171) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 76.903875
+(node:57900) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

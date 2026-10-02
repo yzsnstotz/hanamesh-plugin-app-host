@@ -1,0 +1,38 @@
+$ npm run build
+(node:60175) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> @hanamesh/dsh-app-host@0.1.0-rc.43 build
+> node scripts/build.mjs
+
+Build completed: self-contained ESM modules and public type declarations.
+npm notice
+npm notice New minor version of npm available! 11.8.0 -> 11.21.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.21.0
+npm notice To update run: npm install -g npm@11.21.0
+npm notice
+exit 0
+$ npm run check:consistency
+(node:60254) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> @hanamesh/dsh-app-host@0.1.0-rc.43 check:consistency
+> node scripts/check-consistency.mjs
+
+(node:60273) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+X01 PASS: 4 groups, 4 boundaries
+exit 0
+$ npm run test:types
+(node:60274) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> @hanamesh/dsh-app-host@0.1.0-rc.43 test:types
+> tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext tests/consumer.mts
+
+npm notice
+npm notice New minor version of npm available! 11.8.0 -> 11.21.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.21.0
+npm notice To update run: npm install -g npm@11.21.0
+npm notice
+exit 0

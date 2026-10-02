@@ -1,12 +1,12 @@
 TAP version 13
-# (node:43295) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:56926) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-VL01: real market client keeps one idle view renewed beyond its original TTL with exact current credential
 not ok 1 - AH-VL01: real market client keeps one idle view renewed beyond its original TTL with exact current credential
   ---
-  duration_ms: 4.5965
+  duration_ms: 5.022417
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-L3TiAq/tests/client-heartbeat.test.mjs:18:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-3ZrT7R/tests/client-heartbeat.test.mjs:18:1'
   failureType: 'testCodeFailure'
   error: 'visible idle view must consume heartbeat before the 90s lease expires'
   code: 'ERR_ASSERTION'
@@ -15,7 +15,7 @@ not ok 1 - AH-VL01: real market client keeps one idle view renewed beyond its or
   actual: false
   operator: '=='
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-L3TiAq/tests/client-heartbeat.test.mjs:19:55)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-3ZrT7R/tests/client-heartbeat.test.mjs:19:55)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -27,6 +27,6 @@ not ok 1 - AH-VL01: real market client keeps one idle view renewed beyond its or
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 36.095375
-(node:43294) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 36.978125
+(node:56925) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

@@ -1,0 +1,12 @@
+$ npm pack --pack-destination <tmp>  (Node v24.13.1, fresh npm_config_cache)
+npm notice total files: 83
+npm notice
+hanamesh-dsh-app-host-0.1.0-rc.43.tgz
+npm notice
+npm notice New minor version of npm available! 11.8.0 -> 11.21.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.21.0
+npm notice To update run: npm install -g npm@11.21.0
+npm notice
+
+0867f969f023b281bd2bf2a1aa158c75dc8838cbbcb53f8bb63dfce2a66bffaf  <tmp>/repack/hanamesh-dsh-app-host-0.1.0-rc.43.tgz
+0867f969f023b281bd2bf2a1aa158c75dc8838cbbcb53f8bb63dfce2a66bffaf  artifacts/hanamesh-dsh-app-host-0.1.0-rc.43.tgz

@@ -1,10 +1,10 @@
 TAP version 13
-# (node:43293) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:56924) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-VL01: real market client keeps one idle view renewed beyond its original TTL with exact current credential
 ok 1 - AH-VL01: real market client keeps one idle view renewed beyond its original TTL with exact current credential
   ---
-  duration_ms: 4.585292
+  duration_ms: 4.644792
   type: 'test'
   ...
 1..1
@@ -15,6 +15,6 @@ ok 1 - AH-VL01: real market client keeps one idle view renewed beyond its origin
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 36.653042
-(node:43292) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 36.423792
+(node:56923) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

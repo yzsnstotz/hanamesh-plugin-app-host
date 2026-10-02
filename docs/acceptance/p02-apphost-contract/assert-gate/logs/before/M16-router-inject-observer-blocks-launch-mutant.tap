@@ -1,0 +1,31 @@
+TAP version 13
+# (node:44155) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: AH-R12 (T6) every injection tells the receipt observer the routed provider and model — never the value — and local receipts are readable per app
+not ok 1 - AH-R12 (T6) every injection tells the receipt observer the routed provider and model — never the value — and local receipts are readable per app
+  ---
+  duration_ms: 2.222333
+  type: 'test'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-cIRefB/tests/router-broker.test.mjs:127:1'
+  failureType: 'testCodeFailure'
+  error: 'observer down'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    onInject (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-cIRefB/tests/router-broker.test.mjs:140:332)
+    Object.credentialResolver (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-cIRefB/src/router/broker.js:149:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-cIRefB/tests/router-broker.test.mjs:141:18)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 35.546375
+(node:44154) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)

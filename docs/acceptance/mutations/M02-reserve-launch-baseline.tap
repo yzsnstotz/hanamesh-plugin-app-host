@@ -1,11 +1,11 @@
 TAP version 13
-# (node:43769) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:57499) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
-# X03 reserve-launch: {"signal":"SIGKILL","instanceId":"ef77fb58-7d5b-44c5-a40f-9b5d7314386c","pid":43778,"appWroteData":true,"durableOwner":true,"guardianCleanup":true}
+# X03 reserve-launch: {"signal":"SIGKILL","instanceId":"cc0766c8-66db-4470-9dc7-a89b628dac4d","pid":57507,"appWroteData":true,"durableOwner":true,"guardianCleanup":true}
 # Subtest: X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data
 ok 1 - X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data
   ---
-  duration_ms: 274.947291
+  duration_ms: 277.005583
   type: 'test'
   ...
 1..1
@@ -16,6 +16,6 @@ ok 1 - X03 reserve-launch: SIGKILL after actual process writes leaves a durable 
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 337.122958
-(node:43768) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 340.702709
+(node:57498) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

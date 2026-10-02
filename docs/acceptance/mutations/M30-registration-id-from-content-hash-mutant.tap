@@ -1,33 +1,33 @@
 TAP version 13
-# (node:44398) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:58107) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-PK06 unregister only removes the exact registration (registrationId, not content) and is a no-op while the host closes
 not ok 1 - AH-PK06 unregister only removes the exact registration (registrationId, not content) and is a no-op while the host closes
   ---
-  duration_ms: 73.249333
+  duration_ms: 70.430583
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-9N06ig/tests/app-package-lifecycle.test.mjs:124:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-60ROJG/tests/app-package-lifecycle.test.mjs:124:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected "actual" to be strictly unequal to:
     
-    'a3c34a89-7e17-4031-8f54-c2a8fb7c9745'
+    '0c8ef7e9-787f-4afe-846e-9e1d5d6a187b'
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
-  expected: 'a3c34a89-7e17-4031-8f54-c2a8fb7c9745'
-  actual: 'a3c34a89-7e17-4031-8f54-c2a8fb7c9745'
+  expected: '0c8ef7e9-787f-4afe-846e-9e1d5d6a187b'
+  actual: '0c8ef7e9-787f-4afe-846e-9e1d5d6a187b'
   operator: 'notStrictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-9N06ig/tests/app-package-lifecycle.test.mjs:141:10)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-60ROJG/tests/app-package-lifecycle.test.mjs:141:10)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
 # Subtest: AH-PK11 (QUALITY R-Q1) a late disposer of an earlier registration of the SAME definition never removes the current one or stops its runtime
 not ok 2 - AH-PK11 (QUALITY R-Q1) a late disposer of an earlier registration of the SAME definition never removes the current one or stops its runtime
   ---
-  duration_ms: 286.20325
+  duration_ms: 282.942792
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-9N06ig/tests/app-package-lifecycle.test.mjs:232:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-60ROJG/tests/app-package-lifecycle.test.mjs:232:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:
@@ -55,7 +55,7 @@ not ok 2 - AH-PK11 (QUALITY R-Q1) a late disposer of an earlier registration of 
     stopped: 1
   operator: 'deepStrictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-9N06ig/tests/app-package-lifecycle.test.mjs:243:10)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-60ROJG/tests/app-package-lifecycle.test.mjs:243:10)
     async Test.run (node:internal/test_runner/test:1110:7)
     async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
   ...
@@ -67,6 +67,6 @@ not ok 2 - AH-PK11 (QUALITY R-Q1) a late disposer of an earlier registration of 
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 437.037459
-(node:44397) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 431.301417
+(node:58106) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

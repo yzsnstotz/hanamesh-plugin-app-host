@@ -1,12 +1,12 @@
 TAP version 13
-# (node:44076) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:57803) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-L09: nodeBinary is this process only outside Electron; explicit configuration always wins
 not ok 1 - AH-L09: nodeBinary is this process only outside Electron; explicit configuration always wins
   ---
-  duration_ms: 0.688667
+  duration_ms: 0.688
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-h1CGUM/tests/library-locate.test.mjs:78:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-ynjEOg/tests/library-locate.test.mjs:78:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
@@ -20,7 +20,7 @@ not ok 1 - AH-L09: nodeBinary is this process only outside Electron; explicit co
   actual: '/Applications/X.app/Contents/MacOS/X'
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-h1CGUM/tests/library-locate.test.mjs:80:10)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-ynjEOg/tests/library-locate.test.mjs:80:10)
     Test.runInAsyncScope (node:async_hooks:214:14)
     Test.run (node:internal/test_runner/test:1103:25)
     Test.start (node:internal/test_runner/test:1000:17)
@@ -35,6 +35,6 @@ not ok 1 - AH-L09: nodeBinary is this process only outside Electron; explicit co
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 36.133125
-(node:44075) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 36.226166
+(node:57802) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-02T11:02:18.255Z",
+  "generatedAt": "2026-10-02T10:46:08.603Z",
   "results": [
     {
       "id": "M21-market-close-retry-rejected-cache",
@@ -63,7 +63,7 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "failed": true,
-      "killed": true,
+      "killed": false,
       "originalSourceSha256": "15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7",
       "mutatedSourceSha256": "0c0e31465a0f3ceaae5cef6fed77e5cb71a17293e52a83c7956e83da4e42e669"
     },
@@ -195,7 +195,7 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "failed": true,
-      "killed": true,
+      "killed": false,
       "originalSourceSha256": "9c24e70fe7bae62d20510a15fb21f9a07c387a6e0fbf75d4f8cc349fa22e5734",
       "mutatedSourceSha256": "76a5b820e86552dc151ab18be5522e9bade098d75be1f4389335971b089622f9"
     },
@@ -228,7 +228,7 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "failed": true,
-      "killed": true,
+      "killed": false,
       "originalSourceSha256": "91d4d333bd9920bba1e01570dd46096937901f9d8d4d9d99166a588a3e407a09",
       "mutatedSourceSha256": "bff42c2a334d2c8e679bdbda92230db670d6893d77e37ba96693cd25e2f38f5a"
     },

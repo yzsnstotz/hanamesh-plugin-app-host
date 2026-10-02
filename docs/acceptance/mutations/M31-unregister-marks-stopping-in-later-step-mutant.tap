@@ -1,12 +1,12 @@
 TAP version 13
-# (node:44505) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:58215) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-PK12 (QUALITY R-Q1 ordering) bundle reload, same definition: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime
 not ok 1 - AH-PK12 (QUALITY R-Q1 ordering) bundle reload, same definition: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime
   ---
-  duration_ms: 281.931667
+  duration_ms: 314.559958
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-nNESbz/tests/app-package-lifecycle.test.mjs:255:3'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-GlTKem/tests/app-package-lifecycle.test.mjs:255:3'
   failureType: 'testCodeFailure'
   error: |-
     "INSTANCE_NOT_READY"
@@ -20,16 +20,16 @@ not ok 1 - AH-PK12 (QUALITY R-Q1 ordering) bundle reload, same definition: an Op
   actual: 'INSTANCE_NOT_READY'
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-nNESbz/tests/app-package-lifecycle.test.mjs:269:12)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-GlTKem/tests/app-package-lifecycle.test.mjs:269:12)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
 # Subtest: AH-PK12 (QUALITY R-Q1 ordering) bundle reload, upgraded definition: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime
 not ok 2 - AH-PK12 (QUALITY R-Q1 ordering) bundle reload, upgraded definition: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime
   ---
-  duration_ms: 261.512125
+  duration_ms: 265.199792
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-nNESbz/tests/app-package-lifecycle.test.mjs:255:3'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-GlTKem/tests/app-package-lifecycle.test.mjs:255:3'
   failureType: 'testCodeFailure'
   error: |-
     "DEFINITION_CHANGED"
@@ -43,7 +43,7 @@ not ok 2 - AH-PK12 (QUALITY R-Q1 ordering) bundle reload, upgraded definition: a
   actual: 'DEFINITION_CHANGED'
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-nNESbz/tests/app-package-lifecycle.test.mjs:269:12)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-GlTKem/tests/app-package-lifecycle.test.mjs:269:12)
     async Test.run (node:internal/test_runner/test:1110:7)
     async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
   ...
@@ -55,6 +55,6 @@ not ok 2 - AH-PK12 (QUALITY R-Q1 ordering) bundle reload, upgraded definition: a
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 621.247709
-(node:44504) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 658.361584
+(node:58214) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

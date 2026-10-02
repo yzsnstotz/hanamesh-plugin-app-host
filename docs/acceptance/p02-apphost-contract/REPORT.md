@@ -6,6 +6,36 @@
 **QUALITY R-Q1 整改（2026-10-02，回应 `P02-APPHOST-01-QUALITY-REVIEW.md`）：** 见 §0R。**当前候选包 `0.1.0-rc.43`，SHA-256 `0867f969f023b281bd2bf2a1aa158c75dc8838cbbcb53f8bb63dfce2a66bffaf`。** rc.42 的全部字节（`3047353d…3615`、`eedf454d…060b`、`95cf8af3…f47d`）作废，只留作历史（`artifacts/hanamesh-dsh-app-host-0.1.0-rc.43.history.txt`），rc.42 这个名字不再复用。
 **同卡 SPEC 整改（2026-10-02，回应 `P02-APPHOST-01-SPEC-REVIEW.md`）：** 见 §0；其中的包 SHA 是当时的 rc.42 `95cf8af3…f47d`，已被 rc.43 取代。
 
+## 0M. 变异门断言口径更正（2026-10-02，回应 R-Q1 独立窄复审 §3.4；只改测试与门，产品包字节不变）
+
+**问题：** 变异门把「目标测试失败且日志匹配 reason 正则」算作检出。M01、M16、M17 一直这样「通过」，但目标测试里没有一次是断言失败：
+
+| 变异 | 旧 mutant TAP（`assert-gate/logs/before/`） | 根因 |
+|---|---|---|
+| M01 单实例复用 | H02 `code: 'DATA_ROOT_BUSY'`（原始错误） | 测试用 `Promise.all`，第一个被拒的 open 直接抛出，没有任何断言判过「8 个并发 open 都应加入同一预留」 |
+| M16 观察者阻断注入 | AH-R12 `code: 'ERR_TEST_FAILURE'`，`error: 'observer down'` | 测试直接 `await credentialResolver(...)`，观察者抛的原始错误冒出来；「抛异常的观察者不得妨碍注入」没有断言 |
+| M17 市场席位互斥 | AH-MS02/03 `code: 'ERR_TEST_FAILURE'`，消息正文却是断言 diff | 断言本身生效，但 `record.provided` 里的值带函数；Node 的 TAP 序列化无法克隆这样的 AssertionError，降级成 `ERR_TEST_FAILURE`。最小复现（Node v22.12.0 与 v24.13.1 相同）：`assert.deepEqual([{v:{render(){}}}],[])` → `ERR_TEST_FAILURE`；`assert.deepEqual([{v:1}],[])` → `ERR_ASSERTION` |
+
+所以 R-Q1 复审里的「32/32 失败、29/32 由 `ERR_ASSERTION` 检出」，按 DELIVERY_RULES §1.7 应只算 **29/32**；更早 §0「整改后的模块门」写的「29/29 检出」也包含这三项：`d945ee6` 提交的 mutant TAP 里，它们的 code 分别是 `DATA_ROOT_BUSY`、`ERR_TEST_FAILURE`、`ERR_TEST_FAILURE`，所以应理解为 26/29。
+
+**更正（只改测试与门）：**
+- `tests/manager.test.mjs` H02：改为 `Promise.allSettled`，先断言 8 个结果全部 `fulfilled`（被拒的会以 `rejected:<code>` 列入 diff），再做原有的实例/进程/视图断言。原断言一条都没删。
+- `tests/router-broker.test.mjs` AH-R12：抛异常的观察者加调用计数；把 `credentialResolver` 的结果收成 `{injected, error}`，断言观察者确实被调用 1 次、注入成功且无错误，再断言注入值。比原来多了「观察者确实被调到」这条，避免空过。
+- `tests/market-seat.test.mjs` AH-MS02/03：`record.provided` 改为比较席位名数组 `record.provided.map(e=>e.name)` 与 `[]`。空数组 ⇔ 空数组，判定强度不变，只是让断言能被 TAP 正确上报。
+- `scripts/mutations.mjs`：成功门改成**每个变异都必须在目标测试的 TAP 块里出现 `code: 'ERR_ASSERTION'`**（并且有 `not ok` 且匹配 reason）。通用失败、原始错误不算通过，单独列为「not counted」；没有失败的列为「not detected」；只要有任何一项，exit 1。M01/M16 的 reason 从原始错误文本收紧为新断言的消息；M17 去掉了通用的 `strictly deep-equal` 备选。其余 29 项的 reason 未动。
+
+**结果（Node v24.13.1，`assert-gate/logs/`）：**
+
+| 门 | 结果 | 原始日志 |
+|---|---|---|
+| 全量测试 | **182 tests = 179 pass / 0 fail / 3 skip**，exit 0（与 rc.43 相同；skip 仍是 H13、H10 REAL_BROWSER、AH-VL08） | `tests.tap` |
+| 变异门（新口径） | **32/32 由 `ERR_ASSERTION` 检出**，exit 0（原 29/32）。M01：H02 `ERR_ASSERTION`，diff 显示 7 个 `rejected:DATA_ROOT_BUSY`；M16：AH-R12 `ERR_ASSERTION`；M17：AH-MS02、AH-MS03 都是 `ERR_ASSERTION` | `mutations.log`、`mutations-results.json`、`M01/M16/M17-*-mutant.tap`；全部 32 组 baseline/mutant TAP 在 `docs/acceptance/mutations/` |
+| 对照：新门 + `98cf72b` 原测试 | **FAIL，29/32**，exit 1：M17 列为 not counted，M01、M16 列为 not detected（原始错误既不含新 reason，也没有 `ERR_ASSERTION`）。证明新门不会再放过这三项 | `control-new-gate-on-98cf72b-tests.log` |
+| build / `check:consistency` / `test:types` | 全部 exit 0；build 后 `dist/` 无 diff | `build-consistency-types.log` |
+| 产品包字节 | 包内全部源文件（`files` 列出的 dist、docs、schemas、profile 等，加上 `src/`、`package.json`，共 116 个）改动前后 SHA-256 逐个相同；从改后的树用全新 npm 缓存重新 `npm pack`，得到 **`0867f969f023b281bd2bf2a1aa158c75dc8838cbbcb53f8bb63dfce2a66bffaf`**，与 `artifacts/` 中的 rc.43 tgz 相同 | `repack-sha.log` |
+
+**没有改：** `src/`、`dist/`、打包进 tgz 的 docs、`package.json`、rc.43 tgz。VIBE / Core / DSH / STATUS 都没动。没有 push、tag、发布或部署；没有碰 `~/.dsh`、3080、研究 runtime、生产或凭据。这次只重跑单仓门，没有重跑真实 DSH（产品字节没变）。
+
 ## 0R. QUALITY R-Q1 整改（rc.43）
 
 **缺陷（QUALITY 原文）：** rc.42 的 `unregister(appId, definitionHash)` 用**内容指纹**当注册身份。同一份定义注册两次（同版本重装、bundle 重载），`definitionHash` 相同；迟到或重复的旧 disposer 会撤掉当前注册、停掉它的真实进程。

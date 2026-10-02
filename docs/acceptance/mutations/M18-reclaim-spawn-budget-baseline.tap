@@ -1,11 +1,11 @@
 TAP version 13
-# (node:43301) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:56932) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
-# {"evidence":"REAL_PROCESS_ISOLATED","result":"spawned","elapsedMs":5075,"oldOrphanPid":43302,"newGuardianPid":43305,"newAppPid":43513,"lockOwner":43305,"trace":[{"at":1790937941127,"message":"ORPHAN_READY"},{"at":1790937941187,"message":"ORPHAN_TERM_IGNORED"}]}
+# {"evidence":"REAL_PROCESS_ISOLATED","result":"spawned","elapsedMs":5080,"oldOrphanPid":56933,"newGuardianPid":56936,"newAppPid":57185,"lockOwner":56936,"trace":[{"at":1790938910405,"message":"ORPHAN_READY"},{"at":1790938910463,"message":"ORPHAN_TERM_IGNORED"}]}
 # Subtest: AH-L07: proven orphan reclamation gets its declared grace before the launch handshake budget
 ok 1 - AH-L07: proven orphan reclamation gets its declared grace before the launch handshake budget
   ---
-  duration_ms: 5149.565208
+  duration_ms: 5161.959
   type: 'test'
   ...
 1..1
@@ -16,6 +16,6 @@ ok 1 - AH-L07: proven orphan reclamation gets its declared grace before the laun
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 5212.81425
-(node:43300) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 5226.44325
+(node:56931) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)
