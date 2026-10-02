@@ -1,0 +1,5 @@
+829999514a61d4db3b54416479f25f744ac811a433fc44f1b10fe0deb0d3f416  /Users/yzliu/.claude/jobs/68def075/tmp/run/inputs/hanamesh-core-0.2.0-rc.46.tgz
+457b0c9690776d6762e374453f64780fcca9529b730ab506b45766055bb37134  /Users/yzliu/.claude/jobs/68def075/tmp/run/inputs/hanamesh-dsh-app-host-0.1.0-rc.41.tgz
+386d57361ccc3c8578f54cad8137acc291dd72e01b3ff987e65dfaa716f2e0b0  /Users/yzliu/.claude/jobs/68def075/tmp/run/inputs/hanamesh-lib-provision-0.1.0-rc.1.tgz
+c69c97a93eb5ad167b60a8ec0000a954e809f291879992b9eb24078d7756864e  /Users/yzliu/.claude/jobs/68def075/tmp/run/inputs/hanamesh-usage-0.2.0-rc.10.tgz
+51f51d886af1428713bf52b4e795afa43e2b43956b8483c9a92590f4c5a7b296  /Users/yzliu/.claude/jobs/68def075/tmp/run/inputs/zod-4.5.4.tgz

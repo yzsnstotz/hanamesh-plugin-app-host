@@ -1,0 +1,8 @@
+2026-10-02T09:33:00Z red-p1 fixture-missing-dataDir-binding web_up=NO exit_rc=1 (fixture bug: MISSING_RUNTIME_BINDING, kept as loud-definition-error evidence)
+2026-10-02T09:36:13Z red-boot1-with-host web_up port=35411 root_without_token=401
+2026-10-02T09:36:22Z red-boot1-with-host stopped_by=SIGINT rc=130
+2026-10-02T09:36:29Z red-boot2-host-removed web_up port=35411 root_without_token=401
+2026-10-02T09:36:29Z red-boot2-host-removed stopped_by=SIGINT rc=130
+2026-10-02T09:37:38Z red-a-with-host web_up port=35411 root_without_token=401
+2026-10-02T09:37:40Z red-a-with-host stopped_by=SIGINT rc=130
+2026-10-02T09:37:42Z red-b-host-removed web_up=NO exit_rc=1

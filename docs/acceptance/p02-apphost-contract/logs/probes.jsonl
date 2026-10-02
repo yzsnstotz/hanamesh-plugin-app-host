@@ -1,0 +1,2 @@
+{"tag":"red-a-with-host","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[],"views":[]}
+{"tag":"red-a-with-host","action":"routes","/hanamesh/apps":200,"/hanamesh/library":200,"/hanamesh/core/status":404,"unauthenticated":401}

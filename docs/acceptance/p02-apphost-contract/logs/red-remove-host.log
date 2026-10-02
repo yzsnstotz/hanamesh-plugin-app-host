@@ -1,0 +1,11 @@
+$ docs/acceptance/p02-apphost-contract/harness/dsh.sh red plugin --profile p2 remove @hanamesh/dsh-app-host
+✓ Lockfile passes supply-chain policies (verified 3m ago)
+Progress: resolved 0, reused 1, downloaded 0, added 0
+[ERR_PNPM_FETCH_404] GET https://registry.npmjs.org/@hanamesh%2Fdsh-app-host: Not Found - 404
+
+This error happened while installing a direct dependency of /Users/yzliu/.claude/jobs/68def075/tmp/run/home-red/dsh/profiles/p2
+
+@hanamesh/dsh-app-host is not in the npm registry, or you have no permission to fetch it.
+
+No authorization header was set for the request.
+dsh: pnpm failed in profile directory /Users/yzliu/.claude/jobs/68def075/tmp/run/home-red/dsh/profiles/p2

@@ -1,0 +1,1 @@
+{"contractVersion":1,"apps":[{"id":"contract-fixture","name":"Contract fixture","singleInstanceOnly":true,"packageName":"@hanamesh/app-contract-fixture","deployments":[{"id":"local","dataId":"default","mode":"owned","embedding":"gateway","credentialEnv":[]}]}],"instances":[],"views":[],"sequence":0,"traceId":"a893f3b4-4c4f-422e-a5c2-b02d3ecfd962"}

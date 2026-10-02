@@ -1,0 +1,12 @@
+2026-10-02T09:32:52Z red-add-v1 rc=0 :: docs/acceptance/p02-apphost-contract/harness/dsh.sh red plugin --profile p1 add file:$RUN/home-red/dsh/profiles/p1/.inputs/hanamesh-app-contract-fixture-0.0.1.tgz
+2026-10-02T09:32:52Z red-dump-with-host rc=0 :: docs/acceptance/p02-apphost-contract/harness/dsh.sh red --profile p1 --dump-config
+2026-10-02T09:33:18Z red-add-host rc=0 :: docs/acceptance/p02-apphost-contract/harness/dsh.sh red plugin --profile p2 add file:$RUN/home-red/dsh/profiles/p2/.inputs/hanamesh-dsh-app-host-0.1.0-rc.41.tgz
+2026-10-02T09:33:19Z red-add-v1 rc=0 :: docs/acceptance/p02-apphost-contract/harness/dsh.sh red plugin --profile p2 add file:$RUN/home-red/dsh/profiles/p2/.inputs/hanamesh-app-contract-fixture-0.0.1.tgz
+2026-10-02T09:36:27Z red-remove-host rc=1 :: docs/acceptance/p02-apphost-contract/harness/dsh.sh red plugin --profile p2 remove @hanamesh/dsh-app-host
+2026-10-02T09:36:27Z red-dump-after-remove rc=0 :: docs/acceptance/p02-apphost-contract/harness/dsh.sh red --profile p2 --dump-config
+2026-10-02T09:36:56Z red-p3-add-core rc=0 :: docs/acceptance/p02-apphost-contract/harness/dsh.sh red plugin --profile p3 add file:$RUN/home-red/dsh/profiles/p3/.inputs/hanamesh-core-0.2.0-rc.46.tgz
+2026-10-02T09:36:56Z red-p3-add-v1 rc=1 :: docs/acceptance/p02-apphost-contract/harness/dsh.sh red plugin --profile p3 add file:$RUN/home-red/dsh/profiles/p3/.inputs/hanamesh-app-contract-fixture-0.0.1.tgz
+2026-10-02T09:37:10Z red-p3-add-v1 rc=0 :: docs/acceptance/p02-apphost-contract/harness/dsh.sh red plugin --profile p3 add file:$RUN/home-red/dsh/profiles/p3/.inputs/hanamesh-app-contract-fixture-0.0.1.tgz
+2026-10-02T09:37:40Z red-remove-core rc=0 :: /Users/yzliu/work/projects/hanamesh/_deliveries/p02-dispatch-20261002/worktrees/apphost-contract/docs/acceptance/p02-apphost-contract/harness/dsh.sh red plugin --profile p3 remove hanamesh-core
+2026-10-02T09:37:40Z red-dump-after-remove rc=0 :: /Users/yzliu/work/projects/hanamesh/_deliveries/p02-dispatch-20261002/worktrees/apphost-contract/docs/acceptance/p02-apphost-contract/harness/dsh.sh red --profile p3 --dump-config
+2026-10-02T09:37:40Z red-after-remove-node-modules rc=0 :: ls $RUN/home-red/dsh/profiles/p3/node_modules/@hanamesh $RUN/home-red/dsh/profiles/p3/node_modules

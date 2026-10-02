@@ -1,0 +1,13 @@
+confirmModulesPurge=false
+packages:
+  - .
+
+nodeLinker: hoisted
+autoInstallPeers: false
+overrides:
+  '@hanamesh/dsh-app-host': file:./.inputs/hanamesh-dsh-app-host-0.1.0-rc.41.tgz
+  '@hanamesh/lib-provision': file:./.inputs/hanamesh-lib-provision-0.1.0-rc.1.tgz
+  zod: file:./.inputs/zod-4.5.4.tgz
+457b0c9690776d6762e374453f64780fcca9529b730ab506b45766055bb37134  /Users/yzliu/.claude/jobs/68def075/tmp/run/home-red/dsh/profiles/p2/.inputs/hanamesh-dsh-app-host-0.1.0-rc.41.tgz
+386d57361ccc3c8578f54cad8137acc291dd72e01b3ff987e65dfaa716f2e0b0  /Users/yzliu/.claude/jobs/68def075/tmp/run/home-red/dsh/profiles/p2/.inputs/hanamesh-lib-provision-0.1.0-rc.1.tgz
+51f51d886af1428713bf52b4e795afa43e2b43956b8483c9a92590f4c5a7b296  /Users/yzliu/.claude/jobs/68def075/tmp/run/home-red/dsh/profiles/p2/.inputs/zod-4.5.4.tgz

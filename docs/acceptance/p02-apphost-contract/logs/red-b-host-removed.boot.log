@@ -1,0 +1,21 @@
+dsh web: http://127.0.0.1:35411/?token=<redacted>
+file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh-app-boot/lib/index.js:1545
+		throw new Error(`${binName}: ${stage}: ${detail}${stack}`, { cause });
+		      ^
+
+Error: dsh: plugin tree failed to load: dsh: 1 entry did not activate
+@hanamesh/app-contract-fixture/dsh: pending (waiting for service: hanameshApps)
+    at boot (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh-app-boot/lib/index.js:1545:9)
+    at async runProfile (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh/lib/profile-boot-Dk-7KqJc.js:311:14)
+    at async runCli (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js:146:4)
+    at async file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js:168:23 {
+  [cause]: Error: dsh: 1 entry did not activate
+  @hanamesh/app-contract-fixture/dsh: pending (waiting for service: hanameshApps)
+      at assertEntriesActivated (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh-app-boot/lib/index.js:1492:9)
+      at boot (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh-app-boot/lib/index.js:1537:9)
+      at async runProfile (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh/lib/profile-boot-Dk-7KqJc.js:311:14)
+      at async runCli (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js:146:4)
+      at async file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js:168:23
+}
+
+Node.js v24.13.1
