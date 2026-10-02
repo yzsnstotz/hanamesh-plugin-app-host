@@ -98,7 +98,10 @@ export class AppHost {
     const current = this.#definitions.get(appId);
     if (!current || fingerprint(current) !== definitionHash) return { appId, removed:false, reason:current ? 'definition-replaced' : 'not-registered', stopped:0 };
     this.#definitions.delete(appId);
-    const targets = (this.#state?.instances ?? []).filter(i => i.appId === appId && (!isTerminal(i.status) || this.#controls.has(i.id)));
+    // Targets are read inside the serial queue: an Open that reserved before the delete has committed by then and is
+    // stopped here; one queued after it is refused by the registration check in #prepareOpen. Only this appId is touched.
+    const targets = await this.#queue.run(async () => (this.#state?.instances ?? [])
+      .filter(i => i.appId === appId && (!isTerminal(i.status) || this.#controls.has(i.id))));
     const results = await Promise.allSettled(targets.map(i => this.stop(i.id,{confirm:true},i.principalId)));
     const failed = results.filter(r => r.status === 'rejected').length;
     if (failed) throw new AppHostError('UNREGISTER_STOP_INCOMPLETE','Application unregistered, but some of its runtimes could not be confirmed stopped.',{ appId, count:failed });
@@ -217,6 +220,9 @@ export class AppHost {
     const { app, deployment } = this.#definition(input.appId,input.deploymentId);
     const prepared = await this.#queue.run(async () => {
       this.#assertOpen();
+      // rc.42 (SPEC R2): the definition was read before this queued step; an unregister in between must win, so no
+      // reservation or launch happens for an app whose exact registration is gone (or was replaced).
+      requireCondition(this.#definitions.get(app.id) === app,'APP_NOT_REGISTERED','Application is not registered.',{},404);
       let next = copy(this.#state), lease = this.#findLease(next,principalId,input.viewId), instance;
       let token = input.leaseToken;
       if (lease) {

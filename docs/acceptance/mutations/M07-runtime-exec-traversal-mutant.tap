@@ -1,18 +1,18 @@
 TAP version 13
-# (node:98237) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:26266) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-P02: runtime item, installTo and exec must remain inside the provisioned tree
 not ok 1 - AH-P02: runtime item, installTo and exec must remain inside the provisioned tree
   ---
-  duration_ms: 1.05625
+  duration_ms: 1.196625
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-FEvMNV/tests/descriptor-runtime.test.mjs:36:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-DzOhcf/tests/descriptor-runtime.test.mjs:36:1'
   failureType: 'testCodeFailure'
   error: 'Missing expected exception: /bin/vibe'
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-FEvMNV/tests/descriptor-runtime.test.mjs:40:12)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-DzOhcf/tests/descriptor-runtime.test.mjs:40:12)
     Test.runInAsyncScope (node:async_hooks:214:14)
     Test.run (node:internal/test_runner/test:1103:25)
     Test.start (node:internal/test_runner/test:1000:17)
@@ -27,6 +27,6 @@ not ok 1 - AH-P02: runtime item, installTo and exec must remain inside the provi
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 68.564333
-(node:98236) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 66.476958
+(node:26265) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

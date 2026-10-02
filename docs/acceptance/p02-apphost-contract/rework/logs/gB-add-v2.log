@@ -1,0 +1,14 @@
+$ /Users/yzliu/work/projects/hanamesh/_deliveries/p02-dispatch-20261002/worktrees/apphost-contract/docs/acceptance/p02-apphost-contract/harness/dsh.sh green plugin --profile g2 add file:/Users/yzliu/.claude/jobs/68def075/tmp/run-rework-final/home-green/dsh/profiles/g2/.inputs/hanamesh-app-contract-fixture-0.0.2.tgz
+✓ Lockfile passes supply-chain policies (verified 290ms ago)
+Progress: resolved 0, reused 1, downloaded 0, added 0
+[WARN] Issues with peer dependencies found. Run "pnpm peers check" to list them.
+
+dependencies:
++ @hanamesh/app-contract-fixture file:/Users/yzliu/.claude/jobs/68def075/tmp/run-rework-final/home-green/dsh/profiles/g2/.inputs/hanamesh-app-contract-fixture-0.0.2.tgz
+
+Packages: +1
++
+Progress: resolved 7, reused 5, downloaded 1, added 1, done
+Added 1 entry to minimumReleaseAgeExclude in pnpm-workspace.yaml (set minimumReleaseAgeStrict to true to gate these updates with a prompt):
+  @hanamesh/dsh-app-host@0.1.0-rc.42
+Done in 290ms using pnpm v11.7.0

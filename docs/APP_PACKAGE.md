@@ -45,7 +45,7 @@ export async function apply(ctx, config = {}) {
 - **宿主缺席：** bundle 自身是 active 的 Loader 条目，只是不注册任何东西；DSH 正常启动，HanaMesh 页面与路由不存在。
 - **宿主到来 / 恢复 / 重载：** 每次 `hanameshApps` 出现，订阅作用域执行一次 `register`；同一宿主生命里只有一份定义，不重复写事件。
 - **宿主离开：** 作用域随服务一起结束；宿主自己的 `dispose` 停掉全部自有进程，此时 `unregister` 是 no-op（`reason:'host-closing'`）。
-- **应用被卸载 / bundle 重载：** `unregister(appId, definitionHash)` 先撤下定义（不能再新开），再经正常停止路径停掉该应用全部自有 runtime；实例记录、应用数据目录与 storage-domain 记录保留，重装后复用同一单实例槽位与数据目录。只撤下与 `definitionHash` 完全相同的那次注册。
+- **应用被卸载 / bundle 重载：** `unregister(appId, definitionHash)` 先撤下定义（不能再新开），再经正常停止路径停掉该应用全部自有 runtime；实例记录、应用数据目录与 storage-domain 记录保留，重装后复用同一单实例槽位与数据目录。只撤下与 `definitionHash` 完全相同的那次注册。撤销与并发打开的顺序由宿主的串行队列决定：撤销前已开始落盘的预留会被一并停掉；撤销时仍在排队的打开以 `APP_NOT_REGISTERED`（404）拒绝，不会新建实例或进程；其他应用的实例不受影响。
 - **错误不被吞：** `app.json` 解析失败在 `apply` 顶层抛出，按 DSH 规则让启动失败并指明本包；定义校验失败（`validateDefinition`）与重复 `appId` 在订阅作用域里抛出，由 Cordis 以 error 级日志报出、不注册任何东西；其中定义校验失败在市场「已安装」列表里同时显示为「包无效」与错误码（扫描用同一 `validateDefinition`）。配置不为空同样在顶层抛出。
 
 版本门：`peerDependencies["@hanamesh/dsh-app-host"]` 必须精确为 `0.1.0-rc.42` 或更新（`unregister` 自 rc.42 起才存在），`package.json` 写 `"hanamesh": { "app": "./app.json", "contractVersion": 2 }`。app-host 导出 `checkAppPackageEntry(entry, packageJson)` 供应用仓自己的测试调用：顶层 `inject` 含 `hanameshApps`（数组或映射形式）或 `contractVersion` 不是 2 时抛错；它不执行入口。

@@ -1,0 +1,48 @@
+TAP version 13
+# (node:26756) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: AH-PK09 (SPEC R3) unregistering app A stops only A: app B keeps its live, ready runtime
+not ok 1 - AH-PK09 (SPEC R3) unregistering app A stops only A: app B keeps its live, ready runtime
+  ---
+  duration_ms: 509.879541
+  type: 'test'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-IhRWCB/tests/app-package-lifecycle.test.mjs:172:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    [32m+ actual[39m [31m- expected[39m
+    
+    [39m  {
+    [39m    appId: 'app-a',
+    [39m    removed: true,
+    [32m+[39m   stopped: 2
+    [31m-[39m   stopped: 1
+    [39m  }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    appId: 'app-a'
+    removed: true
+    stopped: 1
+  actual:
+    appId: 'app-a'
+    removed: true
+    stopped: 2
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-IhRWCB/tests/app-package-lifecycle.test.mjs:180:10)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 596.607541
+(node:26755) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)

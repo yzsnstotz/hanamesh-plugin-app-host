@@ -1,12 +1,12 @@
 TAP version 13
-# (node:98559) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:26594) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-PK07 checkAppPackageEntry: v2 entry passes; a top-level hanameshApps inject (array or map) or a stale contractVersion is refused
 not ok 1 - AH-PK07 checkAppPackageEntry: v2 entry passes; a top-level hanameshApps inject (array or map) or a stale contractVersion is refused
   ---
-  duration_ms: 40.617208
+  duration_ms: 40.896458
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-draiyD/tests/app-package-lifecycle.test.mjs:138:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-hmR4Gr/tests/app-package-lifecycle.test.mjs:138:1'
   failureType: 'testCodeFailure'
   error: 'Missing expected exception.'
   code: 'ERR_ASSERTION'
@@ -15,7 +15,7 @@ not ok 1 - AH-PK07 checkAppPackageEntry: v2 entry passes; a top-level hanameshAp
     code: 'APP_PACKAGE_HOST_REQUIRED'
   operator: 'throws'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-draiyD/tests/app-package-lifecycle.test.mjs:143:10)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-hmR4Gr/tests/app-package-lifecycle.test.mjs:143:10)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -27,6 +27,6 @@ not ok 1 - AH-PK07 checkAppPackageEntry: v2 entry passes; a top-level hanameshAp
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 127.508458
-(node:98558) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 121.622417
+(node:26593) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

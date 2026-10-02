@@ -1,0 +1,12 @@
+2026-10-02T10:25:24Z gB-host-then-app web_up port=35413 root_without_token=401
+2026-10-02T10:25:28Z gB-host-then-app stopped_by=SIGINT rc=130
+2026-10-02T10:25:31Z gC-host-removed web_up port=35413 root_without_token=401
+2026-10-02T10:25:38Z gC-host-removed stopped_by=SIGINT rc=130
+2026-10-02T10:25:40Z gD-host-restored web_up port=35413 root_without_token=401
+2026-10-02T10:25:45Z gD-host-restored stopped_by=SIGINT rc=130
+2026-10-02T10:25:53Z gE-live web_up port=35413 root_without_token=401
+2026-10-02T10:26:10Z gE-live stopped_by=SIGINT rc=130
+2026-10-02T10:26:13Z gE-reboot web_up port=35413 root_without_token=401
+2026-10-02T10:26:15Z gE-reboot stopped_by=SIGINT rc=130
+2026-10-02T10:26:19Z lF web_up port=35416 root_without_token=401
+2026-10-02T10:26:33Z lF stopped_by=SIGINT rc=130

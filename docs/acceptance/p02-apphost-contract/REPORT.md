@@ -3,6 +3,20 @@
 **执行者：** Claude Code 后台作业（Opus 5.5），单仓 `hanamesh-plugin-app-host` 隔离工作树，分支 `codex/p02-apphost-01`，基线 `b8a741c`（rc.41）。
 **判定上限：** 组件候选。没有 SPEC/QUALITY 独立复核、没有 P02 产品门、没有用户 ACCEPTED。不声称正式 runner checker PASS。
 **未改：** Vibe / Core / Usage / Desktop / DSH 上游 / docs `STATUS.md`。没有 push、发布或 tag，也没有加载生产凭据。
+**同卡整改（2026-10-02，回应 `P02-APPHOST-01-SPEC-REVIEW.md`）：** 见 §0。当前候选包 SHA-256 `95cf8af3f102fee25fe7ba890294135585273f37aba3b4d85020671aa933f47d`；首个 rc.42 候选 `3047353d…3615` 已作废（只留作历史，见 `artifacts/hanamesh-dsh-app-host-0.1.0-rc.42.history.txt`）。
+
+## 0. SPEC 整改结果
+
+| 项 | 处理 | 证据 |
+|---|---|---|
+| **R2** `beginOpen`/`unregister` 竞态（复核时为推断） | **已实测复现并修复。** 在 70723a7 上，`AH-PK08` 让一个 Open 已读过定义、还排在串行队列里时执行 `unregister`，结果是被撤销的 `race-app` 仍被预留并 spawn（实例 `starting`、真实 pid）。修法在 `src/manager.js`（AppHost 自有代码）：① `#prepareOpen` 进入串行队列后重新核对 `this.#definitions.get(app.id) === app`，不一致按 `APP_NOT_REGISTERED`（404）拒绝；② `unregister` 删除定义后，在串行队列内读取要停的实例，正在落盘的预留会先完成，然后被停掉。 | 修复前 RED：`logs/rework-r2-red-on-70723a7.tap`（PK08、PK10 失败）。修复后：`AH-PK08`（排队中的 Open 必须被拒、该 app 无任何实例记录）、`AH-PK10`（真实文件存储的 save 被卡在中途时 `unregister`，结果 `stopped:1`、进程退出、状态 `stopped`）。变异 `M27`、`M28` 分别打掉两道防线，都被检出。 |
+| **R3** 不误杀 | 补 `AH-PK09`：两个应用各开一个真实进程，`unregister` A 后，A 的进程退出，B 的 pid 存活且状态仍为 `ready`。旧代码同样通过（原本就按 `appId` 过滤），本次补的是覆盖。变异 `M29`（不按 appId 过滤）被检出。 | `logs/rework-tests.tap`、`logs/rework-mutations.log` |
+| **R1** 证据披露 | 本报告 §1 的 F 行改为精确引用最终有效段；§3 改正 HOME 的说法；§4A 新增 `probes.jsonl` 全段索引（含失败/作废段、根因及其已证/未定状态）与同 tag 文件对应关系。原始日志未删、未改。 | §1、§3、§4A |
+| **R4** 版本留痕 | `logs/rework-versions.txt`：`dsh --version` → `0.1.5-alpha.1`；Node `v24.13.1`；`@deepseek-ai/dsh@0.1.5-alpha.1` 的 `lib/bin.js` SHA-256 `0ff7f1d7…f2ac5`（与 P02 独立验证报告一致）；Cordis `4.0.2`；pnpm `11.7.0`。 | 同左 |
+| **R5** 坏定义的 UI 截图 / 宿主侧可查询状态 | **未做**（复核标为建议，由 QUALITY/PM 定）。现状：`state:"invalid"` 只有 API probe 证据（`logs/probes.jsonl:169`）和 Cordis error 日志。 | — |
+| 整改后的模块门 | Node 24.13.1：179 tests = 176 pass / 0 fail / 3 skip（新增 PK08–PK10）；build、`check:consistency`、`test:types` 通过；变异 29/29 检出（新增 M27–M29，M24 改锚到 stop 调用，不变量不变）；离线 tarball consumer PASS（对最终包重跑过）。重打两次包，字节相同。完整测试跑在文档改动之前；之后 `src/` 没有变化，只改了 README/APP_PACKAGE/CONTRACT，因此对引用 APP_PACKAGE 的 `tests/app-package-lifecycle.test.mjs` 重跑了一遍（10/10 通过）。 | `logs/rework-tests.tap`、`rework-build-consistency-types.log`、`rework-mutations.log`、`rework-package-smoke.log` |
+| 整改后的真实 DSH 回归（最终字节 `95cf8af3…f47d`） | 全新 `RUN`/`HOME`/pnpm store；已核实 profile 内装上的 `dist/manager.js` 含修复。B（先宿主后应用、open/close 进程 1→0）、C（移除 Core 后启动正常、进程 0、6 个 storage 文件不变）、D（恢复后注册 1 次、同一实例、0 重复事件）、E（重启后卸载生效、进程 0）、F（live 禁用宿主/应用时运行中进程停止，恢复后各注册 1 次，0 重复）**每项一次跑通，没有失败或作废段**（`rework/logs/probes.jsonl` 1–56 全部有效，7 次事件读取 `duplicateSequences` 都是 0，4 次 storage 计数都是 6）；usage 上报 0 次（桩只收到 5 次设备 challenge）。同一组 B–F 先在中间字节 `eedf454d…060b` 上跑过一次，同样全部通过，存于 `rework/superseded-eedf454d/`；那份包与最终包只差 README/APP_PACKAGE/CONTRACT 三个文档（解包 `diff -rq` 核对过），因为改了随包文档，所以在最终字节上又跑了一遍。A、RED、兼容门（v1、坏定义、UI 提示）没有重跑：它们不经过 open/unregister 路径，证据仍是首轮（旧字节）。 | `rework/logs/`（`probes.jsonl` 1–56 全部有效、`boot-summary.log`、`steps.log`、`inputs-sha256.txt`、`live-cordis-log.jsonl`、`stub-requests.jsonl`）、`rework/ui/` |
+
 
 ## 1. 结论
 
@@ -14,13 +28,13 @@
 | C 宿主消失、应用仍在 | PASS：`remove hanamesh-core` rc=0，应用 bundle 与 loader 条目仍在；**boot 正常**（Chrome 根 200、无 HanaMesh 入口、路由 404）；进程 0；6 个 storage 文件不变 | `gC*`、`ui/gC-host-removed-home.*`、`gB/gC/gD-storage-files.txt` |
 | D 宿主恢复 | PASS：注册 1 次；同一实例 id（单实例槽位与数据目录复用）；事件序号 0 重复 | `gD*` |
 | E 应用主动卸载（重启后生效） | PASS：`remove @hanamesh/app-contract-fixture` 后启动，应用列表空、进程 0、实例记录与 storage 保留 | `gE*` |
-| F 运行中卸载/恢复（DSH 自身 live patch reload，`disabled: true`） | PASS：应用开着时禁用宿主 → 自有进程停止、`view.stopped`/`instance.stopped` 各 1；恢复宿主 → 注册 1 次；应用开着时禁用应用 → `unregister` 撤下定义并停掉进程（进程 0）；恢复应用 → 注册 1 次；全程 0 重复事件 | `run-live-f.sh`、`lF*`、`live-cordis-log.jsonl` |
+| F 运行中卸载/恢复（DSH 自身 live patch reload，`disabled: true`） | PASS：应用开着时禁用宿主 → 自有进程停止、`view.stopped`/`instance.stopped` 各 1；恢复宿主 → 注册 1 次；应用开着时禁用应用 → `unregister` 撤下定义并停掉进程（进程 0）；恢复应用 → 注册 1 次；全程 0 重复事件 | **只有** `logs/probes.jsonl:145-165` 这一段是有效证据（09:56:12–09:56:26 那一轮，全新 `home-live`）；`lF.boot.log` 与 `live-cordis-log.jsonl` 是同一轮，`ui.jsonl:7` 是该轮截图，`ui/lF1-host-disabled-home.png` 被该轮覆盖。其余 lF/lD 段见 §4A。新字节上的复跑见 §0。 |
 | 应用定义错误不被吞 | PASS：坏 v2 定义（缺 `{{dataDir}}`）时 DSH 照常启动；Cordis error 级日志以包名报出 `MISSING_RUNTIME_BINDING`；不注册任何东西；市场已装行 `state:"invalid"`；套件移除后 DSH 仍能启动 | `cB*`、`compat-cordis-log.jsonl` |
 | 旧 v1 包在 rc.42 上 | 宿主在时可用，扫描标 `contractVersion:1 / hostLifecycle:"host-required"`；真实 Chrome 的市场「已安装」行显示「旧版应用契约：卸载 HanaMesh 套件前请先卸载此应用，否则 DSH 无法启动」；**移除套件后仍 boot rc=1**。rc.42 修不了已封的旧包 | `cA*`、`ui/cU-v1-on-rc42-market.*` |
 | 未授权零上报 | PASS：Core 指向本机记录桩，全程只有 `POST /v1/identity/devices/challenge` ×18（设备注册尝试，与同意无关）；`/v1/usage/events` 0 次 | `stub-requests.jsonl` |
-| 单测/构建/类型/一致性 | 176 tests：173 pass / 0 fail / 3 skip（基线 165/0/3，新增 8）；build、`check:consistency`（X01 4/4）、`test:types` 通过 | `rc42-tests.tap`、`rc42-build-consistency-types.log` |
-| 变异 | 26/26 检出（新增 M23–M26：unregister 身份、unregister 孤儿进程、v1 未标注、入口检查放行 v1） | `rc42-mutations.log`、`../mutations/M2[3-6]*` |
-| 干净 tarball 消费者 | PASS：离线隔离安装 rc.42 tgz，真实自有进程 + `checkAppPackageEntry` + `unregister` 停止 runtime | `rc42-package-smoke.log` |
+| 单测/构建/类型/一致性（首轮，旧字节；整改后数字见 §0） | 176 tests：173 pass / 0 fail / 3 skip（基线 165/0/3，新增 8）；build、`check:consistency`（X01 4/4）、`test:types` 通过 | `rc42-tests.tap`、`rc42-build-consistency-types.log` |
+| 变异（首轮；整改后 29/29 见 §0） | 26/26 检出（新增 M23–M26：unregister 身份、unregister 孤儿进程、v1 未标注、入口检查放行 v1） | `rc42-mutations.log`、`../mutations/M2[3-6]*` |
+| 干净 tarball 消费者（首轮；整改后见 §0） | PASS：离线隔离安装 rc.42 tgz，真实自有进程 + `checkAppPackageEntry` + `unregister` 停止 runtime | `rc42-package-smoke.log` |
 
 ## 2. 方案取舍（真实 DSH 依据）
 
@@ -37,7 +51,7 @@
 
 ## 3. 测试脚手架（如实披露，不计为产品能力）
 
-- **隔离：** 每个场景都有独立的 `HOME`/`DSH_HOME`（`$RUN/home-<scenario>`），端口 35411–35418，`env -i` 启动，pnpm store 隔离。DSH 是官方 0.1.5-alpha.1 CLI（Desktop 依赖目录里的 `bin.js`），Node 24.13.1。没有碰 `~/.dsh`、3080、研究 runtime，也没有碰 P01/P04/P02 原 profile。
+- **隔离（更正）：** `HOME`/`DSH_HOME` 是**按 scenario 名**分的（`$RUN/home-<scenario>`），不是每个场景一个。同一 scenario 下的多个 profile 共用一个 `DSH_HOME`，而 storage 按 `DSH_HOME` 存：`red`（p1/p2/p3）、`green`（g1=A、g2=B–E、g3=作废的 gF）、`live`（l1，最终 lF 之前已整目录删除重建）、`compat`（c1）、`compatui`（c2）。A 在 g1 里从没开过实例，B 开始时 `instances` 为空（`logs/probes.jsonl:6`），所以 B–E 的结论没有被 A 污染；g3（gF）因共用而作废。整改复跑用的是另一个全新的 `RUN`（`run-rework`）。其余隔离条件：端口 35411–35418，`env -i` 启动，pnpm store 隔离。DSH 是官方 0.1.5-alpha.1 CLI（Desktop 依赖目录里的 `bin.js`），Node 24.13.1。没有碰 `~/.dsh`、3080、研究 runtime，也没有碰 P01/P04/P02 原 profile。
 - **私有包来源：**
   - 私有包经 pnpm `overrides` 指向冻结 tgz（`logs/*-scaffold.txt`）。
   - Core46 原本精确依赖 AppHost rc.41，测试里用 override 换成 rc.42 候选。**真实用户要拿到 rc.42，Core 需要发新版本并更新这条依赖（版本钉，非代码修复）。**
@@ -62,6 +76,28 @@
 3. **`web-server` 的 `ECONNRESET` warn：** 与 Playwright 关闭浏览器的时刻吻合。`loader patch: entry hanamesh-core not found`：套件移除后，profile patch 仍指向 Core，这是预期内的 warn。
 4. **DSH 0.1.5-alpha.1 的 `plugin remove` 不在运行时卸载 bundle**（`gE-live`：remove rc=0，应用仍注册、进程仍在，直到重启）。这是 DSH 自身行为，市场原有的「已卸载 · 需重启」与此一致。运行时卸载路径由 F（`disabled` live patch）覆盖。
 
+## 4A. `logs/probes.jsonl` 全段索引（原始日志不删、不改）
+
+| 行 | 运行 | 有效？ | 现象 | 根因 |
+|---|---|---|---|---|
+| 1–2 | RED p3（宿主在） | 有效 | 注册 1 次 | — |
+| 3–40 | A（g1）、B–E（g2） | 有效 | 见 §1 | — |
+| 41–56 | `gF`（g3，与 g1/g2 共用 `home-green`） | **作废** | live 禁用宿主未生效（`:45` 仍 200） | 已证有二：共用 HOME（非全新）；patch 写法为原地截断再写（同下）。gF 的文件在 `logs/superseded/gF*` |
+| 57–62 | `lF-startup-disabled` / `lF-live` 诊断 | 有效（诊断） | 启动时 `disabled:true` 生效；对运行中 DSH 追加写（`>>`）禁用宿主 2s 内生效 | — |
+| 63–83 | 第一轮 `lF`（`home-live` 首次） | **失败/作废** | `:67` 禁用宿主 30s 未生效（仍 200）；`:77` 禁用应用 20s 未撤下 | **根因未直接证实**：这一轮没有日志旁路。写法为 `cp base` 再 `>>` 追加（两次写），与下述已证的原地写问题同类，推定同因 |
+| 84–93 | `lD` 第 1 次（无日志旁路） | **失败** | `:85`、`:91` 恢复宿主时 `want 200 got 404`（20s） | **未直接证实**：无日志；恢复写法为 `cp` 原地覆盖，推定同因 |
+| 94–103 | `lD` 第 2 次（日志旁路放在仓内） | 有效（诊断），但不作证据 | 全部切换 500ms 内生效 | 同样是原地写却成功，说明这是**时序竞态**，不是每次都失败。该轮日志已被第 3 次运行截断覆盖，丢失；旁路放在仓内还触发了 `client-modules` 的「multiple active Loader sources」warn |
+| 104–113、114–123 | `lD` 第 3、4 次（日志旁路移到仓外） | **失败** | `:105`、`:111`、`:115`、`:121` 恢复宿主 `want 200 got 404` | **已证**：`logs/superseded/live-diag-cordis-log-inplace-write.jsonl` 记录了 DSH HMR `config reload … failed: … must be a top-level YAML array of loader patch entries`，即读到被截断的半截文件，此后的变更事件被合并，没有再次重载。改为「写临时文件 → rename」后不再出现 |
+| 124–144 | 第二轮 `lF`（复用 lD 残留的 `home-live`） | **作废** | `:125`、`:134` `open` 403；`:137–141` 禁用应用时本来就没有进程，**证明不了 unregister 能停进程** | **已证**：probe 复用了上一轮已存在的 viewId `v-f`/`v-f2`，又不带该 lease 的 token，`#checkToken` 返回 `LEASE_NOT_OWNED` 403 |
+| 145–165 | 最终 `lF`（删除重建的 `home-live`、原子写） | **有效** | 见 §1 F 行 | — |
+| 166–171 | 兼容门 cA/cB | 有效 | 见 §1 | — |
+
+同 tag 文件对应：
+- `lF.boot.log`、`lD.boot.log` 每轮被覆盖，现存的是最后一轮：`lF` = 09:56:12 有效轮，`lD` = 第 4 次。
+- `logs/boot-summary.log` 按时间追加：09:56:12/09:56:26 两行属于有效 `lF`；09:48:31、09:55:01 两轮作废。
+- `ui.jsonl` 的 `lF1-host-disabled` 共三条，只有第 7 行属于有效轮：第 5 行是第一轮（宿主其实没被禁用，仍请求了 `installedPlugins 200`），第 6 行是第二轮，第 4 行是 gF。
+- `logs/live-cordis-log.jsonl` 在有效 lF 开始时被清空，只含该轮。
+
 ## 5. 公开契约变化与旧消费者迁移（VIBE 唯一来源须另卡）
 
 - **契约变化：**
@@ -79,7 +115,8 @@
 
 ## 6. 产物
 
-- **候选包：** `hanamesh-dsh-app-host-0.1.0-rc.42.tgz`，SHA-256 `3047353d10123b1987e6e41a59e3ddd7ccaa76c5c8a6dfaad56d6bc79c6c3615`。这是真实门里实际安装的字节，副本在 `artifacts/`。
+- **当前候选包：** `artifacts/hanamesh-dsh-app-host-0.1.0-rc.42.tgz`，SHA-256 `95cf8af3f102fee25fe7ba890294135585273f37aba3b4d85020671aa933f47d`（整改后，§0 的真实回归装的就是这份字节）。
+- **作废的首个候选：** SHA-256 `3047353d10123b1987e6e41a59e3ddd7ccaa76c5c8a6dfaad56d6bc79c6c3615`（提交 `70723a7`，含 R2 竞态）。§1 中 A–F、RED、兼容门的真实证据都跑在这份旧字节上。
 - **固定输入：** 摘要见 `logs/inputs-sha256.txt`，与卡面一致：Core46 `829999…f416`、Usage10 `c69c97…864e`、AppHost41 `457b0c…7134`。
 - **复跑方法：** `harness/` 下的 `setup.sh`、`run-red.sh`、`run-green-a.sh`、`run-green-b.sh`、`run-green-e.sh`、`run-live-f.sh`、`run-compat.sh`、`run-compat-ui.sh` 可原样复跑。需要先启动 `stub.mjs` 和 `regstub.mjs`，路径变量见 `env.sh`。
 
@@ -88,4 +125,6 @@
 - 原生 Desktop 客户端：NOT_RUN（本卡只要求 DSH Web 真门）。
 - 真实 Vibe 包走 v2：不存在，需要 VIBE 卡。
 - 公共分发：仍是 `PUBLIC_DISTRIBUTION_NOT_AVAILABLE`。
-- SPEC/QUALITY 独立复核：未做，需由不同执行者完成。
+- SPEC 独立复核已做（SPEC_PASS，附 R1/R2 条件，本次已处理）；QUALITY 独立复核尚未做。
+- R5（坏定义的 UI 截图、宿主侧可查询的注册失败状态）：未做。
+- 整改后在新字节上没有重跑 A、RED 与兼容门（理由见 §0）。

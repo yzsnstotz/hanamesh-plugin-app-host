@@ -1,0 +1,27 @@
+TAP version 13
+# (node:26652) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregister starts is found and stopped — no orphan runtime
+not ok 1 - AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregister starts is found and stopped — no orphan runtime
+  ---
+  duration_ms: 103.816834
+  type: 'test'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-tjMbaV/tests/app-package-lifecycle.test.mjs:188:1'
+  failureType: 'unhandledRejection'
+  error: 'targets.map is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    AppHost.unregister (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-tjMbaV/src/manager.js:105:54)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 276.123083
+(node:26651) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)

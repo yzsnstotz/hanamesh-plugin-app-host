@@ -1,12 +1,12 @@
 TAP version 13
-# (node:98447) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:26486) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-PK06 unregister only removes the exact registration and is a no-op while the host closes
 not ok 1 - AH-PK06 unregister only removes the exact registration and is a no-op while the host closes
   ---
-  duration_ms: 70.766125
+  duration_ms: 70.894625
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-neS4m8/tests/app-package-lifecycle.test.mjs:124:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-7iRY6y/tests/app-package-lifecycle.test.mjs:124:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:
@@ -33,7 +33,7 @@ not ok 1 - AH-PK06 unregister only removes the exact registration and is a no-op
     stopped: 0
   operator: 'deepStrictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-neS4m8/tests/app-package-lifecycle.test.mjs:130:10)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-7iRY6y/tests/app-package-lifecycle.test.mjs:130:10)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -45,6 +45,6 @@ not ok 1 - AH-PK06 unregister only removes the exact registration and is a no-op
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 158.275542
-(node:98446) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 151.948125
+(node:26485) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

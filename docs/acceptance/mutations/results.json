@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-02T09:42:49.688Z",
+  "generatedAt": "2026-10-02T10:24:55.334Z",
   "results": [
     {
       "id": "M21-market-close-retry-rejected-cache",
@@ -58,8 +58,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "c796d685b1133f3545f388675aa2abc7867876290e7055b00a0ae1e1cb485593",
-      "mutatedSourceSha256": "555e8db0a456231aa2e41a99d6c9c88eabb8b6e16d7df01fe29b4b793971df7e"
+      "originalSourceSha256": "105c5f81659e8938c9b30fe57a59b05a4673ef37046abbb3b241e25166bb3fad",
+      "mutatedSourceSha256": "19e21aef063650e765241ac18d23bf502f7b390505d0ebb20b155610b124a8f0"
     },
     {
       "id": "M02-reserve-launch",
@@ -88,8 +88,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "c796d685b1133f3545f388675aa2abc7867876290e7055b00a0ae1e1cb485593",
-      "mutatedSourceSha256": "990e31afc3ce1697b1b1899399454addbc1fdf276a0c2156db398580973a9034"
+      "originalSourceSha256": "105c5f81659e8938c9b30fe57a59b05a4673ef37046abbb3b241e25166bb3fad",
+      "mutatedSourceSha256": "e19f0aaff2e87c7f566b49aa76eebebcdcd721593994c6776cf05983ef56e6ff"
     },
     {
       "id": "M04-socket-ownership",
@@ -228,8 +228,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "c796d685b1133f3545f388675aa2abc7867876290e7055b00a0ae1e1cb485593",
-      "mutatedSourceSha256": "96652943644818986e211aa51ef6735129d8a1228d88fc9fbd7490d61873c46a"
+      "originalSourceSha256": "105c5f81659e8938c9b30fe57a59b05a4673ef37046abbb3b241e25166bb3fad",
+      "mutatedSourceSha256": "29cfe61f0dfe39043186d7ccff004cb44495a9e071a84c1e05b2b8c5091e80c5"
     },
     {
       "id": "M24-unregister-orphans-runtime",
@@ -238,8 +238,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "c796d685b1133f3545f388675aa2abc7867876290e7055b00a0ae1e1cb485593",
-      "mutatedSourceSha256": "f9c1630a2c792a07647789183a4b400780848ed9ed710b36a4d358a70b0b0128"
+      "originalSourceSha256": "105c5f81659e8938c9b30fe57a59b05a4673ef37046abbb3b241e25166bb3fad",
+      "mutatedSourceSha256": "6732be4adade2b12ae444a32247b1b126c9c30339b1fc2c610f67a579e08f221"
     },
     {
       "id": "M25-installed-lifecycle-always-optional",
@@ -260,6 +260,36 @@
       "killed": true,
       "originalSourceSha256": "b731c734f63631b6f5e6255348c4532e025bc76f18f60e3e7ece68588585dcc6",
       "mutatedSourceSha256": "a0abb33f0bfe8169fc365a52d82fae2f8885c25547450e5bd6f7ab8993b5fdfc"
+    },
+    {
+      "id": "M27-queued-open-skips-registration-check",
+      "test": "tests/app-package-lifecycle.test.mjs",
+      "pattern": "^AH-PK08 ",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "105c5f81659e8938c9b30fe57a59b05a4673ef37046abbb3b241e25166bb3fad",
+      "mutatedSourceSha256": "933cefc8678b090660951da36e94c115843181e1b6e3c8b42b43d1046a004076"
+    },
+    {
+      "id": "M28-unregister-targets-outside-queue",
+      "test": "tests/app-package-lifecycle.test.mjs",
+      "pattern": "^AH-PK10 ",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "105c5f81659e8938c9b30fe57a59b05a4673ef37046abbb3b241e25166bb3fad",
+      "mutatedSourceSha256": "4bfacd09da3bc524e0a93639203a11f2a73e6b704075ebeb6097b9e2bb07e8ee"
+    },
+    {
+      "id": "M29-unregister-stops-other-apps",
+      "test": "tests/app-package-lifecycle.test.mjs",
+      "pattern": "^AH-PK09 ",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "105c5f81659e8938c9b30fe57a59b05a4673ef37046abbb3b241e25166bb3fad",
+      "mutatedSourceSha256": "6734a6159336f370c36661e7fb1ad715aaee97e2628af3a88118515842a0ae20"
     }
   ]
 }

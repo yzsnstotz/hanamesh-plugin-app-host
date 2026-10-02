@@ -1,10 +1,10 @@
 TAP version 13
-# (node:98422) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:26470) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall / plugin fields answer 400 INVALID_INPUT before any operation starts; installedPlugins and the plugin routes are served
 ok 1 - AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall / plugin fields answer 400 INVALID_INPUT before any operation starts; installedPlugins and the plugin routes are served
   ---
-  duration_ms: 81.308458
+  duration_ms: 82.87075
   type: 'test'
   ...
 1..1
@@ -15,6 +15,6 @@ ok 1 - AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall 
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 150.013667
-(node:98421) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 149.283834
+(node:26469) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

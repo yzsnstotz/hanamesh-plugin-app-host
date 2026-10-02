@@ -1,10 +1,10 @@
 TAP version 13
-# (node:98557) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:26592) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-PK07 checkAppPackageEntry: v2 entry passes; a top-level hanameshApps inject (array or map) or a stale contractVersion is refused
 ok 1 - AH-PK07 checkAppPackageEntry: v2 entry passes; a top-level hanameshApps inject (array or map) or a stale contractVersion is refused
   ---
-  duration_ms: 41.414125
+  duration_ms: 41.5695
   type: 'test'
   ...
 1..1
@@ -15,6 +15,6 @@ ok 1 - AH-PK07 checkAppPackageEntry: v2 entry passes; a top-level hanameshApps i
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 129.159167
-(node:98556) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 120.497208
+(node:26591) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

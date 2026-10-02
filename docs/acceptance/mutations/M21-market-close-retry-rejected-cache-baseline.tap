@@ -1,10 +1,10 @@
 TAP version 13
-# (node:97153) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:25229) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-VL10: failed close can be explicitly retried after network recovery without restarting renewal
 ok 1 - AH-VL10: failed close can be explicitly retried after network recovery without restarting renewal
   ---
-  duration_ms: 5.069083
+  duration_ms: 4.788625
   type: 'test'
   ...
 1..1
@@ -15,6 +15,6 @@ ok 1 - AH-VL10: failed close can be explicitly retried after network recovery wi
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 45.444708
-(node:97152) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 40.599625
+(node:25228) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

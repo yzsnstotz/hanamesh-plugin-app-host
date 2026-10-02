@@ -1,0 +1,12 @@
+$ /Users/yzliu/work/projects/hanamesh/_deliveries/p02-dispatch-20261002/worktrees/apphost-contract/docs/acceptance/p02-apphost-contract/harness/dsh.sh green plugin --profile g2 add file:/Users/yzliu/.claude/jobs/68def075/tmp/run-rework-final/home-green/dsh/profiles/g2/.inputs/hanamesh-core-0.2.0-rc.46.tgz
+✓ Lockfile passes supply-chain policies (verified 8s ago)
+Progress: resolved 0, reused 1, downloaded 0, added 0
+[WARN] Issues with peer dependencies found. Run "pnpm peers check" to list them.
+
+dependencies:
++ hanamesh-core file:/Users/yzliu/.claude/jobs/68def075/tmp/run-rework-final/home-green/dsh/profiles/g2/.inputs/hanamesh-core-0.2.0-rc.46.tgz
+
+Packages: +2
+++
+Progress: resolved 7, reused 6, downloaded 0, added 2, done
+Done in 287ms using pnpm v11.7.0

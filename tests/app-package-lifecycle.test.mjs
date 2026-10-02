@@ -15,8 +15,8 @@ import * as storageJson from '@deepseek-ai/dsh-storage-json';
 import * as storageDomain from '@deepseek-ai/dsh-storage-domain';
 import WebServer from '@deepseek-ai/dsh-host-webserver';
 import * as appHost from '../src/dsh.js';
-import { checkAppPackageEntry, APP_PACKAGE_CONTRACT_VERSION } from '../src/index.js';
-import { definition, temporary, until, pidAlive, delay } from './helpers.mjs';
+import { checkAppPackageEntry, APP_PACKAGE_CONTRACT_VERSION, AppHost, AtomicFileStore } from '../src/index.js';
+import { definition, temporary, until, pidAlive, delay, parentOrigin } from './helpers.mjs';
 
 const P = appHost.BROWSER_PRINCIPAL;
 const FIBER_ACTIVE = 2, FIBER_PENDING = 0;   // same mirrors dsh-app-boot uses to audit Loader entries
@@ -148,4 +148,63 @@ test('AH-PK07 checkAppPackageEntry: v2 entry passes; a top-level hanameshApps in
   const doc = await readFile(new URL('../docs/APP_PACKAGE.md', import.meta.url), 'utf8');
   const entry = await readFile(new URL('./fixtures/app-package/entry-v2.js', import.meta.url), 'utf8');
   assert.ok(doc.includes('```js\n' + entry + '```'), 'docs/APP_PACKAGE.md must show entry-v2.js verbatim');
+});
+
+test('AH-PK08 (SPEC R2) an Open already queued when unregister runs never reserves or launches a runtime for the removed app', async t => {
+  const r = await root(t);
+  await r.host.start();
+  const host = r.ctx.get('hanameshApps');
+  const { appId, definitionHash } = host.register(definition({ id: 'race-app' }));
+  // Another app's Open occupies the serial queue, so the raced Open has read the definition but not yet reserved
+  // when unregister starts (both calls are issued synchronously, before any queued step runs).
+  host.register(definition({ id: 'blocker' }));
+  const held = host.beginOpen({ appId: 'blocker', deploymentId: 'local', viewId: 'v-blocker' }, P);
+  const raced = host.beginOpen({ appId, deploymentId: 'local', viewId: 'v-race' }, P);
+  const undone = await host.unregister(appId, definitionHash);
+  const outcome = await raced.then(value => ({ value }), error => ({ error }));
+  await held;
+  assert.equal(undone.removed, true);
+  // The queued Open had not reserved yet, so it must be refused — no record, no runtime for the removed app.
+  assert.equal(outcome.error?.code, 'APP_NOT_REGISTERED', JSON.stringify(outcome.value?.instance ?? null));
+  assert.deepEqual(host.instanceList(P).filter(i => i.appId === appId), [], JSON.stringify(host.instanceList(P)));
+});
+
+test('AH-PK09 (SPEC R3) unregistering app A stops only A: app B keeps its live, ready runtime', async t => {
+  const r = await root(t);
+  await r.host.start();
+  const host = r.ctx.get('hanameshApps');
+  const a = host.register(definition({ id: 'app-a' })), b = host.register(definition({ id: 'app-b' }));
+  const openA = await host.open({ appId: 'app-a', deploymentId: 'local', viewId: 'v-a' }, P);
+  const openB = await host.open({ appId: 'app-b', deploymentId: 'local', viewId: 'v-b' }, P);
+  assert.ok(pidAlive(openA.instance.pid)); assert.ok(pidAlive(openB.instance.pid));
+  assert.deepEqual(await host.unregister(a.appId, a.definitionHash), { appId: 'app-a', removed: true, stopped: 1 });
+  assert.equal(pidAlive(openA.instance.pid), false);
+  assert.ok(pidAlive(openB.instance.pid), 'B must survive A being unregistered');
+  assert.equal(host.instance(openB.instance.id, P).status, 'ready');
+  assert.deepEqual(host.list(P).apps.map(x => x.id), ['app-b']);
+  void b;
+});
+
+test('AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregister starts is found and stopped — no orphan runtime', async t => {
+  const dir = await temporary();
+  // The real file store, with one save held open so unregister lands between "registration checked" and "reservation durable".
+  const inner = new AtomicFileStore(join(dir, 'sidecar')); let hold = null;
+  const store = { init: () => inner.init(), load: () => inner.load(), close: () => inner.close(),
+    save: async snapshot => { if (hold && snapshot.instances.some(i => i.appId === 'held-app')) { const h = hold; hold = null; h.reached(); await h.gate; } return await inner.save(snapshot); } };
+  const host = new AppHost({ store, dataRoot: join(dir, 'data'), parentOrigin, sweepIntervalMs: 0 });
+  t.after(async () => { await host.dispose(); await rm(dir, { recursive: true, force: true }); });
+  const { appId, definitionHash } = host.register(definition({ id: 'held-app' }));
+  await host.init();
+  let reached, release; const atSave = new Promise(r => { reached = r; }), gate = new Promise(r => { release = r; });
+  hold = { reached, gate };
+  const opening = host.beginOpen({ appId, deploymentId: 'local', viewId: 'v-held' }, P);
+  await atSave;                                         // reservation is being written, not yet in host state
+  const undoing = host.unregister(appId, definitionHash);
+  release();
+  const opened = await opening;                         // it passed the registration check before the delete
+  const undone = await undoing;
+  assert.deepEqual(undone, { appId, removed: true, stopped: 1 });
+  await until(() => !pidAlive(opened.instance.pid ?? host.instance(opened.instance.id, P)?.pid ?? -1));
+  assert.equal(host.instance(opened.instance.id, P).status, 'stopped');
+  assert.deepEqual(host.list(P).apps, []);
 });

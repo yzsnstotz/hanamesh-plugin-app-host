@@ -1,10 +1,10 @@
 TAP version 13
-# (node:98439) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:26478) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-K5-2: Electron self-hosting refuses fallback and persists a failed instance event
 ok 1 - AH-K5-2: Electron self-hosting refuses fallback and persists a failed instance event
   ---
-  duration_ms: 58.849375
+  duration_ms: 37.193
   type: 'test'
   ...
 1..1
@@ -15,6 +15,6 @@ ok 1 - AH-K5-2: Electron self-hosting refuses fallback and persists a failed ins
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 135.155666
-(node:98438) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 101.417167
+(node:26477) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

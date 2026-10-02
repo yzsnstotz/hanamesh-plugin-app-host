@@ -62,7 +62,7 @@ app 升级会改描述符。宿主只在数据绑定（dataDir/mode，`BINDING_P
 
 ## Host service
 
-`register / unregister（rc.42，见 APP_PACKAGE.md 契约 v2） / beginOpen / open / start / resume / recoverView / heartbeat / close / stop / stopAll / instance / instanceList / list / logTail / eventsSince / subscribe / dispose`。`.d.ts` 是可编译的精确字段定义。宿主方法省略 principal 时是受信 `host` 主体，浏览器路由必须使用认证系统给出的主体，不能从请求体读 principal。
+`register / unregister（rc.42，见 APP_PACKAGE.md 契约 v2；撤销时仍排队的 open 以 `APP_NOT_REGISTERED` 拒绝） / beginOpen / open / start / resume / recoverView / heartbeat / close / stop / stopAll / instance / instanceList / list / logTail / eventsSince / subscribe / dispose`。`.d.ts` 是可编译的精确字段定义。宿主方法省略 principal 时是受信 `host` 主体，浏览器路由必须使用认证系统给出的主体，不能从请求体读 principal。
 
 `beginOpen` 在 durable reservation 和 bounded spawn 后返回回执（owned 所有权回收先按既有 5s bootstrap + stopGraceMs + 2s kill确认限时；仅 acquire 成功后启动后续独立 5s launcher/app握手，错误/guardian退出在两阶段立即失败），此时可 `close` 取消尚未就绪的启动；`open/start` 等待就绪，供受信调用者使用。回执包含持久 instance、view lease、`leaseToken`、`uiUrl`（未就绪时 null）。原始 token 不写入 sidecar，仅存哈希；只读列表与事件流不返回 token。
 

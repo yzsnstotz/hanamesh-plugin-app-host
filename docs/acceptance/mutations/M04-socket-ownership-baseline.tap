@@ -1,10 +1,10 @@
 TAP version 13
-# (node:98195) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:26237) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH readiness: unrelated HTTP 200 with the same app marker is not owned readiness
 ok 1 - AH readiness: unrelated HTTP 200 with the same app marker is not owned readiness
   ---
-  duration_ms: 274.509667
+  duration_ms: 223.664417
   type: 'test'
   ...
 1..1
@@ -15,6 +15,6 @@ ok 1 - AH readiness: unrelated HTTP 200 with the same app marker is not owned re
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 380.8545
-(node:98191) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 300.6075
+(node:26236) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

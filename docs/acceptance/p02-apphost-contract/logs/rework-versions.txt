@@ -1,0 +1,14 @@
+$ dsh --version (official CLI, env -i isolated)
+0.1.5-alpha.1
+$ node --version (/Users/yzliu/Library/Application Support/com.hanamesh.desktop/runtime/bin/node)
+v24.13.1
+$ CLI package.json name/version
+@deepseek-ai/dsh@0.1.5-alpha.1
+$ shasum -a 256 bin.js
+0ff7f1d72c4e0cbe14001709c81e20a04b70464118a7f78568952988e28f2ac5  @deepseek-ai/dsh/lib/bin.js
+$ cordis version
+4.0.2
+$ pnpm --version (desktop pnpm.cjs)
+(node:23133) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+11.7.0
