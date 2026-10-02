@@ -1,0 +1,30 @@
+TAP version 13
+# Subtest: P06A-T01/T02/T03/T05/T06/T07: target validates before support limit, replaces and consumes only exact ID without persistent effects
+not ok 1 - P06A-T01/T02/T03/T05/T06/T07: target validates before support limit, replaces and consumes only exact ID without persistent effects
+  ---
+  duration_ms: 0.970292
+  type: 'test'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-jLvnJ5/tests/library-target.test.mjs:16:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The validation function is expected to return "true". Received false
+
+    Caught error:
+
+    AppHostError: The current catalog search supports at most 200 characters.
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  stack: |-
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-jLvnJ5/tests/library-target.test.mjs:23:12)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 67.355

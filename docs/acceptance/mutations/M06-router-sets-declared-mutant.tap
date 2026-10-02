@@ -1,24 +1,22 @@
 TAP version 13
-# (node:57721) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-R11/AK11 sets expands provider, baseUrl and model and ignores undeclared or empty targets
 not ok 1 - AH-R11/AK11 sets expands provider, baseUrl and model and ignores undeclared or empty targets
   ---
-  duration_ms: 2.463958
+  duration_ms: 2.334333
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-Gu2yU7/tests/router-broker.test.mjs:87:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-IgAHLi/tests/router-broker.test.mjs:87:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:
-    [32m+ actual[39m [31m- expected[39m
+    + actual - expected
     
-    [39m  {
-    [39m    EMPTY: 'http://127.0.0.1:18080/v1',
-    [39m    LANGCHAIN_MODEL_NAME: 'gpt-5.5',
-    [32m+[39m   NOT_DECLARED: 'x',
-    [39m    OPENAI_API_KEY: 'gateway-secret',
-    [39m    OPENAI_BASE_URL: 'http://127.0.0.1:18080/v1'
-    [39m  }
+      {
+        EMPTY: 'http://127.0.0.1:18080/v1',
+        LANGCHAIN_MODEL_NAME: 'gpt-5.5',
+    +   NOT_DECLARED: 'x',
+        OPENAI_API_KEY: 'gateway-secret',
+        OPENAI_BASE_URL: 'http://127.0.0.1:18080/v1'
+      }
     
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
@@ -35,8 +33,7 @@ not ok 1 - AH-R11/AK11 sets expands provider, baseUrl and model and ignores unde
     NOT_DECLARED: 'x'
   operator: 'deepStrictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-Gu2yU7/tests/router-broker.test.mjs:94:10)
-    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-IgAHLi/tests/router-broker.test.mjs:94:10)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -48,6 +45,4 @@ not ok 1 - AH-R11/AK11 sets expands provider, baseUrl and model and ignores unde
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 38.764792
-(node:57720) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-(Use `node --trace-warnings ...` to show where the warning was created)
+# duration_ms 35.072792

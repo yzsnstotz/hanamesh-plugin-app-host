@@ -1,26 +1,24 @@
 TAP version 13
-# (node:57870) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-U08 (T6): the Router route becomes the hour receipt {providerId, model, count}; injections and requests are separate; unknown routes report without a receipt
 not ok 1 - AH-U08 (T6): the Router route becomes the hour receipt {providerId, model, count}; injections and requests are separate; unknown routes report without a receipt
   ---
-  duration_ms: 232.068917
+  duration_ms: 235.191167
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-BCDkS0/tests/usage-evidence.test.mjs:230:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-38ThGG/tests/usage-evidence.test.mjs:230:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:
-    [32m+ actual[39m [31m- expected[39m
+    + actual - expected
     
-    [39m  [
-    [39m    {
-    [32m+[39m     count: 1,
-    [31m-[39m     count: 3,
-    [39m      hour: '2026092210',
-    [39m      injections: 1,
-    [39m      model: 'deepseek-chat',
-    [39m      providerId: 'deepseek'
-    [39m    }
+      [
+        {
+    +     count: 1,
+    -     count: 3,
+          hour: '2026092210',
+          injections: 1,
+          model: 'deepseek-chat',
+          providerId: 'deepseek'
+        }
     
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
@@ -40,7 +38,7 @@ not ok 1 - AH-U08 (T6): the Router route becomes the hour receipt {providerId, m
       injections: 1
   operator: 'deepStrictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-BCDkS0/tests/usage-evidence.test.mjs:243:10)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-38ThGG/tests/usage-evidence.test.mjs:243:10)
     process.processTicksAndRejections (node:internal/process/task_queues:103:5)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
@@ -53,6 +51,4 @@ not ok 1 - AH-U08 (T6): the Router route becomes the hour receipt {providerId, m
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 299.14575
-(node:57868) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-(Use `node --trace-warnings ...` to show where the warning was created)
+# duration_ms 302.700625

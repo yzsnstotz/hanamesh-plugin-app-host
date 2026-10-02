@@ -1,23 +1,21 @@
 TAP version 13
-# (node:57883) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-R12 (T6) every injection tells the receipt observer the routed provider and model — never the value — and local receipts are readable per app
 not ok 1 - AH-R12 (T6) every injection tells the receipt observer the routed provider and model — never the value — and local receipts are readable per app
   ---
-  duration_ms: 2.65525
+  duration_ms: 2.660875
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-pybML0/tests/router-broker.test.mjs:127:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-kt794K/tests/router-broker.test.mjs:127:1'
   failureType: 'testCodeFailure'
   error: |-
     a throwing receipt observer never fails the credential injection
-    [32m+ actual[39m [31m- expected[39m
+    + actual - expected
     
-    [39m  {
-    [32m+[39m   error: 'observer down',
-    [32m+[39m   injected: false
-    [31m-[39m   error: undefined,
-    [31m-[39m   injected: true
-    [39m  }
+      {
+    +   error: 'observer down',
+    +   injected: false
+    -   error: undefined,
+    -   injected: true
+      }
     
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
@@ -28,8 +26,7 @@ not ok 1 - AH-R12 (T6) every injection tells the receipt observer the routed pro
     error: 'observer down'
   operator: 'deepStrictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-pybML0/tests/router-broker.test.mjs:145:10)
-    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-kt794K/tests/router-broker.test.mjs:145:10)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -41,6 +38,4 @@ not ok 1 - AH-R12 (T6) every injection tells the receipt observer the routed pro
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 35.911292
-(node:57882) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-(Use `node --trace-warnings ...` to show where the warning was created)
+# duration_ms 36.86175

@@ -1,0 +1,13 @@
+{
+  "gate": "T15 exact rc43 rollback",
+  "result": "PASS",
+  "installedVersion": "0.1.0-rc.43",
+  "targetStatus": 404,
+  "targetBodyBytes": 0,
+  "marketStatus": 200,
+  "marketItems": 50,
+  "sourcesStatus": 200,
+  "apps": [
+    "contract-fixture"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "gate": "full-auth no-cookie AppHost target",
+  "status": 401,
+  "errorCode": "UNAUTHENTICATED",
+  "bodyBytes": 143
+}

@@ -1,23 +1,21 @@
 TAP version 13
-# (node:58067) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregister starts is found and stopped — no orphan runtime
 not ok 1 - AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregister starts is found and stopped — no orphan runtime
   ---
-  duration_ms: 159.344417
+  duration_ms: 156.920792
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-f8NOOD/tests/app-package-lifecycle.test.mjs:196:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-TrD1n6/tests/app-package-lifecycle.test.mjs:196:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:
-    [32m+ actual[39m [31m- expected[39m
+    + actual - expected
     
-    [39m  {
-    [39m    appId: 'held-app',
-    [39m    removed: true,
-    [32m+[39m   stopped: 0
-    [31m-[39m   stopped: 1
-    [39m  }
+      {
+        appId: 'held-app',
+        removed: true,
+    +   stopped: 0
+    -   stopped: 1
+      }
     
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
@@ -31,7 +29,7 @@ not ok 1 - AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregi
     stopped: 0
   operator: 'deepStrictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-f8NOOD/tests/app-package-lifecycle.test.mjs:214:10)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-TrD1n6/tests/app-package-lifecycle.test.mjs:214:10)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -43,6 +41,4 @@ not ok 1 - AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregi
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 237.311417
-(node:58066) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-(Use `node --trace-warnings ...` to show where the warning was created)
+# duration_ms 238.462791

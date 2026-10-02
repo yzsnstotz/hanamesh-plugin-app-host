@@ -1,6 +1,50 @@
 {
-  "generatedAt": "2026-10-02T11:02:18.255Z",
+  "generatedAt": "2026-10-02T22:39:52.824Z",
   "results": [
+    {
+      "id": "M33-target-search-200",
+      "test": "tests/library-target.test.mjs",
+      "pattern": "^P06A-T01/T02/T03",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "failed": true,
+      "killed": true,
+      "originalSourceSha256": "bb7b672e0de3dd7237115dfc4ff8e319d891403b7c15e41879345b2dd86b1f4b",
+      "mutatedSourceSha256": "52e5f49955a326404f69f4065ecc03811aae67981605c794a01cb44647a73c1b"
+    },
+    {
+      "id": "M34-target-validation-first",
+      "test": "tests/library-target.test.mjs",
+      "pattern": "^P06A-T01/T02/T03",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "failed": true,
+      "killed": true,
+      "originalSourceSha256": "bb7b672e0de3dd7237115dfc4ff8e319d891403b7c15e41879345b2dd86b1f4b",
+      "mutatedSourceSha256": "298a1cf4b86a5e9a0c3b24b353677da78306eccdd895736ef262315f2c956dbe"
+    },
+    {
+      "id": "M35-target-exact-result",
+      "test": "tests/client-target.test.mjs",
+      "pattern": "^P06A-T08/T09/T10b",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "failed": true,
+      "killed": true,
+      "originalSourceSha256": "920224fdaaeab81daa25e5a587952a9873f7988cd7a87b3ffaa9b3cae9632b56",
+      "mutatedSourceSha256": "006007492778a945910c8a63a0a21a3395070510a82371614677b6e9fede6df8"
+    },
+    {
+      "id": "M36-target-consume-id",
+      "test": "tests/library-target.test.mjs",
+      "pattern": "^P06A-T01/T02/T03",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "failed": true,
+      "killed": true,
+      "originalSourceSha256": "bb7b672e0de3dd7237115dfc4ff8e319d891403b7c15e41879345b2dd86b1f4b",
+      "mutatedSourceSha256": "7937e7b64c8f4e4231626f906d552caef3ebd1313500e9ac8f979f55e0d6b237"
+    },
     {
       "id": "M21-market-close-retry-rejected-cache",
       "test": "tests/client-heartbeat.test.mjs",
@@ -9,8 +53,8 @@
       "mutantExit": 1,
       "failed": true,
       "killed": true,
-      "originalSourceSha256": "91d4d333bd9920bba1e01570dd46096937901f9d8d4d9d99166a588a3e407a09",
-      "mutatedSourceSha256": "2a03dae8c9adaeb45ad2177517f67fdff339595bdb42b7231c332b44608ae575"
+      "originalSourceSha256": "920224fdaaeab81daa25e5a587952a9873f7988cd7a87b3ffaa9b3cae9632b56",
+      "mutatedSourceSha256": "bffa746bbeb14fcc0f12a580f57e2ab6d8b926e041996402b7677b65f096a5d2"
     },
     {
       "id": "M22-market-late-open-orphan",
@@ -20,8 +64,8 @@
       "mutantExit": 1,
       "failed": true,
       "killed": true,
-      "originalSourceSha256": "91d4d333bd9920bba1e01570dd46096937901f9d8d4d9d99166a588a3e407a09",
-      "mutatedSourceSha256": "8ddc5963942263422cc5faf05987f782830b511daa22f0e1c9a76b36285f8500"
+      "originalSourceSha256": "920224fdaaeab81daa25e5a587952a9873f7988cd7a87b3ffaa9b3cae9632b56",
+      "mutatedSourceSha256": "0ec83b0e181e8d2036404e7a31bb34e74c112b3f846bd9fc99ec1aba4ad18f88"
     },
     {
       "id": "M19-market-view-heartbeat-missing",
@@ -31,8 +75,8 @@
       "mutantExit": 1,
       "failed": true,
       "killed": true,
-      "originalSourceSha256": "91d4d333bd9920bba1e01570dd46096937901f9d8d4d9d99166a588a3e407a09",
-      "mutatedSourceSha256": "89d133553d3c7e3716b0b5a27a86c2cf43d5a6c8671b3a75d36f2fb31909c567"
+      "originalSourceSha256": "920224fdaaeab81daa25e5a587952a9873f7988cd7a87b3ffaa9b3cae9632b56",
+      "mutatedSourceSha256": "25ade1c10495ec089bab525d47fe01d56e425062d6119c50942fa4e929481cc4"
     },
     {
       "id": "M20-market-view-cleanup-missing",
@@ -42,8 +86,8 @@
       "mutantExit": 1,
       "failed": true,
       "killed": true,
-      "originalSourceSha256": "91d4d333bd9920bba1e01570dd46096937901f9d8d4d9d99166a588a3e407a09",
-      "mutatedSourceSha256": "2665a64af88de64e89fb22d56ccbd8b8fd333f8c47ce588057f10a27cccb0bcc"
+      "originalSourceSha256": "920224fdaaeab81daa25e5a587952a9873f7988cd7a87b3ffaa9b3cae9632b56",
+      "mutatedSourceSha256": "4ec4e860bca78c229bd8340dde0e981022d41cb954b3b6c66adf82e1f21a6b16"
     },
     {
       "id": "M18-reclaim-spawn-budget",
@@ -218,8 +262,8 @@
       "mutantExit": 1,
       "failed": true,
       "killed": true,
-      "originalSourceSha256": "ddc4cfc9486af7ed6ea6c65ec46ec7f27f18e884e7c786ba06dd6b867a49a275",
-      "mutatedSourceSha256": "17ff0ed57cbc5c2def81f090b600ee26769c6c67cf84e942aade04ec525474ad"
+      "originalSourceSha256": "bb7b672e0de3dd7237115dfc4ff8e319d891403b7c15e41879345b2dd86b1f4b",
+      "mutatedSourceSha256": "8efeea8a9fba19bb0663453798cab9e8501992556ffa612d60a9cf5d71768cf8"
     },
     {
       "id": "M17-market-seat-exclusive",
@@ -229,8 +273,8 @@
       "mutantExit": 1,
       "failed": true,
       "killed": true,
-      "originalSourceSha256": "91d4d333bd9920bba1e01570dd46096937901f9d8d4d9d99166a588a3e407a09",
-      "mutatedSourceSha256": "bff42c2a334d2c8e679bdbda92230db670d6893d77e37ba96693cd25e2f38f5a"
+      "originalSourceSha256": "920224fdaaeab81daa25e5a587952a9873f7988cd7a87b3ffaa9b3cae9632b56",
+      "mutatedSourceSha256": "29d54e5a8768ffd017cf232b18d4f386ca606ccb6f2a0bb39369fb5018cd20c5"
     },
     {
       "id": "M08-node-runtime-electron",

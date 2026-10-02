@@ -10,7 +10,7 @@ const RESTART_STATES=new Set(['installed-not-loaded','uninstalled-not-unloaded']
 const protectedPackage=name=>PROTECTED_PACKAGES.includes(name);
 
 export function createLibraryService({domain,host,config={},dataRoot,ledgerReader,installer}){
-  const events=[];let sequence=0;let state;const running=new Map();let bootDependencies;
+  const events=[];let sequence=0;let state;const running=new Map();let bootDependencies;let target=null;
   const emit=event=>{const value={sequence:++sequence,at:Date.now(),...event};events.push(value);if(events.length>512)events.shift();return value;};
   // Real sources hold ~10k entries (2026-09-20: market.hanamesh.com 12,121). `/hanamesh/library` keeps its rc.16 default
   // (`category=hanamesh-app`, backward compatible); the rc.28 market page asks for `category=''` (everything) explicitly.
@@ -36,6 +36,21 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   }
   const runningApp=appId=>host.instanceList().some(instance=>instance.appId===appId&&!['stopped','failed','interrupted'].includes(instance.status));
   return{
+    requestTarget(input){
+      requireCondition(input&&typeof input==='object'&&!Array.isArray(input),'INVALID_INPUT','Target request requires an object.');
+      requireCondition(Object.keys(input).every(key=>key==='packageName'),'UNKNOWN_FIELDS','Target request takes packageName only.');
+      const packageName=input.packageName;
+      requireCondition(text(packageName,214)&&PACKAGE_NAME.test(packageName),'INVALID_INPUT','packageName is invalid.');
+      requireCondition(packageName.length<=200,'TARGET_SEARCH_UNSUPPORTED','The current catalog search supports at most 200 characters.',{maxLength:200,length:packageName.length},400);
+      target={targetId:randomUUID(),packageName};return{...target};
+    },
+    pendingTarget(){return target?{...target,protected:protectedPackage(target.packageName)}:null;},
+    consumeTarget(input){
+      requireCondition(input&&typeof input==='object'&&!Array.isArray(input),'INVALID_INPUT','Target consume requires an object.');
+      requireCondition(Object.keys(input).every(key=>key==='targetId'),'UNKNOWN_FIELDS','Target consume takes targetId only.');
+      requireCondition(typeof input.targetId==='string'&&input.targetId.length>0,'INVALID_INPUT','targetId is required.');
+      if(target?.targetId!==input.targetId)return{consumed:false};target=null;return{consumed:true};
+    },
     async init(){state=await domain.global.get();if(state.sources.length===0&&Array.isArray(config.sources)&&config.sources.length){const sources=config.sources.map((source,index)=>({manifestUrl:validateManifestUrl(source.manifestUrl).href,enabled:source.enabled===true||(source.enabled!==false&&index===0)}));requireCondition(sources.filter(source=>source.enabled).length===1,'CATALOG_SOURCE_REQUIRED','Exactly one catalog source must be enabled.');await persist({...state,sources});}
       // rc.28: the dependency set at boot is the "loaded" baseline for plugin restart states; unreadable → everything counts as loaded.
       if(config.profileDir){try{bootDependencies=await snapshotProfileDependencies(config.profileDir);}catch{bootDependencies=undefined;}}

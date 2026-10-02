@@ -1,16 +1,14 @@
 TAP version 13
-# (node:57905) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-PK06 unregister only removes the exact registration (registrationId, not content) and is a no-op while the host closes
 ok 1 - AH-PK06 unregister only removes the exact registration (registrationId, not content) and is a no-op while the host closes
   ---
-  duration_ms: 73.074625
+  duration_ms: 70.036042
   type: 'test'
   ...
 # Subtest: AH-PK11 (QUALITY R-Q1) a late disposer of an earlier registration of the SAME definition never removes the current one or stops its runtime
 ok 2 - AH-PK11 (QUALITY R-Q1) a late disposer of an earlier registration of the SAME definition never removes the current one or stops its runtime
   ---
-  duration_ms: 284.778333
+  duration_ms: 290.993
   type: 'test'
   ...
 1..2
@@ -21,6 +19,4 @@ ok 2 - AH-PK11 (QUALITY R-Q1) a late disposer of an earlier registration of the 
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 447.854792
-(node:57904) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-(Use `node --trace-warnings ...` to show where the warning was created)
+# duration_ms 458.211209

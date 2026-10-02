@@ -1,10 +1,8 @@
 TAP version 13
-# (node:57954) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-PK04 app uninstalled while the host runs: its definition goes, its owned runtime stops, its record and data stay
 ok 1 - AH-PK04 app uninstalled while the host runs: its definition goes, its owned runtime stops, its record and data stay
   ---
-  duration_ms: 530.712917
+  duration_ms: 548.382125
   type: 'test'
   ...
 1..1
@@ -15,6 +13,4 @@ ok 1 - AH-PK04 app uninstalled while the host runs: its definition goes, its own
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 609.20875
-(node:57953) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-(Use `node --trace-warnings ...` to show where the warning was created)
+# duration_ms 627.278167

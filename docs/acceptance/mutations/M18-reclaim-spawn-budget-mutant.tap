@@ -1,20 +1,18 @@
 TAP version 13
-# (node:57209) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-# (Use `node --trace-warnings ...` to show where the warning was created)
-# {"evidence":"REAL_PROCESS_ISOLATED","result":"TIMEOUT","elapsedMs":5006,"orphanAlive":true,"lockOwnerUnchanged":true,"trace":[{"at":1790938915662,"message":"ORPHAN_READY"},{"at":1790938915720,"message":"ORPHAN_TERM_IGNORED"}]}
+# {"evidence":"REAL_PROCESS_ISOLATED","result":"TIMEOUT","elapsedMs":5006,"orphanAlive":true,"lockOwnerUnchanged":true,"trace":[{"at":1790980769915,"message":"ORPHAN_READY"},{"at":1790980770003,"message":"ORPHAN_TERM_IGNORED"}]}
 # Subtest: AH-L07: proven orphan reclamation gets its declared grace before the launch handshake budget
 not ok 1 - AH-L07: proven orphan reclamation gets its declared grace before the launch handshake budget
   ---
-  duration_ms: 5052.503875
+  duration_ms: 5066.402292
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-E2klvL/tests/reclaim-spawn.test.mjs:9:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-UOmjEX/tests/reclaim-spawn.test.mjs:9:1'
   failureType: 'testCodeFailure'
   error: 'proven orphan reclaim followed by launch must succeed, got TIMEOUT'
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   operator: 'fail'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-E2klvL/tests/reclaim-spawn.test.mjs:29:12)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-UOmjEX/tests/reclaim-spawn.test.mjs:29:12)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -26,6 +24,4 @@ not ok 1 - AH-L07: proven orphan reclamation gets its declared grace before the 
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 5115.128291
-(node:57208) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-(Use `node --trace-warnings ...` to show where the warning was created)
+# duration_ms 5133.862667

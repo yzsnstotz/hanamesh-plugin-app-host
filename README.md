@@ -1,4 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.43
+# HanaMesh app-host · 0.1.0-rc.44
+
+> rc.44（2026-10-03，P06-APPHOST-01）：增加仅内存的外部市场目标交接，沿用回环 HTTP 鉴权与 CSRF 链；客户端以 1 秒轮询、失败 5 秒退避，搜索并高亮同包名的全部精确 npm 条目，分页未翻完时显示“已加载的结果里还没有”，不自动安装。该 Mac 切片受当前目录搜索 200 字符上限和 `--skip-auth` 宿主姿态约束；完整产品路径另验。
 
 > rc.43（2026-10-02，P02-APPHOST-01 QUALITY R-Q1）：`register` 新增每次调用唯一、永不复用的 `registrationId`，`unregister(appId, registrationId)` 只撤下返回该 id 的那一次注册。rc.42 用内容指纹 `definitionHash` 当注册身份：同一份定义重新注册（同版本重装、bundle 重载）后，迟到的旧 disposer 会撤掉新注册并停掉它的进程。`definitionHash` 仍随 `register` 返回，只作内容指纹；把它传给 `unregister` 以 `INVALID_REQUEST` 拒绝，不会被当成身份匹配。撤销在同一个串行步骤内读取目标并落盘 `stopping`，所以 bundle 重载时新注册的 open 得到可重试的 `INSTANCE_STOPPING`，而不是挂到即将被停的进程上。rc.42 候选（`95cf8af3…f47d`）作废，没有消费者发版。
 

@@ -1,0 +1,197 @@
+{
+  "gate": "REAL_HOST target HTTP",
+  "result": "PASS",
+  "results": [
+    {
+      "case": "sources before",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "events before",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "read target",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "target A",
+      "status": 202,
+      "code": null
+    },
+    {
+      "case": "read target",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "N200 accepted",
+      "status": 202,
+      "code": null
+    },
+    {
+      "case": "read target",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "N201",
+      "status": 400,
+      "code": "TARGET_SEARCH_UNSUPPORTED"
+    },
+    {
+      "case": "read target",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "N214",
+      "status": 400,
+      "code": "TARGET_SEARCH_UNSUPPORTED"
+    },
+    {
+      "case": "read target",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "N215",
+      "status": 400,
+      "code": "INVALID_INPUT"
+    },
+    {
+      "case": "read target",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "205 uppercase",
+      "status": 400,
+      "code": "INVALID_INPUT"
+    },
+    {
+      "case": "read target",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "missing",
+      "status": 400,
+      "code": "INVALID_INPUT"
+    },
+    {
+      "case": "read target",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "number",
+      "status": 400,
+      "code": "INVALID_INPUT"
+    },
+    {
+      "case": "read target",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "empty",
+      "status": 400,
+      "code": "INVALID_INPUT"
+    },
+    {
+      "case": "read target",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "extra",
+      "status": 400,
+      "code": "UNKNOWN_FIELDS"
+    },
+    {
+      "case": "read target",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "wrong host",
+      "status": 403,
+      "code": "HOST_DENIED"
+    },
+    {
+      "case": "external origin",
+      "status": 403,
+      "code": "ORIGIN_DENIED"
+    },
+    {
+      "case": "missing client",
+      "status": 403,
+      "code": "CSRF_DENIED"
+    },
+    {
+      "case": "missing origin",
+      "status": 403,
+      "code": "CSRF_DENIED"
+    },
+    {
+      "case": "frame write",
+      "status": 403,
+      "code": "FRAME_CONTROL_DENIED"
+    },
+    {
+      "case": "external origin read",
+      "status": 403,
+      "code": "ORIGIN_DENIED"
+    },
+    {
+      "case": "read target",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "consume old",
+      "status": 202,
+      "code": null
+    },
+    {
+      "case": "read target",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "consume exact",
+      "status": 202,
+      "code": null
+    },
+    {
+      "case": "read target",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "consume again",
+      "status": 202,
+      "code": null
+    },
+    {
+      "case": "sources after",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "events after",
+      "status": 200,
+      "code": null
+    },
+    {
+      "case": "no sources or library event mutations",
+      "pass": true,
+      "sourcesSha256": "2689e45accc26c074648f15b298e1cfff947d17448a0ce5f50973c37943fd9a4",
+      "eventSequence": 0
+    }
+  ]
+}

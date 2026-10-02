@@ -1,4 +1,4 @@
-# 公开契约 v1（候选，0.1.0-rc.43；rc.43 注册身份：`register` 返回每次唯一的 `registrationId`，`unregister(appId, registrationId)` 只撤该次注册，内容指纹 `definitionHash` 不再是身份；rc.42 应用包契约 v2：应用入口在 `apply` 内订阅 `hanameshApps`、宿主新增 `unregister`、已装扫描报 `contractVersion`/`hostLifecycle`（见 APP_PACKAGE.md）；rc.41 卸载 runtime 时清理生成的 Python 字节码缓存、未知残留仍 fail-closed；rc.40 市场只读查询待启动实例，ready 后一次 resume；前台即时 heartbeat 与失效帧显式清理；rc.39 Market seat 内打开应用时将原有应用帧固定铺满原生窗口并覆盖 Settings，同一回执/租约/关闭动作；rc.38 投射时仅提升 shell.overlay 层级以盖过原生 Settings；rc.35 市场开关按钮即时反馈、owned 应用已退出时提前结束 TERM 等待并确认精确进程组终止；rc.34 内置市场消费 heartbeat/视图清理；rc.33 owned 回收与启动握手分阶段限时；rc.32 客户端 `market` 席位与 dshmarket 互斥、壳内重启改走 postMessage 桥（见「市场席位」）；rc.28 HanaMesh 市场：插件与应用同路径装卸、已装含插件、可升级/需重启、`installedPlugins` 与 `plugins/*` 路由、`LIB-PROVISION-INPUT` 400（见「市场」）；rc.27 应用使用证据经 usage 插件 record 座位上报（见「应用使用证据」）；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
+# 公开契约 v1（候选，0.1.0-rc.44；rc.43 注册身份：`register` 返回每次唯一的 `registrationId`，`unregister(appId, registrationId)` 只撤该次注册，内容指纹 `definitionHash` 不再是身份；rc.42 应用包契约 v2：应用入口在 `apply` 内订阅 `hanameshApps`、宿主新增 `unregister`、已装扫描报 `contractVersion`/`hostLifecycle`（见 APP_PACKAGE.md）；rc.41 卸载 runtime 时清理生成的 Python 字节码缓存、未知残留仍 fail-closed；rc.40 市场只读查询待启动实例，ready 后一次 resume；前台即时 heartbeat 与失效帧显式清理；rc.39 Market seat 内打开应用时将原有应用帧固定铺满原生窗口并覆盖 Settings，同一回执/租约/关闭动作；rc.38 投射时仅提升 shell.overlay 层级以盖过原生 Settings；rc.35 市场开关按钮即时反馈、owned 应用已退出时提前结束 TERM 等待并确认精确进程组终止；rc.34 内置市场消费 heartbeat/视图清理；rc.33 owned 回收与启动握手分阶段限时；rc.32 客户端 `market` 席位与 dshmarket 互斥、壳内重启改走 postMessage 桥（见「市场席位」）；rc.28 HanaMesh 市场：插件与应用同路径装卸、已装含插件、可升级/需重启、`installedPlugins` 与 `plugins/*` 路由、`LIB-PROVISION-INPUT` 400（见「市场」）；rc.27 应用使用证据经 usage 插件 record 座位上报（见「应用使用证据」）；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
 
 冷恢复中断实例时，将对应旧活跃租约失效并在同一镜像记 `view.expired(reason=host-restart)`；旧视图仍可按原身份恢复并轮换凭据，新视图关闭不受旧租约占用。只有确认进程组退出后才持久发布 `stopped`。
 
@@ -156,6 +156,16 @@ DSH 绑定必须提供同一个 `single` domain 的一次完整镜像 publish �
 | `/hanamesh/library/uninstall` | POST | `{appId, packageName, runtimeItem?}` | 202；缺字段/非法 → 400 `INVALID_INPUT` |
 
 事件流 `library.install-*` 增加 `kind`；`install-done.result` 对插件为 `{status:'restart-required', kind:'plugin', packageName, version}`。受保护包（`hanamesh-core`、`hanamesh-usage`、`@hanamesh/dsh-app-host` 及旧写法 `@hanamesh/dsh-core`、`@hanamesh/dsh-usage`）任何路径都 `PACKAGE_DENIED`：`plugins/*` 在启动操作前同步答 403，目录条目路径在操作内以 `-failed` 事件给出。「需重启」判定只来自本进程启动时的 profile 依赖快照（钉版本内核不暴露已加载插件集合）；快照不可读时一切已装计为已加载。客户端在壳内（`window.self !== window.top`）给 `hanamesh://restart` 深链，官方 DSH 直开时只提示文字；本包不重启 DSH。
+
+## 外部目标交接（rc.44）
+
+本 Mac 切片由桌面壳在当前 DSH 服务就绪后，通过同实例回环 HTTP 提交目标。新增 `POST /hanamesh/library/target`，请求体必须恰为 `{packageName}`，202 返回 `{targetId,packageName,traceId}`；`GET /hanamesh/library/target` 不带参数，200 返回 `{target:{targetId,packageName,protected}|null,traceId}`；`POST /hanamesh/library/target/consume` 请求体必须恰为 `{targetId}`，202 返回 `{consumed:boolean,traceId}`。`targetId` 是新的 UUID，后到目标覆盖先到目标，只有完全相同的 ID 可以清除当前目标。目标仅保留于当前宿主进程内存；重启即清空，不写 storage-domain、目录或事件流。
+
+三条路由沿用现有 Host、Origin、iframe、`authenticate` 和 `authorize` 栅栏。写请求另须 `Origin: http://127.0.0.1:<当前 DSH 端口>` 与 `x-hanamesh-client: workspace-v1`。壳使用该标记**仅限这条非安装交接路由**；它不获得安装、卸载或来源变更调用权。当前自有桌面壳通过 `--skip-auth` 启动 DSH 时可走此回环通道；完整 cookie 认证姿态下，壳没有浏览器 cookie，写请求会返回 401，这属于已知前提，不能放宽认证或补造凭据。
+
+错误优先级沿现有路由链：`HOST_DENIED` → `NOT_FOUND` → `METHOD_NOT_ALLOWED` → `ORIGIN_DENIED` → `FRAME_CONTROL_DENIED` → `CSRF_DENIED` → `UNAUTHENTICATED` → JSON/请求体错误 → `FORBIDDEN` → `UNKNOWN_FIELDS` → `INVALID_INPUT` → `TARGET_SEARCH_UNSUPPORTED`。包名逐字校验既有 `PACKAGE_NAME` 规则及长度 1–214；超过 214、非法字符、缺值是 400 `INVALID_INPUT`。合法但 201–214 字符是 400 `TARGET_SEARCH_UNSUPPORTED`，`details:{maxLength:200,length}`；两种拒绝均不覆盖已有目标。当前 `list(q)` 只接受 200 字符、`loadCatalog` 将查询截到 200、网站 `/v1/plugins` 也限 200，因此本切片不宣称 201–214 可搜索。请求体上限仍为 65,536 字节。
+
+客户端仅在挂载期间每 1000 ms 读取目标一次，失败后 5000 ms 再试，成功恢复 1000 ms；1 秒用于让已就绪的桌面入口及时可见，5 秒避免故障时密集请求。新目标打开 HanaMesh 市场、清空类别、用包名搜索，精确高亮所有 `registry==='npm' && name===packageName` 条目。状态区是中文 `role="status"`：`found`、`protected`、`catalog-unavailable`、`not-on-loaded-pages` 或 `missing`。有 `nextCursor` 且已加载页没有精确条目时只能报 `not-on-loaded-pages`；用户点现有「更多」后重判，翻完才可报 `missing`。呈现后用 ID 消费目标；不自动翻页、不安装、不关闭应用视图租约。
 
 ## 市场席位（rc.32，设计定案 2026-09-22 §4，T5）
 

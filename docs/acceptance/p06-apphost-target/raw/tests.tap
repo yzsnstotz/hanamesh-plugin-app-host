@@ -1,0 +1,1156 @@
+TAP version 13
+# Subtest: AH-PK01 (RED shape): a contract v1 bundle without the host stays PENDING — the state the pinned DSH boot audit rejects
+ok 1 - AH-PK01 (RED shape): a contract v1 bundle without the host stays PENDING — the state the pinned DSH boot audit rejects
+  ---
+  duration_ms: 240.639875
+  type: 'test'
+  ...
+# Subtest: AH-PK02 app before host: a v2 bundle is ACTIVE and inert without the host, then registers exactly once when the host arrives
+ok 2 - AH-PK02 app before host: a v2 bundle is ACTIVE and inert without the host, then registers exactly once when the host arrives
+  ---
+  duration_ms: 98.512458
+  type: 'test'
+  ...
+# Subtest: AH-PK03 host before app, host gone, host back: one registration per host life, app never fails, no orphan process
+ok 3 - AH-PK03 host before app, host gone, host back: one registration per host life, app never fails, no orphan process
+  ---
+  duration_ms: 343.693083
+  type: 'test'
+  ...
+# Subtest: AH-PK04 app uninstalled while the host runs: its definition goes, its owned runtime stops, its record and data stay
+ok 4 - AH-PK04 app uninstalled while the host runs: its definition goes, its owned runtime stops, its record and data stay
+  ---
+  duration_ms: 519.349041
+  type: 'test'
+  ...
+# Subtest: AH-PK05 a broken app definition is not swallowed: the registration fails loudly and nothing is registered
+ok 5 - AH-PK05 a broken app definition is not swallowed: the registration fails loudly and nothing is registered
+  ---
+  duration_ms: 98.130958
+  type: 'test'
+  ...
+# Subtest: AH-PK06 unregister only removes the exact registration (registrationId, not content) and is a no-op while the host closes
+ok 6 - AH-PK06 unregister only removes the exact registration (registrationId, not content) and is a no-op while the host closes
+  ---
+  duration_ms: 67.236917
+  type: 'test'
+  ...
+# Subtest: AH-PK07 checkAppPackageEntry: v2 entry passes; a top-level hanameshApps inject (array or map) or a stale contractVersion is refused
+ok 7 - AH-PK07 checkAppPackageEntry: v2 entry passes; a top-level hanameshApps inject (array or map) or a stale contractVersion is refused
+  ---
+  duration_ms: 35.575
+  type: 'test'
+  ...
+# Subtest: AH-PK08 (SPEC R2) an Open already queued when unregister runs never reserves or launches a runtime for the removed app
+ok 8 - AH-PK08 (SPEC R2) an Open already queued when unregister runs never reserves or launches a runtime for the removed app
+  ---
+  duration_ms: 176.121791
+  type: 'test'
+  ...
+# Subtest: AH-PK09 (SPEC R3) unregistering app A stops only A: app B keeps its live, ready runtime
+ok 9 - AH-PK09 (SPEC R3) unregistering app A stops only A: app B keeps its live, ready runtime
+  ---
+  duration_ms: 458.963667
+  type: 'test'
+  ...
+# Subtest: AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregister starts is found and stopped — no orphan runtime
+ok 10 - AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregister starts is found and stopped — no orphan runtime
+  ---
+  duration_ms: 140.641708
+  type: 'test'
+  ...
+# Subtest: AH-PK11 (QUALITY R-Q1) a late disposer of an earlier registration of the SAME definition never removes the current one or stops its runtime
+ok 11 - AH-PK11 (QUALITY R-Q1) a late disposer of an earlier registration of the SAME definition never removes the current one or stops its runtime
+  ---
+  duration_ms: 271.770542
+  type: 'test'
+  ...
+# Subtest: AH-PK12 (QUALITY R-Q1 ordering) bundle reload, same definition: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime
+ok 12 - AH-PK12 (QUALITY R-Q1 ordering) bundle reload, same definition: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime
+  ---
+  duration_ms: 475.909208
+  type: 'test'
+  ...
+# Subtest: AH-PK12 (QUALITY R-Q1 ordering) bundle reload, upgraded definition: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime
+ok 13 - AH-PK12 (QUALITY R-Q1 ordering) bundle reload, upgraded definition: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime
+  ---
+  duration_ms: 481.687833
+  type: 'test'
+  ...
+# Subtest: AH-UI17: Market opens one viewport application frame and closes its original lease
+ok 14 - AH-UI17: Market opens one viewport application frame and closes its original lease
+  ---
+  duration_ms: 5.518625
+  type: 'test'
+  ...
+# Subtest: H13 REAL_BROWSER: named parent embeds unchanged app; direct top navigation and iframe control calls are denied
+ok 15 - H13 REAL_BROWSER: named parent embeds unchanged app; direct top navigation and iframe control calls are denied # SKIP REAL_BROWSER unavailable: isolated Chromium binary was not found.
+  ---
+  duration_ms: 1.350042
+  type: 'test'
+  ...
+# Subtest: H10 REAL_BROWSER: SIGKILL browser process group, no unload, lease expiry stops actual owned application
+ok 16 - H10 REAL_BROWSER: SIGKILL browser process group, no unload, lease expiry stops actual owned application # SKIP REAL_BROWSER unavailable: isolated Chromium binary was not found.
+  ---
+  duration_ms: 0.423
+  type: 'test'
+  ...
+# Subtest: AH-VL08: actual default90s lease survives idle market client and last-view close ends exact owned group
+ok 17 - AH-VL08: actual default90s lease survives idle market client and last-view close ends exact owned group # SKIP
+  ---
+  duration_ms: 0.262708
+  type: 'test'
+  ...
+# Subtest: AH-VL01: real market client keeps one idle view renewed beyond its original TTL with exact current credential
+ok 18 - AH-VL01: real market client keeps one idle view renewed beyond its original TTL with exact current credential
+  ---
+  duration_ms: 7.517708
+  type: 'test'
+  ...
+# Subtest: AH-VL15: returning to a visible document or pageshow renews immediately before the old timer fires
+ok 19 - AH-VL15: returning to a visible document or pageshow renews immediately before the old timer fires
+  ---
+  duration_ms: 2.69975
+  type: 'test'
+  ...
+# Subtest: AH-VL16: expired heartbeat removes the stale iframe and offers explicit Market reopen
+ok 20 - AH-VL16: expired heartbeat removes the stale iframe and offers explicit Market reopen
+  ---
+  duration_ms: 1.105792
+  type: 'test'
+  ...
+# Subtest: AH-VL17: stopped instance heartbeat clears its unusable frame without reviving it
+ok 21 - AH-VL17: stopped instance heartbeat clears its unusable frame without reviving it
+  ---
+  duration_ms: 1.644583
+  type: 'test'
+  ...
+# Subtest: AH-VL18: pagehide closes the lease and pageshow cannot revive its old frame
+ok 22 - AH-VL18: pagehide closes the lease and pageshow cannot revive its old frame
+  ---
+  duration_ms: 0.500916
+  type: 'test'
+  ...
+# Subtest: AH-VL02: close-last-view cancels renewals immediately and sends one explicit lease close
+ok 23 - AH-VL02: close-last-view cancels renewals immediately and sends one explicit lease close
+  ---
+  duration_ms: 4.542958
+  type: 'test'
+  ...
+# Subtest: AH-VL03: hiding the overlay releases the exact lease and never keeps a hidden view alive
+ok 24 - AH-VL03: hiding the overlay releases the exact lease and never keeps a hidden view alive
+  ---
+  duration_ms: 4.602
+  type: 'test'
+  ...
+# Subtest: AH-VL04: unmount during in-flight heartbeat aborts it, closes once and ignores its late completion
+ok 25 - AH-VL04: unmount during in-flight heartbeat aborts it, closes once and ignores its late completion
+  ---
+  duration_ms: 2.207834
+  type: 'test'
+  ...
+# Subtest: AH-VL05: transient heartbeat transport failure is observed and retried without creating a new view
+ok 26 - AH-VL05: transient heartbeat transport failure is observed and retried without creating a new view
+  ---
+  duration_ms: 1.634541
+  type: 'test'
+  ...
+# Subtest: AH-VL06: terminal expired lease is not silently resumed or renewed forever
+ok 27 - AH-VL06: terminal expired lease is not silently resumed or renewed forever
+  ---
+  duration_ms: 3.572875
+  type: 'test'
+  ...
+# Subtest: AH-VL07: pagehide performs best-effort close, cancels heartbeat and unmount does not duplicate close
+ok 28 - AH-VL07: pagehide performs best-effort close, cancels heartbeat and unmount does not duplicate close
+  ---
+  duration_ms: 1.569375
+  type: 'test'
+  ...
+# Subtest: AH-VL09: clicking close during in-flight heartbeat fences its late response and releases exactly once
+ok 29 - AH-VL09: clicking close during in-flight heartbeat fences its late response and releases exactly once
+  ---
+  duration_ms: 4.793375
+  type: 'test'
+  ...
+# Subtest: AH-VL10: failed close can be explicitly retried after network recovery without restarting renewal
+ok 30 - AH-VL10: failed close can be explicitly retried after network recovery without restarting renewal
+  ---
+  duration_ms: 2.986708
+  type: 'test'
+  ...
+# Subtest: AH-VL11: overlapping explicit closes share the in-flight request and successful cleanup remains idempotent
+ok 31 - AH-VL11: overlapping explicit closes share the in-flight request and successful cleanup remains idempotent
+  ---
+  duration_ms: 0.41625
+  type: 'test'
+  ...
+# Subtest: AH-VL12: late ready Open receipt after hiding is closed without anonymous resume or renewal
+ok 32 - AH-VL12: late ready Open receipt after hiding is closed without anonymous resume or renewal
+  ---
+  duration_ms: 3.365417
+  type: 'test'
+  ...
+# Subtest: AH-VL12: late starting Open receipt after hiding is closed without anonymous resume or renewal
+ok 33 - AH-VL12: late starting Open receipt after hiding is closed without anonymous resume or renewal
+  ---
+  duration_ms: 4.36975
+  type: 'test'
+  ...
+# Subtest: AH-VL13: late Open receipt after unmount is explicitly closed and never polled or retained
+ok 34 - AH-VL13: late Open receipt after unmount is explicitly closed and never polled or retained
+  ---
+  duration_ms: 1.126583
+  type: 'test'
+  ...
+# Subtest: AH-VL14: hiding then reopening market does not resurrect an old pending Open receipt
+ok 35 - AH-VL14: hiding then reopening market does not resurrect an old pending Open receipt
+  ---
+  duration_ms: 0.341667
+  type: 'test'
+  ...
+# Subtest: P06A-T08/T09/T10b: polling opens market, exact marks all duplicates, page 1 is not falsely missing, consume follows presentation
+ok 36 - P06A-T08/T09/T10b: polling opens market, exact marks all duplicates, page 1 is not falsely missing, consume follows presentation
+  ---
+  duration_ms: 5.486291
+  type: 'test'
+  ...
+# Subtest: P06A-T08/T10: failure backs off 5000 ms then resumes 1000 ms, protected and unavailable states are visible
+ok 37 - P06A-T08/T10: failure backs off 5000 ms then resumes 1000 ms, protected and unavailable states are visible
+  ---
+  duration_ms: 2.901958
+  type: 'test'
+  ...
+# Subtest: P06A-T11: a target leaves an already open application view lease mounted
+ok 38 - P06A-T11: a target leaves an already open application view lease mounted
+  ---
+  duration_ms: 1.435209
+  type: 'test'
+  ...
+# Subtest: X01: consistency declaration covers each production group and boundary
+ok 39 - X01: consistency declaration covers each production group and boundary
+  ---
+  duration_ms: 5.771042
+  type: 'test'
+  ...
+# X02 first-lease: {"point":"snapshot-temp-fsynced","death":{"code":null,"signal":"SIGKILL"},"facts":[false,false,false],"revision":0}
+# Subtest: X02 first-lease: real SIGKILL at snapshot-temp-fsynced restores all or none
+ok 40 - X02 first-lease: real SIGKILL at snapshot-temp-fsynced restores all or none
+  ---
+  duration_ms: 89.369459
+  type: 'test'
+  ...
+# X02 stopped-views: {"point":"snapshot-temp-fsynced","death":{"code":null,"signal":"SIGKILL"},"facts":[false,false,false],"revision":4}
+# Subtest: X02 stopped-views: real SIGKILL at snapshot-temp-fsynced restores all or none
+ok 41 - X02 stopped-views: real SIGKILL at snapshot-temp-fsynced restores all or none
+  ---
+  duration_ms: 345.545417
+  type: 'test'
+  ...
+# X02 first-lease: {"point":"snapshot-published","death":{"code":null,"signal":"SIGKILL"},"facts":[true,true,true],"revision":1}
+# Subtest: X02 first-lease: real SIGKILL at snapshot-published restores all or none
+ok 42 - X02 first-lease: real SIGKILL at snapshot-published restores all or none
+  ---
+  duration_ms: 93.683083
+  type: 'test'
+  ...
+# X02 stopped-views: {"point":"snapshot-published","death":{"code":null,"signal":"SIGKILL"},"facts":[true,true,true],"revision":5}
+# Subtest: X02 stopped-views: real SIGKILL at snapshot-published restores all or none
+ok 43 - X02 stopped-views: real SIGKILL at snapshot-published restores all or none
+  ---
+  duration_ms: 357.098208
+  type: 'test'
+  ...
+# X03 reserve-launch: {"signal":"SIGKILL","instanceId":"635fa7c1-d6c8-4d3f-9f97-447c4dc918e0","pid":28602,"appWroteData":true,"durableOwner":true,"guardianCleanup":true}
+# Subtest: X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data
+ok 44 - X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data
+  ---
+  duration_ms: 265.780083
+  type: 'test'
+  ...
+# X03 stop-publish: {"signal":"SIGKILL","stateAfterRestart":"stopping","aliveAtCut":false,"aliveAfterRestart":false}
+# Subtest: X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive
+ok 45 - X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive
+  ---
+  duration_ms: 360.923666
+  type: 'test'
+  ...
+# H12 real host kill/resume: {"stableInstance":"fb724a9f-7686-4fb5-8b2a-e66195157976","oldRuntime":"bb2ac50b-8a6f-4a42-8b44-c130fed9e6c0","newRuntime":"fcd55d17-1601-4914-8ba0-4047b156eaa0","dataRetained":true}
+# Subtest: H12/H06: SIGKILL host, guardian cleanup, fresh host exact-identity resume and persisted app data
+ok 46 - H12/H06: SIGKILL host, guardian cleanup, fresh host exact-identity resume and persisted app data
+  ---
+  duration_ms: 717.589375
+  type: 'test'
+  ...
+# Subtest: H12: a stale view from a killed host cannot delay stopping a newly opened view
+ok 47 - H12: a stale view from a killed host cannot delay stopping a newly opened view
+  ---
+  duration_ms: 869.016458
+  type: 'test'
+  ...
+# Subtest: AH-C1: credentialEnv is validated — host control names, duplicates, static-env repeats and escaping paths are rejected
+ok 48 - AH-C1: credentialEnv is validated — host control names, duplicates, static-env repeats and escaping paths are rejected
+  ---
+  duration_ms: 3.231333
+  type: 'test'
+  ...
+# Subtest: AH-C2/C3/C4: resolver values reach the child only for declared names; undeclared env and escaping files are rejected with events; logs are redacted
+ok 49 - AH-C2/C3/C4: resolver values reach the child only for declared names; undeclared env and escaping files are rejected with events; logs are redacted
+  ---
+  duration_ms: 220.126292
+  type: 'test'
+  ...
+# Subtest: AH-C5: a throwing resolver is recorded and never blocks the launch
+ok 50 - AH-C5: a throwing resolver is recorded and never blocks the launch
+  ---
+  duration_ms: 211.273667
+  type: 'test'
+  ...
+# Subtest: AH-C6: without a resolver (or after its disposer ran) nothing is injected and no credential event exists
+ok 51 - AH-C6: without a resolver (or after its disposer ran) nothing is injected and no credential event exists
+  ---
+  duration_ms: 210.014333
+  type: 'test'
+  ...
+# Subtest: AH-C7 (rc.6): file policy — if-absent keeps an app-rotated file, overwrite replaces it, remove deletes it; events name each
+ok 52 - AH-C7 (rc.6): file policy — if-absent keeps an app-rotated file, overwrite replaces it, remove deletes it; events name each
+  ---
+  duration_ms: 802.947833
+  type: 'test'
+  ...
+# Subtest: AH-P01: runtime deployment is valid without command and participates in the definition fingerprint
+ok 53 - AH-P01: runtime deployment is valid without command and participates in the definition fingerprint
+  ---
+  duration_ms: 0.865708
+  type: 'test'
+  ...
+# Subtest: AH-P02: runtime item, installTo and exec must remain inside the provisioned tree
+ok 54 - AH-P02: runtime item, installTo and exec must remain inside the provisioned tree
+  ---
+  duration_ms: 0.268333
+  type: 'test'
+  ...
+# Subtest: AH-P03: host launches the executable selected by the validated runtime and matching ledger
+ok 55 - AH-P03: host launches the executable selected by the validated runtime and matching ledger
+  ---
+  duration_ms: 543.554791
+  type: 'test'
+  ...
+# Subtest: AH-P04: missing, stale or non-executable runtime fails closed as RUNTIME_MISSING
+    # Subtest: missing-ledger
+    ok 1 - missing-ledger
+      ---
+      duration_ms: 24.775625
+      type: 'test'
+      ...
+    # Subtest: stale-ledger
+    ok 2 - stale-ledger
+      ---
+      duration_ms: 22.777167
+      type: 'test'
+      ...
+    # Subtest: missing-exec
+    ok 3 - missing-exec
+      ---
+      duration_ms: 22.9535
+      type: 'test'
+      ...
+    # Subtest: non-executable
+    ok 4 - non-executable
+      ---
+      duration_ms: 20.934709
+      type: 'test'
+      ...
+    1..4
+ok 56 - AH-P04: missing, stale or non-executable runtime fails closed as RUNTIME_MISSING
+  ---
+  duration_ms: 91.868
+  type: 'test'
+  ...
+# Subtest: H01 (harness half): the plugin activates on a real Cordis root and provides ctx.hanameshApps
+ok 57 - H01 (harness half): the plugin activates on a real Cordis root and provides ctx.hanameshApps
+  ---
+  duration_ms: 71.306208
+  type: 'test'
+  ...
+# Subtest: H11: lease/instance state lands in the storage-domain sidecar and DSH still reads its own session
+ok 58 - H11: lease/instance state lands in the storage-domain sidecar and DSH still reads its own session
+  ---
+  duration_ms: 296.72725
+  type: 'test'
+  ...
+# Subtest: H14/AC-07 on the real web server: unauthenticated, wrong origin and iframe callers are refused
+ok 59 - H14/AC-07 on the real web server: unauthenticated, wrong origin and iframe callers are refused
+  ---
+  duration_ms: 66.399292
+  type: 'test'
+  ...
+# Subtest: H09/dispose: unloading the plugin removes its routes, stops owned instances, and closes the domain
+ok 60 - H09/dispose: unloading the plugin removes its routes, stops owned instances, and closes the domain
+  ---
+  duration_ms: 324.622917
+  type: 'test'
+  ...
+# Subtest: AC-26 shape: without the connection service the plugin never activates, so no route is public
+ok 61 - AC-26 shape: without the connection service the plugin never activates, so no route is public
+  ---
+  duration_ms: 334.931375
+  type: 'test'
+  ...
+# Subtest: unit: bare apply() cannot masquerade as a loaded plugin
+ok 62 - unit: bare apply() cannot masquerade as a loaded plugin
+  ---
+  duration_ms: 0.296667
+  type: 'test'
+  ...
+# Subtest: teardown: a whole-root unload (profile shutdown) never orphans an owned process, even though the storage domain closes concurrently
+ok 63 - teardown: a whole-root unload (profile shutdown) never orphans an owned process, even though the storage domain closes concurrently
+  ---
+  duration_ms: 274.577292
+  type: 'test'
+  ...
+# Subtest: AH-L07 (plugin): an unconfigured library seeds the HanaMesh catalog source through the real Config schema; an explicit [] does not
+ok 64 - AH-L07 (plugin): an unconfigured library seeds the HanaMesh catalog source through the real Config schema; an explicit [] does not
+  ---
+  duration_ms: 129.890541
+  type: 'test'
+  ...
+# Subtest: AH-U07 (plugin): usage evidence reaches ctx.hanameshUsage.record when that sibling is provided — before or after this plugin — and its absence changes nothing
+ok 65 - AH-U07 (plugin): usage evidence reaches ctx.hanameshUsage.record when that sibling is provided — before or after this plugin — and its absence changes nothing
+  ---
+  duration_ms: 806.631083
+  type: 'test'
+  ...
+# Subtest: AH-M08 (plugin): rc.28 market routes are registered on the real web server behind the same auth chain; without an installer the plugin seats answer 503, never 500
+ok 66 - AH-M08 (plugin): rc.28 market routes are registered on the real web server behind the same auth chain; without an installer the plugin seats answer 503, never 500
+  ---
+  duration_ms: 68.789667
+  type: 'test'
+  ...
+# Subtest: the library entry never pulls a DSH-only peer into a plain consumer import graph
+ok 67 - the library entry never pulls a DSH-only peer into a plain consumer import graph
+  ---
+  duration_ms: 3.849334
+  type: 'test'
+  ...
+# Subtest: AH-L11: an exited app closes promptly without spending the unused five-second TERM grace
+ok 68 - AH-L11: an exited app closes promptly without spending the unused five-second TERM grace
+  ---
+  duration_ms: 432.199959
+  type: 'test'
+  ...
+# Subtest: H13: fixed gateway changes only XFO/frame-ancestors; preserves HTML, gzip and application headers
+ok 69 - H13: fixed gateway changes only XFO/frame-ancestors; preserves HTML, gzip and application headers
+  ---
+  duration_ms: 80.974292
+  type: 'test'
+  ...
+# Subtest: H14: gateway requires live capability; denies foreign origins, top navigation, arbitrary targets and ticket reuse
+ok 70 - H14: gateway requires live capability; denies foreign origins, top navigation, arbitrary targets and ticket reuse
+  ---
+  duration_ms: 67.015125
+  type: 'test'
+  ...
+# Subtest: H14: gateway strips DSH credentials, control headers and unregistered cookies
+ok 71 - H14: gateway strips DSH credentials, control headers and unregistered cookies
+  ---
+  duration_ms: 67.986667
+  type: 'test'
+  ...
+# Subtest: AH gateway: uploads, SSE, relative application paths and redirects retain transport semantics
+ok 72 - AH gateway: uploads, SSE, relative application paths and redirects retain transport semantics
+  ---
+  duration_ms: 144.129708
+  type: 'test'
+  ...
+# Subtest: AH gateway: real WebSocket upgrade preserves frame bytes
+ok 73 - AH gateway: real WebSocket upgrade preserves frame bytes
+  ---
+  duration_ms: 67.411083
+  type: 'test'
+  ...
+# Subtest: H15: embedded webview without third-party cookies — Fetch Metadata capability after a consumed bootstrap ticket
+ok 74 - H15: embedded webview without third-party cookies — Fetch Metadata capability after a consumed bootstrap ticket
+  ---
+  duration_ms: 68.649666
+  type: 'test'
+  ...
+# Subtest: H15: no bootstrap ever consumed → Fetch Metadata alone never authorizes
+ok 75 - H15: no bootstrap ever consumed → Fetch Metadata alone never authorizes
+  ---
+  duration_ms: 65.065375
+  type: 'test'
+  ...
+# Subtest: H15: embedded WebSocket handshake authorizes by the app origin without a cookie; foreign origin denied
+ok 76 - H15: embedded WebSocket handshake authorizes by the app origin without a cookie; foreign origin denied
+  ---
+  duration_ms: 67.171958
+  type: 'test'
+  ...
+# Subtest: H16: frame-ancestors lists the shell webview origin as well as the workspace; bogus ancestors are refused
+ok 77 - H16: frame-ancestors lists the shell webview origin as well as the workspace; bogus ancestors are refused
+  ---
+  duration_ms: 66.626209
+  type: 'test'
+  ...
+# Subtest: AH-L09: catalog items may carry schema-allowed updatedAt
+ok 78 - AH-L09: catalog items may carry schema-allowed updatedAt
+  ---
+  duration_ms: 0.644792
+  type: 'test'
+  ...
+# Subtest: AH-L01: fixture catalog validates all entries and exposes only installable HanaMesh applications
+ok 79 - AH-L01: fixture catalog validates all entries and exposes only installable HanaMesh applications
+  ---
+  duration_ms: 1.975917
+  type: 'test'
+  ...
+# Subtest: AH-L02: catalog URLs are standard-port HTTPS and redirects remain same-origin
+ok 80 - AH-L02: catalog URLs are standard-port HTTPS and redirects remain same-origin
+  ---
+  duration_ms: 9.270292
+  type: 'test'
+  ...
+# Subtest: AH-L04/L05: install uses explicit Node + DSH argv, exact stable registry version, then provisions the declared item
+ok 81 - AH-L04/L05: install uses explicit Node + DSH argv, exact stable registry version, then provisions the declared item
+  ---
+  duration_ms: 11.223541
+  type: 'test'
+  ...
+# Subtest: AH-L06: uninstall removes the package and owned runtime but preserves application data
+ok 82 - AH-L06: uninstall removes the package and owned runtime but preserves application data
+  ---
+  duration_ms: 1.524875
+  type: 'test'
+  ...
+# Subtest: AH-RI01: uninstall clears generated Python bytecode left by provision remove
+ok 83 - AH-RI01: uninstall clears generated Python bytecode left by provision remove
+  ---
+  duration_ms: 1.620541
+  type: 'test'
+  ...
+# Subtest: AH-RI02: uninstall preserves unknown runtime residue and reports incomplete cleanup
+ok 84 - AH-RI02: uninstall preserves unknown runtime residue and reports incomplete cleanup
+  ---
+  duration_ms: 0.701209
+  type: 'test'
+  ...
+# Subtest: AH-L03: installed scan reports registered, installed-not-loaded and runtime-missing independently of catalog sources
+ok 85 - AH-L03: installed scan reports registered, installed-not-loaded and runtime-missing independently of catalog sources
+  ---
+  duration_ms: 9.697875
+  type: 'test'
+  ...
+# Subtest: AH-L13 (rc.42): each application row says whether it survives the host being removed — contract ≥2 host-optional, v1/undeclared host-required
+ok 86 - AH-L13 (rc.42): each application row says whether it survives the host being removed — contract ≥2 host-optional, v1/undeclared host-required
+  ---
+  duration_ms: 2.150625
+  type: 'test'
+  ...
+# Subtest: AH-L07: library.sources unset → the HanaMesh catalog source is seeded; an explicit [] stays empty
+ok 87 - AH-L07: library.sources unset → the HanaMesh catalog source is seeded; an explicit [] stays empty
+  ---
+  duration_ms: 3.561959
+  type: 'test'
+  ...
+# Subtest: AH-L08: profileDir/profileName are inferred from the package's own real location inside a `dsh plugin` profile
+ok 88 - AH-L08: profileDir/profileName are inferred from the package's own real location inside a `dsh plugin` profile
+  ---
+  duration_ms: 10.071042
+  type: 'test'
+  ...
+# Subtest: AH-L09: nodeBinary is this process only outside Electron; explicit configuration always wins
+ok 89 - AH-L09: nodeBinary is this process only outside Electron; explicit configuration always wins
+  ---
+  duration_ms: 1.8185
+  type: 'test'
+  ...
+# Subtest: AH-L10: dshBin is taken from argv[1] only when that script is @deepseek-ai/dsh/lib/bin.js
+ok 90 - AH-L10: dshBin is taken from argv[1] only when that script is @deepseek-ai/dsh/lib/bin.js
+  ---
+  duration_ms: 0.588625
+  type: 'test'
+  ...
+# Subtest: AH-M01: a catalog plugin installs through the same `dsh plugin add --save-exact` path as an application, reads no app.json and provisions nothing
+ok 91 - AH-M01: a catalog plugin installs through the same `dsh plugin add --save-exact` path as an application, reads no app.json and provisions nothing
+  ---
+  duration_ms: 4.857166
+  type: 'test'
+  ...
+# Subtest: AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite itself is refused both ways (PACKAGE_DENIED)
+ok 92 - AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite itself is refused both ways (PACKAGE_DENIED)
+  ---
+  duration_ms: 1.616375
+  type: 'test'
+  ...
+# Subtest: AH-M03: installed plugins = profile dependencies minus application packages, with restart states from the boot snapshot
+ok 93 - AH-M03: installed plugins = profile dependencies minus application packages, with restart states from the boot snapshot
+  ---
+  duration_ms: 9.174958
+  type: 'test'
+  ...
+# Subtest: AH-M04: upgrade = catalog latestVersion strictly newer than the installed version (semver, prerelease below release)
+ok 94 - AH-M04: upgrade = catalog latestVersion strictly newer than the installed version (semver, prerelease below release)
+  ---
+  duration_ms: 0.233
+  type: 'test'
+  ...
+# Subtest: AH-M05: the market listing annotates every entry with kind / installed row / upgradeAvailable, lists categories, installed plugins and restartRequired
+ok 95 - AH-M05: the market listing annotates every entry with kind / installed row / upgradeAvailable, lists categories, installed plugins and restartRequired
+  ---
+  duration_ms: 4.369542
+  type: 'test'
+  ...
+# Subtest: AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall / plugin fields answer 400 INVALID_INPUT before any operation starts; installedPlugins and the plugin routes are served
+ok 96 - AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall / plugin fields answer 400 INVALID_INPUT before any operation starts; installedPlugins and the plugin routes are served
+  ---
+  duration_ms: 77.200917
+  type: 'test'
+  ...
+# Subtest: AH-M07 (client source): the entry is 「市场」, cards carry kind/state/upgrade, and a plugin change shows 「需重启 DSH」 with the hanamesh://restart deep link only inside the shell
+ok 97 - AH-M07 (client source): the entry is 「市场」, cards carry kind/state/upgrade, and a plugin change shows 「需重启 DSH」 with the hanamesh://restart deep link only inside the shell
+  ---
+  duration_ms: 0.590959
+  type: 'test'
+  ...
+# Subtest: AH-L10: category, q and cursor reach the provider endpoint
+ok 98 - AH-L10: category, q and cursor reach the provider endpoint
+  ---
+  duration_ms: 10.707875
+  type: 'test'
+  ...
+# Subtest: AH-L11: library card tracks install/provision/uninstall operations via the event feed and shows failures inline (user 2026-09-20)
+ok 99 - AH-L11: library card tracks install/provision/uninstall operations via the event feed and shows failures inline (user 2026-09-20)
+  ---
+  duration_ms: 1.432708
+  type: 'test'
+  ...
+# Subtest: P06A-T01/T02/T03/T05/T06/T07: target validates before support limit, replaces and consumes only exact ID without persistent effects
+ok 100 - P06A-T01/T02/T03/T05/T06/T07: target validates before support limit, replaces and consumes only exact ID without persistent effects
+  ---
+  duration_ms: 1.156125
+  type: 'test'
+  ...
+# Subtest: P06A-T03: N200 passes the existing client search boundary
+ok 101 - P06A-T03: N200 passes the existing client search boundary
+  ---
+  duration_ms: 1.866583
+  type: 'test'
+  ...
+# Subtest: P06A-T01/T04/T05: HTTP target uses existing Host, Origin, frame, CSRF, auth and authorization chain
+ok 102 - P06A-T01/T04/T05: HTTP target uses existing Host, Origin, frame, CSRF, auth and authorization chain
+  ---
+  duration_ms: 14.224458
+  type: 'test'
+  ...
+# H02 real process evidence: {"opens":8,"pids":[29057]}
+# Subtest: H02: eight concurrent opens reserve one actual application process
+ok 103 - H02: eight concurrent opens reserve one actual application process
+  ---
+  duration_ms: 228.703792
+  type: 'test'
+  ...
+# H03 actual directory contents: {"a":{"path":"/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-29051-idfkrl/data/4740ae6347b0172c01254ff5/example/local/data-v1/1da6f8c8-02f8-4aef-a35c-fcb04d6f82b9","files":[".runtime.lock","cache","config","home","runtime-evidence.json","state","tmp","write-60fe38c3-7031-4f6a-99bd-e9968827f9c7.txt"]},"b":{"path":"/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-29051-idfkrl/data/4740ae6347b0172c01254ff5/example/local/data-v1/577318d7-cdb9-47da-8b48-66c616943515","files":[".runtime.lock","cache","config","home","runtime-evidence.json","state","tmp","write-bcbe05da-f842-4e34-957e-d6daed0a4d9f.txt"]}}
+# Subtest: H03: multi-instance applications write genuinely separate data roots
+ok 104 - H03: multi-instance applications write genuinely separate data roots
+  ---
+  duration_ms: 360.660541
+  type: 'test'
+  ...
+# Subtest: H04/H05: reopen is idempotent; closing one view does not stop the other
+ok 105 - H04/H05: reopen is idempotent; closing one view does not stop the other
+  ---
+  duration_ms: 253.655542
+  type: 'test'
+  ...
+# H06 durable slot restore: {"old":"46acc989-dae7-4e5c-9a7d-1469d26d0714","restored":"46acc989-dae7-4e5c-9a7d-1469d26d0714","originalSessionId":"document-exact-a"}
+# Subtest: H06: restart/resume preserves exact view, deployment, data and original-session identities
+ok 106 - H06: restart/resume preserves exact view, deployment, data and original-session identities
+  ---
+  duration_ms: 757.11375
+  type: 'test'
+  ...
+# Subtest: H07: forged, expired-generation, and cross-principal close cannot decrement another lease
+ok 107 - H07: forged, expired-generation, and cross-principal close cannot decrement another lease
+  ---
+  duration_ms: 410.014417
+  type: 'test'
+  ...
+# Subtest: H08: busy Stop explains occupiers; confirmed stop emits durable notifications for every view
+ok 108 - H08: busy Stop explains occupiers; confirmed stop emits durable notifications for every view
+  ---
+  duration_ms: 241.306625
+  type: 'test'
+  ...
+# Subtest: H09: attach close, stopAll and dispose never signal the external process
+ok 109 - H09: attach close, stopAll and dispose never signal the external process
+  ---
+  duration_ms: 234.124375
+  type: 'test'
+  ...
+# Subtest: H10: expired leases converge without any unload request
+ok 110 - H10: expired leases converge without any unload request
+  ---
+  duration_ms: 476.634667
+  type: 'test'
+  ...
+# Subtest: AH: startup cancellation receipt stops the actual child and does not return false-ready
+ok 111 - AH: startup cancellation receipt stops the actual child and does not return false-ready
+  ---
+  duration_ms: 156.420834
+  type: 'test'
+  ...
+# Subtest: AH: never-ready startup is bounded, cleans up, and supports an explicit retry
+ok 112 - AH: never-ready startup is bounded, cleans up, and supports an explicit retry
+  ---
+  duration_ms: 551.177042
+  type: 'test'
+  ...
+# Subtest: AH: spontaneous application exit cannot leave ready forever
+ok 113 - AH: spontaneous application exit cannot leave ready forever
+  ---
+  duration_ms: 261.044334
+  type: 'test'
+  ...
+# Subtest: AH: disjoint applications launch independently and cannot rebind an existing view
+ok 114 - AH: disjoint applications launch independently and cannot rebind an existing view
+  ---
+  duration_ms: 314.759875
+  type: 'test'
+  ...
+# Subtest: AH: host secrets are not inherited; logs redact bearer and JSON secrets
+ok 115 - AH: host secrets are not inherited; logs redact bearer and JSON secrets
+  ---
+  duration_ms: 216.166125
+  type: 'test'
+  ...
+# Subtest: AH: confirmed Stop removes a SIGTERM-resistant descendant in its owned group
+ok 116 - AH: confirmed Stop removes a SIGTERM-resistant descendant in its owned group
+  ---
+  duration_ms: 290.450458
+  type: 'test'
+  ...
+# Subtest: FIX-01: lost receipt recovery is owner-confirmed, fences old credentials and retains exact identity
+ok 117 - FIX-01: lost receipt recovery is owner-confirmed, fences old credentials and retains exact identity
+  ---
+  duration_ms: 228.355875
+  type: 'test'
+  ...
+# Subtest: FIX-01 gateway: closed/recovered generations never regain iframe capabilities after reopen
+ok 118 - FIX-01 gateway: closed/recovered generations never regain iframe capabilities after reopen
+  ---
+  duration_ms: 246.934042
+  type: 'test'
+  ...
+# Subtest: AH recovery: tampered data-root bindings cannot redirect application writes
+ok 119 - AH recovery: tampered data-root bindings cannot redirect application writes
+  ---
+  duration_ms: 215.286792
+  type: 'test'
+  ...
+# Subtest: AH-D1: an upgraded descriptor is adopted by a stopped instance across a host restart
+ok 120 - AH-D1: an upgraded descriptor is adopted by a stopped instance across a host restart
+  ---
+  duration_ms: 420.646917
+  type: 'test'
+  ...
+# Subtest: AH-MS01: with no dshmarket the plugin provides the `market` seat, and the seat renders the market page and can hide our own entry
+ok 121 - AH-MS01: with no dshmarket the plugin provides the `market` seat, and the seat renders the market page and can hide our own entry
+  ---
+  duration_ms: 3.603875
+  type: 'test'
+  ...
+# Subtest: AH-MS02: dshmarket installed in the profile — the seat is left alone, the market page carries the 「只能其一」 notice, and the host logged it
+ok 122 - AH-MS02: dshmarket installed in the profile — the seat is left alone, the market page carries the 「只能其一」 notice, and the host logged it
+  ---
+  duration_ms: 1.541208
+  type: 'test'
+  ...
+# Subtest: AH-MS03: dshmarket already holding the seat is detected before we try to provide it
+ok 123 - AH-MS03: dshmarket already holding the seat is detected before we try to provide it
+  ---
+  duration_ms: 0.345125
+  type: 'test'
+  ...
+# Subtest: AH-MS04: an unreachable host never blocks the seat, and disposing the plugin gives the seat back
+ok 124 - AH-MS04: an unreachable host never blocks the seat, and disposing the plugin gives the seat back
+  ---
+  duration_ms: 0.34675
+  type: 'test'
+  ...
+# Subtest: AH-MS05: the in-shell restart goes through the shell postMessage bridge, not a blocked iframe scheme navigation
+ok 125 - AH-MS05: the in-shell restart goes through the shell postMessage bridge, not a blocked iframe scheme navigation
+  ---
+  duration_ms: 0.454209
+  type: 'test'
+  ...
+# Subtest: AH-K5-1: guardian and launcher use the explicit executable Node runtime
+ok 126 - AH-K5-1: guardian and launcher use the explicit executable Node runtime
+  ---
+  duration_ms: 221.597459
+  type: 'test'
+  ...
+# Subtest: AH-K5-1: internal runtime environment has only the controlled whitelist
+ok 127 - AH-K5-1: internal runtime environment has only the controlled whitelist
+  ---
+  duration_ms: 0.335125
+  type: 'test'
+  ...
+# Subtest: AH-K5-2: Electron self-hosting refuses fallback and persists a failed instance event
+ok 128 - AH-K5-2: Electron self-hosting refuses fallback and persists a failed instance event
+  ---
+  duration_ms: 29.859041
+  type: 'test'
+  ...
+# Subtest: AH-K5-2: configured nodeBinary must be absolute and executable
+ok 129 - AH-K5-2: configured nodeBinary must be absolute and executable
+  ---
+  duration_ms: 0.679
+  type: 'test'
+  ...
+# Subtest: AH-K5-3: guardian refuses an Electron runtime with exit 78 and a typed event
+ok 130 - AH-K5-3: guardian refuses an Electron runtime with exit 78 and a typed event
+  ---
+  duration_ms: 32.723292
+  type: 'test'
+  ...
+# Subtest: AH-UI15: Open acknowledges the click while startup is still in flight
+ok 131 - AH-UI15: Open acknowledges the click while startup is still in flight
+  ---
+  duration_ms: 5.152083
+  type: 'test'
+  ...
+# Subtest: AH-UI16: Close acknowledges the click while owned-process cleanup is still in flight
+ok 132 - AH-UI16: Close acknowledges the click while owned-process cleanup is still in flight
+  ---
+  duration_ms: 1.67925
+  type: 'test'
+  ...
+# Subtest: AH-UI18: pending Open polls read-only status and resumes exactly once after ready
+ok 133 - AH-UI18: pending Open polls read-only status and resumes exactly once after ready
+  ---
+  duration_ms: 0.934334
+  type: 'test'
+  ...
+# Subtest: AH-UI19: hiding during pending Open closes its exact lease without a late resume
+ok 134 - AH-UI19: hiding during pending Open closes its exact lease without a late resume
+  ---
+  duration_ms: 0.976
+  type: 'test'
+  ...
+# Subtest: AH-UI20: a long read-only startup renews its pending lease without repeated resume writes
+ok 135 - AH-UI20: a long read-only startup renews its pending lease without repeated resume writes
+  ---
+  duration_ms: 11.896208
+  type: 'test'
+  ...
+# Subtest: AH-UI21: a timed-out pending Open releases its exact lease
+ok 136 - AH-UI21: a timed-out pending Open releases its exact lease
+  ---
+  duration_ms: 15.989708
+  type: 'test'
+  ...
+# Subtest: AH-UI22: a ready-to-starting race never issues a second resume write
+ok 137 - AH-UI22: a ready-to-starting race never issues a second resume write
+  ---
+  duration_ms: 1.061042
+  type: 'test'
+  ...
+# {"evidence":"REAL_PROCESS_ISOLATED","result":"spawned","elapsedMs":5094,"oldOrphanPid":29451,"newGuardianPid":29454,"newAppPid":29649,"lockOwner":29454,"trace":[{"at":1790981035406,"message":"ORPHAN_READY"},{"at":1790981035467,"message":"ORPHAN_TERM_IGNORED"}]}
+# Subtest: AH-L07: proven orphan reclamation gets its declared grace before the launch handshake budget
+ok 138 - AH-L07: proven orphan reclamation gets its declared grace before the launch handshake budget
+  ---
+  duration_ms: 5169.081708
+  type: 'test'
+  ...
+# Subtest: AH-L08: hung ownership guardian is bounded by bootstrap plus declared grace and kill confirmation
+ok 139 - AH-L08: hung ownership guardian is bounded by bootstrap plus declared grace and kill confirmation
+  ---
+  duration_ms: 7064.063125
+  type: 'test'
+  ...
+# Subtest: AH-L09: after ownership-ready a hung launcher handshake keeps its independent five second bound
+ok 140 - AH-L09: after ownership-ready a hung launcher handshake keeps its independent five second bound
+  ---
+  duration_ms: 5313.208542
+  type: 'test'
+  ...
+# Subtest: AH-L10: guardian error before ownership-ready fails immediately
+ok 141 - AH-L10: guardian error before ownership-ready fails immediately
+  ---
+  duration_ms: 377.855708
+  type: 'test'
+  ...
+# Subtest: AH-L10: guardian exit before ownership-ready fails immediately
+ok 142 - AH-L10: guardian exit before ownership-ready fails immediately
+  ---
+  duration_ms: 454.392875
+  type: 'test'
+  ...
+# Subtest: AH-L10: guardian error after ownership-ready fails immediately
+ok 143 - AH-L10: guardian error after ownership-ready fails immediately
+  ---
+  duration_ms: 331.811291
+  type: 'test'
+  ...
+# Subtest: AH-L10: guardian exit after ownership-ready fails immediately
+ok 144 - AH-L10: guardian exit after ownership-ready fails immediately
+  ---
+  duration_ms: 305.656417
+  type: 'test'
+  ...
+# Subtest: AH-R01 directory reports configured references but never exposes values
+ok 145 - AH-R01 directory reports configured references but never exposes values
+  ---
+  duration_ms: 0.497292
+  type: 'test'
+  ...
+# Subtest: AH-R02 a configured provider the entry accepts is auto-routed; revoke opts out; explicit grant overrides
+ok 146 - AH-R02 a configured provider the entry accepts is auto-routed; revoke opts out; explicit grant overrides
+  ---
+  duration_ms: 2.333125
+  type: 'test'
+  ...
+# Subtest: AH-R02b the OpenAI-compatible Coding OAuth gateway auto-routes to an `openai` slot only when no OpenAI key exists
+ok 147 - AH-R02b the OpenAI-compatible Coding OAuth gateway auto-routes to an `openai` slot only when no OpenAI key exists
+  ---
+  duration_ms: 0.580417
+  type: 'test'
+  ...
+# Subtest: AH-R01 grant keeps matching-consumer risk acknowledgement for legacy grant slots
+ok 148 - AH-R01 grant keeps matching-consumer risk acknowledgement for legacy grant slots
+  ---
+  duration_ms: 0.216833
+  type: 'test'
+  ...
+# Subtest: AH-R01 absent OAuth leaves a selected grant missing without reading its record
+ok 149 - AH-R01 absent OAuth leaves a selected grant missing without reading its record
+  ---
+  duration_ms: 0.098625
+  type: 'test'
+  ...
+# Subtest: AH-R01/AK11 file projection lifecycle follows host events and app-owned cleanup
+ok 150 - AH-R01/AK11 file projection lifecycle follows host events and app-owned cleanup
+  ---
+  duration_ms: 0.417834
+  type: 'test'
+  ...
+# Subtest: AH-R01 interrupted launch keeps durable file intent
+ok 151 - AH-R01 interrupted launch keeps durable file intent
+  ---
+  duration_ms: 0.22875
+  type: 'test'
+  ...
+# Subtest: AH-R11/AK11 sets expands provider, baseUrl and model and ignores undeclared or empty targets
+ok 152 - AH-R11/AK11 sets expands provider, baseUrl and model and ignores undeclared or empty targets
+  ---
+  duration_ms: 0.181041
+  type: 'test'
+  ...
+# Subtest: AH-R05 sets default applies and empty baseUrl is omitted
+ok 153 - AH-R05 sets default applies and empty baseUrl is omitted
+  ---
+  duration_ms: 0.136
+  type: 'test'
+  ...
+# Subtest: AH-R02c auto-route keeps the app's declared default model and never routes a derived slot
+ok 154 - AH-R02c auto-route keeps the app's declared default model and never routes a derived slot
+  ---
+  duration_ms: 0.388583
+  type: 'test'
+  ...
+# Subtest: AH-R12 (T6) every injection tells the receipt observer the routed provider and model — never the value — and local receipts are readable per app
+ok 155 - AH-R12 (T6) every injection tells the receipt observer the routed provider and model — never the value — and local receipts are readable per app
+  ---
+  duration_ms: 0.407541
+  type: 'test'
+  ...
+# Subtest: AH-R01/AK09: locked app-host file policies preserve rotated files and remove revoked grants
+ok 156 - AH-R01/AK09: locked app-host file policies preserve rotated files and remove revoked grants
+  ---
+  duration_ms: 1268.869084
+  type: 'test'
+  ...
+# Subtest: AH-R02 dsh-models describes refs without resolving values and adds pinned llm metadata
+ok 157 - AH-R02 dsh-models describes refs without resolving values and adds pinned llm metadata
+  ---
+  duration_ms: 1.468125
+  type: 'test'
+  ...
+# Subtest: AH-R03 coding gateway maps 404, off, configured and unreachable without exposing apiKey
+ok 158 - AH-R03 coding gateway maps 404, off, configured and unreachable without exposing apiKey
+  ---
+  duration_ms: 1.148375
+  type: 'test'
+  ...
+# Subtest: AH-R09 file gateway requires mode 0600 and returns the same provider contract
+ok 159 - AH-R09 file gateway requires mode 0600 and returns the same provider contract
+  ---
+  duration_ms: 3.670625
+  type: 'test'
+  ...
+# Subtest: AH-R08 every router route rejects missing client header, wrong origin, iframe and unauthenticated calls
+ok 160 - AH-R08 every router route rejects missing client header, wrong origin, iframe and unauthenticated calls
+  ---
+  duration_ms: 13.207458
+  type: 'test'
+  ...
+# Subtest: H14: every browser command/env/cwd/path/url override is rejected before spawn
+ok 161 - H14: every browser command/env/cwd/path/url override is rejected before spawn
+  ---
+  duration_ms: 23.066625
+  type: 'test'
+  ...
+# Subtest: H14: control routes require authentication, CSRF header, exact origin and host
+ok 162 - H14: control routes require authentication, CSRF header, exact origin and host
+  ---
+  duration_ms: 10.037083
+  type: 'test'
+  ...
+# Subtest: AH routes: startup receipt can be cancelled and tokens are not leaked through list/events
+ok 163 - AH routes: startup receipt can be cancelled and tokens are not leaked through list/events
+  ---
+  duration_ms: 158.851459
+  type: 'test'
+  ...
+# Subtest: H08: busy Stop is HTTP 409 and names the occupying view
+ok 164 - H08: busy Stop is HTTP 409 and names the occupying view
+  ---
+  duration_ms: 147.327792
+  type: 'test'
+  ...
+# AH-L01 reclaimed stale owner: {"deadPid":29858}
+# Subtest: AH-L01: a runtime lock left by a dead owner is reclaimed (current and legacy record shapes)
+ok 165 - AH-L01: a runtime lock left by a dead owner is reclaimed (current and legacy record shapes)
+  ---
+  duration_ms: 65.742625
+  type: 'test'
+  ...
+# AH-L02 live owner blocks: {"pid":29882,"start":"Sat Oct 3 07:44:16 2026"}
+# Subtest: AH-L02: a live owner still blocks, names its pid, and is never signalled
+ok 166 - AH-L02: a live owner still blocks, names its pid, and is never signalled
+  ---
+  duration_ms: 92.232125
+  type: 'test'
+  ...
+# AH-L03 pid reuse treated as dead: {"pid":29897,"liveStart":"Sat Oct 3 07:44:16 2026"}
+# Subtest: AH-L03: same pid with a different start token is a reused pid: reclaimed, and the stranger is not signalled
+ok 167 - AH-L03: same pid with a different start token is a reused pid: reclaimed, and the stranger is not signalled
+  ---
+  duration_ms: 104.389709
+  type: 'test'
+  ...
+# AH-L04 orphan handling: {"unproven":29917,"terminated":29930,"death":{"code":null,"signal":"SIGKILL"}}
+# Subtest: AH-L04: a surviving recorded child blocks unless provably ours; provably-ours orphans are terminated first
+ok 168 - AH-L04: a surviving recorded child blocks unless provably ours; provably-ours orphans are terminated first
+  ---
+  duration_ms: 374.591833
+  type: 'test'
+  ...
+# AH-L05 reclaimed after tree kill: {"oldGuardian":29957,"oldApp":29961,"newApp":30003,"newGuardian":29989}
+# Subtest: AH-L05: shell tree force-killed -> next open reclaims the stale runtime lock and replaces the orphaned app
+ok 169 - AH-L05: shell tree force-killed -> next open reclaims the stale runtime lock and replaces the orphaned app
+  ---
+  duration_ms: 974.994792
+  type: 'test'
+  ...
+# AH-L06 unproven orphan keeps the lock: {"launcherPid":30054,"appPid":30056}
+# Subtest: AH-L06: shell tree force-killed but the orphan cannot be proven ours -> open keeps failing DATA_ROOT_BUSY with the live pid
+ok 170 - AH-L06: shell tree force-killed but the orphan cannot be proven ours -> open keeps failing DATA_ROOT_BUSY with the live pid
+  ---
+  duration_ms: 329.600541
+  type: 'test'
+  ...
+# Subtest: AH store: pre-publish failure preserves prior image; post-publish failure is explicitly uncertain
+ok 171 - AH store: pre-publish failure preserves prior image; post-publish failure is explicitly uncertain
+  ---
+  duration_ms: 35.81175
+  type: 'test'
+  ...
+# Subtest: AH store: a second live owner is rejected and cannot silently overwrite state
+ok 172 - AH store: a second live owner is rejected and cannot silently overwrite state
+  ---
+  duration_ms: 18.452583
+  type: 'test'
+  ...
+# Subtest: AH store: corrupt snapshots and symlinked roots fail closed
+ok 173 - AH store: corrupt snapshots and symlinked roots fail closed
+  ---
+  duration_ms: 7.900583
+  type: 'test'
+  ...
+# Subtest: AH readiness: unrelated HTTP 200 with the same app marker is not owned readiness
+ok 174 - AH readiness: unrelated HTTP 200 with the same app marker is not owned readiness
+  ---
+  duration_ms: 216.445208
+  type: 'test'
+  ...
+# Subtest: AH descriptors: relative commands, shell-style launch, missing data binding and host env are rejected
+ok 175 - AH descriptors: relative commands, shell-style launch, missing data binding and host env are rejected
+  ---
+  duration_ms: 0.590792
+  type: 'test'
+  ...
+# Subtest: H01/H11 guard: bare apply() cannot masquerade as a loaded plugin; the domain binding is a single-image port
+ok 176 - H01/H11 guard: bare apply() cannot masquerade as a loaded plugin; the domain binding is a single-image port
+  ---
+  duration_ms: 0.620333
+  type: 'test'
+  ...
+# Subtest: AH-U01: open is recorded once per instance reaching ready; hanaRef is the app package name; sourcePlugin is app-host
+ok 177 - AH-U01: open is recorded once per instance reaching ready; hanaRef is the app package name; sourcePlugin is app-host
+  ---
+  duration_ms: 428.087208
+  type: 'test'
+  ...
+# Subtest: AH-U02: use is one per app per UTC hour of real gateway activity, reported when the hour closes; bootstrap, denials and 401/403 answers never count
+ok 178 - AH-U02: use is one per app per UTC hour of real gateway activity, reported when the hour closes; bootstrap, denials and 401/403 answers never count
+  ---
+  duration_ms: 255.290208
+  type: 'test'
+  ...
+# Subtest: AH-U03: no seat → nothing recorded, no throw; a seat that appears later is used from then on
+ok 179 - AH-U03: no seat → nothing recorded, no throw; a seat that appears later is used from then on
+  ---
+  duration_ms: 639.966333
+  type: 'test'
+  ...
+# Subtest: AH-U04: a rejecting, throwing or withholding seat never breaks the launch or the proxied request
+ok 180 - AH-U04: a rejecting, throwing or withholding seat never breaks the launch or the proxied request
+  ---
+  duration_ms: 844.845625
+  type: 'test'
+  ...
+# Subtest: AH-U05: hanaRef comes from the package — definition packageName, else the installed-scan binding, else no evidence
+ok 181 - AH-U05: hanaRef comes from the package — definition packageName, else the installed-scan binding, else no evidence
+  ---
+  duration_ms: 417.001542
+  type: 'test'
+  ...
+# Subtest: AH-U06: multiple instances of one app share the hour at the seat; the hour is reported once the last live instance stops
+ok 182 - AH-U06: multiple instances of one app share the hour at the seat; the hour is reported once the last live instance stops
+  ---
+  duration_ms: 684.103833
+  type: 'test'
+  ...
+# Subtest: AH-U08 (T6): the Router route becomes the hour receipt {providerId, model, count}; injections and requests are separate; unknown routes report without a receipt
+ok 183 - AH-U08 (T6): the Router route becomes the hour receipt {providerId, model, count}; injections and requests are separate; unknown routes report without a receipt
+  ---
+  duration_ms: 501.279709
+  type: 'test'
+  ...
+# Subtest: AH-U09 (T6): the receipt ledger persists through one debounced global.set, reloads, reports leftover closed hours on the next start and prunes
+ok 184 - AH-U09 (T6): the receipt ledger persists through one debounced global.set, reloads, reports leftover closed hours on the next start and prunes
+  ---
+  duration_ms: 61.782917
+  type: 'test'
+  ...
+1..184
+# tests 188
+# suites 0
+# pass 185
+# fail 0
+# cancelled 0
+# skipped 3
+# todo 0
+# duration_ms 46934.139625

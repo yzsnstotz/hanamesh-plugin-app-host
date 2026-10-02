@@ -1,12 +1,10 @@
 TAP version 13
-# (node:57546) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data
 not ok 1 - X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data
   ---
-  duration_ms: 266.689708
+  duration_ms: 270.352666
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-jkU4Mb/tests/crash.test.mjs:46:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-okcaJ3/tests/crash.test.mjs:46:1'
   failureType: 'testCodeFailure'
   error: 'RESERVE_BOUNDARY_UNSAFE: real app data exists without durable instance + lease ownership'
   code: 'ERR_ASSERTION'
@@ -15,7 +13,7 @@ not ok 1 - X03 reserve-launch: SIGKILL after actual process writes leaves a dura
   actual: false
   operator: '=='
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-jkU4Mb/tests/crash.test.mjs:50:3)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-okcaJ3/tests/crash.test.mjs:50:3)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -27,6 +25,4 @@ not ok 1 - X03 reserve-launch: SIGKILL after actual process writes leaves a dura
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 329.989834
-(node:57545) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-(Use `node --trace-warnings ...` to show where the warning was created)
+# duration_ms 333.863875
