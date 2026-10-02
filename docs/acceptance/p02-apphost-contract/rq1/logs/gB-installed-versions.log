@@ -1,0 +1,6 @@
+$ sh -c grep '"version"' /Users/yzliu/.claude/jobs/4ec8378d/tmp/run-rq1/home-green/dsh/profiles/g2/node_modules/@hanamesh/*/package.json /Users/yzliu/.claude/jobs/4ec8378d/tmp/run-rq1/home-green/dsh/profiles/g2/node_modules/hanamesh-*/package.json
+/Users/yzliu/.claude/jobs/4ec8378d/tmp/run-rq1/home-green/dsh/profiles/g2/node_modules/@hanamesh/app-contract-fixture/package.json:  "version": "0.0.4",
+/Users/yzliu/.claude/jobs/4ec8378d/tmp/run-rq1/home-green/dsh/profiles/g2/node_modules/@hanamesh/dsh-app-host/package.json:  "version": "0.1.0-rc.43",
+/Users/yzliu/.claude/jobs/4ec8378d/tmp/run-rq1/home-green/dsh/profiles/g2/node_modules/@hanamesh/lib-provision/package.json:  "version": "0.1.0-rc.1",
+/Users/yzliu/.claude/jobs/4ec8378d/tmp/run-rq1/home-green/dsh/profiles/g2/node_modules/hanamesh-core/package.json:  "version": "0.2.0-rc.46",
+/Users/yzliu/.claude/jobs/4ec8378d/tmp/run-rq1/home-green/dsh/profiles/g2/node_modules/hanamesh-usage/package.json:  "version": "0.2.0-rc.10",

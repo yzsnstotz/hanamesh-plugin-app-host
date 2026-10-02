@@ -1,0 +1,18 @@
+$ npm cache add zod@4.5.4  (fresh npm_config_cache; the tgz's only dependency)
+(node:45138) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+npm notice
+npm notice New minor version of npm available! 11.8.0 -> 11.21.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.21.0
+npm notice To update run: npm install -g npm@11.21.0
+npm notice
+exit=0
+$ node scripts/verify-package.mjs artifacts/hanamesh-dsh-app-host-0.1.0-rc.43.tgz
+
+added 2 packages in 253ms
+(node:45145) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"check":"ISOLATED_PACKAGE","status":"PASS","realOwnedPid":45152,"realAppData":true,"installedExports":[".","./client"],"appPackageContract":2,"unregisterStoppedRuntime":true,"dshEntry":"requires pinned DSH peers; verified separately in the real profile","sourceTreeImports":0}
+(node:45146) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+exit=0

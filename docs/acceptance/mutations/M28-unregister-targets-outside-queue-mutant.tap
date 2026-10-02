@@ -1,18 +1,39 @@
 TAP version 13
-# (node:26652) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:44332) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregister starts is found and stopped — no orphan runtime
 not ok 1 - AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregister starts is found and stopped — no orphan runtime
   ---
-  duration_ms: 103.816834
+  duration_ms: 151.045875
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-tjMbaV/tests/app-package-lifecycle.test.mjs:188:1'
-  failureType: 'unhandledRejection'
-  error: 'targets.map is not a function'
-  code: 'ERR_TEST_FAILURE'
-  name: 'TypeError'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-0ewsD1/tests/app-package-lifecycle.test.mjs:196:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    [32m+ actual[39m [31m- expected[39m
+    
+    [39m  {
+    [39m    appId: 'held-app',
+    [39m    removed: true,
+    [32m+[39m   stopped: 0
+    [31m-[39m   stopped: 1
+    [39m  }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    appId: 'held-app'
+    removed: true
+    stopped: 1
+  actual:
+    appId: 'held-app'
+    removed: true
+    stopped: 0
+  operator: 'deepStrictEqual'
   stack: |-
-    AppHost.unregister (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-tjMbaV/src/manager.js:105:54)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-0ewsD1/tests/app-package-lifecycle.test.mjs:214:10)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
 1..1
 # tests 1
@@ -22,6 +43,6 @@ not ok 1 - AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregi
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 276.123083
-(node:26651) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 228.480041
+(node:44331) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

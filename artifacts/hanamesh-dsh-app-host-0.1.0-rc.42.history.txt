@@ -1,4 +1,4 @@
 # Same version string, local (never published) candidates in order. Only the last line is the current candidate.
 3047353d10123b1987e6e41a59e3ddd7ccaa76c5c8a6dfaad56d6bc79c6c3615  superseded  commit 70723a7 — first rc.42 candidate; SPEC R2 race (beginOpen/unregister) present
 eedf454d5cf69c38a391e71f457fb022438144e79566408dc3033152e354060b  superseded  never committed — R2 fix; differs from the current one only in README.md, docs/APP_PACKAGE.md, docs/CONTRACT.md
-95cf8af3f102fee25fe7ba890294135585273f37aba3b4d85020671aa933f47d  current     rework commit — R2 fix + contract docs
+95cf8af3f102fee25fe7ba890294135585273f37aba3b4d85020671aa933f47d  superseded  commit d945ee6 — R2 fix + contract docs; superseded by 0.1.0-rc.43 (QUALITY R-Q1), see hanamesh-dsh-app-host-0.1.0-rc.43.history.txt

@@ -1,0 +1,3 @@
+{"tag":"gC-host-removed","captures":["gC-host-removed-home"],"consoleErrors":[],"hanameshRequests":[],"rootStatus":200}
+{"tag":"gE-live-before","captures":["gE-live-before-home"],"consoleErrors":[],"hanameshRequests":["GET /hanamesh/library/installedPlugins 200","GET /api/hanamesh/core/points 200"],"rootStatus":200}
+{"tag":"lF1-host-disabled","captures":["lF1-host-disabled-home"],"consoleErrors":[],"hanameshRequests":["GET /api/hanamesh/core/points 200"],"rootStatus":200}

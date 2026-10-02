@@ -1,10 +1,10 @@
 TAP version 13
-# (node:26625) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:44316) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregister starts is found and stopped — no orphan runtime
 ok 1 - AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregister starts is found and stopped — no orphan runtime
   ---
-  duration_ms: 154.186625
+  duration_ms: 156.143417
   type: 'test'
   ...
 1..1
@@ -15,6 +15,6 @@ ok 1 - AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregister
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 233.423125
-(node:26624) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 233.851083
+(node:44315) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

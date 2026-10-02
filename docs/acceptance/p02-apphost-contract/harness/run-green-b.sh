@@ -1,12 +1,13 @@
 #!/bin/bash
 # GREEN cases B–E on one fresh profile: host before app → host removed (app stays) → host restored → app uninstalled.
 . "$(dirname "$0")/lib.sh"; PORT=35413; S=green; P=g2; PR="$RUN/home-$S/dsh/profiles/$P"; DATA="$RUN/home-$S/dsh/data/hanamesh-apps"
+FIXTURE=${FIXTURE:-hanamesh-app-contract-fixture-0.0.2.tgz}   # rc.43 rerun: FIXTURE=…-0.0.4.tgz APPHOST_TGZ=…rc.43.tgz
 storage() { ( cd "$RUN/home-$S/dsh" && find storages data -type f 2>/dev/null | sort | sed 's#[0-9a-f]\{24\}#<ns>#' ) > "$EVID/logs/$1-storage-files.txt"; wc -l < "$EVID/logs/$1-storage-files.txt" | sed "s/^/$1 storage_files=/" | tee -a "$EVID/logs/probes.jsonl"; }
-"$H/setup.sh" $S $P "$RUN/inputs/hanamesh-dsh-app-host-0.1.0-rc.42.tgz" > "$RUN/$P-setup.out" 2>&1 || { cat "$RUN/$P-setup.out"; exit 1; }
-cp "$RUN/inputs/hanamesh-app-contract-fixture-0.0.2.tgz" "$PR/.inputs/"
+"$H/setup.sh" $S $P "${APPHOST_TGZ:-$RUN/inputs/hanamesh-dsh-app-host-0.1.0-rc.42.tgz}" > "$RUN/$P-setup.out" 2>&1 || { cat "$RUN/$P-setup.out"; exit 1; }
+cp "$RUN/inputs/$FIXTURE" "$PR/.inputs/"
 # B: host first, then app
 "$H/step.sh" gB-add-core "$H/dsh.sh" $S plugin --profile $P add "file:$PR/.inputs/hanamesh-core-0.2.0-rc.46.tgz"
-"$H/step.sh" gB-add-v2 "$H/dsh.sh" $S plugin --profile $P add "file:$PR/.inputs/hanamesh-app-contract-fixture-0.0.2.tgz"
+"$H/step.sh" gB-add-v2 "$H/dsh.sh" $S plugin --profile $P add "file:$PR/.inputs/$FIXTURE"
 "$H/step.sh" gB-installed-versions sh -c "grep '\"version\"' $PR/node_modules/@hanamesh/*/package.json $PR/node_modules/hanamesh-*/package.json"
 up $S $P gB-host-then-app || exit 1
 probe gB-host-then-app apps; probe gB-host-then-app installed

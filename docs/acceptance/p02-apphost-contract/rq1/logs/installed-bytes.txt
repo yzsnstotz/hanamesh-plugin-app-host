@@ -1,0 +1,36 @@
+# rc.43 bytes actually installed into the isolated DSH profiles (R-Q4 evidence)
+$ shasum -a 256 artifacts/hanamesh-dsh-app-host-0.1.0-rc.43.tgz (repo candidate)
+0867f969f023b281bd2bf2a1aa158c75dc8838cbbcb53f8bb63dfce2a66bffaf  artifacts/hanamesh-dsh-app-host-0.1.0-rc.43.tgz
+$ shasum -a 256 $RUN/home-green/dsh/profiles/g2/.inputs/hanamesh-dsh-app-host-0.1.0-rc.43.tgz (pnpm override source)
+0867f969f023b281bd2bf2a1aa158c75dc8838cbbcb53f8bb63dfce2a66bffaf  $RUN/home-green/dsh/profiles/g2/.inputs/hanamesh-dsh-app-host-0.1.0-rc.43.tgz
+$ realpath node_modules/@hanamesh/dsh-app-host → $RUN/home-green/dsh/profiles/g2/node_modules/@hanamesh/dsh-app-host
+$ grep version package.json
+  "version": "0.1.0-rc.43",
+$ shasum -a 256 dist/manager.js dist/index.d.ts (installed)
+15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7  dist/manager.js
+4a574561c7c5214aecc35d8c4e1afdfd23aad9b67ac34e1c190f73b57d00f714  dist/index.d.ts
+$ diff -r installed dist/ vs tgz-unpacked dist/
+identical
+$ grep -c registrationId dist/manager.js
+7
+$ fixture installed dsh.js register lines
+(fixture removed in this profile — scenario E)
+$ shasum -a 256 $RUN/home-live/dsh/profiles/l1/.inputs/hanamesh-dsh-app-host-0.1.0-rc.43.tgz (pnpm override source)
+0867f969f023b281bd2bf2a1aa158c75dc8838cbbcb53f8bb63dfce2a66bffaf  $RUN/home-live/dsh/profiles/l1/.inputs/hanamesh-dsh-app-host-0.1.0-rc.43.tgz
+$ realpath node_modules/@hanamesh/dsh-app-host → $RUN/home-live/dsh/profiles/l1/node_modules/@hanamesh/dsh-app-host
+$ grep version package.json
+  "version": "0.1.0-rc.43",
+$ shasum -a 256 dist/manager.js dist/index.d.ts (installed)
+15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7  dist/manager.js
+4a574561c7c5214aecc35d8c4e1afdfd23aad9b67ac34e1c190f73b57d00f714  dist/index.d.ts
+$ diff -r installed dist/ vs tgz-unpacked dist/
+identical
+$ grep -c registrationId dist/manager.js
+7
+$ fixture installed dsh.js register lines
+8:    const { appId, registrationId } = apps.register(definition);
+9:    return () => apps.unregister(appId, registrationId);
+$ shasum -a 256 dist/manager.js (tgz-unpacked, repo dist, src)
+15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7  $UNPACK/package/dist/manager.js
+15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7  dist/manager.js
+15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7  src/manager.js

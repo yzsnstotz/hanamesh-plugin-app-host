@@ -1,0 +1,15 @@
+$ node --version
+v24.13.1
+$ npm --version
+11.8.0
+$ npm ci (npm_config_cache=fresh mktemp dir)
+(node:38304) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+added 50 packages in 2s
+npm notice
+npm notice New minor version of npm available! 11.8.0 -> 11.21.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.21.0
+npm notice To update run: npm install -g npm@11.21.0
+npm notice
+exit=0

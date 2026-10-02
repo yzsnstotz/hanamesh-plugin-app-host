@@ -1,0 +1,6 @@
+# P02-APPHOST-01 local (never published) candidates, oldest first. Only the last line is the current candidate.
+# rc.42 bytes are kept (hanamesh-dsh-app-host-0.1.0-rc.42.tgz + .sha256 + .history.txt) as history only; the rc.42 name is not reused.
+3047353d10123b1987e6e41a59e3ddd7ccaa76c5c8a6dfaad56d6bc79c6c3615  0.1.0-rc.42  superseded  commit 70723a7 — first rc.42 candidate; SPEC R2 race (beginOpen/unregister) present
+eedf454d5cf69c38a391e71f457fb022438144e79566408dc3033152e354060b  0.1.0-rc.42  superseded  never committed — R2 fix; differs from 95cf8af3 only in README.md, docs/APP_PACKAGE.md, docs/CONTRACT.md
+95cf8af3f102fee25fe7ba890294135585273f37aba3b4d85020671aa933f47d  0.1.0-rc.42  superseded  commit d945ee6 — QUALITY R-Q1: unregister(appId, definitionHash) used the content fingerprint as registration identity
+0867f969f023b281bd2bf2a1aa158c75dc8838cbbcb53f8bb63dfce2a66bffaf  0.1.0-rc.43  current     R-Q1 rework — per-call registrationId; unregister(appId, registrationId); stopping persisted in the unregister queue step

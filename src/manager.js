@@ -18,11 +18,12 @@ const publicLease = lease => {
 };
 const publicInstance = instance => copy(instance);
 const isTerminal = s => ['stopped','failed','interrupted'].includes(s);
+const REGISTRATION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 /** Sole owner of instance records and view leases. No session-log mutation. */
 export class AppHost {
   #queue = new SerialQueue(); #definitions = new Map(); #controls = new Map(); #listeners = new Set();
-  #packageNames = new Map(); #activityListeners = new Set();
+  #packageNames = new Map(); #activityListeners = new Set(); #registrations = new Map();
   #logs = new Map(); #state; #initialized = false; #closing = false; #poisoned = false; #timer; #disposing;
   #credentialResolver = null; #nodeBinary; #runtimeLedgerReader;
   constructor({ store, dataRoot, parentOrigin, frameAncestors = [], leaseTtlMs = 90_000, sweepIntervalMs = 15_000,
@@ -81,31 +82,44 @@ export class AppHost {
     requireCondition(!this.#closing,'HOST_CLOSED','Host is closing.');
     const d = validateDefinition(definition);
     requireCondition(!this.#definitions.has(d.id),'DUPLICATE_APP','An app definition cannot be replaced in a running host.');
-    this.#definitions.set(d.id,d);
-    return { appId:d.id, definitionHash:fingerprint(d) };
+    // rc.43 (QUALITY R-Q1): every register() is its own registration; the id is random and never reissued, so equal
+    // definition content (re-install of the same version, bundle reload) never makes two registrations interchangeable.
+    const registrationId = randomUUID();
+    this.#definitions.set(d.id,d); this.#registrations.set(d.id,registrationId);
+    return { appId:d.id, registrationId, definitionHash:fingerprint(d) };
   }
   /**
    * rc.42 (app package contract v2): the registering bundle's own scope ended — the app package was unloaded or the
-   * bundle reloaded. Only the exact registration (`definitionHash` from `register`) is removed, so a stale disposer can
-   * never drop a newer definition. The definition goes first (no new opens), then every owned runtime of the app is
-   * stopped through the normal stop path; instance records and app data stay. While the host itself is closing this
-   * is a no-op: `dispose()` already stops everything and the definitions die with this host object.
+   * bundle reloaded. rc.43 (QUALITY R-Q1): only the registration whose `registrationId` `register` returned is removed;
+   * the content fingerprint is not an identity, so a late or repeated disposer of an earlier registration of the same
+   * definition is a no-op (`registration-replaced`). The definition goes first (no new opens), then every owned
+   * runtime of the app is stopped through the normal stop path; instance records and app data stay. While the host
+   * itself is closing this is a no-op: `dispose()` already stops everything and the definitions die with this host.
    */
-  async unregister(appId,definitionHash) {
+  async unregister(appId,registrationId) {
     identifier(appId,'appId');
-    requireCondition(typeof definitionHash === 'string' && /^[a-f0-9]{64}$/.test(definitionHash),'INVALID_REQUEST','definitionHash from register() is required.');
+    requireCondition(typeof registrationId === 'string' && REGISTRATION_ID.test(registrationId),'INVALID_REQUEST','registrationId from register() is required.');
     if (this.#closing) return { appId, removed:false, reason:'host-closing', stopped:0 };
-    const current = this.#definitions.get(appId);
-    if (!current || fingerprint(current) !== definitionHash) return { appId, removed:false, reason:current ? 'definition-replaced' : 'not-registered', stopped:0 };
-    this.#definitions.delete(appId);
+    const current = this.#registrations.get(appId);
+    if (current !== registrationId) return { appId, removed:false, reason:current ? 'registration-replaced' : 'not-registered', stopped:0 };
+    this.#definitions.delete(appId); this.#registrations.delete(appId);
     // Targets are read inside the serial queue: an Open that reserved before the delete has committed by then and is
     // stopped here; one queued after it is refused by the registration check in #prepareOpen. Only this appId is touched.
-    const targets = await this.#queue.run(async () => (this.#state?.instances ?? [])
-      .filter(i => i.appId === appId && (!isTerminal(i.status) || this.#controls.has(i.id))));
-    const results = await Promise.allSettled(targets.map(i => this.stop(i.id,{confirm:true},i.principalId)));
+    // The same queued step persists `stopping` for every target, so an Open of a newer registration (bundle reload)
+    // queued behind it gets a retryable INSTANCE_STOPPING instead of a view on a runtime about to be stopped.
+    const tasks = await this.#queue.run(async () => {
+      const targets = (this.#state?.instances ?? []).filter(i => i.appId === appId && (!isTerminal(i.status) || this.#controls.has(i.id)));
+      const pending = [];
+      for (const i of targets) {
+        try { pending.push((await this.#stopStep(i.id,true,i.principalId)).task); }
+        catch (error) { const failed = Promise.reject(error); failed.catch(() => {}); pending.push(failed); }
+      }
+      return pending;
+    });
+    const results = await Promise.allSettled(tasks);
     const failed = results.filter(r => r.status === 'rejected').length;
     if (failed) throw new AppHostError('UNREGISTER_STOP_INCOMPLETE','Application unregistered, but some of its runtimes could not be confirmed stopped.',{ appId, count:failed });
-    return { appId, removed:true, stopped:targets.length };
+    return { appId, removed:true, stopped:tasks.length };
   }
   /**
    * rc.27: the npm package that ships an app, as the installed-package scan saw it (`<profile>/node_modules/<pkg>/app.json`
@@ -266,6 +280,9 @@ export class AppHost {
           status:'active',expiresAt:this.clock()+this.leaseTtlMs,createdAt:this.clock(),originalSessionId:input.originalSessionId ?? null };
         next.leases.push(lease);
       }
+      // Checked before definition adoption: a stopping runtime (e.g. the previous registration's cleanup during a bundle
+      // reload) is a retryable state whatever definition the new Open carries.
+      requireCondition(instance.status !== 'stopping','INSTANCE_STOPPING','Instance is stopping; retry after the stopped event.');
       // App upgrades change descriptors (credentialEnv, purpose text, name). Data ownership is checked separately below
       // (BINDING_PATH_INVALID), so a not-running instance simply adopts the new definition; a running one keeps the
       // definition it was launched with and must be stopped first.
@@ -280,7 +297,6 @@ export class AppHost {
       const expectedDirectory=join(this.dataRoot,expectedNamespace,app.id,deployment.id,deployment.dataId,app.singleInstanceOnly?'single':instance.id);
       requireCondition(instance.dataDir===expectedDirectory && instance.mode===deployment.mode,'BINDING_PATH_INVALID',
         'Persisted data ownership does not match this registered root; explicit migration is required.');
-      requireCondition(instance.status !== 'stopping','INSTANCE_STOPPING','Instance is stopping; retry after the stopped event.');
       if (lease.status !== 'active' || lease.expiresAt <= this.clock()) {
         token = randomBytes(32).toString('hex'); lease.tokenHash = hash(token); lease.generation++;
       }
@@ -528,43 +544,45 @@ export class AppHost {
   }
   async stop(instanceId,{confirm=false}={},principalId='host') {
     identifier(instanceId,'instanceId');
-    const wrapped=await this.#queue.run(async()=>{
-      // During dispose, existing runtimes must still be stoppable.
-      requireCondition(this.#initialized,'HOST_CLOSED','Host is not initialized.');
-      const stored=this.#state.instances.find(i=>i.id===instanceId);
-      requireCondition(stored && stored.principalId===principalId,'INSTANCE_NOT_OWNED','Instance not owned by this principal.',{},403);
-      const control=this.#controls.get(instanceId);
-      if(control?.stopTask)return {task:control.stopTask};
-      if(isTerminal(stored.status) && !control)return {task:Promise.resolve(publicInstance(stored))};
-      const users=this.#activeFor(this.#state,instanceId);
-      requireCondition(confirm || users.length===0,'INSTANCE_IN_USE','Stop refused: views are still using this instance.',
-        {views:users.map(l=>({viewId:l.viewId,generation:l.generation,expiresAt:l.expiresAt}))},409);
-      const next=copy(this.#state),record=next.instances.find(i=>i.id===instanceId);
-      record.status='stopping';record.updatedAt=this.clock();
-      this.#event(next,'instance.stop-requested',record,{views:users.map(l=>l.viewId)});
-      // Persist stopping before signalling; no UI may infer stopped from this event.
-      await this.#commit(next);control?.abort.abort();
-      const task=(async()=>{
-        await stopBeforePublish(async()=>{
-          await control?.gateway?.close();await control?.runner?.stop();
-          await control?.readyTask?.catch(()=>{});
-        },async()=>{
-          return await this.#queue.run(async()=>{
-            const final=copy(this.#state),item=final.instances.find(i=>i.id===instanceId);
-            item.status='stopped';item.endpoint=null;item.gatewayOrigin=null;item.updatedAt=this.clock();
-            for(const lease of final.leases)if(lease.instanceId===instanceId && lease.status==='active') {
-              lease.status='stopped';this.#event(final,'view.stopped',item,{viewId:lease.viewId,generation:lease.generation});
-            }
-            this.#event(final,'instance.stopped',item,{mode:item.mode});await this.#commit(final);
-            this.#controls.delete(instanceId);return publicInstance(item);
-          });
-        },point=>this.checkpoint(point,{instanceId}));
-        return this.instance(instanceId,principalId);
-      })();
-      task.catch(()=>{});if(control)control.stopTask=task;
-      return {task};
-    });
+    const wrapped=await this.#queue.run(()=>this.#stopStep(instanceId,confirm,principalId));
     return await wrapped.task;
+  }
+  /** One serial-queue step of `stop`: persists `stopping` and signals; the returned task publishes `stopped` later. */
+  async #stopStep(instanceId,confirm,principalId) {
+    // During dispose, existing runtimes must still be stoppable.
+    requireCondition(this.#initialized,'HOST_CLOSED','Host is not initialized.');
+    const stored=this.#state.instances.find(i=>i.id===instanceId);
+    requireCondition(stored && stored.principalId===principalId,'INSTANCE_NOT_OWNED','Instance not owned by this principal.',{},403);
+    const control=this.#controls.get(instanceId);
+    if(control?.stopTask)return {task:control.stopTask};
+    if(isTerminal(stored.status) && !control)return {task:Promise.resolve(publicInstance(stored))};
+    const users=this.#activeFor(this.#state,instanceId);
+    requireCondition(confirm || users.length===0,'INSTANCE_IN_USE','Stop refused: views are still using this instance.',
+      {views:users.map(l=>({viewId:l.viewId,generation:l.generation,expiresAt:l.expiresAt}))},409);
+    const next=copy(this.#state),record=next.instances.find(i=>i.id===instanceId);
+    record.status='stopping';record.updatedAt=this.clock();
+    this.#event(next,'instance.stop-requested',record,{views:users.map(l=>l.viewId)});
+    // Persist stopping before signalling; no UI may infer stopped from this event.
+    await this.#commit(next);control?.abort.abort();
+    const task=(async()=>{
+      await stopBeforePublish(async()=>{
+        await control?.gateway?.close();await control?.runner?.stop();
+        await control?.readyTask?.catch(()=>{});
+      },async()=>{
+        return await this.#queue.run(async()=>{
+          const final=copy(this.#state),item=final.instances.find(i=>i.id===instanceId);
+          item.status='stopped';item.endpoint=null;item.gatewayOrigin=null;item.updatedAt=this.clock();
+          for(const lease of final.leases)if(lease.instanceId===instanceId && lease.status==='active') {
+            lease.status='stopped';this.#event(final,'view.stopped',item,{viewId:lease.viewId,generation:lease.generation});
+          }
+          this.#event(final,'instance.stopped',item,{mode:item.mode});await this.#commit(final);
+          this.#controls.delete(instanceId);return publicInstance(item);
+        });
+      },point=>this.checkpoint(point,{instanceId}));
+      return this.instance(instanceId,principalId);
+    })();
+    task.catch(()=>{});if(control)control.stopTask=task;
+    return {task};
   }
   async stopAll() {
     const records=this.#state?.instances ?? [];

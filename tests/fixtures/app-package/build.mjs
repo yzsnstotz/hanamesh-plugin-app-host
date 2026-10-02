@@ -6,11 +6,11 @@
 import { mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
 import { execFileSync } from 'node:child_process';
-const [contract, outDir, node, peer = '0.1.0-rc.42'] = process.argv.slice(2);
+const [contract, outDir, node, peer = '0.1.0-rc.43'] = process.argv.slice(2);
 if (!['v1','v2'].includes(contract) || !outDir || !isAbsolute(node ?? '')) throw new Error('usage: build.mjs <v1|v2> <outDir> <absolute node> [peer]');
 // FIXTURE_BROKEN=1: same v2 entry but app.json omits the {{dataDir}} binding, so validateDefinition rejects it (loud-error gate).
 const broken = process.env.FIXTURE_BROKEN === '1';
-const name = '@hanamesh/app-contract-fixture', version = contract === 'v1' ? '0.0.1' : broken ? '0.0.3' : '0.0.2';
+const name = '@hanamesh/app-contract-fixture', version = contract === 'v1' ? '0.0.1' : broken ? '0.0.3' : '0.0.4'; // v2 0.0.2 = rc.42 entry (definitionHash), superseded
 const dir = join(outDir, `fixture-${contract}${broken ? '-broken' : ''}`); await rm(dir, { recursive:true, force:true }); await mkdir(dir, { recursive:true });
 const here = new URL('.', import.meta.url);
 const entry = (await readFile(new URL(`entry-${contract}.js`, here), 'utf8')).replaceAll('@hanamesh/app-example', name);

@@ -1,7 +1,7 @@
 #!/bin/bash
 # usage: setup.sh <scenario> <profile> <apphost tgz> — fresh isolated web profile for the Core suite + fixture app.
 # Test-profile scaffold only (not a product path): private packages resolve to local tarballs through pnpm overrides, and
-# peer metadata comes from regstub.mjs (local registry + the unpublished rc.42 candidate);
+# peer metadata comes from regstub.mjs (local registry + the unpublished app-host candidate under test: rc.42, rc.43 for the R-Q1 rerun);
 # Core's documented serverOrigin/websiteOrigin knobs point at a loopback stub that records request shapes and answers 503 so nothing reaches production.
 set -euo pipefail
 . "$(dirname "$0")/env.sh"

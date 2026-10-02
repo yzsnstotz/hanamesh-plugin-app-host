@@ -3,12 +3,13 @@
 # app-host entry while the app is open, re-enable it, then disable the app entry while it is open. Patch = documented
 # Loader entry option `disabled`. Restores the patch file afterwards.
 . "$(dirname "$0")/lib.sh"; PORT=35416; S=live; P=l1; PR="$RUN/home-$S/dsh/profiles/$P"; DATA="$RUN/home-$S/dsh/data/hanamesh-apps"
+FIXTURE=${FIXTURE:-hanamesh-app-contract-fixture-0.0.2.tgz}   # rc.43 rerun: FIXTURE=…-0.0.4.tgz APPHOST_TGZ=…rc.43.tgz
 # fresh DSH_HOME: setup + Core46 + fixture v2; base patch = Core stub knobs + test-only log tap (outside the repo)
 rm -f "$RUN"/lF.leases.json
-[ -f "$PR/package.json" ] || { "$H/setup.sh" $S $P "$RUN/inputs/hanamesh-dsh-app-host-0.1.0-rc.42.tgz" > "$RUN/$P-setup.out" 2>&1 || exit 1
-  cp "$RUN/inputs/hanamesh-app-contract-fixture-0.0.2.tgz" "$PR/.inputs/"
+[ -f "$PR/package.json" ] || { "$H/setup.sh" $S $P "${APPHOST_TGZ:-$RUN/inputs/hanamesh-dsh-app-host-0.1.0-rc.42.tgz}" > "$RUN/$P-setup.out" 2>&1 || exit 1
+  cp "$RUN/inputs/$FIXTURE" "$PR/.inputs/"
   "$H/step.sh" lF-add-core "$H/dsh.sh" $S plugin --profile $P add "file:$PR/.inputs/hanamesh-core-0.2.0-rc.46.tgz"
-  "$H/step.sh" lF-add-v2 "$H/dsh.sh" $S plugin --profile $P add "file:$PR/.inputs/hanamesh-app-contract-fixture-0.0.2.tgz"
+  "$H/step.sh" lF-add-v2 "$H/dsh.sh" $S plugin --profile $P add "file:$PR/.inputs/$FIXTURE"
   { cat "$PR/cordis.patch.yml"; cat "$RUN/l1-logtap.yml"; } > "$RUN/l1-base.yml"; }
 cp "$RUN/l1-base.yml" "$PR/cordis.patch.yml"; : > "$EVID/logs/live-cordis-log.jsonl"
 # wait until /hanamesh/apps answers the expected status (the live reload is asynchronous); records how long it took

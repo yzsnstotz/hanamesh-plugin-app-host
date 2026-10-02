@@ -1,12 +1,12 @@
 TAP version 13
-# (node:26590) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:44281) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-L13 (rc.42): each application row says whether it survives the host being removed — contract ≥2 host-optional, v1/undeclared host-required
 not ok 1 - AH-L13 (rc.42): each application row says whether it survives the host being removed — contract ≥2 host-optional, v1/undeclared host-required
   ---
-  duration_ms: 11.494542
+  duration_ms: 10.494584
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-qCMj9O/tests/library-installed.test.mjs:25:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-g1SH6q/tests/library-installed.test.mjs:25:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:
@@ -53,7 +53,7 @@ not ok 1 - AH-L13 (rc.42): each application row says whether it survives the hos
       1: 'host-optional'
   operator: 'deepStrictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-qCMj9O/tests/library-installed.test.mjs:33:10)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-g1SH6q/tests/library-installed.test.mjs:33:10)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -65,6 +65,6 @@ not ok 1 - AH-L13 (rc.42): each application row says whether it survives the hos
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 44.621708
-(node:26589) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 44.182708
+(node:44280) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

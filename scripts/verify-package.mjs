@@ -18,9 +18,12 @@ try{
     const registration=host.register(definition);
     try{await host.init();const result=await host.open({appId:'installed',deploymentId:'local',viewId:'installed-view'});assert.equal(await readFile(join(result.instance.dataDir,'independent-app.txt'),'utf8'),'actual app write');assert.equal(typeof WorkspaceAppClient,'function');
     // rc.42 app package contract v2 surface from the installed artifact: entry check + exact unregister stops the owned runtime.
+    // rc.43: the handle is the per-registration registrationId; the content fingerprint is refused and a stale id is a no-op.
     assert.equal(checkAppPackageEntry({apply(){}},{hanamesh:{contractVersion:APP_PACKAGE_CONTRACT_VERSION}}).hostLifecycle,'host-optional');
     assert.throws(()=>checkAppPackageEntry({apply(){},inject:['hanameshApps']},{hanamesh:{contractVersion:2}}),{code:'APP_PACKAGE_HOST_REQUIRED'});
-    const undone=await host.unregister(registration.appId,registration.definitionHash);
+    await assert.rejects(host.unregister(registration.appId,registration.definitionHash),{code:'INVALID_REQUEST'});
+    assert.equal((await host.unregister(registration.appId,'00000000-0000-4000-8000-000000000000')).reason,'registration-replaced');
+    const undone=await host.unregister(registration.appId,registration.registrationId);
     assert.deepEqual(undone,{appId:'installed',removed:true,stopped:1});assert.equal(host.instance(result.instance.id).status,'stopped');
     // The ./dsh entry needs the pinned DSH peers (schemastery, storage-domain): without them it cannot load at all, so it cannot masquerade as a plugin here. Its real load is the H01 profile run.
     await assert.rejects(import('@hanamesh/dsh-app-host/dsh'),{code:'ERR_MODULE_NOT_FOUND'});

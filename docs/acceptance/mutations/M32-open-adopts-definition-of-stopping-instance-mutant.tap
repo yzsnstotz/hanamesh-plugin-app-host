@@ -1,0 +1,60 @@
+TAP version 13
+# (node:44630) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: AH-PK12 (QUALITY R-Q1 ordering) bundle reload, same definition: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime
+not ok 1 - AH-PK12 (QUALITY R-Q1 ordering) bundle reload, same definition: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime
+  ---
+  duration_ms: 279.782208
+  type: 'test'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-C39ey0/tests/app-package-lifecycle.test.mjs:255:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    "INSTANCE_NOT_READY"
+    [32mactual[39m [31mexpected[39m
+    
+    [39m'[39m[39mI[39m[39mN[39m[39mS[39m[39mT[39m[39mA[39m[39mN[39m[39mC[39m[39mE[39m[39m_[39m[32mN[39m[32mO[39m[31mS[39m[39mT[39m[32m_[39m[32mR[39m[32mE[39m[32mA[39m[32mD[39m[32mY[39m[31mO[39m[31mP[39m[31mP[39m[31mI[39m[31mN[39m[31mG[39m[39m'[39m
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INSTANCE_STOPPING'
+  actual: 'INSTANCE_NOT_READY'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-C39ey0/tests/app-package-lifecycle.test.mjs:269:12)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  ...
+# Subtest: AH-PK12 (QUALITY R-Q1 ordering) bundle reload, upgraded definition: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime
+not ok 2 - AH-PK12 (QUALITY R-Q1 ordering) bundle reload, upgraded definition: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime
+  ---
+  duration_ms: 265.380042
+  type: 'test'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-C39ey0/tests/app-package-lifecycle.test.mjs:255:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    "DEFINITION_CHANGED"
+    [32mactual[39m [31mexpected[39m
+    
+    [39m'[39m[32mD[39m[32mE[39m[32mF[39m[39mI[39m[39mN[39m[32mI[39m[31mS[39m[39mT[39m[32mI[39m[32mO[39m[31mA[39m[39mN[39m[32m_[39m[39mC[39m[32mH[39m[32mA[39m[31mE[39m[31m_[39m[31mS[39m[31mT[39m[31mO[39m[31mP[39m[31mP[39m[31mI[39m[39mN[39m[39mG[39m[32mE[39m[32mD[39m[39m'[39m
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INSTANCE_STOPPING'
+  actual: 'DEFINITION_CHANGED'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-C39ey0/tests/app-package-lifecycle.test.mjs:269:12)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 623.319125
+(node:44629) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)

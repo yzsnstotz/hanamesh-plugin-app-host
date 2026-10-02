@@ -4,7 +4,7 @@ import { apply,domainBinding,browserAuthentication,type DshPluginConfig } from '
 const definition:AppDefinition={id:'example',name:'Example',deployments:[{id:'local',dataId:'data1',mode:'owned',command:'/absolute/node',args:['app.mjs','{{port}}','{{dataDir}}'],readiness:{path:'/health',status:200,bodyIncludes:'EXAMPLE'}}]};
 const host=new AppHost({store:new AtomicFileStore('/tmp/example-state'),dataRoot:'/tmp/example-data',parentOrigin:'http://127.0.0.1:40000'});
 const registration=host.register(definition);
-const undone=await host.unregister(registration.appId,registration.definitionHash);const removed:boolean=undone.removed;void removed;
+const undone=await host.unregister(registration.appId,registration.registrationId);const removed:boolean=undone.removed;void removed;const fingerprint:string=registration.definitionHash;void fingerprint;
 host.register(definition);
 const lifecycle:'host-optional'=checkAppPackageEntry({apply(){}},{hanamesh:{contractVersion:APP_PACKAGE_CONTRACT_VERSION}}).hostLifecycle;void lifecycle;
 const opened=await host.beginOpen({appId:'example',deploymentId:'local',viewId:'view'});

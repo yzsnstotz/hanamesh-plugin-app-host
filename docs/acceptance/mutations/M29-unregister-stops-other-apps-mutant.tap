@@ -1,12 +1,12 @@
 TAP version 13
-# (node:26756) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:44708) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-PK09 (SPEC R3) unregistering app A stops only A: app B keeps its live, ready runtime
 not ok 1 - AH-PK09 (SPEC R3) unregistering app A stops only A: app B keeps its live, ready runtime
   ---
-  duration_ms: 509.879541
+  duration_ms: 455.276667
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-IhRWCB/tests/app-package-lifecycle.test.mjs:172:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-63UUc7/tests/app-package-lifecycle.test.mjs:180:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:
@@ -31,7 +31,7 @@ not ok 1 - AH-PK09 (SPEC R3) unregistering app A stops only A: app B keeps its l
     stopped: 2
   operator: 'deepStrictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-IhRWCB/tests/app-package-lifecycle.test.mjs:180:10)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-63UUc7/tests/app-package-lifecycle.test.mjs:188:10)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -43,6 +43,6 @@ not ok 1 - AH-PK09 (SPEC R3) unregistering app A stops only A: app B keeps its l
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 596.607541
-(node:26755) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 532.98425
+(node:44707) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

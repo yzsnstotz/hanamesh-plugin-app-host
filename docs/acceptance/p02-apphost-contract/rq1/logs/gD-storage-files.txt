@@ -1,0 +1,6 @@
+storages/hanamesh_app_host.json
+storages/hanamesh_core.json
+storages/hanamesh_core_health.json
+storages/hanamesh_library.json
+storages/hanamesh_usage_events.json
+storages/workspace.json

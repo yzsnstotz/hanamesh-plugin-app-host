@@ -1,12 +1,12 @@
 TAP version 13
-# (node:26419) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:44112) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-U02: use is one per app per UTC hour of real gateway activity, reported when the hour closes; bootstrap, denials and 401/403 answers never count
 not ok 1 - AH-U02: use is one per app per UTC hour of real gateway activity, reported when the hour closes; bootstrap, denials and 401/403 answers never count
   ---
-  duration_ms: 240.714791
+  duration_ms: 241.633958
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-tBPMa1/tests/usage-evidence.test.mjs:79:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-0p5dGp/tests/usage-evidence.test.mjs:79:1'
   failureType: 'testCodeFailure'
   error: |-
     the running hour is not reported yet
@@ -19,7 +19,7 @@ not ok 1 - AH-U02: use is one per app per UTC hour of real gateway activity, rep
   actual: 1
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-tBPMa1/tests/usage-evidence.test.mjs:100:10)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-0p5dGp/tests/usage-evidence.test.mjs:100:10)
     process.processTicksAndRejections (node:internal/process/task_queues:103:5)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
@@ -32,6 +32,6 @@ not ok 1 - AH-U02: use is one per app per UTC hour of real gateway activity, rep
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 305.554041
-(node:26418) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 305.519209
+(node:44111) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

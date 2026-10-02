@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-02T10:24:55.334Z",
+  "generatedAt": "2026-10-02T10:46:08.603Z",
   "results": [
     {
       "id": "M21-market-close-retry-rejected-cache",
@@ -7,6 +7,7 @@
       "pattern": "^AH-VL10:",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "91d4d333bd9920bba1e01570dd46096937901f9d8d4d9d99166a588a3e407a09",
       "mutatedSourceSha256": "2a03dae8c9adaeb45ad2177517f67fdff339595bdb42b7231c332b44608ae575"
@@ -17,6 +18,7 @@
       "pattern": "^AH-VL13:",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "91d4d333bd9920bba1e01570dd46096937901f9d8d4d9d99166a588a3e407a09",
       "mutatedSourceSha256": "8ddc5963942263422cc5faf05987f782830b511daa22f0e1c9a76b36285f8500"
@@ -27,6 +29,7 @@
       "pattern": "^AH-VL01:",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "91d4d333bd9920bba1e01570dd46096937901f9d8d4d9d99166a588a3e407a09",
       "mutatedSourceSha256": "89d133553d3c7e3716b0b5a27a86c2cf43d5a6c8671b3a75d36f2fb31909c567"
@@ -37,6 +40,7 @@
       "pattern": "^AH-VL03:",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "91d4d333bd9920bba1e01570dd46096937901f9d8d4d9d99166a588a3e407a09",
       "mutatedSourceSha256": "2665a64af88de64e89fb22d56ccbd8b8fd333f8c47ce588057f10a27cccb0bcc"
@@ -47,6 +51,7 @@
       "pattern": "^AH-L07:",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "47480b9465e37b1219e59ccdfdc9c07412657da8c3c8a2629d0d934651f528fe",
       "mutatedSourceSha256": "0b564bee4f54913d4887b4aa7f7e7d8b2eb9a33307d21447c9d956e38030481a"
@@ -57,9 +62,10 @@
       "pattern": "^H02:",
       "baselineExit": 0,
       "mutantExit": 1,
-      "killed": true,
-      "originalSourceSha256": "105c5f81659e8938c9b30fe57a59b05a4673ef37046abbb3b241e25166bb3fad",
-      "mutatedSourceSha256": "19e21aef063650e765241ac18d23bf502f7b390505d0ebb20b155610b124a8f0"
+      "failed": true,
+      "killed": false,
+      "originalSourceSha256": "15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7",
+      "mutatedSourceSha256": "0c0e31465a0f3ceaae5cef6fed77e5cb71a17293e52a83c7956e83da4e42e669"
     },
     {
       "id": "M02-reserve-launch",
@@ -67,6 +73,7 @@
       "pattern": "^X03 reserve-launch:",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "1d2bf5814e0424333f013dc2e9b176c2ea32074a41dfda81069b454634e58f29",
       "mutatedSourceSha256": "b1444993b8289051eff0a0fd2f53882dba8f95ca40dfb3d29f0a959a7bb70f47"
@@ -77,6 +84,7 @@
       "pattern": "^X03 stop-publish:",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "1d2bf5814e0424333f013dc2e9b176c2ea32074a41dfda81069b454634e58f29",
       "mutatedSourceSha256": "66790829fb80174999979c4486a387a615be86f95b4fade3c105723b0103c6a9"
@@ -87,9 +95,10 @@
       "pattern": "^AH-C2",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
-      "originalSourceSha256": "105c5f81659e8938c9b30fe57a59b05a4673ef37046abbb3b241e25166bb3fad",
-      "mutatedSourceSha256": "e19f0aaff2e87c7f566b49aa76eebebcdcd721593994c6776cf05983ef56e6ff"
+      "originalSourceSha256": "15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7",
+      "mutatedSourceSha256": "249bdd55890e2c7c721682de89a07a2105f46b0a40ac56ed9a15c8c4e52768d7"
     },
     {
       "id": "M04-socket-ownership",
@@ -97,6 +106,7 @@
       "pattern": "^AH readiness:",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "47480b9465e37b1219e59ccdfdc9c07412657da8c3c8a2629d0d934651f528fe",
       "mutatedSourceSha256": "d0d4fa1a6c8f0afc79da70bd48e3272b5b442499c201e0968faa11588ff7c7c1"
@@ -107,6 +117,7 @@
       "pattern": "^AH-R11/AK11",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "9c24e70fe7bae62d20510a15fb21f9a07c387a6e0fbf75d4f8cc349fa22e5734",
       "mutatedSourceSha256": "226239551d2d358f8fca0eda519f5991fe2a36c1e598406b7a84ffb10d1d7e2c"
@@ -117,6 +128,7 @@
       "pattern": "^AH-P02:",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "294d10b20f7dde614f4a9e7d492c6668ed6c47be8d026822896aefdcdd7cdd1e",
       "mutatedSourceSha256": "2bf411530744a841a0bb81dca395eb9e1b5a9d453d61403743cd437e91942dee"
@@ -127,6 +139,7 @@
       "pattern": "^AH-L04:",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "3daa98b79de16823c7e0540dc2ec62649718263bbc79b781c0ff4c3fa54543ea",
       "mutatedSourceSha256": "1638547290c2d027bdd2d91e4c3813462d2764fa3bcc491d79b2f542041f9792"
@@ -137,6 +150,7 @@
       "pattern": "^AH-L09:",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "35dd3e090992e0eb7960027e64c14726ff351a888e1505a3f907c7f0812eb9b9",
       "mutatedSourceSha256": "ddc655ab327552d81d578337a7a0f2d4d4ab38d7c63bc745f593568a81b7c912"
@@ -147,6 +161,7 @@
       "pattern": "^AH-U02:",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "049d1cbf16f54a51960bc241a43ad86b56724c421892a26cadd6cb26c16e0a68",
       "mutatedSourceSha256": "86d3c0ca98ed6f4b3e85cac12c940f8088095b5242ed2fa2723ef04a771904da"
@@ -157,6 +172,7 @@
       "pattern": "^AH-U02:",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "55d58767bc33a83a2b35d24efb198088b6f728b7c0145123b924764719c9bc8f",
       "mutatedSourceSha256": "34541ab55b48037b6b9d515fa5be4deddca54eddc78594b134f2122545ab8123"
@@ -167,6 +183,7 @@
       "pattern": "^AH-U08",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "55d58767bc33a83a2b35d24efb198088b6f728b7c0145123b924764719c9bc8f",
       "mutatedSourceSha256": "0f51272bff737513320393b6e92bd84d863550d2452f11a308fc8f0b0899c094"
@@ -177,7 +194,8 @@
       "pattern": "^AH-R12",
       "baselineExit": 0,
       "mutantExit": 1,
-      "killed": true,
+      "failed": true,
+      "killed": false,
       "originalSourceSha256": "9c24e70fe7bae62d20510a15fb21f9a07c387a6e0fbf75d4f8cc349fa22e5734",
       "mutatedSourceSha256": "76a5b820e86552dc151ab18be5522e9bade098d75be1f4389335971b089622f9"
     },
@@ -187,6 +205,7 @@
       "pattern": "^AH-M02:",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "126fd4e8c60cb2dbdc848f9700cecc1e68c63ed1942c239d347fd4482264a1fc",
       "mutatedSourceSha256": "0eba0064d0a0cf2149c2ccfa850fca021142d24c5a3f20e6dc01a39a58126fa7"
@@ -197,6 +216,7 @@
       "pattern": "^AH-M06",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "ddc4cfc9486af7ed6ea6c65ec46ec7f27f18e884e7c786ba06dd6b867a49a275",
       "mutatedSourceSha256": "17ff0ed57cbc5c2def81f090b600ee26769c6c67cf84e942aade04ec525474ad"
@@ -207,7 +227,8 @@
       "pattern": "^AH-MS0[23]",
       "baselineExit": 0,
       "mutantExit": 1,
-      "killed": true,
+      "failed": true,
+      "killed": false,
       "originalSourceSha256": "91d4d333bd9920bba1e01570dd46096937901f9d8d4d9d99166a588a3e407a09",
       "mutatedSourceSha256": "bff42c2a334d2c8e679bdbda92230db670d6893d77e37ba96693cd25e2f38f5a"
     },
@@ -217,6 +238,7 @@
       "pattern": "^AH-K5-2: Electron self-hosting",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "47480b9465e37b1219e59ccdfdc9c07412657da8c3c8a2629d0d934651f528fe",
       "mutatedSourceSha256": "a0682b95ac562a64164d83244c0c0d43257afd531547640dbc3b5a131565c3c5"
@@ -224,12 +246,13 @@
     {
       "id": "M23-unregister-ignores-registration-identity",
       "test": "tests/app-package-lifecycle.test.mjs",
-      "pattern": "^AH-PK06 ",
+      "pattern": "^AH-PK(06|11) ",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
-      "originalSourceSha256": "105c5f81659e8938c9b30fe57a59b05a4673ef37046abbb3b241e25166bb3fad",
-      "mutatedSourceSha256": "29cfe61f0dfe39043186d7ccff004cb44495a9e071a84c1e05b2b8c5091e80c5"
+      "originalSourceSha256": "15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7",
+      "mutatedSourceSha256": "669cc6cc888203d61c551185aca74e65ae0ce831ac1711b4146eb874eef197a5"
     },
     {
       "id": "M24-unregister-orphans-runtime",
@@ -237,9 +260,10 @@
       "pattern": "^AH-PK04 ",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
-      "originalSourceSha256": "105c5f81659e8938c9b30fe57a59b05a4673ef37046abbb3b241e25166bb3fad",
-      "mutatedSourceSha256": "6732be4adade2b12ae444a32247b1b126c9c30339b1fc2c610f67a579e08f221"
+      "originalSourceSha256": "15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7",
+      "mutatedSourceSha256": "f61eaee0e5b2ac6dff3261b9824a0f2816e6e135c0cfa4f2b15500f041803446"
     },
     {
       "id": "M25-installed-lifecycle-always-optional",
@@ -247,6 +271,7 @@
       "pattern": "^AH-L13 ",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "6c73bfdb1e104a86dcd98fdeaf425b0be253313cfc568cc5b46d41ee5a01692b",
       "mutatedSourceSha256": "c7da7b3b607096b559e45c6c392a622eb3d1db5cc683eb3c5433512cc0427773"
@@ -257,6 +282,7 @@
       "pattern": "^AH-PK07 ",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
       "originalSourceSha256": "b731c734f63631b6f5e6255348c4532e025bc76f18f60e3e7ece68588585dcc6",
       "mutatedSourceSha256": "a0abb33f0bfe8169fc365a52d82fae2f8885c25547450e5bd6f7ab8993b5fdfc"
@@ -267,9 +293,10 @@
       "pattern": "^AH-PK08 ",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
-      "originalSourceSha256": "105c5f81659e8938c9b30fe57a59b05a4673ef37046abbb3b241e25166bb3fad",
-      "mutatedSourceSha256": "933cefc8678b090660951da36e94c115843181e1b6e3c8b42b43d1046a004076"
+      "originalSourceSha256": "15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7",
+      "mutatedSourceSha256": "90e3d9ce09dd28e356ec17107f9b559dbc603f3982445b73d38a563c5de65e2f"
     },
     {
       "id": "M28-unregister-targets-outside-queue",
@@ -277,9 +304,43 @@
       "pattern": "^AH-PK10 ",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
-      "originalSourceSha256": "105c5f81659e8938c9b30fe57a59b05a4673ef37046abbb3b241e25166bb3fad",
-      "mutatedSourceSha256": "4bfacd09da3bc524e0a93639203a11f2a73e6b704075ebeb6097b9e2bb07e8ee"
+      "originalSourceSha256": "15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7",
+      "mutatedSourceSha256": "377046a107aa8afa4e63e3229c877040f73dc6b3d87693648257a6b4020f8a02"
+    },
+    {
+      "id": "M30-registration-id-from-content-hash",
+      "test": "tests/app-package-lifecycle.test.mjs",
+      "pattern": "^AH-PK(06|11) ",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "failed": true,
+      "killed": true,
+      "originalSourceSha256": "15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7",
+      "mutatedSourceSha256": "9ad8ed40b5678ea20e3e946602239d1f607c305673d6767ae9cdcac432d56c62"
+    },
+    {
+      "id": "M31-unregister-marks-stopping-in-later-step",
+      "test": "tests/app-package-lifecycle.test.mjs",
+      "pattern": "^AH-PK12 ",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "failed": true,
+      "killed": true,
+      "originalSourceSha256": "15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7",
+      "mutatedSourceSha256": "838961c9e4ed5983ce6f2f0549cbce04afbc6267db1cce912bbb1daa12d18d3f"
+    },
+    {
+      "id": "M32-open-adopts-definition-of-stopping-instance",
+      "test": "tests/app-package-lifecycle.test.mjs",
+      "pattern": "^AH-PK12 ",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "failed": true,
+      "killed": true,
+      "originalSourceSha256": "15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7",
+      "mutatedSourceSha256": "737624e2b81614551a5b44da9d8b7511e5e763e7bdcdca63c4a63c45e08e9a38"
     },
     {
       "id": "M29-unregister-stops-other-apps",
@@ -287,9 +348,10 @@
       "pattern": "^AH-PK09 ",
       "baselineExit": 0,
       "mutantExit": 1,
+      "failed": true,
       "killed": true,
-      "originalSourceSha256": "105c5f81659e8938c9b30fe57a59b05a4673ef37046abbb3b241e25166bb3fad",
-      "mutatedSourceSha256": "6734a6159336f370c36661e7fb1ad715aaee97e2628af3a88118515842a0ae20"
+      "originalSourceSha256": "15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7",
+      "mutatedSourceSha256": "5e098f87e50c005e6b09655fc033156c34460f85b3601bb06b89ed043fe4ad13"
     }
   ]
 }

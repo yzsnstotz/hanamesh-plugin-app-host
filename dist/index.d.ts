@@ -55,9 +55,10 @@ export class AppHost {
   constructor(options:HostOptions);
   /** rc.4: seat or clear the credential broker; returns a disposer that clears it only if still the same function. */
   setCredentialResolver(resolver:CredentialResolver|null):()=>void;
-  register(definition:AppDefinition):{appId:string;definitionHash:string};
-  /** rc.42 app package contract v2: undo exactly one `register` (stops the app's owned runtimes; records and data stay). No-op while the host closes. */
-  unregister(appId:string,definitionHash:string):Promise<{appId:string;removed:boolean;reason?:'host-closing'|'definition-replaced'|'not-registered';stopped:number}>;
+  /** `registrationId` (rc.43) is unique per call and never reissued; `definitionHash` is only the content fingerprint. */
+  register(definition:AppDefinition):{appId:string;registrationId:string;definitionHash:string};
+  /** rc.42 app package contract v2, rc.43 identity: undo exactly the `register` call that returned `registrationId` (stops the app's owned runtimes; records and data stay). A stale id is a no-op; a non-UUID (e.g. the old `definitionHash`) is INVALID_REQUEST. No-op while the host closes. */
+  unregister(appId:string,registrationId:string):Promise<{appId:string;removed:boolean;reason?:'host-closing'|'registration-replaced'|'not-registered';stopped:number}>;
   init():Promise<this>;
   /** rc.27: bind the npm package that ships `appId` (from the installed scan); a definition-declared `packageName` wins. */
   bindPackageName(appId:string,packageName:string):void;

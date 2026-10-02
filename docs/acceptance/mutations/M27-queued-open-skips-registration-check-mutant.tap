@@ -1,15 +1,15 @@
 TAP version 13
-# (node:26608) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:44300) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-PK08 (SPEC R2) an Open already queued when unregister runs never reserves or launches a runtime for the removed app
 not ok 1 - AH-PK08 (SPEC R2) an Open already queued when unregister runs never reserves or launches a runtime for the removed app
   ---
-  duration_ms: 333.932625
+  duration_ms: 328.566917
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-n9EQ6f/tests/app-package-lifecycle.test.mjs:153:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-IR0pRs/tests/app-package-lifecycle.test.mjs:161:1'
   failureType: 'testCodeFailure'
   error: |-
-    {"id":"d7e690ce-7700-4711-9d8e-ce402897af4f","appId":"race-app","deploymentId":"local","dataId":"data-v1","principalId":"dsh-browser","dataDir":"/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-26608-yf9NER/app-data/8695bef47d82e4517c6268b6/race-app/local/data-v1/single","mode":"owned","definitionHash":"1359cd36ba357e725b77b398c554b7f5f1fc42103f25ac21f4e13c038002f217","status":"starting","runtimeId":"154c894b-2bb4-4a42-be11-7374074f159a","endpoint":"http://127.0.0.1:52212","gatewayOrigin":null,"pid":26622,"guardianPid":26616,"createdAt":1790936693347,"updatedAt":1790936693426}
+    {"id":"2dbf84b5-f86c-484d-9ff6-b928f4eb82d3","appId":"race-app","deploymentId":"local","dataId":"data-v1","principalId":"dsh-browser","dataDir":"/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-44300-fUGUli/app-data/8695bef47d82e4517c6268b6/race-app/local/data-v1/single","mode":"owned","definitionHash":"3dbdb3d531b5830019a40b4055ea0b1fc6c0ef33c6020091d520063257af4473","status":"stopping","runtimeId":"10b23f2e-5d10-4248-b24d-0f9777a7e459","endpoint":"http://127.0.0.1:55279","gatewayOrigin":null,"pid":44313,"guardianPid":44307,"createdAt":1790937962243,"updatedAt":1790937962330}
     [32m+ actual[39m [31m- expected[39m
     
     [32m+[39m undefined
@@ -20,7 +20,7 @@ not ok 1 - AH-PK08 (SPEC R2) an Open already queued when unregister runs never r
   expected: 'APP_NOT_REGISTERED'
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-n9EQ6f/tests/app-package-lifecycle.test.mjs:168:10)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-IR0pRs/tests/app-package-lifecycle.test.mjs:176:10)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -32,6 +32,6 @@ not ok 1 - AH-PK08 (SPEC R2) an Open already queued when unregister runs never r
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 414.047083
-(node:26607) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 407.747791
+(node:44299) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

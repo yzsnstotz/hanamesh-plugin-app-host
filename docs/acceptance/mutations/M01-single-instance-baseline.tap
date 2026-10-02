@@ -1,11 +1,11 @@
 TAP version 13
-# (node:25782) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:43734) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
-# H02 real process evidence: {"opens":8,"pids":[25789]}
+# H02 real process evidence: {"opens":8,"pids":[43740]}
 # Subtest: H02: eight concurrent opens reserve one actual application process
 ok 1 - H02: eight concurrent opens reserve one actual application process
   ---
-  duration_ms: 233.3995
+  duration_ms: 236.55975
   type: 'test'
   ...
 1..1
@@ -16,6 +16,6 @@ ok 1 - H02: eight concurrent opens reserve one actual application process
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 298.194834
-(node:25781) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 300.529417
+(node:43733) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

@@ -1,10 +1,10 @@
 TAP version 13
-# (node:26588) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:44279) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-L13 (rc.42): each application row says whether it survives the host being removed — contract ≥2 host-optional, v1/undeclared host-required
 ok 1 - AH-L13 (rc.42): each application row says whether it survives the host being removed — contract ≥2 host-optional, v1/undeclared host-required
   ---
-  duration_ms: 11.38125
+  duration_ms: 10.263917
   type: 'test'
   ...
 1..1
@@ -15,6 +15,6 @@ ok 1 - AH-L13 (rc.42): each application row says whether it survives the host be
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 45.2545
-(node:26587) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 43.15425
+(node:44278) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

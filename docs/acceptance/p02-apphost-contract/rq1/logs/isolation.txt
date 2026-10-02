@@ -1,0 +1,5 @@
+RUN=$CLAUDE_JOB_DIR/tmp/run-rq1 (fresh; did not exist before this rerun)
+green (B–E): HOME=$RUN/home-green DSH_HOME=$RUN/home-green/dsh profile g2 port 35413
+live (F):    HOME=$RUN/home-live  DSH_HOME=$RUN/home-live/dsh  profile l1 port 35416
+stub 35414, regstub 35415 (→ local registry 4873 + rc.43 candidate)
+never ~/.dsh, never 3080

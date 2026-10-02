@@ -1,10 +1,10 @@
 TAP version 13
-# (node:26408) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:44101) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-U02: use is one per app per UTC hour of real gateway activity, reported when the hour closes; bootstrap, denials and 401/403 answers never count
 ok 1 - AH-U02: use is one per app per UTC hour of real gateway activity, reported when the hour closes; bootstrap, denials and 401/403 answers never count
   ---
-  duration_ms: 274.999041
+  duration_ms: 274.280625
   type: 'test'
   ...
 1..1
@@ -15,6 +15,6 @@ ok 1 - AH-U02: use is one per app per UTC hour of real gateway activity, reporte
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 339.044458
-(node:26407) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 337.40225
+(node:44100) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

@@ -1,12 +1,12 @@
 TAP version 13
-# (node:26468) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:44159) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite itself is refused both ways (PACKAGE_DENIED)
 not ok 1 - AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite itself is refused both ways (PACKAGE_DENIED)
   ---
-  duration_ms: 3.197084
+  duration_ms: 3.34475
   type: 'test'
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-AvztAb/tests/library-market.test.mjs:55:1'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-73CNkq/tests/library-market.test.mjs:55:1'
   failureType: 'testCodeFailure'
   error: 'Missing expected rejection.'
   code: 'ERR_ASSERTION'
@@ -15,7 +15,7 @@ not ok 1 - AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh 
     code: 'PACKAGE_DENIED'
   operator: 'rejects'
   stack: |-
-    async TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-AvztAb/tests/library-market.test.mjs:62:5)
+    async TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-73CNkq/tests/library-market.test.mjs:62:5)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -27,6 +27,6 @@ not ok 1 - AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh 
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 68.208375
-(node:26467) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 67.207083
+(node:44158) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)

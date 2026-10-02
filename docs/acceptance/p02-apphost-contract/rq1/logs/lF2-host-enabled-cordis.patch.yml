@@ -1,0 +1,11 @@
+# P02-APPHOST-01 isolation: Core's documented origin knobs → loopback request-recording stub (no production traffic).
+- id: hanamesh-core
+  config:
+    serverOrigin: http://127.0.0.1:35414
+    websiteOrigin: http://127.0.0.1:35414
+    allowSystemBrowser: false
+- insert:
+  - id: p02-log-tap
+    name: /Users/yzliu/.claude/jobs/4ec8378d/tmp/run-rq1/diag/log-tap.mjs
+    config:
+      file: /Users/yzliu/work/projects/hanamesh/_deliveries/p02-dispatch-20261002/worktrees/apphost-contract/docs/acceptance/p02-apphost-contract/rq1/logs/live-cordis-log.jsonl

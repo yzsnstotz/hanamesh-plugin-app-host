@@ -121,18 +121,26 @@ test('AH-PK05 a broken app definition is not swallowed: the registration fails l
   assert.equal(fiber.state, FIBER_ACTIVE, 'the bundle itself stays loaded so DSH still boots; the failure is the logged scope error');
 });
 
-test('AH-PK06 unregister only removes the exact registration and is a no-op while the host closes', async t => {
+test('AH-PK06 unregister only removes the exact registration (registrationId, not content) and is a no-op while the host closes', async t => {
   const r = await root(t);
   await r.host.start();
   const host = r.ctx.get('hanameshApps');
-  const { appId, definitionHash } = host.register(definition({ id: 'direct' }));
+  const first = host.register(definition({ id: 'direct' }));
+  assert.match(first.registrationId, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  assert.match(first.definitionHash, /^[a-f0-9]{64}$/);
+  const { appId, registrationId } = first;
   await assert.rejects(host.unregister(appId, 'nothex'), { code: 'INVALID_REQUEST' });
-  assert.deepEqual(await host.unregister(appId, 'f'.repeat(64)), { appId, removed: false, reason: 'definition-replaced', stopped: 0 });
-  assert.deepEqual(await host.unregister('other', definitionHash), { appId: 'other', removed: false, reason: 'not-registered', stopped: 0 });
-  assert.deepEqual(await host.unregister(appId, definitionHash), { appId, removed: true, stopped: 0 });
+  // The content fingerprint is not a registration handle: passing it is refused loudly, never matched.
+  await assert.rejects(host.unregister(appId, first.definitionHash), { code: 'INVALID_REQUEST' });
+  assert.deepEqual(await host.unregister(appId, '00000000-0000-4000-8000-000000000000'), { appId, removed: false, reason: 'registration-replaced', stopped: 0 });
+  assert.deepEqual(await host.unregister('other', registrationId), { appId: 'other', removed: false, reason: 'not-registered', stopped: 0 });
+  assert.deepEqual(await host.unregister(appId, registrationId), { appId, removed: true, stopped: 0 });
   const again = host.register(definition({ id: 'direct' }));
+  // Same definition, new registration: same fingerprint, never the same registrationId.
+  assert.equal(again.definitionHash, first.definitionHash);
+  assert.notEqual(again.registrationId, registrationId);
   await r.host.stop();
-  assert.deepEqual(await host.unregister(appId, again.definitionHash), { appId, removed: false, reason: 'host-closing', stopped: 0 });
+  assert.deepEqual(await host.unregister(appId, again.registrationId), { appId, removed: false, reason: 'host-closing', stopped: 0 });
 });
 
 test('AH-PK07 checkAppPackageEntry: v2 entry passes; a top-level hanameshApps inject (array or map) or a stale contractVersion is refused', async t => {
@@ -154,13 +162,13 @@ test('AH-PK08 (SPEC R2) an Open already queued when unregister runs never reserv
   const r = await root(t);
   await r.host.start();
   const host = r.ctx.get('hanameshApps');
-  const { appId, definitionHash } = host.register(definition({ id: 'race-app' }));
+  const { appId, registrationId } = host.register(definition({ id: 'race-app' }));
   // Another app's Open occupies the serial queue, so the raced Open has read the definition but not yet reserved
   // when unregister starts (both calls are issued synchronously, before any queued step runs).
   host.register(definition({ id: 'blocker' }));
   const held = host.beginOpen({ appId: 'blocker', deploymentId: 'local', viewId: 'v-blocker' }, P);
   const raced = host.beginOpen({ appId, deploymentId: 'local', viewId: 'v-race' }, P);
-  const undone = await host.unregister(appId, definitionHash);
+  const undone = await host.unregister(appId, registrationId);
   const outcome = await raced.then(value => ({ value }), error => ({ error }));
   await held;
   assert.equal(undone.removed, true);
@@ -177,7 +185,7 @@ test('AH-PK09 (SPEC R3) unregistering app A stops only A: app B keeps its live, 
   const openA = await host.open({ appId: 'app-a', deploymentId: 'local', viewId: 'v-a' }, P);
   const openB = await host.open({ appId: 'app-b', deploymentId: 'local', viewId: 'v-b' }, P);
   assert.ok(pidAlive(openA.instance.pid)); assert.ok(pidAlive(openB.instance.pid));
-  assert.deepEqual(await host.unregister(a.appId, a.definitionHash), { appId: 'app-a', removed: true, stopped: 1 });
+  assert.deepEqual(await host.unregister(a.appId, a.registrationId), { appId: 'app-a', removed: true, stopped: 1 });
   assert.equal(pidAlive(openA.instance.pid), false);
   assert.ok(pidAlive(openB.instance.pid), 'B must survive A being unregistered');
   assert.equal(host.instance(openB.instance.id, P).status, 'ready');
@@ -193,13 +201,13 @@ test('AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregister 
     save: async snapshot => { if (hold && snapshot.instances.some(i => i.appId === 'held-app')) { const h = hold; hold = null; h.reached(); await h.gate; } return await inner.save(snapshot); } };
   const host = new AppHost({ store, dataRoot: join(dir, 'data'), parentOrigin, sweepIntervalMs: 0 });
   t.after(async () => { await host.dispose(); await rm(dir, { recursive: true, force: true }); });
-  const { appId, definitionHash } = host.register(definition({ id: 'held-app' }));
+  const { appId, registrationId } = host.register(definition({ id: 'held-app' }));
   await host.init();
   let reached, release; const atSave = new Promise(r => { reached = r; }), gate = new Promise(r => { release = r; });
   hold = { reached, gate };
   const opening = host.beginOpen({ appId, deploymentId: 'local', viewId: 'v-held' }, P);
   await atSave;                                         // reservation is being written, not yet in host state
-  const undoing = host.unregister(appId, definitionHash);
+  const undoing = host.unregister(appId, registrationId);
   release();
   const opened = await opening;                         // it passed the registration check before the delete
   const undone = await undoing;
@@ -208,3 +216,68 @@ test('AH-PK10 (SPEC R2) an Open whose reservation is mid-commit when unregister 
   assert.equal(host.instance(opened.instance.id, P).status, 'stopped');
   assert.deepEqual(host.list(P).apps, []);
 });
+
+/**
+ * QUALITY R-Q1: drive the contract entry itself (entry-v2.js, the file docs/APP_PACKAGE.md shows verbatim) through a
+ * minimal ctx whose `inject` hands back the subscription callback, so the test holds the entry's own disposer and can
+ * call it late — the case Cordis' dispose guard hides. Whatever handle the entry passes to `unregister` is exercised.
+ */
+async function subscriptions(entry, host) {
+  let subscribe;
+  await entry.apply({ inject: (deps, callback) => { assert.deepEqual(deps, ['hanameshApps']); subscribe = callback; } });
+  // Each call is one scope start (one `register`); it returns that scope's disposer. Synchronous, like Cordis' effect.
+  return () => subscribe({ get: name => (name === 'hanameshApps' ? host : undefined) });
+}
+
+test('AH-PK11 (QUALITY R-Q1) a late disposer of an earlier registration of the SAME definition never removes the current one or stops its runtime', async t => {
+  const r = await root(t);
+  await r.host.start();
+  const host = r.ctx.get('hanameshApps');
+  const subscribe = await subscriptions(await bundle(r.dir, 'v2', definition({ id: 'reg-app' })), host);
+  const disposeR1 = subscribe();
+  assert.deepEqual(await disposeR1(), { appId: 'reg-app', removed: true, stopped: 0 });
+  const disposeR2 = subscribe();                             // same app.json bytes → same content fingerprint
+  const opened = await host.open({ appId: 'reg-app', deploymentId: 'local', viewId: 'v-r2' }, P);
+  assert.ok(pidAlive(opened.instance.pid));
+  const late = await disposeR1();                            // stale cleanup of r1 arrives after r2 exists
+  assert.deepEqual(late, { appId: 'reg-app', removed: false, reason: 'registration-replaced', stopped: 0 });
+  assert.deepEqual(ids(r.ctx), ['reg-app'], 'r2 must stay registered');
+  assert.ok(pidAlive(opened.instance.pid), 'r2 runtime must survive the stale r1 cleanup');
+  assert.equal(host.instance(opened.instance.id, P).status, 'ready');
+  // r2's own disposer still works exactly once; records and data stay.
+  assert.deepEqual(await disposeR2(), { appId: 'reg-app', removed: true, stopped: 1 });
+  assert.equal(pidAlive(opened.instance.pid), false);
+  assert.deepEqual(await disposeR2(), { appId: 'reg-app', removed: false, reason: 'not-registered', stopped: 0 });
+  assert.equal(host.instance(opened.instance.id, P).status, 'stopped');
+});
+
+for (const [label, changed] of [['same definition', false], ['upgraded definition', true]]) {
+  test(`AH-PK12 (QUALITY R-Q1 ordering) bundle reload, ${label}: an Open of the new registration issued while the old cleanup runs gets a retryable INSTANCE_STOPPING, never a view on the dying runtime`, async t => {
+    const r = await root(t);
+    await r.host.start();
+    const host = r.ctx.get('hanameshApps');
+    const v1 = definition({ id: 'reload-app' });
+    const v2 = changed ? { ...v1, name: 'Reloaded app' } : v1;
+    const disposeOld = (await subscriptions(await bundle(r.dir, 'v2', v1), host))();
+    const first = await host.open({ appId: 'reload-app', deploymentId: 'local', viewId: 'v-old' }, P);
+    assert.ok(pidAlive(first.instance.pid));
+    const subscribeNew = await subscriptions(await bundle(r.dir, 'v2', v2), host);
+    // Reload: the old scope ends, the new scope registers and opens in the same tick (before any queued step runs).
+    const undoing = disposeOld();
+    const disposeNew = subscribeNew();
+    const raced = await host.open({ appId: 'reload-app', deploymentId: 'local', viewId: 'v-new' }, P).then(value => ({ value }), error => ({ error }));
+    assert.equal(raced.error?.code, 'INSTANCE_STOPPING', JSON.stringify(raced.value?.instance ?? raced.error?.code ?? null));
+    assert.deepEqual(await undoing, { appId: 'reload-app', removed: true, stopped: 1 });
+    assert.equal(pidAlive(first.instance.pid), false);
+    assert.deepEqual(ids(r.ctx), ['reload-app'], 'the new registration survives the old cleanup');
+    // Retry after the stopped event: same persisted slot and data directory, fresh runtime, no orphan.
+    const retried = await host.open({ appId: 'reload-app', deploymentId: 'local', viewId: 'v-new' }, P);
+    assert.equal(retried.instance.id, first.instance.id);
+    assert.equal(retried.instance.dataDir, first.instance.dataDir);
+    assert.ok(pidAlive(retried.instance.pid));
+    assert.equal(host.instance(retried.instance.id, P).status, 'ready');
+    assert.equal(host.instanceList(P).filter(i => i.appId === 'reload-app').length, 1);
+    assert.deepEqual(await disposeNew(), { appId: 'reload-app', removed: true, stopped: 1 });
+    assert.equal(pidAlive(retried.instance.pid), false);
+  });
+}

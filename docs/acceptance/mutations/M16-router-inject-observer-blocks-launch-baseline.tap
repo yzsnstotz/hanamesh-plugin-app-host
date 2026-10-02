@@ -1,10 +1,10 @@
 TAP version 13
-# (node:26461) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (node:44153) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-R12 (T6) every injection tells the receipt observer the routed provider and model — never the value — and local receipts are readable per app
 ok 1 - AH-R12 (T6) every injection tells the receipt observer the routed provider and model — never the value — and local receipts are readable per app
   ---
-  duration_ms: 2.473583
+  duration_ms: 2.717125
   type: 'test'
   ...
 1..1
@@ -15,6 +15,6 @@ ok 1 - AH-R12 (T6) every injection tells the receipt observer the routed provide
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 35.619833
-(node:26460) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# duration_ms 35.575125
+(node:44152) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)
