@@ -1,8 +1,11 @@
 TAP version 13
+# (node:98235) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-P02: runtime item, installTo and exec must remain inside the provisioned tree
 ok 1 - AH-P02: runtime item, installTo and exec must remain inside the provisioned tree
   ---
-  duration_ms: 0.934375
+  duration_ms: 0.97075
+  type: 'test'
   ...
 1..1
 # tests 1
@@ -12,4 +15,6 @@ ok 1 - AH-P02: runtime item, installTo and exec must remain inside the provision
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 84.396542
+# duration_ms 71.118917
+(node:98234) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)

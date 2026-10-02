@@ -1,4 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.41
+# HanaMesh app-host · 0.1.0-rc.42
+
+> rc.42（2026-10-02，P02-APPHOST-01）：应用包契约 v2。v1 入口把 `hanameshApps` 写成顶层必需 `inject`，HanaMesh 套件被移除后应用 bundle 永远 pending，DSH 0.1.5-alpha.1 启动失败（P02-U03 真实失败）。v2 入口在 `apply` 内用 Cordis 公开 `ctx.inject(['hanameshApps'])` 订阅：宿主缺席时惰性、到来时注册一次、作用域结束时 `unregister`。宿主新增 `unregister(appId, definitionHash)`、导出 `checkAppPackageEntry`，「已安装」扫描返回 `contractVersion`/`hostLifecycle` 并在市场列表注明旧契约应用的卸载顺序。真实 DSH 正反序证据见 `docs/acceptance/p02-apphost-contract/`；旧 Vibe36 仍是 v1，须由其应用仓按新入口发版。
 
 > rc.41（2026-10-01，P01-U05-RI 修复）：真实原生市场重装 Vibe 时，受管 Python runtime 卸载后留有32个运行时生成的 `__pycache__/*.pyc`，后续原子提升因目标目录无所有权清单而拒绝（`E_PROMOTE`）。AppHost 在 lib-provision 精确移除受管文件后仅清理由该 runtime 生成的 Python 字节码及空目录；未知残留继续保留并报告 `RUNTIME_RESIDUE`，不以 force 覆盖。两项回归、模块 check/types 通过；仍需固定消费者组合和独立原生产品复验。
 

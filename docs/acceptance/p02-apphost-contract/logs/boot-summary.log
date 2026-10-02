@@ -6,3 +6,46 @@
 2026-10-02T09:37:38Z red-a-with-host web_up port=35411 root_without_token=401
 2026-10-02T09:37:40Z red-a-with-host stopped_by=SIGINT rc=130
 2026-10-02T09:37:42Z red-b-host-removed web_up=NO exit_rc=1
+2026-10-02T09:43:25Z gA1-app-only web_up port=35412 root_without_token=401
+2026-10-02T09:43:31Z gA1-app-only stopped_by=SIGINT rc=130
+2026-10-02T09:43:34Z gA2-host-arrives web_up port=35412 root_without_token=401
+2026-10-02T09:43:36Z gA2-host-arrives stopped_by=SIGINT rc=130
+2026-10-02T09:44:10Z gB-host-then-app web_up port=35413 root_without_token=401
+2026-10-02T09:44:14Z gB-host-then-app stopped_by=SIGINT rc=130
+2026-10-02T09:44:18Z gC-host-removed web_up port=35413 root_without_token=401
+2026-10-02T09:44:24Z gC-host-removed stopped_by=SIGINT rc=130
+2026-10-02T09:44:27Z gD-host-restored web_up port=35413 root_without_token=401
+2026-10-02T09:44:31Z gD-host-restored stopped_by=SIGINT rc=130
+2026-10-02T09:44:46Z gE-live web_up port=35413 root_without_token=401
+2026-10-02T09:45:03Z gE-live stopped_by=SIGINT rc=130
+2026-10-02T09:45:04Z gE-reboot web_up port=35413 root_without_token=401
+2026-10-02T09:45:06Z gE-reboot stopped_by=SIGINT rc=130
+2026-10-02T09:45:36Z gF web_up port=35416 root_without_token=401
+2026-10-02T09:46:07Z gF stopped_by=SIGINT rc=130
+2026-10-02T09:47:20Z lF-startup-disabled web_up port=35417 root_without_token=401
+2026-10-02T09:47:21Z lF-startup-disabled stopped_by=SIGINT rc=130
+2026-10-02T09:47:23Z lF-live web_up port=35417 root_without_token=401
+2026-10-02T09:48:02Z lF-live stopped_by=SIGINT rc=130
+2026-10-02T09:48:31Z lF web_up port=35416 root_without_token=401
+2026-10-02T09:49:48Z lF stopped_by=SIGINT rc=130
+2026-10-02T09:50:25Z lD web_up port=35416 root_without_token=401
+2026-10-02T09:51:32Z lD stopped_by=SIGINT rc=130
+2026-10-02T09:52:05Z lD web_up port=35416 root_without_token=401
+2026-10-02T09:52:08Z lD stopped_by=SIGINT rc=130
+2026-10-02T09:52:27Z lD web_up port=35416 root_without_token=401
+2026-10-02T09:53:34Z lD stopped_by=SIGINT rc=130
+2026-10-02T09:53:36Z lD web_up port=35416 root_without_token=401
+2026-10-02T09:54:44Z lD stopped_by=SIGINT rc=130
+2026-10-02T09:55:01Z lF web_up port=35416 root_without_token=401
+2026-10-02T09:55:55Z lF stopped_by=SIGINT rc=130
+2026-10-02T09:56:12Z lF web_up port=35416 root_without_token=401
+2026-10-02T09:56:26Z lF stopped_by=SIGINT rc=130
+2026-10-02T09:57:08Z cA-v1-on-rc42 web_up port=35418 root_without_token=401
+2026-10-02T09:57:44Z cA-v1-on-rc42 stopped_by=SIGINT rc=130
+2026-10-02T09:57:47Z cA-v1-host-removed web_up=NO exit_rc=1
+2026-10-02T09:57:50Z cB-broken-v2 web_up port=35418 root_without_token=401
+2026-10-02T09:57:51Z cB-broken-v2 stopped_by=SIGINT rc=130
+2026-10-02T09:57:53Z cB-broken-v2-host-removed web_up port=35418 root_without_token=401
+2026-10-02T09:57:55Z cB-broken-v2-host-removed stopped_by=SIGINT rc=130
+2026-10-02T09:58:16Z cU web_up port=35418 root_without_token=401
+2026-10-02T09:58:25Z cU stopped_by=SIGINT rc=130

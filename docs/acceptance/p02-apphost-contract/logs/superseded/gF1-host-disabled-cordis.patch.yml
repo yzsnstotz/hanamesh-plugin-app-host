@@ -1,0 +1,8 @@
+# P02-APPHOST-01 isolation: Core's documented origin knobs → loopback request-recording stub (no production traffic).
+- id: hanamesh-core
+  config:
+    serverOrigin: http://127.0.0.1:35414
+    websiteOrigin: http://127.0.0.1:35414
+    allowSystemBrowser: false
+- id: hanamesh-app-host
+  disabled: true

@@ -1,0 +1,38 @@
+(node:97123) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> @hanamesh/dsh-app-host@0.1.0-rc.42 test:mutation
+> node scripts/mutations.mjs
+
+M21-market-close-retry-rejected-cache: baseline PASS; mutation DETECTED
+M22-market-late-open-orphan: baseline PASS; mutation DETECTED
+M19-market-view-heartbeat-missing: baseline PASS; mutation DETECTED
+M20-market-view-cleanup-missing: baseline PASS; mutation DETECTED
+M18-reclaim-spawn-budget: baseline PASS; mutation DETECTED
+M01-single-instance: baseline PASS; mutation DETECTED
+M02-reserve-launch: baseline PASS; mutation DETECTED
+M03-stop-publish: baseline PASS; mutation DETECTED
+M05-credential-declared-only: baseline PASS; mutation DETECTED
+M04-socket-ownership: baseline PASS; mutation DETECTED
+M06-router-sets-declared: baseline PASS; mutation DETECTED
+M07-runtime-exec-traversal: baseline PASS; mutation DETECTED
+M09-runtime-lock-unproven-orphan: baseline PASS; mutation DETECTED
+M10-library-node-electron: baseline PASS; mutation DETECTED
+M11-usage-denied-counts: baseline PASS; mutation DETECTED
+M12-usage-hour-bucket: baseline PASS; mutation DETECTED
+M15-receipt-count-not-accumulated: baseline PASS; mutation DETECTED
+M16-router-inject-observer-blocks-launch: baseline PASS; mutation DETECTED
+M13-market-suite-protected: baseline PASS; mutation DETECTED
+M14-provision-input-400: baseline PASS; mutation DETECTED
+M17-market-seat-exclusive: baseline PASS; mutation DETECTED
+M08-node-runtime-electron: baseline PASS; mutation DETECTED
+M23-unregister-ignores-registration-identity: baseline PASS; mutation DETECTED
+M24-unregister-orphans-runtime: baseline PASS; mutation DETECTED
+M25-installed-lifecycle-always-optional: baseline PASS; mutation DETECTED
+M26-entry-check-accepts-required-inject: baseline PASS; mutation DETECTED
+Mutation guard PASS: 26/26 genuine source mutations detected.
+npm notice
+npm notice New minor version of npm available! 11.8.0 -> 11.21.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.21.0
+npm notice To update run: npm install -g npm@11.21.0
+npm notice

@@ -8,7 +8,7 @@ async function login() {
   const url = (await readFile(`${RUN}/${tag}.url`, 'utf8')).trim();
   const res = await fetch(url, { redirect:'manual' }); cookie = (res.headers.getSetCookie?.() ?? []).map(c => c.split(';')[0]).join('; ');
 }
-const call = async (path, body) => { const res = await fetch(origin + path, { method:body ? 'POST' : 'GET', headers:{ cookie, origin, ...(body ? { 'content-type':'application/json' } : {}) }, body:body ? JSON.stringify(body) : undefined });
+const call = async (path, body) => { const res = await fetch(origin + path, { method:body ? 'POST' : 'GET', headers:{ cookie, origin, ...(body ? { 'content-type':'application/json', 'x-hanamesh-client':'workspace-v1' } : {}) }, body:body ? JSON.stringify(body) : undefined });
   const text = await res.text(); let json; try { json = JSON.parse(text); } catch { json = text.slice(0, 120); } return { status:res.status, json }; };
 const tokens = new Map(); const tokFile = `${RUN}/${tag}.leases.json`;
 try { for (const [k,v] of Object.entries(JSON.parse(await readFile(tokFile,'utf8')))) tokens.set(k,v); } catch {}
@@ -24,6 +24,14 @@ else {
     if (r.json?.leaseToken) { tokens.set(rest[0], r.json.leaseToken); await save(); }
     Object.assign(out, { status:r.status, code:r.json?.code, instanceStatus:r.json?.instance?.status, gateway:Boolean(r.json?.instance?.gatewayOrigin ?? r.json?.url) }); }
   else if (action === 'close') { const r = await call('/apps/close', { viewId:rest[0], leaseToken:tokens.get(rest[0]) }); Object.assign(out, { status:r.status, code:r.json?.code, instanceStatus:r.json?.instance?.status }); }
+  else if (action === 'wait-ready') { let j; for (let i = 0; i < 80; i++) { j = (await call('/hanamesh/apps')).json; if (j.instances?.some(x => x.appId === 'contract-fixture' && x.status === 'ready')) break; await new Promise(r => setTimeout(r, 250)); }
+    Object.assign(out, { instances:j.instances?.map(i => ({ id:i.id.slice(0, 8), appId:i.appId, status:i.status, pid:i.pid })) }); }
+  else if (action === 'events') { const r = await call('/apps/events?after=0'); const ev = r.json.events ?? [];
+    const counts = {}; for (const e of ev) counts[e.type] = (counts[e.type] ?? 0) + 1;
+    Object.assign(out, { status:r.status, total:ev.length, counts, duplicateSequences:ev.length - new Set(ev.map(e => e.sequence)).size, instanceIds:[...new Set(ev.map(e => e.instanceId?.slice(0, 8)))] }); }
+  else if (action === 'installed') { const r = await call('/hanamesh/library/installedPlugins'); Object.assign(out, { status:r.status,
+    apps:r.json.apps?.map(a => ({ packageName:a.packageName, version:a.version, state:a.state, contractVersion:a.contractVersion, hostLifecycle:a.hostLifecycle })),
+    plugins:r.json.plugins?.map(p => `${p.packageName}@${p.version}:${p.state}`) }); }
   else if (action === 'routes') { for (const p of ['/hanamesh/apps', '/hanamesh/library', '/hanamesh/core/status']) out[p] = (await call(p)).status;
     const anon = await fetch(origin + '/hanamesh/apps'); out.unauthenticated = anon.status; }
 }

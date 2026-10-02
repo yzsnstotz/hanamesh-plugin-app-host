@@ -1,0 +1,8 @@
+{"tag":"gA1-app-only","captures":["gA1-app-only-home"],"consoleErrors":[],"hanameshRequests":[],"rootStatus":200}
+{"tag":"gC-host-removed","captures":["gC-host-removed-home"],"consoleErrors":[],"hanameshRequests":[],"rootStatus":200}
+{"tag":"gE-live-before","captures":["gE-live-before-home"],"consoleErrors":[],"hanameshRequests":["GET /hanamesh/library/installedPlugins 200","GET /api/hanamesh/core/points 200"],"rootStatus":200}
+{"tag":"gF1-host-disabled","captures":["gF1-host-disabled-home"],"consoleErrors":[],"hanameshRequests":["GET /hanamesh/library/installedPlugins 200","GET /api/hanamesh/core/points 200"],"rootStatus":200}
+{"tag":"lF1-host-disabled","captures":["lF1-host-disabled-home"],"consoleErrors":[],"hanameshRequests":["GET /hanamesh/library/installedPlugins 200","GET /api/hanamesh/core/points 200"],"rootStatus":200}
+{"tag":"lF1-host-disabled","captures":["lF1-host-disabled-home"],"consoleErrors":[],"hanameshRequests":["GET /api/hanamesh/core/points 200"],"rootStatus":200}
+{"tag":"lF1-host-disabled","captures":["lF1-host-disabled-home"],"consoleErrors":[],"hanameshRequests":["GET /api/hanamesh/core/points 200"],"rootStatus":200}
+{"tag":"cU-v1-on-rc42","captures":["cU-v1-on-rc42-market"],"consoleErrors":[],"hanameshRequests":["GET /hanamesh/library/installedPlugins 200","GET /api/hanamesh/core/points 200","GET /hanamesh/library 200"],"rootStatus":200}

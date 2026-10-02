@@ -25,11 +25,14 @@ export async function scanInstalled({profileDir,host,ledgerReader,dataRoot}){
   for(const candidate of await packageRoots(profileDir)){
     let pkg;try{pkg=await json(join(candidate.root,'package.json'));}catch{continue;}
     const declaration=pkg.hanamesh?.app;if(!declaration)continue;
+    // rc.42: package contract ≥2 entries subscribe to `hanameshApps` and stay inert without the host; v1 entries declare it
+    // as a required top-level inject, so removing the HanaMesh suite while one is installed stops DSH from booting.
+    const contractVersion=Number.isInteger(pkg.hanamesh?.contractVersion)?pkg.hanamesh.contractVersion:null,contract={contractVersion,hostLifecycle:contractVersion>=2?'host-optional':'host-required'};
     const appFile=typeof declaration==='string'?declaration:'app.json';
-    let definition;try{definition=validateDefinition(await json(join(candidate.root,appFile)));}catch(error){rows.push({packageName:pkg.name??candidate.name,version:pkg.version,state:'invalid',errorCode:error.code??'INVALID_DEFINITION'});continue;}
+    let definition;try{definition=validateDefinition(await json(join(candidate.root,appFile)));}catch(error){rows.push({packageName:pkg.name??candidate.name,version:pkg.version,state:'invalid',errorCode:error.code??'INVALID_DEFINITION',...contract});continue;}
     const runtime=definition.deployments.map(deployment=>deployment.runtime).find(Boolean);let state=registered.has(definition.id)?'registered':'installed-not-loaded';
     if(runtime){const book=await ledgerReader(join(dataRoot,'runtimes',definition.id));if(!book.items?.[runtime.item])state='runtime-missing';}
-    rows.push({packageName:pkg.name??candidate.name,version:pkg.version,appId:definition.id,name:definition.name,state,definition,runtimeItem:runtime?.item});
+    rows.push({packageName:pkg.name??candidate.name,version:pkg.version,appId:definition.id,name:definition.name,state,definition,runtimeItem:runtime?.item,...contract});
   }
   return rows.sort((a,b)=>(a.packageName??'').localeCompare(b.packageName??''));
 }

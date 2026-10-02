@@ -85,6 +85,26 @@ export class AppHost {
     return { appId:d.id, definitionHash:fingerprint(d) };
   }
   /**
+   * rc.42 (app package contract v2): the registering bundle's own scope ended — the app package was unloaded or the
+   * bundle reloaded. Only the exact registration (`definitionHash` from `register`) is removed, so a stale disposer can
+   * never drop a newer definition. The definition goes first (no new opens), then every owned runtime of the app is
+   * stopped through the normal stop path; instance records and app data stay. While the host itself is closing this
+   * is a no-op: `dispose()` already stops everything and the definitions die with this host object.
+   */
+  async unregister(appId,definitionHash) {
+    identifier(appId,'appId');
+    requireCondition(typeof definitionHash === 'string' && /^[a-f0-9]{64}$/.test(definitionHash),'INVALID_REQUEST','definitionHash from register() is required.');
+    if (this.#closing) return { appId, removed:false, reason:'host-closing', stopped:0 };
+    const current = this.#definitions.get(appId);
+    if (!current || fingerprint(current) !== definitionHash) return { appId, removed:false, reason:current ? 'definition-replaced' : 'not-registered', stopped:0 };
+    this.#definitions.delete(appId);
+    const targets = (this.#state?.instances ?? []).filter(i => i.appId === appId && (!isTerminal(i.status) || this.#controls.has(i.id)));
+    const results = await Promise.allSettled(targets.map(i => this.stop(i.id,{confirm:true},i.principalId)));
+    const failed = results.filter(r => r.status === 'rejected').length;
+    if (failed) throw new AppHostError('UNREGISTER_STOP_INCOMPLETE','Application unregistered, but some of its runtimes could not be confirmed stopped.',{ appId, count:failed });
+    return { appId, removed:true, stopped:targets.length };
+  }
+  /**
    * rc.27: the npm package that ships an app, as the installed-package scan saw it (`<profile>/node_modules/<pkg>/app.json`
    * → `id`). Bound before or after `register` — app bundles register themselves once `hanameshApps` is provided, the
    * scan runs earlier. A `packageName` declared in the definition itself always wins. Bounded by installed packages.

@@ -1,9 +1,12 @@
 TAP version 13
+# (node:97174) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-VL01: real market client keeps one idle view renewed beyond its original TTL with exact current credential
 not ok 1 - AH-VL01: real market client keeps one idle view renewed beyond its original TTL with exact current credential
   ---
-  duration_ms: 5.581458
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-nNxQ93/tests/client-heartbeat.test.mjs:18:1'
+  duration_ms: 5.068833
+  type: 'test'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-ebdiH3/tests/client-heartbeat.test.mjs:18:1'
   failureType: 'testCodeFailure'
   error: 'visible idle view must consume heartbeat before the 90s lease expires'
   code: 'ERR_ASSERTION'
@@ -12,9 +15,9 @@ not ok 1 - AH-VL01: real market client keeps one idle view renewed beyond its or
   actual: false
   operator: '=='
   stack: |-
-    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-nNxQ93/tests/client-heartbeat.test.mjs:19:55)
-    async Test.run (node:internal/test_runner/test:935:9)
-    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+    TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-ebdiH3/tests/client-heartbeat.test.mjs:19:55)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
 1..1
 # tests 1
@@ -24,4 +27,6 @@ not ok 1 - AH-VL01: real market client keeps one idle view renewed beyond its or
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 63.265708
+# duration_ms 39.901542
+(node:97173) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)

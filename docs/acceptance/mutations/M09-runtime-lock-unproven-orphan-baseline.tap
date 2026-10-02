@@ -1,9 +1,12 @@
 TAP version 13
-# AH-L04 orphan handling: {"unproven":62467,"terminated":62491,"death":{"code":null,"signal":"SIGKILL"}}
+# (node:98239) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# AH-L04 orphan handling: {"unproven":98259,"terminated":98283,"death":{"code":null,"signal":"SIGKILL"}}
 # Subtest: AH-L04: a surviving recorded child blocks unless provably ours; provably-ours orphans are terminated first
 ok 1 - AH-L04: a surviving recorded child blocks unless provably ours; provably-ours orphans are terminated first
   ---
-  duration_ms: 442.0445
+  duration_ms: 241.999916
+  type: 'test'
   ...
 1..1
 # tests 1
@@ -13,4 +16,6 @@ ok 1 - AH-L04: a surviving recorded child blocks unless provably ours; provably-
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 525.760125
+# duration_ms 313.465875
+(node:98238) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)

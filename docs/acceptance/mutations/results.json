@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-30T04:00:55.722Z",
+  "generatedAt": "2026-10-02T09:42:49.688Z",
   "results": [
     {
       "id": "M21-market-close-retry-rejected-cache",
@@ -8,8 +8,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "aa5657b00e3fe4eab8053cc4ebcba5317d5c2430337f25f858455e9fda1640b3",
-      "mutatedSourceSha256": "f7057b56416982abea73b25092adca6107c94a952ae8a6f0294cec3b23d89cbc"
+      "originalSourceSha256": "91d4d333bd9920bba1e01570dd46096937901f9d8d4d9d99166a588a3e407a09",
+      "mutatedSourceSha256": "2a03dae8c9adaeb45ad2177517f67fdff339595bdb42b7231c332b44608ae575"
     },
     {
       "id": "M22-market-late-open-orphan",
@@ -18,8 +18,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "aa5657b00e3fe4eab8053cc4ebcba5317d5c2430337f25f858455e9fda1640b3",
-      "mutatedSourceSha256": "18d35c26215f694d861961241b0c85b6d9bf94256068114b69435971eaf8afef"
+      "originalSourceSha256": "91d4d333bd9920bba1e01570dd46096937901f9d8d4d9d99166a588a3e407a09",
+      "mutatedSourceSha256": "8ddc5963942263422cc5faf05987f782830b511daa22f0e1c9a76b36285f8500"
     },
     {
       "id": "M19-market-view-heartbeat-missing",
@@ -28,8 +28,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "aa5657b00e3fe4eab8053cc4ebcba5317d5c2430337f25f858455e9fda1640b3",
-      "mutatedSourceSha256": "45a3ef865afbeb8ad64e3e5c2e30d4d9eb5ce59f72fa536ff20823559ebb03e5"
+      "originalSourceSha256": "91d4d333bd9920bba1e01570dd46096937901f9d8d4d9d99166a588a3e407a09",
+      "mutatedSourceSha256": "89d133553d3c7e3716b0b5a27a86c2cf43d5a6c8671b3a75d36f2fb31909c567"
     },
     {
       "id": "M20-market-view-cleanup-missing",
@@ -38,8 +38,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "aa5657b00e3fe4eab8053cc4ebcba5317d5c2430337f25f858455e9fda1640b3",
-      "mutatedSourceSha256": "d58eeafc84dd033af3cba40e56e39701bc74fe1e7062dfc42e226d2ab0212d33"
+      "originalSourceSha256": "91d4d333bd9920bba1e01570dd46096937901f9d8d4d9d99166a588a3e407a09",
+      "mutatedSourceSha256": "2665a64af88de64e89fb22d56ccbd8b8fd333f8c47ce588057f10a27cccb0bcc"
     },
     {
       "id": "M18-reclaim-spawn-budget",
@@ -58,8 +58,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "77deca20afe7e4af381e4c170ddd9481d8d7af492f35a8211307df0ec7553010",
-      "mutatedSourceSha256": "4f34a5ac1cee7906fb2f6b0e89cecfe31a7d4795f6fce8a9929e57de66afed8b"
+      "originalSourceSha256": "c796d685b1133f3545f388675aa2abc7867876290e7055b00a0ae1e1cb485593",
+      "mutatedSourceSha256": "555e8db0a456231aa2e41a99d6c9c88eabb8b6e16d7df01fe29b4b793971df7e"
     },
     {
       "id": "M02-reserve-launch",
@@ -88,8 +88,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "77deca20afe7e4af381e4c170ddd9481d8d7af492f35a8211307df0ec7553010",
-      "mutatedSourceSha256": "30d27d7334ecee53faa474e4db48346de7aae3b5c5a84bd2bf4bfb1b19ec2991"
+      "originalSourceSha256": "c796d685b1133f3545f388675aa2abc7867876290e7055b00a0ae1e1cb485593",
+      "mutatedSourceSha256": "990e31afc3ce1697b1b1899399454addbc1fdf276a0c2156db398580973a9034"
     },
     {
       "id": "M04-socket-ownership",
@@ -188,8 +188,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "2e3ce1522f5bff1fbb7730c6faf964632e871201f26b61c47831d7da3869fea6",
-      "mutatedSourceSha256": "f4738847d948fcb76ecf2b5f2d7135fd8ad69b606d9452b9f01e5ae63c0951a8"
+      "originalSourceSha256": "126fd4e8c60cb2dbdc848f9700cecc1e68c63ed1942c239d347fd4482264a1fc",
+      "mutatedSourceSha256": "0eba0064d0a0cf2149c2ccfa850fca021142d24c5a3f20e6dc01a39a58126fa7"
     },
     {
       "id": "M14-provision-input-400",
@@ -208,8 +208,8 @@
       "baselineExit": 0,
       "mutantExit": 1,
       "killed": true,
-      "originalSourceSha256": "aa5657b00e3fe4eab8053cc4ebcba5317d5c2430337f25f858455e9fda1640b3",
-      "mutatedSourceSha256": "650c682a619309f2cadaa92ada33001db57e100b5b6454557411877d6870f50e"
+      "originalSourceSha256": "91d4d333bd9920bba1e01570dd46096937901f9d8d4d9d99166a588a3e407a09",
+      "mutatedSourceSha256": "bff42c2a334d2c8e679bdbda92230db670d6893d77e37ba96693cd25e2f38f5a"
     },
     {
       "id": "M08-node-runtime-electron",
@@ -220,6 +220,46 @@
       "killed": true,
       "originalSourceSha256": "47480b9465e37b1219e59ccdfdc9c07412657da8c3c8a2629d0d934651f528fe",
       "mutatedSourceSha256": "a0682b95ac562a64164d83244c0c0d43257afd531547640dbc3b5a131565c3c5"
+    },
+    {
+      "id": "M23-unregister-ignores-registration-identity",
+      "test": "tests/app-package-lifecycle.test.mjs",
+      "pattern": "^AH-PK06 ",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "c796d685b1133f3545f388675aa2abc7867876290e7055b00a0ae1e1cb485593",
+      "mutatedSourceSha256": "96652943644818986e211aa51ef6735129d8a1228d88fc9fbd7490d61873c46a"
+    },
+    {
+      "id": "M24-unregister-orphans-runtime",
+      "test": "tests/app-package-lifecycle.test.mjs",
+      "pattern": "^AH-PK04 ",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "c796d685b1133f3545f388675aa2abc7867876290e7055b00a0ae1e1cb485593",
+      "mutatedSourceSha256": "f9c1630a2c792a07647789183a4b400780848ed9ed710b36a4d358a70b0b0128"
+    },
+    {
+      "id": "M25-installed-lifecycle-always-optional",
+      "test": "tests/library-installed.test.mjs",
+      "pattern": "^AH-L13 ",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "6c73bfdb1e104a86dcd98fdeaf425b0be253313cfc568cc5b46d41ee5a01692b",
+      "mutatedSourceSha256": "c7da7b3b607096b559e45c6c392a622eb3d1db5cc683eb3c5433512cc0427773"
+    },
+    {
+      "id": "M26-entry-check-accepts-required-inject",
+      "test": "tests/app-package-lifecycle.test.mjs",
+      "pattern": "^AH-PK07 ",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "killed": true,
+      "originalSourceSha256": "b731c734f63631b6f5e6255348c4532e025bc76f18f60e3e7ece68588585dcc6",
+      "mutatedSourceSha256": "a0abb33f0bfe8169fc365a52d82fae2f8885c25547450e5bd6f7ab8993b5fdfc"
     }
   ]
 }

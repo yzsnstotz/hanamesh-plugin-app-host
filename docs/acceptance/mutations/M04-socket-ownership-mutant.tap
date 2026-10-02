@@ -1,9 +1,12 @@
 TAP version 13
+# (node:98226) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH readiness: unrelated HTTP 200 with the same app marker is not owned readiness
 not ok 1 - AH readiness: unrelated HTTP 200 with the same app marker is not owned readiness
   ---
-  duration_ms: 107.150417
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-wbP7rk/tests/storage.test.mjs:26:1'
+  duration_ms: 101.552959
+  type: 'test'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-vTv4Cu/tests/storage.test.mjs:26:1'
   failureType: 'testCodeFailure'
   error: 'Missing expected rejection.'
   code: 'ERR_ASSERTION'
@@ -12,10 +15,10 @@ not ok 1 - AH readiness: unrelated HTTP 200 with the same app marker is not owne
     code: 'READY_TIMEOUT'
   operator: 'rejects'
   stack: |-
-    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-    async TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-wbP7rk/tests/storage.test.mjs:28:3)
-    async Test.run (node:internal/test_runner/test:935:9)
-    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-vTv4Cu/tests/storage.test.mjs:28:3)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
 1..1
 # tests 1
@@ -25,4 +28,6 @@ not ok 1 - AH readiness: unrelated HTTP 200 with the same app marker is not owne
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 205.969791
+# duration_ms 180.222166
+(node:98225) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)

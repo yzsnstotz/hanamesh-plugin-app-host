@@ -1,13 +1,17 @@
 TAP version 13
+# (node:98435) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-MS02: dshmarket installed in the profile — the seat is left alone, the market page carries the 「只能其一」 notice, and the host logged it
 ok 1 - AH-MS02: dshmarket installed in the profile — the seat is left alone, the market page carries the 「只能其一」 notice, and the host logged it
   ---
-  duration_ms: 3.277042
+  duration_ms: 3.341959
+  type: 'test'
   ...
 # Subtest: AH-MS03: dshmarket already holding the seat is detected before we try to provide it
 ok 2 - AH-MS03: dshmarket already holding the seat is detected before we try to provide it
   ---
-  duration_ms: 1.868041
+  duration_ms: 1.737667
+  type: 'test'
   ...
 1..2
 # tests 2
@@ -17,4 +21,6 @@ ok 2 - AH-MS03: dshmarket already holding the seat is detected before we try to 
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 66.847125
+# duration_ms 38.3275
+(node:98429) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)

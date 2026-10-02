@@ -1,2 +1,171 @@
 {"tag":"red-a-with-host","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[],"views":[]}
 {"tag":"red-a-with-host","action":"routes","/hanamesh/apps":200,"/hanamesh/library":200,"/hanamesh/core/status":404,"unauthenticated":401}
+{"tag":"gA1-app-only","action":"routes","/hanamesh/apps":404,"/hanamesh/library":404,"/hanamesh/core/status":404,"unauthenticated":404}
+{"tag":"gA2-host-arrives","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[],"views":[]}
+{"tag":"gA2-host-arrives","action":"routes","/hanamesh/apps":200,"/hanamesh/library":200,"/hanamesh/core/status":404,"unauthenticated":401}
+{"tag":"gB-host-then-app","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[],"views":[]}
+{"tag":"gB-host-then-app","action":"installed","status":200,"apps":[{"packageName":"@hanamesh/app-contract-fixture","version":"0.0.2","state":"registered","contractVersion":2,"hostLifecycle":"host-optional"}],"plugins":["@hanamesh/lib-provision@0.1.0-rc.1:installed","hanamesh-core@0.2.0-rc.46:installed","zod@4.5.4:installed"]}
+{"tag":"gB-host-then-app","action":"open","status":200,"instanceStatus":"starting","gateway":false}
+{"tag":"gB-host-then-app","action":"wait-ready","instances":[{"id":"de578ebe","appId":"contract-fixture","status":"ready"}]}
+{"tag":"gB-host-then-app","action":"procs","count":1,"commands":["/Users/yzliu/Library/Application Support/com.hanamesh.desktop/runtime/bin/node -e require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).list"]}
+{"tag":"gB-host-then-app","action":"close","status":200,"instanceStatus":"stopped"}
+{"tag":"gB-host-then-app","action":"procs","count":0,"commands":[]}
+{"tag":"gB-host-then-app","action":"events","status":200,"total":6,"counts":{"view.opened":1,"instance.starting":1,"instance.ready":1,"view.closed":1,"instance.stop-requested":1,"instance.stopped":1},"duplicateSequences":0,"instanceIds":["de578ebe"]}
+{"tag":"gB-host-then-app","action":"open","status":200,"instanceStatus":"starting","gateway":false}
+{"tag":"gB-host-then-app","action":"wait-ready","instances":[{"id":"de578ebe","appId":"contract-fixture","status":"ready"}]}
+{"tag":"gB-host-then-app","action":"procs","count":1,"commands":["/Users/yzliu/Library/Application Support/com.hanamesh.desktop/runtime/bin/node -e require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).list"]}
+{"tag":"gB-after-host-stop","action":"procs","count":0,"commands":[]}
+gB storage_files=       6
+{"tag":"gC-host-removed","action":"routes","/hanamesh/apps":404,"/hanamesh/library":404,"/hanamesh/core/status":404,"unauthenticated":404}
+{"tag":"gC-host-removed","action":"procs","count":0,"commands":[]}
+gC storage_files=       6
+{"tag":"gD-host-restored","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[{"appId":"contract-fixture","status":"interrupted"}],"views":[{"viewId":"v-b","status":"closed"},{"viewId":"v-b2","status":"expired"}]}
+{"tag":"gD-host-restored","action":"events","status":200,"total":12,"counts":{"view.opened":2,"instance.starting":2,"instance.ready":2,"view.closed":1,"instance.stop-requested":2,"instance.stopped":1,"instance.interrupted":1,"view.expired":1},"duplicateSequences":0,"instanceIds":["de578ebe"]}
+{"tag":"gD-host-restored","action":"open","status":200,"instanceStatus":"starting","gateway":false}
+{"tag":"gD-host-restored","action":"wait-ready","instances":[{"id":"de578ebe","appId":"contract-fixture","status":"ready"}]}
+{"tag":"gD-host-restored","action":"close","status":200,"instanceStatus":"stopped"}
+{"tag":"gD-host-restored","action":"procs","count":0,"commands":[]}
+{"tag":"gD-host-restored","action":"events","status":200,"total":18,"counts":{"view.opened":3,"instance.starting":3,"instance.ready":3,"view.closed":2,"instance.stop-requested":3,"instance.stopped":2,"instance.interrupted":1,"view.expired":1},"duplicateSequences":0,"instanceIds":["de578ebe"]}
+gD storage_files=       6
+{"tag":"gE-live","action":"open","status":200,"instanceStatus":"starting","gateway":false}
+{"tag":"gE-live","action":"wait-ready","instances":[{"id":"de578ebe","appId":"contract-fixture","status":"ready"}]}
+{"tag":"gE-live","action":"procs","count":1,"commands":["/Users/yzliu/Library/Application Support/com.hanamesh.desktop/runtime/bin/node -e require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).list"]}
+{"tag":"gE-live","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[{"appId":"contract-fixture","status":"ready"}],"views":[{"viewId":"v-b","status":"closed"},{"viewId":"v-b2","status":"expired"},{"viewId":"v-d","status":"closed"},{"viewId":"v-e","status":"active"}]}
+{"tag":"gE-live","action":"procs","count":1,"commands":["/Users/yzliu/Library/Application Support/com.hanamesh.desktop/runtime/bin/node -e require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).list"]}
+{"tag":"gE-live","action":"events","status":200,"total":21,"counts":{"view.opened":4,"instance.starting":4,"instance.ready":4,"view.closed":2,"instance.stop-requested":3,"instance.stopped":2,"instance.interrupted":1,"view.expired":1},"duplicateSequences":0,"instanceIds":["de578ebe"]}
+gE storage_files=       6
+{"tag":"gE-reboot","action":"apps","status":200,"apps":[],"appCount":0,"instances":[{"appId":"contract-fixture","status":"interrupted"}],"views":[{"viewId":"v-b","status":"closed"},{"viewId":"v-b2","status":"expired"},{"viewId":"v-d","status":"closed"},{"viewId":"v-e","status":"expired"}]}
+{"tag":"gE-reboot","action":"installed","status":200,"apps":[],"plugins":["@hanamesh/lib-provision@0.1.0-rc.1:installed","hanamesh-core@0.2.0-rc.46:installed","zod@4.5.4:installed"]}
+{"tag":"gE-reboot","action":"procs","count":0,"commands":[]}
+{"tag":"gE-reboot","action":"routes","/hanamesh/apps":200,"/hanamesh/library":200,"/hanamesh/core/status":404,"unauthenticated":401}
+{"tag":"gF","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[{"appId":"contract-fixture","status":"interrupted"}],"views":[{"viewId":"v-b","status":"closed"},{"viewId":"v-b2","status":"expired"},{"viewId":"v-d","status":"closed"},{"viewId":"v-e","status":"expired"}]}
+{"tag":"gF","action":"open","status":200,"instanceStatus":"starting","gateway":false}
+{"tag":"gF","action":"wait-ready","instances":[{"id":"de578ebe","appId":"contract-fixture","status":"ready"}]}
+{"tag":"gF","action":"procs","count":1,"commands":["/Users/yzliu/Library/Application Support/com.hanamesh.desktop/runtime/bin/node -e require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).list"]}
+{"tag":"gF","action":"routes","/hanamesh/apps":200,"/hanamesh/library":200,"/hanamesh/core/status":404,"unauthenticated":401}
+{"tag":"gF","action":"procs","count":1,"commands":["/Users/yzliu/Library/Application Support/com.hanamesh.desktop/runtime/bin/node -e require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).list"]}
+{"tag":"gF","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[{"appId":"contract-fixture","status":"ready"}],"views":[{"viewId":"v-b","status":"closed"},{"viewId":"v-b2","status":"expired"},{"viewId":"v-d","status":"closed"},{"viewId":"v-e","status":"expired"},{"viewId":"v-f","status":"active"}]}
+{"tag":"gF","action":"events","status":200,"total":27,"counts":{"view.opened":5,"instance.starting":5,"instance.ready":5,"view.closed":2,"instance.stop-requested":4,"instance.stopped":2,"instance.interrupted":2,"view.expired":2},"duplicateSequences":0,"instanceIds":["de578ebe"]}
+{"tag":"gF","action":"open","status":200,"instanceStatus":"ready","gateway":false}
+{"tag":"gF","action":"wait-ready","instances":[{"id":"de578ebe","appId":"contract-fixture","status":"ready"}]}
+{"tag":"gF","action":"procs","count":1,"commands":["/Users/yzliu/Library/Application Support/com.hanamesh.desktop/runtime/bin/node -e require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).list"]}
+{"tag":"gF","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[{"appId":"contract-fixture","status":"ready"}],"views":[{"viewId":"v-b","status":"closed"},{"viewId":"v-b2","status":"expired"},{"viewId":"v-d","status":"closed"},{"viewId":"v-e","status":"expired"},{"viewId":"v-f","status":"active"},{"viewId":"v-f2","status":"active"}]}
+{"tag":"gF","action":"procs","count":1,"commands":["/Users/yzliu/Library/Application Support/com.hanamesh.desktop/runtime/bin/node -e require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).list"]}
+{"tag":"gF","action":"events","status":200,"total":28,"counts":{"view.opened":6,"instance.starting":5,"instance.ready":5,"view.closed":2,"instance.stop-requested":4,"instance.stopped":2,"instance.interrupted":2,"view.expired":2},"duplicateSequences":0,"instanceIds":["de578ebe"]}
+{"tag":"gF","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[{"appId":"contract-fixture","status":"ready"}],"views":[{"viewId":"v-b","status":"closed"},{"viewId":"v-b2","status":"expired"},{"viewId":"v-d","status":"closed"},{"viewId":"v-e","status":"expired"},{"viewId":"v-f","status":"active"},{"viewId":"v-f2","status":"active"}]}
+{"tag":"gF","action":"events","status":200,"total":28,"counts":{"view.opened":6,"instance.starting":5,"instance.ready":5,"view.closed":2,"instance.stop-requested":4,"instance.stopped":2,"instance.interrupted":2,"view.expired":2},"duplicateSequences":0,"instanceIds":["de578ebe"]}
+{"tag":"lF-startup-disabled","action":"routes","/hanamesh/apps":404,"/hanamesh/library":404,"/hanamesh/core/status":404,"unauthenticated":404}
+{"tag":"lF-live","action":"routes","/hanamesh/apps":200,"/hanamesh/library":200,"/hanamesh/core/status":404,"unauthenticated":401}
+{"tag":"lF-live","action":"routes","/hanamesh/apps":404,"/hanamesh/library":404,"/hanamesh/core/status":404,"unauthenticated":404}
+{"tag":"lF-live","action":"routes","/hanamesh/apps":404,"/hanamesh/library":404,"/hanamesh/core/status":404,"unauthenticated":404}
+{"tag":"lF-live","action":"routes","/hanamesh/apps":404,"/hanamesh/library":404,"/hanamesh/core/status":404,"unauthenticated":404}
+{"tag":"lF-live","action":"routes","/hanamesh/apps":404,"/hanamesh/library":404,"/hanamesh/core/status":404,"unauthenticated":404}
+{"tag":"lF","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[],"views":[]}
+{"tag":"lF","action":"open","status":200,"instanceStatus":"starting","gateway":false}
+{"tag":"lF","action":"wait-ready","instances":[{"id":"e63671a3","appId":"contract-fixture","status":"ready"}]}
+{"tag":"lF","action":"procs","count":1,"commands":["/Users/yzliu/Library/Application Support/com.hanamesh.desktop/runtime/bin/node -e require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).list"]}
+{"tag":"lF1-host-disabled","settledAfterMs":30000,"/hanamesh/apps":200}
+{"tag":"lF","action":"routes","/hanamesh/apps":200,"/hanamesh/library":200,"/hanamesh/core/status":404,"unauthenticated":401}
+{"tag":"lF","action":"procs","count":1,"commands":["/Users/yzliu/Library/Application Support/com.hanamesh.desktop/runtime/bin/node -e require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).list"]}
+{"tag":"lF2-host-enabled","settledAfterMs":500,"/hanamesh/apps":200}
+{"tag":"lF","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[{"appId":"contract-fixture","status":"ready"}],"views":[{"viewId":"v-f","status":"active"}]}
+{"tag":"lF","action":"events","status":200,"total":3,"counts":{"view.opened":1,"instance.starting":1,"instance.ready":1},"duplicateSequences":0,"instanceIds":["e63671a3"]}
+{"tag":"lF","action":"open","status":200,"instanceStatus":"ready","gateway":false}
+{"tag":"lF","action":"wait-ready","instances":[{"id":"e63671a3","appId":"contract-fixture","status":"ready"}]}
+{"tag":"lF","action":"procs","count":1,"commands":["/Users/yzliu/Library/Application Support/com.hanamesh.desktop/runtime/bin/node -e require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).list"]}
+{"tag":"lF3-app-disabled","settledAfterMs":500,"/hanamesh/apps":200}
+{"tag":"lF3-app-disabled","appsEmptyAfterMs":20000}
+{"tag":"lF","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[{"appId":"contract-fixture","status":"ready"}],"views":[{"viewId":"v-f","status":"active"},{"viewId":"v-f2","status":"active"}]}
+{"tag":"lF","action":"procs","count":1,"commands":["/Users/yzliu/Library/Application Support/com.hanamesh.desktop/runtime/bin/node -e require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).list"]}
+{"tag":"lF","action":"events","status":200,"total":4,"counts":{"view.opened":2,"instance.starting":1,"instance.ready":1},"duplicateSequences":0,"instanceIds":["e63671a3"]}
+{"tag":"lF4-app-enabled","settledAfterMs":500,"/hanamesh/apps":200}
+{"tag":"lF","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[{"appId":"contract-fixture","status":"ready"}],"views":[{"viewId":"v-f","status":"active"},{"viewId":"v-f2","status":"active"}]}
+{"tag":"lF","action":"events","status":200,"total":4,"counts":{"view.opened":2,"instance.starting":1,"instance.ready":1},"duplicateSequences":0,"instanceIds":["e63671a3"]}
+{"tag":"lD","case":"a-cp-append-no-instance","want":404,"got":404,"afterMs":500}
+{"tag":"lD","case":"a-restore","want":200,"got":404,"afterMs":20000}
+{"tag":"lD","action":"open","status":405,"gateway":false}
+{"tag":"lD","action":"wait-ready"}
+{"tag":"lD","action":"procs","count":0,"commands":[]}
+{"tag":"lD","case":"b-append-with-instance","want":404,"got":404,"afterMs":500}
+{"tag":"lD","action":"procs","count":0,"commands":[]}
+{"tag":"lD","case":"b-restore","want":200,"got":404,"afterMs":20000}
+{"tag":"lD","action":"apps","status":404}
+{"tag":"lD","action":"events","status":404,"total":0,"counts":{},"duplicateSequences":0,"instanceIds":[]}
+{"tag":"lD","case":"a-cp-append-no-instance","want":404,"got":404,"afterMs":500}
+{"tag":"lD","case":"a-restore","want":200,"got":200,"afterMs":500}
+{"tag":"lD","action":"open","status":200,"instanceStatus":"starting","gateway":false}
+{"tag":"lD","action":"wait-ready","instances":[{"id":"e63671a3","appId":"contract-fixture","status":"ready"}]}
+{"tag":"lD","action":"procs","count":1,"commands":["/Users/yzliu/Library/Application Support/com.hanamesh.desktop/runtime/bin/node -e require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).list"]}
+{"tag":"lD","case":"b-append-with-instance","want":404,"got":404,"afterMs":500}
+{"tag":"lD","action":"procs","count":0,"commands":[]}
+{"tag":"lD","case":"b-restore","want":200,"got":200,"afterMs":500}
+{"tag":"lD","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[{"appId":"contract-fixture","status":"stopped"}],"views":[{"viewId":"v-f","status":"expired"},{"viewId":"v-f2","status":"expired"},{"viewId":"v-d1","status":"stopped"}]}
+{"tag":"lD","action":"events","status":200,"total":14,"counts":{"view.opened":3,"instance.starting":2,"instance.ready":2,"instance.stop-requested":2,"instance.interrupted":1,"view.expired":2,"view.stopped":1,"instance.stopped":1},"duplicateSequences":0,"instanceIds":["e63671a3"]}
+{"tag":"lD","case":"a-cp-append-no-instance","want":404,"got":404,"afterMs":500}
+{"tag":"lD","case":"a-restore","want":200,"got":404,"afterMs":20000}
+{"tag":"lD","action":"open","status":405,"gateway":false}
+{"tag":"lD","action":"wait-ready"}
+{"tag":"lD","action":"procs","count":0,"commands":[]}
+{"tag":"lD","case":"b-append-with-instance","want":404,"got":404,"afterMs":500}
+{"tag":"lD","action":"procs","count":0,"commands":[]}
+{"tag":"lD","case":"b-restore","want":200,"got":404,"afterMs":20000}
+{"tag":"lD","action":"apps","status":404}
+{"tag":"lD","action":"events","status":404,"total":0,"counts":{},"duplicateSequences":0,"instanceIds":[]}
+{"tag":"lD","case":"a-cp-append-no-instance","want":404,"got":404,"afterMs":500}
+{"tag":"lD","case":"a-restore","want":200,"got":404,"afterMs":20000}
+{"tag":"lD","action":"open","status":405,"gateway":false}
+{"tag":"lD","action":"wait-ready"}
+{"tag":"lD","action":"procs","count":0,"commands":[]}
+{"tag":"lD","case":"b-append-with-instance","want":404,"got":404,"afterMs":500}
+{"tag":"lD","action":"procs","count":0,"commands":[]}
+{"tag":"lD","case":"b-restore","want":200,"got":404,"afterMs":20000}
+{"tag":"lD","action":"apps","status":404}
+{"tag":"lD","action":"events","status":404,"total":0,"counts":{},"duplicateSequences":0,"instanceIds":[]}
+{"tag":"lF","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[{"appId":"contract-fixture","status":"stopped"}],"views":[{"viewId":"v-f","status":"expired"},{"viewId":"v-f2","status":"expired"},{"viewId":"v-d1","status":"stopped"}]}
+{"tag":"lF","action":"open","status":403,"gateway":false}
+{"tag":"lF","action":"wait-ready","instances":[{"id":"e63671a3","appId":"contract-fixture","status":"stopped"}]}
+{"tag":"lF","action":"procs","count":0,"commands":[]}
+{"tag":"lF1-host-disabled","settledAfterMs":500,"/hanamesh/apps":404}
+{"tag":"lF","action":"routes","/hanamesh/apps":404,"/hanamesh/library":404,"/hanamesh/core/status":404,"unauthenticated":404}
+{"tag":"lF","action":"procs","count":0,"commands":[]}
+{"tag":"lF2-host-enabled","settledAfterMs":500,"/hanamesh/apps":200}
+{"tag":"lF","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[{"appId":"contract-fixture","status":"stopped"}],"views":[{"viewId":"v-f","status":"expired"},{"viewId":"v-f2","status":"expired"},{"viewId":"v-d1","status":"stopped"}]}
+{"tag":"lF","action":"events","status":200,"total":14,"counts":{"view.opened":3,"instance.starting":2,"instance.ready":2,"instance.stop-requested":2,"instance.interrupted":1,"view.expired":2,"view.stopped":1,"instance.stopped":1},"duplicateSequences":0,"instanceIds":["e63671a3"]}
+{"tag":"lF","action":"open","status":403,"gateway":false}
+{"tag":"lF","action":"wait-ready","instances":[{"id":"e63671a3","appId":"contract-fixture","status":"stopped"}]}
+{"tag":"lF","action":"procs","count":0,"commands":[]}
+{"tag":"lF3-app-disabled","settledAfterMs":500,"/hanamesh/apps":200}
+{"tag":"lF3-app-disabled","appsEmptyAfterMs":500}
+{"tag":"lF","action":"apps","status":200,"apps":[],"appCount":0,"instances":[{"appId":"contract-fixture","status":"stopped"}],"views":[{"viewId":"v-f","status":"expired"},{"viewId":"v-f2","status":"expired"},{"viewId":"v-d1","status":"stopped"}]}
+{"tag":"lF","action":"procs","count":0,"commands":[]}
+{"tag":"lF","action":"events","status":200,"total":14,"counts":{"view.opened":3,"instance.starting":2,"instance.ready":2,"instance.stop-requested":2,"instance.interrupted":1,"view.expired":2,"view.stopped":1,"instance.stopped":1},"duplicateSequences":0,"instanceIds":["e63671a3"]}
+{"tag":"lF4-app-enabled","settledAfterMs":500,"/hanamesh/apps":200}
+{"tag":"lF","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[{"appId":"contract-fixture","status":"stopped"}],"views":[{"viewId":"v-f","status":"expired"},{"viewId":"v-f2","status":"expired"},{"viewId":"v-d1","status":"stopped"}]}
+{"tag":"lF","action":"events","status":200,"total":14,"counts":{"view.opened":3,"instance.starting":2,"instance.ready":2,"instance.stop-requested":2,"instance.interrupted":1,"view.expired":2,"view.stopped":1,"instance.stopped":1},"duplicateSequences":0,"instanceIds":["e63671a3"]}
+{"tag":"lF","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[],"views":[]}
+{"tag":"lF","action":"open","status":200,"instanceStatus":"starting","gateway":false}
+{"tag":"lF","action":"wait-ready","instances":[{"id":"ae0c0ef6","appId":"contract-fixture","status":"ready"}]}
+{"tag":"lF","action":"procs","count":1,"commands":["/Users/yzliu/Library/Application Support/com.hanamesh.desktop/runtime/bin/node -e require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).list"]}
+{"tag":"lF1-host-disabled","settledAfterMs":500,"/hanamesh/apps":404}
+{"tag":"lF","action":"routes","/hanamesh/apps":404,"/hanamesh/library":404,"/hanamesh/core/status":404,"unauthenticated":404}
+{"tag":"lF","action":"procs","count":0,"commands":[]}
+{"tag":"lF2-host-enabled","settledAfterMs":500,"/hanamesh/apps":200}
+{"tag":"lF","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[{"appId":"contract-fixture","status":"stopped"}],"views":[{"viewId":"v-f","status":"stopped"}]}
+{"tag":"lF","action":"events","status":200,"total":6,"counts":{"view.opened":1,"instance.starting":1,"instance.ready":1,"instance.stop-requested":1,"view.stopped":1,"instance.stopped":1},"duplicateSequences":0,"instanceIds":["ae0c0ef6"]}
+{"tag":"lF","action":"open","status":200,"instanceStatus":"starting","gateway":false}
+{"tag":"lF","action":"wait-ready","instances":[{"id":"ae0c0ef6","appId":"contract-fixture","status":"ready"}]}
+{"tag":"lF","action":"procs","count":1,"commands":["/Users/yzliu/Library/Application Support/com.hanamesh.desktop/runtime/bin/node -e require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).list"]}
+{"tag":"lF3-app-disabled","settledAfterMs":500,"/hanamesh/apps":200}
+{"tag":"lF3-app-disabled","appsEmptyAfterMs":500}
+{"tag":"lF","action":"apps","status":200,"apps":[],"appCount":0,"instances":[{"appId":"contract-fixture","status":"stopped"}],"views":[{"viewId":"v-f","status":"stopped"},{"viewId":"v-f2","status":"stopped"}]}
+{"tag":"lF","action":"procs","count":0,"commands":[]}
+{"tag":"lF","action":"events","status":200,"total":12,"counts":{"view.opened":2,"instance.starting":2,"instance.ready":2,"instance.stop-requested":2,"view.stopped":2,"instance.stopped":2},"duplicateSequences":0,"instanceIds":["ae0c0ef6"]}
+{"tag":"lF4-app-enabled","settledAfterMs":500,"/hanamesh/apps":200}
+{"tag":"lF","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[{"appId":"contract-fixture","status":"stopped"}],"views":[{"viewId":"v-f","status":"stopped"},{"viewId":"v-f2","status":"stopped"}]}
+{"tag":"lF","action":"events","status":200,"total":12,"counts":{"view.opened":2,"instance.starting":2,"instance.ready":2,"instance.stop-requested":2,"view.stopped":2,"instance.stopped":2},"duplicateSequences":0,"instanceIds":["ae0c0ef6"]}
+{"tag":"cA-v1-on-rc42","action":"apps","status":200,"apps":["contract-fixture"],"appCount":1,"instances":[],"views":[]}
+{"tag":"cA-v1-on-rc42","action":"installed","status":200,"apps":[{"packageName":"@hanamesh/app-contract-fixture","version":"0.0.1","state":"registered","contractVersion":1,"hostLifecycle":"host-required"}],"plugins":["@hanamesh/lib-provision@0.1.0-rc.1:installed","hanamesh-core@0.2.0-rc.46:installed","zod@4.5.4:installed"]}
+{"tag":"cB-broken-v2","action":"apps","status":200,"apps":[],"appCount":0,"instances":[],"views":[]}
+{"tag":"cB-broken-v2","action":"installed","status":200,"apps":[{"packageName":"@hanamesh/app-contract-fixture","version":"0.0.3","state":"invalid","contractVersion":2,"hostLifecycle":"host-optional"}],"plugins":["@hanamesh/lib-provision@0.1.0-rc.1:installed","hanamesh-core@0.2.0-rc.46:installed","zod@4.5.4:installed"]}
+{"tag":"cB-broken-v2","action":"routes","/hanamesh/apps":200,"/hanamesh/library":200,"/hanamesh/core/status":404,"unauthenticated":401}
+{"tag":"cB-broken-v2-host-removed","action":"routes","/hanamesh/apps":404,"/hanamesh/library":404,"/hanamesh/core/status":404,"unauthenticated":404}

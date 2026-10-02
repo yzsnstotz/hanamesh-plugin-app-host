@@ -8,13 +8,15 @@ import { isAbsolute, join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 const [contract, outDir, node, peer = '0.1.0-rc.42'] = process.argv.slice(2);
 if (!['v1','v2'].includes(contract) || !outDir || !isAbsolute(node ?? '')) throw new Error('usage: build.mjs <v1|v2> <outDir> <absolute node> [peer]');
-const name = '@hanamesh/app-contract-fixture', version = contract === 'v1' ? '0.0.1' : '0.0.2';
-const dir = join(outDir, `fixture-${contract}`); await rm(dir, { recursive:true, force:true }); await mkdir(dir, { recursive:true });
+// FIXTURE_BROKEN=1: same v2 entry but app.json omits the {{dataDir}} binding, so validateDefinition rejects it (loud-error gate).
+const broken = process.env.FIXTURE_BROKEN === '1';
+const name = '@hanamesh/app-contract-fixture', version = contract === 'v1' ? '0.0.1' : broken ? '0.0.3' : '0.0.2';
+const dir = join(outDir, `fixture-${contract}${broken ? '-broken' : ''}`); await rm(dir, { recursive:true, force:true }); await mkdir(dir, { recursive:true });
 const here = new URL('.', import.meta.url);
 const entry = (await readFile(new URL(`entry-${contract}.js`, here), 'utf8')).replaceAll('@hanamesh/app-example', name);
 const server = "require('node:http').createServer((q,s)=>s.end('CONTRACT_FIXTURE_READY')).listen(Number(process.argv[1]),'127.0.0.1')";
 const app = { id:'contract-fixture', name:'Contract fixture', singleInstanceOnly:true, deployments:[{ id:'local', dataId:'default', mode:'owned',
-  embedding:'gateway', command:node, args:['-e', server, '{{port}}', '{{dataDir}}'], readiness:{ path:'/', status:200, bodyIncludes:'CONTRACT_FIXTURE_READY' },
+  embedding:'gateway', command:node, args:broken ? ['-e', server, '{{port}}'] : ['-e', server, '{{port}}', '{{dataDir}}'], readiness:{ path:'/', status:200, bodyIncludes:'CONTRACT_FIXTURE_READY' },
   startTimeoutMs:10_000, stopGraceMs:1_000 }] };
 const pkg = { name, version, type:'module', license:'MIT', main:'./dsh.js', exports:{ '.':'./dsh.js', './dsh':'./dsh.js', './package.json':'./package.json' },
   files:['app.json','dsh.js','cordis.patch.yml','README.md','LICENSE'], peerDependencies:{ '@hanamesh/dsh-app-host':peer },

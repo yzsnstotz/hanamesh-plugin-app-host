@@ -55,7 +55,10 @@ export class AppHost {
   constructor(options:HostOptions);
   /** rc.4: seat or clear the credential broker; returns a disposer that clears it only if still the same function. */
   setCredentialResolver(resolver:CredentialResolver|null):()=>void;
-  register(definition:AppDefinition):{appId:string;definitionHash:string}; init():Promise<this>;
+  register(definition:AppDefinition):{appId:string;definitionHash:string};
+  /** rc.42 app package contract v2: undo exactly one `register` (stops the app's owned runtimes; records and data stay). No-op while the host closes. */
+  unregister(appId:string,definitionHash:string):Promise<{appId:string;removed:boolean;reason?:'host-closing'|'definition-replaced'|'not-registered';stopped:number}>;
+  init():Promise<this>;
   /** rc.27: bind the npm package that ships `appId` (from the installed scan); a definition-declared `packageName` wins. */
   bindPackageName(appId:string,packageName:string):void;
   /** Usage-evidence `hanaRef` for an app, or null when unknown (then no evidence is reported for it). */
@@ -101,6 +104,9 @@ export class FixedGateway {
 export function rewriteCsp(value:string,parentOrigin:string):string;
 export function embeddingHeaders(rawHeaders:string[],parentOrigin:string):string[];
 export function validateDefinition(input:AppDefinition):AppDefinition;
+/** rc.42: app package contract v2 entry check for an app's own tests (does not execute the entry). */
+export const APP_PACKAGE_CONTRACT_VERSION:2;
+export function checkAppPackageEntry(entry:{apply?:unknown;inject?:unknown},packageJson:{hanamesh?:{contractVersion?:number}}|undefined):{contractVersion:2;hostLifecycle:'host-optional'};
 /** rc.27 usage evidence: `open` once per instance reaching ready, `use` once per app per UTC hour of real gateway activity, through the optional usage seat. */
 export const SOURCE_PLUGIN:'@hanamesh/dsh-app-host';
 export function hourBucket(ms:number):string;

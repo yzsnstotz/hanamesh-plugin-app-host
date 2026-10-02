@@ -1,0 +1,4 @@
+eb1ca9a42d3badb80d4a608906e430fee021029463d1a3b2b81dd8957e794704  hanamesh-app-contract-fixture-0.0.1.tgz
+d206272c026ef86b38ddbbfba6367246bae91f461946a73bd77256ce86620acf  hanamesh-app-contract-fixture-0.0.2.tgz
+faf8eeb231c4499e3b0cb3ef3e362818224706e3745f3b5923a5a8ded5985b40  hanamesh-app-contract-fixture-0.0.3.tgz
+3047353d10123b1987e6e41a59e3ddd7ccaa76c5c8a6dfaad56d6bc79c6c3615  hanamesh-dsh-app-host-0.1.0-rc.42.tgz

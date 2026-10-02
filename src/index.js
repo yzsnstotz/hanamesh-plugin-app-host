@@ -4,6 +4,7 @@ export { AtomicFileStore, DshDomainSnapshotStore } from './store.js';
 export { createHttpHandler } from './routes.js';
 export { FixedGateway, rewriteCsp, embeddingHeaders } from './gateway.js';
 export { validateDefinition } from './descriptor.js';
+export { checkAppPackageEntry, APP_PACKAGE_CONTRACT_VERSION } from './app-package.js';
 export { createUsageEvidence, hourBucket, SOURCE_PLUGIN } from './usage-evidence.js';
 export { createReceiptLedger, normalizeRoute } from './router/receipts.js';
 /** Bundle root: core API plus a lazy Cordis plugin face, so client-modules can discover this package. */

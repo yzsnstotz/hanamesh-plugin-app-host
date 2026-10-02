@@ -1,17 +1,20 @@
 TAP version 13
+# (node:98311) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: AH-L04: a surviving recorded child blocks unless provably ours; provably-ours orphans are terminated first
 not ok 1 - AH-L04: a surviving recorded child blocks unless provably ours; provably-ours orphans are terminated first
   ---
-  duration_ms: 157.911875
-  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-Q71TXQ/tests/runtime-lock.test.mjs:52:1'
+  duration_ms: 57.347375
+  type: 'test'
+  location: '/private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-202iWU/tests/runtime-lock.test.mjs:52:1'
   failureType: 'testCodeFailure'
   error: 'Missing expected rejection.'
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   stack: |-
-    async TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-Q71TXQ/tests/runtime-lock.test.mjs:58:3)
-    async Test.run (node:internal/test_runner/test:935:9)
-    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+    async TestContext.<anonymous> (file:///private/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-app-host-mutation-202iWU/tests/runtime-lock.test.mjs:58:3)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
 1..1
 # tests 1
@@ -21,4 +24,6 @@ not ok 1 - AH-L04: a surviving recorded child blocks unless provably ours; prova
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 236.482833
+# duration_ms 125.455916
+(node:98310) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)

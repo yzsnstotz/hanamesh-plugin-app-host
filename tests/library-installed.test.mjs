@@ -21,3 +21,15 @@ test('AH-L03: installed scan reports registered, installed-not-loaded and runtim
   const rows=await scanInstalled({profileDir:profile,host:{list:()=>({apps:[{id:'one'}]})},ledgerReader:async()=>({schema:1,items:{}}),dataRoot:join(profile,'data')});
   assert.deepEqual(Object.fromEntries(rows.map(row=>[row.appId,row.state])),{one:'registered',two:'installed-not-loaded',three:'runtime-missing'});
 });
+
+test('AH-L13 (rc.42): each application row says whether it survives the host being removed — contract ≥2 host-optional, v1/undeclared host-required',async()=>{
+  const profile=await mkdtemp(join(tmpdir(),'hm-library-profile-'));
+  await writeFile(join(profile,'package.json'),JSON.stringify({dependencies:{'@hanamesh/app-old':'1.0.0','@hanamesh/app-new':'1.0.0','@hanamesh/app-bare':'1.0.0'}}));
+  for(const [name,id,contractVersion] of [['@hanamesh/app-old','old',1],['@hanamesh/app-new','new',2],['@hanamesh/app-bare','bare',undefined]]){
+    await addPackage(profile,name,id);
+    if(contractVersion!==undefined)await writeFile(join(profile,'node_modules',...name.split('/'),'package.json'),JSON.stringify({name,version:'1.0.0',hanamesh:{app:'app.json',contractVersion}}));
+  }
+  const rows=await scanInstalled({profileDir:profile,host:{list:()=>({apps:[]})},ledgerReader:async()=>({schema:1,items:{}}),dataRoot:join(profile,'data')});
+  assert.deepEqual(Object.fromEntries(rows.map(row=>[row.appId,[row.contractVersion,row.hostLifecycle]])),
+    {bare:[null,'host-required'],new:[2,'host-optional'],old:[1,'host-required']});
+});

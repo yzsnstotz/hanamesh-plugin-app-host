@@ -1,0 +1,7 @@
+
+added 2 packages in 264ms
+(node:9671) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"check":"ISOLATED_PACKAGE","status":"PASS","realOwnedPid":9678,"realAppData":true,"installedExports":[".","./client"],"appPackageContract":2,"unregisterStoppedRuntime":true,"dshEntry":"requires pinned DSH peers; verified separately in the real profile","sourceTreeImports":0}
+(node:9672) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)

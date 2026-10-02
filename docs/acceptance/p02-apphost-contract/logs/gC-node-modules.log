@@ -1,0 +1,9 @@
+$ ls /Users/yzliu/.claude/jobs/68def075/tmp/run/home-green/dsh/profiles/g2/node_modules/@hanamesh /Users/yzliu/.claude/jobs/68def075/tmp/run/home-green/dsh/profiles/g2/node_modules
+/Users/yzliu/.claude/jobs/68def075/tmp/run/home-green/dsh/profiles/g2/node_modules:
+@hanamesh
+zod
+
+/Users/yzliu/.claude/jobs/68def075/tmp/run/home-green/dsh/profiles/g2/node_modules/@hanamesh:
+app-contract-fixture
+dsh-app-host
+lib-provision
