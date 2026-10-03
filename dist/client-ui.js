@@ -34,6 +34,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   }
   let libraryVisible=false;const libraryListeners=new Set();
   let embeddedSurfaceCount=0;
+  let embeddedSurfaceEpoch=0;
   const setLibraryVisible=value=>{libraryVisible=value;for(const listener of libraryListeners)listener(value);};
   // rc.32 market seat. The shell's Extension Management panel (dsh-tauri-panel-extension) reads the client-side
   // cordis service `market` via `ctx.reflect.get('market')` and shows a 「市场」 tab when it is there; it calls
@@ -117,26 +118,31 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     }};
   }
   function LibraryOverlay({embedded,preferredSubsectionId}={}){
-    const[visible,setVisible]=React.useState(embedded?true:libraryVisible),[snapshot,setSnapshot]=React.useState(null),[error,setError]=React.useState(''),[receipt,setReceipt]=React.useState(null),[query,setQuery]=React.useState(''),[filter,setFilter]=React.useState(''),[extra,setExtra]=React.useState([]),[pending,setPending]=React.useState({}),[seenCategories,setSeenCategories]=React.useState([]),[changed,setChanged]=React.useState(false),[openingAppId,setOpeningAppId]=React.useState(null),[closing,setClosing]=React.useState(false),[target,setTarget]=React.useState(null),[loadedQuery,setLoadedQuery]=React.useState(null);
+    const[visible,setVisible]=React.useState(embedded?true:libraryVisible),[snapshot,setSnapshot]=React.useState(null),[error,setError]=React.useState(''),[receipt,setReceipt]=React.useState(null),[query,setQuery]=React.useState(''),[filter,setFilter]=React.useState(''),[extra,setExtra]=React.useState([]),[pending,setPending]=React.useState({}),[seenCategories,setSeenCategories]=React.useState([]),[changed,setChanged]=React.useState(false),[openingAppId,setOpeningAppId]=React.useState(null),[closing,setClosing]=React.useState(false),[target,setTarget]=React.useState(null),[loadedQuery,setLoadedQuery]=React.useState(null),[targetGeneration,setTargetGeneration]=React.useState(0);
     React.useEffect(()=>{if(embedded)return;libraryListeners.add(setVisible);return()=>libraryListeners.delete(setVisible);},[embedded]);
     // The Settings Market tab is the visible target owner while mounted. Keep the background overlay
     // polling alive for its later fallback, but do not let it present or consume the tab's target.
-    React.useEffect(()=>{if(!embedded)return;embeddedSurfaceCount++;return()=>{embeddedSurfaceCount--;};},[embedded]);
+    React.useEffect(()=>{if(!embedded)return;embeddedSurfaceCount++;embeddedSurfaceEpoch++;return()=>{embeddedSurfaceCount--;embeddedSurfaceEpoch++;};},[embedded]);
     const heldView=React.useRef(null),mounted=React.useRef(true),surfaceVisible=React.useRef(visible),surfaceEpoch=React.useRef(0),opening=React.useRef(null),lastTargetId=React.useRef(null),loadSequence=React.useRef(0),consumedTargetId=React.useRef(null);
     surfaceVisible.current=visible;
     React.useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
     React.useEffect(()=>{
-      let stopped=false,timer;
+      let stopped=false,timer,lastOwnedEpoch=embeddedSurfaceEpoch;
       const poll=async()=>{
         let interval=1000;
         try{
           if(embedded||embeddedSurfaceCount===0){
             const current=(await request('/hanamesh/library/target')).target;
             if(stopped)return;
-            if((embedded||embeddedSurfaceCount===0)&&current&&current.targetId!==lastTargetId.current){
-              lastTargetId.current=current.targetId;
-              setTarget(current);setFilter('');setQuery(current.packageName);setSnapshot(null);setExtra([]);setLoadedQuery(null);
-              if(!embedded)setLibraryVisible(true);
+            if(embedded||embeddedSurfaceCount===0){
+              const ownerResumed=!embedded&&lastOwnedEpoch!==embeddedSurfaceEpoch;
+              lastOwnedEpoch=embeddedSurfaceEpoch;
+              if(current&&(current.targetId!==lastTargetId.current||ownerResumed)){
+                if(ownerResumed&&current.targetId===lastTargetId.current)setTargetGeneration(value=>value+1);
+                lastTargetId.current=current.targetId;
+                setTarget(current);setFilter('');setQuery(current.packageName);setSnapshot(null);setExtra([]);setLoadedQuery(null);
+                if(!embedded)setLibraryVisible(true);
+              }
             }
           }
         }catch{interval=5000;}
@@ -164,10 +170,10 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     // `plugin` is a client-side view (every npm entry that is not an application); every other filter is a provider category.
     const params=React.useCallback(cursor=>{const p=new URLSearchParams();if(query)p.set('q',query);p.set('category',filter==='plugin'?'':filter);if(cursor)p.set('cursor',cursor);return'?'+p.toString();},[query,filter]);
     const remember=page=>setSeenCategories(list=>[...new Set([...list,...(page.categories??[])])].sort());
-    const load=React.useCallback(async()=>{const sequence=++loadSequence.current;try{setError('');setExtra([]);setLoadedQuery(null);const page=await request('/hanamesh/library'+params());if(sequence!==loadSequence.current)return;setSnapshot(page);setLoadedQuery(query);remember(page);}catch(e){if(sequence===loadSequence.current)setError(String(e.message??e));}},[params]);
+    const load=React.useCallback(async()=>{const sequence=++loadSequence.current;try{setError('');setExtra([]);setLoadedQuery(null);const page=await request('/hanamesh/library'+params());if(sequence!==loadSequence.current||(!embedded&&embeddedSurfaceCount>0))return;setSnapshot(page);setLoadedQuery(query);remember(page);}catch(e){if(sequence===loadSequence.current&&(embedded||embeddedSurfaceCount===0))setError(String(e.message??e));}},[params]);
     const more=async()=>{try{const cursor=(extra.at(-1)??snapshot)?.page?.nextCursor;if(!cursor)return;const next=await request('/hanamesh/library'+params(cursor));setExtra(list=>[...list,next]);remember(next);}catch(e){setError(String(e.message??e));}};
     // A later target can keep the same package name. Its ID still invalidates the previous catalog snapshot.
-    React.useEffect(()=>{if(visible)void load();},[visible,load,target?.targetId]);
+    React.useEffect(()=>{if(visible)void load();},[visible,load,target?.targetId,targetGeneration]);
     // rc.18: install/provision/uninstall are 202 + events. Track the operation per card so the user sees
     // 「安装中…」 and, on failure, the code with a readable reason (user 2026-09-20: clicked install, nothing happened).
     const operate=async(path,body,key,label)=>{setError('');setPending(p=>({...p,[key]:{label,text:label+'中…'}}));try{const started=await request(path,{method:'POST',body:JSON.stringify(body)});const {operationId}=started;let after=0;const deadline=Date.now()+600000;let outcome=null;while(!outcome&&Date.now()<deadline){await new Promise(resolve=>setTimeout(resolve,1000));const feed=await request('/hanamesh/library/events?after='+after);after=feed.sequence??after;for(const event of feed.events??[]){if(event.operationId!==operationId)continue;if(event.type.endsWith('-done'))outcome={ok:true};else if(event.type.endsWith('-failed'))outcome={ok:false,code:event.code??'LIBRARY_OPERATION_FAILED'};}}
@@ -215,9 +221,9 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     const close=async()=>{if(closing)return;setClosing(true);try{await heldView.current?.close();setReceipt(null);setError('');}catch(e){setError(String(e.message??e));}finally{if(mounted.current)setClosing(false);}};
     const pages=[snapshot,...extra].filter(Boolean),all=pages.flatMap(page=>page.items??[]),items=filter==='plugin'?all.filter(item=>item.kind==='plugin'):all,installed=snapshot?.installed??[],plugins=snapshot?.plugins??[],nextCursor=(extra.at(-1)??snapshot)?.page?.nextCursor??null;
     const exact=item=>item.package?.registry==='npm'&&item.package?.name===target?.packageName;
-    const targetState=!target||!visible?null:target.protected?'protected':error?'catalog-unavailable':loadedQuery!==target.packageName?null:items.some(exact)?'found':nextCursor?'not-on-loaded-pages':'missing';
+    const targetState=!target||!visible||(!embedded&&embeddedSurfaceCount>0)?null:target.protected?'protected':error?'catalog-unavailable':loadedQuery!==target.packageName?null:items.some(exact)?'found':nextCursor?'not-on-loaded-pages':'missing';
     React.useEffect(()=>{
-      if(!targetState||!target||consumedTargetId.current===target.targetId)return;
+      if(!targetState||!target||(!embedded&&embeddedSurfaceCount>0)||consumedTargetId.current===target.targetId)return;
       consumedTargetId.current=target.targetId;
       if(targetState==='found')document.querySelector?.('[data-hanamesh-target="exact"]')?.scrollIntoView?.({block:'nearest'});
       void request('/hanamesh/library/target/consume',{method:'POST',body:JSON.stringify({targetId:target.targetId})}).catch(()=>{consumedTargetId.current=null;});

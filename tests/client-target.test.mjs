@@ -106,6 +106,92 @@ test('P06A-T13: an already mounted embedded Market presents and consumes before 
   assert.equal(calls.filter(call=>call.path.includes('install')||call.path==='/apps/close').length,0);
 });
 
+test('P06A-T13: embedded Market takes ownership while an overlay catalog response is delayed',async t=>{
+  const clock=fakeClock(),calls=[],catalog=[];let target=null,overlay,embedded;
+  const result=value=>({ok:true,json:async()=>value});
+  const fetch=async(path,init={})=>{
+    calls.push({path,body:init.body?JSON.parse(init.body):null,
+      atConsume:path.endsWith('/consume')?{overlay:state(overlay)?.props['data-hanamesh-target-state'],embedded:state(embedded)?.props['data-hanamesh-target-state']}:null});
+    if(path==='/hanamesh/library/target')return result({target});
+    if(path==='/hanamesh/library/target/consume'){target=null;return result({consumed:true});}
+    if(path.startsWith('/hanamesh/library?')){
+      return new Promise(resolve=>catalog.push(()=>resolve(result({items:[exact,second,substring],page:{nextCursor:null}}))));
+    }
+    throw Error('unexpected '+path);
+  };
+  const client=await dualSurfaceClientHarness({fetch,clock});t.after(()=>client.unmount());
+  overlay=await client.mount(false);
+  target={targetId:'overlap-race',packageName:'dsh-pet',protected:false};
+  await clock.advance(1000);
+  const overlayPending=catalog.length;
+  assert(overlayPending>0,'overlay catalog query is held before the foreground tab mounts');
+  embedded=await client.mount(true);
+  assert(catalog.length>overlayPending,'embedded Market also requested the catalog');
+  for(const release of catalog.slice(0,overlayPending))release();
+  await settle();
+  assert.equal(state(overlay),undefined,'late overlay catalog response cannot present a consumed target');
+  assert(!overlay.find(node=>node.props?.['data-hanamesh-target']==='exact'),'late overlay catalog response cannot paint the target card');
+  assert.equal(calls.filter(call=>call.path.endsWith('/consume')).length,0,'overlay response may not consume while embedded catalog is still delayed');
+  for(const release of catalog.slice(overlayPending))release();
+  await settle();
+  assert.equal(state(embedded)?.props['data-hanamesh-target-state'],'found');
+  assert.deepEqual(calls.filter(call=>call.path.endsWith('/consume')).map(call=>call.atConsume),[{overlay:undefined,embedded:'found'}],'only the presented embedded surface acknowledges the target');
+  embedded.unmount();await clock.advance(1000);
+  assert.equal(state(overlay),undefined,'a consumed target does not reopen after embedded unmount');
+  assert.equal(calls.filter(call=>call.path.endsWith('/consume')).length,1);
+  assert.equal(calls.filter(call=>call.path.includes('install')||call.path==='/apps/close').length,0);
+});
+
+test('P06A-T13: an overlay effect queued before embedded mount cannot consume a protected target',async t=>{
+  const clock=fakeClock(),calls=[];let target=null;
+  const fetch=async(path,init={})=>{
+    calls.push({path,body:init.body?JSON.parse(init.body):null});
+    if(path==='/hanamesh/library/target')return{ok:true,json:async()=>({target})};
+    if(path==='/hanamesh/library/target/consume'){target=null;return{ok:true,json:async()=>({consumed:true})};}
+    if(path.startsWith('/hanamesh/library?'))return{ok:true,json:async()=>({items:[],page:{nextCursor:null}})};
+    throw Error('unexpected '+path);
+  };
+  const client=await dualSurfaceClientHarness({fetch,clock});t.after(()=>client.unmount());
+  const overlay=await client.mount(false);overlay.pauseEffects();
+  target={targetId:'protected-overlap',packageName:'@hanamesh/dsh-app-host',protected:true};
+  await clock.advance(1000);
+  assert.equal(state(overlay)?.props['data-hanamesh-target-state'],'protected','overlay committed target state before its passive effect runs');
+  const embedded=await client.mount(true);
+  assert.equal(state(embedded)?.props['data-hanamesh-target-state'],'protected');
+  overlay.rerender();
+  assert.equal(state(overlay),undefined,'the ownership guard suppresses stale target status on the next render');
+  overlay.flushEffects();await settle();
+  assert.deepEqual(calls.filter(call=>call.path.endsWith('/consume')).map(call=>call.body.targetId),['protected-overlap'],'the queued overlay effect may not consume after embedded mount');
+  assert.equal(calls.filter(call=>call.path.includes('install')||call.path==='/apps/close').length,0);
+});
+
+test('P06A-T13: an unconsumed target returns to the overlay when embedded Market unmounts',async t=>{
+  const clock=fakeClock(),catalog=[],calls=[];let target=null;
+  const fetch=async(path,init={})=>{
+    calls.push({path,body:init.body?JSON.parse(init.body):null});
+    if(path==='/hanamesh/library/target')return{ok:true,json:async()=>({target})};
+    if(path==='/hanamesh/library/target/consume'){target=null;return{ok:true,json:async()=>({consumed:true})};}
+    if(path.startsWith('/hanamesh/library?'))return new Promise(resolve=>catalog.push(()=>resolve({ok:true,json:async()=>({items:[exact,second],page:{nextCursor:null}})})));
+    throw Error('unexpected '+path);
+  };
+  const client=await dualSurfaceClientHarness({fetch,clock});t.after(()=>client.unmount());
+  const overlay=await client.mount(false);
+  target={targetId:'same-pending-after-tab-close',packageName:'dsh-pet',protected:false};
+  await clock.advance(1000);
+  const overlayPending=catalog.length;
+  const embedded=await client.mount(true);
+  assert(catalog.length>overlayPending);
+  for(const release of catalog.slice(0,overlayPending))release();
+  await settle();
+  assert.equal(state(overlay),undefined);
+  embedded.unmount();
+  await clock.advance(1000);
+  for(const release of catalog.slice(overlayPending))release();
+  await settle();
+  assert.equal(state(overlay)?.props['data-hanamesh-target-state'],'found','the same pending target is presented after embedded unmount');
+  assert.deepEqual(calls.filter(call=>call.path.endsWith('/consume')).map(call=>call.body.targetId),['same-pending-after-tab-close']);
+});
+
 test('P06A-T08/T09/T10b: polling opens market, exact marks all duplicates, page 1 is not falsely missing, consume follows presentation',async t=>{
   const a=setup(t,{pages:[{items:[substring],page:{nextCursor:'page2'}},{items:[exact,second],page:{nextCursor:null}}]});
   const client=await a.mount();

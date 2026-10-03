@@ -49,8 +49,8 @@ export async function dualSurfaceClientHarness({fetch,clock}){
   scope.Date=clock.Date;scope.setTimeout=clock.setTimeout.bind(clock);scope.clearTimeout=clock.clearTimeout.bind(clock);
   new Function('window','document','globalThis','setTimeout','clearTimeout','Date',source)(window,document,scope,scope.setTimeout,scope.clearTimeout,clock.Date);
   const module=loaded.factory(id=>{assert.equal(id,'react');return React;});
-  function render(surface){surface.cursor=0;active=surface;surface.tree=module.LibraryOverlay({embedded:surface.embedded});active=null;for(const effect of surface.pending.splice(0))effect();return surface.tree;}
+  function render(surface){surface.cursor=0;active=surface;surface.tree=module.LibraryOverlay({embedded:surface.embedded});active=null;if(!surface.effectsPaused)for(const effect of surface.pending.splice(0))effect();return surface.tree;}
   function find(node,predicate){if(!node)return;if(Array.isArray(node)){for(const child of node){const match=find(child,predicate);if(match)return match;}return;}if(typeof node!=='object')return;if(predicate(node))return node;return find(node.children,predicate);}
-  async function mount(embedded){const surface={embedded,hooks:[],pending:[],cursor:0,tree:null,dead:false,scheduled:false};surfaces.push(surface);render(surface);await settle();return{get tree(){return surface.tree;},find:predicate=>find(surface.tree,predicate),unmount(){surface.dead=true;for(const hook of surface.hooks)hook?.cleanup?.();}};}
+  async function mount(embedded){const surface={embedded,hooks:[],pending:[],cursor:0,tree:null,dead:false,scheduled:false,effectsPaused:false};surfaces.push(surface);render(surface);await settle();return{get tree(){return surface.tree;},find:predicate=>find(surface.tree,predicate),rerender(){render(surface);},pauseEffects(){surface.effectsPaused=true;},flushEffects(){surface.effectsPaused=false;for(const effect of surface.pending.splice(0))effect();},unmount(){surface.dead=true;for(const hook of surface.hooks)hook?.cleanup?.();}};}
   return{module,mount,unmount(){for(const surface of surfaces){surface.dead=true;for(const hook of surface.hooks)hook?.cleanup?.();}}};
 }
