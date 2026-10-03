@@ -33,6 +33,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       routeRows.length?h('table',null,h('thead',null,h('tr',null,...['应用','槽位','用途','供应商','模型','状态',''].map((label,index)=>h('th',{key:index},label)))),h('tbody',null,...routeRows)):h('p',{className:'hm-provider-hint'},'还没有安装任何声明了供应商槽位的应用。'));
   }
   let libraryVisible=false;const libraryListeners=new Set();
+  let embeddedSurfaceCount=0;
   const setLibraryVisible=value=>{libraryVisible=value;for(const listener of libraryListeners)listener(value);};
   // rc.32 market seat. The shell's Extension Management panel (dsh-tauri-panel-extension) reads the client-side
   // cordis service `market` via `ctx.reflect.get('market')` and shows a 「市场」 tab when it is there; it calls
@@ -42,9 +43,10 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   const MARKET_CONFLICT_TEXT='检测到 DSH Market（dshmarket）：「扩展管理」的市场标签只能由一个插件提供，这次没有由 HanaMesh 市场接管。两者只能其一——要用 HanaMesh 市场请先卸载 dshmarket 并重启 DSH；要用 dshmarket 就从下方侧栏的「市场」入口使用 HanaMesh 市场。';
   let marketConflict='';const conflictListeners=new Set();
   const setMarketConflict=value=>{marketConflict=value;for(const listener of conflictListeners)listener(value);};
-  // The seat owner asks us to stand down our own entry points while it renders the market itself.
+  // The seat owner hides only our manual sidebar entry. A pending external target still needs
+  // the always-mounted overlay, and an open app view must keep its existing lease.
   let entryVisible=true;const entryListeners=new Set();
-  const setEntryVisible=value=>{entryVisible=value;if(!value)setLibraryVisible(false);for(const listener of entryListeners)listener(value);};
+  const setEntryVisible=value=>{entryVisible=value;for(const listener of entryListeners)listener(value);};
   function MarketConflictNotice(){
     const[text,setText]=React.useState(marketConflict);
     React.useEffect(()=>{conflictListeners.add(setText);return()=>conflictListeners.delete(setText);},[]);
@@ -117,6 +119,9 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   function LibraryOverlay({embedded,preferredSubsectionId}={}){
     const[visible,setVisible]=React.useState(embedded?true:libraryVisible),[snapshot,setSnapshot]=React.useState(null),[error,setError]=React.useState(''),[receipt,setReceipt]=React.useState(null),[query,setQuery]=React.useState(''),[filter,setFilter]=React.useState(''),[extra,setExtra]=React.useState([]),[pending,setPending]=React.useState({}),[seenCategories,setSeenCategories]=React.useState([]),[changed,setChanged]=React.useState(false),[openingAppId,setOpeningAppId]=React.useState(null),[closing,setClosing]=React.useState(false),[target,setTarget]=React.useState(null),[loadedQuery,setLoadedQuery]=React.useState(null);
     React.useEffect(()=>{if(embedded)return;libraryListeners.add(setVisible);return()=>libraryListeners.delete(setVisible);},[embedded]);
+    // The Settings Market tab is the visible target owner while mounted. Keep the background overlay
+    // polling alive for its later fallback, but do not let it present or consume the tab's target.
+    React.useEffect(()=>{if(!embedded)return;embeddedSurfaceCount++;return()=>{embeddedSurfaceCount--;};},[embedded]);
     const heldView=React.useRef(null),mounted=React.useRef(true),surfaceVisible=React.useRef(visible),surfaceEpoch=React.useRef(0),opening=React.useRef(null),lastTargetId=React.useRef(null),loadSequence=React.useRef(0),consumedTargetId=React.useRef(null);
     surfaceVisible.current=visible;
     React.useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
@@ -125,10 +130,10 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       const poll=async()=>{
         let interval=1000;
         try{
-          if(embedded||entryVisible){
+          if(embedded||embeddedSurfaceCount===0){
             const current=(await request('/hanamesh/library/target')).target;
             if(stopped)return;
-            if(current&&current.targetId!==lastTargetId.current){
+            if((embedded||embeddedSurfaceCount===0)&&current&&current.targetId!==lastTargetId.current){
               lastTargetId.current=current.targetId;
               setTarget(current);setFilter('');setQuery(current.packageName);setSnapshot(null);setExtra([]);setLoadedQuery(null);
               if(!embedded)setLibraryVisible(true);
@@ -161,7 +166,8 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     const remember=page=>setSeenCategories(list=>[...new Set([...list,...(page.categories??[])])].sort());
     const load=React.useCallback(async()=>{const sequence=++loadSequence.current;try{setError('');setExtra([]);setLoadedQuery(null);const page=await request('/hanamesh/library'+params());if(sequence!==loadSequence.current)return;setSnapshot(page);setLoadedQuery(query);remember(page);}catch(e){if(sequence===loadSequence.current)setError(String(e.message??e));}},[params]);
     const more=async()=>{try{const cursor=(extra.at(-1)??snapshot)?.page?.nextCursor;if(!cursor)return;const next=await request('/hanamesh/library'+params(cursor));setExtra(list=>[...list,next]);remember(next);}catch(e){setError(String(e.message??e));}};
-    React.useEffect(()=>{if(visible)void load();},[visible,load]);
+    // A later target can keep the same package name. Its ID still invalidates the previous catalog snapshot.
+    React.useEffect(()=>{if(visible)void load();},[visible,load,target?.targetId]);
     // rc.18: install/provision/uninstall are 202 + events. Track the operation per card so the user sees
     // 「安装中…」 and, on failure, the code with a readable reason (user 2026-09-20: clicked install, nothing happened).
     const operate=async(path,body,key,label)=>{setError('');setPending(p=>({...p,[key]:{label,text:label+'中…'}}));try{const started=await request(path,{method:'POST',body:JSON.stringify(body)});const {operationId}=started;let after=0;const deadline=Date.now()+600000;let outcome=null;while(!outcome&&Date.now()<deadline){await new Promise(resolve=>setTimeout(resolve,1000));const feed=await request('/hanamesh/library/events?after='+after);after=feed.sequence??after;for(const event of feed.events??[]){if(event.operationId!==operationId)continue;if(event.type.endsWith('-done'))outcome={ok:true};else if(event.type.endsWith('-failed'))outcome={ok:false,code:event.code??'LIBRARY_OPERATION_FAILED'};}}

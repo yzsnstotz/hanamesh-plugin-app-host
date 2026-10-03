@@ -32,3 +32,25 @@ export async function clientHarness({fetch,clock,embedded=true}={}){
     async show(){module.LibraryAction().props.onClick();await settle();},async hide(){const close=find(tree,node=>node.type==='button'&&node.children.includes('关闭'));assert(close);close.props.onClick();await settle();}};
   render();await settle();return api;
 }
+
+/** Mount both market surfaces against one real client module to exercise their shared target ownership. */
+export async function dualSurfaceClientHarness({fetch,clock}){
+  const source=await readFile(new URL('../../src/client-ui.js',import.meta.url),'utf8');
+  let loaded,active;const surfaces=[];
+  const schedule=surface=>{if(!surface.dead&&!surface.scheduled){surface.scheduled=true;queueMicrotask(()=>{surface.scheduled=false;if(!surface.dead)render(surface);});}};
+  const React={createElement:(type,props,...children)=>({type,props:props??{},children}),
+    useState(initial){const surface=active,id=surface.cursor++;if(!surface.hooks[id])surface.hooks[id]={value:typeof initial==='function'?initial():initial};return[surface.hooks[id].value,next=>{surface.hooks[id].value=typeof next==='function'?next(surface.hooks[id].value):next;schedule(surface);}];},
+    useRef(initial){const surface=active,id=surface.cursor++;return surface.hooks[id]??=({current:initial});},
+    useCallback(fn,deps){const surface=active,id=surface.cursor++,old=surface.hooks[id];if(!old||deps.some((value,i)=>value!==old.deps[i]))surface.hooks[id]={value:fn,deps};return surface.hooks[id].value;},
+    useEffect(run,deps){const surface=active,id=surface.cursor++,old=surface.hooks[id];if(!old||!deps||deps.some((value,i)=>value!==old.deps[i])){surface.hooks[id]={deps,cleanup:old?.cleanup};surface.pending.push(()=>{surface.hooks[id].cleanup?.();surface.hooks[id].cleanup=run();});}}};
+  const document={visibilityState:'visible',addEventListener(){},removeEventListener(){}};
+  const window={__ModuleLoader__:{load:module=>{loaded=module;}},self:{},top:{},parent:{postMessage(){}}};
+  const scope={window,fetch,crypto:globalThis.crypto,console,URLSearchParams,AbortController,addEventListener(){},removeEventListener(){}};
+  scope.Date=clock.Date;scope.setTimeout=clock.setTimeout.bind(clock);scope.clearTimeout=clock.clearTimeout.bind(clock);
+  new Function('window','document','globalThis','setTimeout','clearTimeout','Date',source)(window,document,scope,scope.setTimeout,scope.clearTimeout,clock.Date);
+  const module=loaded.factory(id=>{assert.equal(id,'react');return React;});
+  function render(surface){surface.cursor=0;active=surface;surface.tree=module.LibraryOverlay({embedded:surface.embedded});active=null;for(const effect of surface.pending.splice(0))effect();return surface.tree;}
+  function find(node,predicate){if(!node)return;if(Array.isArray(node)){for(const child of node){const match=find(child,predicate);if(match)return match;}return;}if(typeof node!=='object')return;if(predicate(node))return node;return find(node.children,predicate);}
+  async function mount(embedded){const surface={embedded,hooks:[],pending:[],cursor:0,tree:null,dead:false,scheduled:false};surfaces.push(surface);render(surface);await settle();return{get tree(){return surface.tree;},find:predicate=>find(surface.tree,predicate),unmount(){surface.dead=true;for(const hook of surface.hooks)hook?.cleanup?.();}};}
+  return{module,mount,unmount(){for(const surface of surfaces){surface.dead=true;for(const hook of surface.hooks)hook?.cleanup?.();}}};
+}

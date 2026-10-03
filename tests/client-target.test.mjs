@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { clientHarness, fakeClock, settle } from './fixtures/client-ui-harness.mjs';
+import { clientHarness, dualSurfaceClientHarness, fakeClock, settle } from './fixtures/client-ui-harness.mjs';
 
 const exact={id:'exact-1',kind:'plugin',displayName:'Exact',package:{registry:'npm',name:'dsh-pet'}};
 const second={...exact,id:'exact-2'};
@@ -23,6 +23,88 @@ function setup(t,{pages=[{items:[exact,second,substring],page:{nextCursor:null}}
   return{clock,calls,async mount(){const client=await clientHarness({fetch,clock,embedded});t.after(()=>client.unmount());return client;},setTarget:value=>{target=value;},failTarget:value=>{failTarget=value;},consumes:()=>calls.filter(call=>call.path.endsWith('/consume')),searches:()=>calls.filter(call=>call.path.startsWith('/hanamesh/library?'))};
 }
 const state=client=>client.find(node=>node.props?.['data-hanamesh-target-state']);
+
+test('P06A-T13: panel seat hides the manual entry but a later OS target opens the market from the DSH home page',async t=>{
+  const a=setup(t,{embedded:false});const client=await a.mount();
+  const initialReads=a.calls.filter(call=>call.path==='/hanamesh/library/target').length;
+  client.module.createMarketSeat().setSettingsVisible(false);
+  assert.equal(client.module.LibraryAction(),null,'panel owns the manual sidebar entry');
+  a.setTarget({targetId:'seat-target',packageName:'dsh-pet',protected:false});
+  await a.clock.advance(1000);
+  assert.equal(a.calls.filter(call=>call.path==='/hanamesh/library/target').length,initialReads+1,'target polling stays active while the panel owns the seat');
+  assert.equal(state(client)?.props['data-hanamesh-target-state'],'found','the market opens without visiting Settings');
+  assert(client.find(node=>node.props?.['data-hanamesh-library-item']==='exact-1'&&node.props?.['data-hanamesh-target']==='exact'));
+  assert.equal(a.consumes().length,1);
+  assert.equal(a.calls.filter(call=>call.path.includes('/install')).length,0);
+});
+
+test('P06A-T11/T13: panel seat takeover does not close an existing market app view lease',async t=>{
+  const clock=fakeClock(),calls=[];
+  const row={appId:'fixture-app',state:'registered',packageName:'fixture-app',definition:{deployments:[{id:'local'}]}};
+  const receipt={instance:{id:'instance-seat',appId:'fixture-app',status:'ready'},lease:{viewId:'view-seat',expiresAt:clock.now()+90_000},leaseToken:'fixture-token',uiUrl:'http://127.0.0.1:50001/'};
+  const fetch=async(path,init={})=>{
+    calls.push({path,body:init.body?JSON.parse(init.body):null});
+    const value=path==='/hanamesh/library/target'?{target:null}:
+      path.startsWith('/hanamesh/library?')?{items:[{...exact,installed:row,kind:'application'}],installed:[row],page:{nextCursor:null}}:
+      path==='/apps/open'?receipt:
+      path==='/apps/close'?{instance:{status:'stopped'}}:null;
+    assert.notEqual(value,null,'unexpected route '+path);
+    return{ok:true,json:async()=>value};
+  };
+  const client=await clientHarness({fetch,clock,embedded:false});t.after(()=>client.unmount());
+  await client.show();await client.click('打开');assert(client.find(node=>node.type==='iframe'));
+  client.module.createMarketSeat().setSettingsVisible(false);await settle();
+  assert.equal(client.module.LibraryAction(),null,'the manual entry stays hidden');
+  assert(client.find(node=>node.type==='iframe'),'seat takeover must preserve the foreground app view');
+  assert.equal(calls.filter(call=>call.path==='/apps/close').length,0);
+});
+
+test('P06A-T11/T13: a new target ID for the same package reloads the catalog while the market overlay is open',async t=>{
+  const a=setup(t,{embedded:false});const client=await a.mount();
+  client.module.createMarketSeat().setSettingsVisible(false);
+  a.setTarget({targetId:'same-name-1',packageName:'dsh-pet',protected:false});
+  await a.clock.advance(1000);
+  assert.equal(state(client)?.props['data-hanamesh-target-state'],'found');
+  assert.equal(a.consumes().length,1);
+  const firstSearches=a.searches().length;
+  a.setTarget({targetId:'same-name-2',packageName:'dsh-pet',protected:false});
+  await a.clock.advance(1000);
+  assert.equal(a.searches().length,firstSearches+1,'new target identity refetches even when query text is unchanged');
+  assert.equal(state(client)?.props['data-hanamesh-target-state'],'found');
+  assert.equal(a.consumes().length,2,'each target identity is acknowledged once after presentation');
+});
+
+test('P06A-T13: an already mounted embedded Market presents and consumes before the background overlay',async t=>{
+  const clock=fakeClock(),calls=[];let target=null,overlay,embedded;
+  const fetch=async(path,init={})=>{
+    calls.push({path,body:init.body?JSON.parse(init.body):null,
+      atConsume:path.endsWith('/consume')?{
+        embedded:state(embedded)?.props['data-hanamesh-target-state'],
+        overlay:state(overlay)?.props['data-hanamesh-target-state'],
+        embeddedExact:Boolean(embedded.find(node=>node.props?.['data-hanamesh-target']==='exact')),
+      }:null});
+    if(path==='/hanamesh/library/target')return{ok:true,json:async()=>({target})};
+    if(path==='/hanamesh/library/target/consume')return{ok:true,json:async()=>({consumed:true})};
+    if(path.startsWith('/hanamesh/library?'))return{ok:true,json:async()=>({items:[exact,second,substring],page:{nextCursor:null}})};
+    throw Error('unexpected '+path);
+  };
+  const client=await dualSurfaceClientHarness({fetch,clock});t.after(()=>client.unmount());
+  overlay=await client.mount(false);embedded=await client.mount(true);
+  const readsBefore=calls.filter(call=>call.path==='/hanamesh/library/target').length;
+  target={targetId:'embedded-first',packageName:'dsh-pet',protected:false};
+  await clock.advance(1000); // overlay timer was registered first: force the reverse scheduling race
+  assert.equal(calls.filter(call=>call.path==='/hanamesh/library/target').length,readsBefore+1,'only the foreground embedded surface reads the pending target');
+  assert.equal(state(embedded)?.props['data-hanamesh-target-state'],'found','the foreground embedded Market owns the target');
+  assert.equal(state(overlay),undefined,'the background overlay must not open over Settings');
+  assert.deepEqual(calls.filter(call=>call.path.endsWith('/consume')).map(call=>({id:call.body.targetId,...call.atConsume})),
+    [{id:'embedded-first',embedded:'found',overlay:undefined,embeddedExact:true}],'only the visible embedded surface acknowledges the target');
+  embedded.unmount();
+  target={targetId:'overlay-after-embedded',packageName:'dsh-pet',protected:false};
+  await clock.advance(1000);
+  assert.equal(state(overlay)?.props['data-hanamesh-target-state'],'found','overlay resumes when the embedded Market unmounts');
+  assert.deepEqual(calls.filter(call=>call.path.endsWith('/consume')).map(call=>call.body.targetId),['embedded-first','overlay-after-embedded']);
+  assert.equal(calls.filter(call=>call.path.includes('install')||call.path==='/apps/close').length,0);
+});
 
 test('P06A-T08/T09/T10b: polling opens market, exact marks all duplicates, page 1 is not falsely missing, consume follows presentation',async t=>{
   const a=setup(t,{pages:[{items:[substring],page:{nextCursor:'page2'}},{items:[exact,second],page:{nextCursor:null}}]});
@@ -77,7 +159,16 @@ test('P06A-T11: a target leaves an already open application view lease mounted',
   assert(client.find(node=>node.props?.['data-hanamesh-library-item']==='exact-1'&&node.props?.['data-hanamesh-target']==='exact'));
   assert(client.find(node=>node.props?.['data-hanamesh-library-item']==='exact-2'&&node.props?.['data-hanamesh-target']==='exact'));
   assert.equal(client.find(node=>node.props?.['data-hanamesh-library-item']==='substring'),undefined);
+  target={targetId:'t-lease-obsolete',packageName:'dsh-pet',protected:false};
+  target={targetId:'t-lease-latest',packageName:'dsh-pet',protected:false};
+  await clock.advance(1000);
+  assert(client.find(node=>node.type==='iframe'),'same-name target replacement preserves the foreground iframe');
+  assert.equal(state(client)?.props['data-hanamesh-target-state'],'found');
+  assert.deepEqual(calls.filter(call=>call.path==='/hanamesh/library/target/consume').map(call=>call.body.targetId),['t-lease','t-lease-latest'],'only the latest target identity is consumed');
+  await clock.advance(30_000);
+  assert(client.find(node=>node.type==='iframe'),'lease remains mounted through a heartbeat');
+  assert(calls.some(call=>call.path==='/apps/heartbeat'),'the existing view is still renewed');
   assert.equal(calls.filter(call=>call.path==='/apps/close').length,0);
   assert.equal(calls.filter(call=>call.path==='/apps/open').length,1);
-  assert.equal(calls.filter(call=>call.path==='/hanamesh/library/target/consume').length,1);
+  assert.equal(calls.filter(call=>call.path==='/hanamesh/library/target/consume').length,2);
 });
