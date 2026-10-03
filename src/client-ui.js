@@ -115,11 +115,30 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     }};
   }
   function LibraryOverlay({embedded,preferredSubsectionId}={}){
-    const[visible,setVisible]=React.useState(embedded?true:libraryVisible),[snapshot,setSnapshot]=React.useState(null),[error,setError]=React.useState(''),[receipt,setReceipt]=React.useState(null),[query,setQuery]=React.useState(''),[filter,setFilter]=React.useState(''),[extra,setExtra]=React.useState([]),[pending,setPending]=React.useState({}),[seenCategories,setSeenCategories]=React.useState([]),[changed,setChanged]=React.useState(false),[openingAppId,setOpeningAppId]=React.useState(null),[closing,setClosing]=React.useState(false);
+    const[visible,setVisible]=React.useState(embedded?true:libraryVisible),[snapshot,setSnapshot]=React.useState(null),[error,setError]=React.useState(''),[receipt,setReceipt]=React.useState(null),[query,setQuery]=React.useState(''),[filter,setFilter]=React.useState(''),[extra,setExtra]=React.useState([]),[pending,setPending]=React.useState({}),[seenCategories,setSeenCategories]=React.useState([]),[changed,setChanged]=React.useState(false),[openingAppId,setOpeningAppId]=React.useState(null),[closing,setClosing]=React.useState(false),[target,setTarget]=React.useState(null),[loadedQuery,setLoadedQuery]=React.useState(null);
     React.useEffect(()=>{if(embedded)return;libraryListeners.add(setVisible);return()=>libraryListeners.delete(setVisible);},[embedded]);
-    const heldView=React.useRef(null),mounted=React.useRef(true),surfaceVisible=React.useRef(visible),surfaceEpoch=React.useRef(0),opening=React.useRef(null);
+    const heldView=React.useRef(null),mounted=React.useRef(true),surfaceVisible=React.useRef(visible),surfaceEpoch=React.useRef(0),opening=React.useRef(null),lastTargetId=React.useRef(null),loadSequence=React.useRef(0),consumedTargetId=React.useRef(null);
     surfaceVisible.current=visible;
     React.useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
+    React.useEffect(()=>{
+      let stopped=false,timer;
+      const poll=async()=>{
+        let interval=1000;
+        try{
+          if(embedded||entryVisible){
+            const current=(await request('/hanamesh/library/target')).target;
+            if(stopped)return;
+            if(current&&current.targetId!==lastTargetId.current){
+              lastTargetId.current=current.targetId;
+              setTarget(current);setFilter('');setQuery(current.packageName);setSnapshot(null);setExtra([]);setLoadedQuery(null);
+              if(!embedded)setLibraryVisible(true);
+            }
+          }
+        }catch{interval=5000;}
+        if(!stopped)timer=setTimeout(()=>void poll(),interval);
+      };
+      void poll();return()=>{stopped=true;clearTimeout(timer);};
+    },[embedded]);
     React.useEffect(()=>{
       if(!receipt)return;
       const view=holdViewLease(receipt,(code,terminal)=>{setError(code);if(terminal)setReceipt(null);});
@@ -140,7 +159,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     // `plugin` is a client-side view (every npm entry that is not an application); every other filter is a provider category.
     const params=React.useCallback(cursor=>{const p=new URLSearchParams();if(query)p.set('q',query);p.set('category',filter==='plugin'?'':filter);if(cursor)p.set('cursor',cursor);return'?'+p.toString();},[query,filter]);
     const remember=page=>setSeenCategories(list=>[...new Set([...list,...(page.categories??[])])].sort());
-    const load=React.useCallback(async()=>{try{setError('');setExtra([]);const page=await request('/hanamesh/library'+params());setSnapshot(page);remember(page);}catch(e){setError(String(e.message??e));}},[params]);
+    const load=React.useCallback(async()=>{const sequence=++loadSequence.current;try{setError('');setExtra([]);setLoadedQuery(null);const page=await request('/hanamesh/library'+params());if(sequence!==loadSequence.current)return;setSnapshot(page);setLoadedQuery(query);remember(page);}catch(e){if(sequence===loadSequence.current)setError(String(e.message??e));}},[params]);
     const more=async()=>{try{const cursor=(extra.at(-1)??snapshot)?.page?.nextCursor;if(!cursor)return;const next=await request('/hanamesh/library'+params(cursor));setExtra(list=>[...list,next]);remember(next);}catch(e){setError(String(e.message??e));}};
     React.useEffect(()=>{if(visible)void load();},[visible,load]);
     // rc.18: install/provision/uninstall are 202 + events. Track the operation per card so the user sees
@@ -188,8 +207,16 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       finally{if(opening.current===active){opening.current=null;if(mounted.current)setOpeningAppId(null);}}
     };
     const close=async()=>{if(closing)return;setClosing(true);try{await heldView.current?.close();setReceipt(null);setError('');}catch(e){setError(String(e.message??e));}finally{if(mounted.current)setClosing(false);}};
-    if(!visible)return null;
     const pages=[snapshot,...extra].filter(Boolean),all=pages.flatMap(page=>page.items??[]),items=filter==='plugin'?all.filter(item=>item.kind==='plugin'):all,installed=snapshot?.installed??[],plugins=snapshot?.plugins??[],nextCursor=(extra.at(-1)??snapshot)?.page?.nextCursor??null;
+    const exact=item=>item.package?.registry==='npm'&&item.package?.name===target?.packageName;
+    const targetState=!target||!visible?null:target.protected?'protected':error?'catalog-unavailable':loadedQuery!==target.packageName?null:items.some(exact)?'found':nextCursor?'not-on-loaded-pages':'missing';
+    React.useEffect(()=>{
+      if(!targetState||!target||consumedTargetId.current===target.targetId)return;
+      consumedTargetId.current=target.targetId;
+      if(targetState==='found')document.querySelector?.('[data-hanamesh-target="exact"]')?.scrollIntoView?.({block:'nearest'});
+      void request('/hanamesh/library/target/consume',{method:'POST',body:JSON.stringify({targetId:target.targetId})}).catch(()=>{consumedTargetId.current=null;});
+    },[targetState,target?.targetId]);
+    if(!visible)return null;
     const restartRequired=changed||Boolean(snapshot?.restartRequired);
     const filters=[...BASE_FILTERS,...seenCategories.filter(c=>c!=='hanamesh-app').map(c=>[c,c])];
     const openButton=row=>h('button',{type:'button',disabled:Boolean(openingAppId),onClick:()=>void open(row)},openingAppId===row.appId?'打开中…':'打开');
@@ -204,7 +231,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       else if(row?.state==='installed')action=PROTECTED.has(row.packageName)?h('span',null,'HanaMesh 套件'):h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/plugins/uninstall',{packageName:row.packageName},item.id,'卸载')},'卸载');
       else if(row?.state==='uninstalled-not-unloaded')action=h('span',null,'已卸载，重启 DSH 后生效');
       else if(row)action=h('span',null,'已安装，重启 DSH 后生效');
-      return h('article',{key:item.id,'data-hanamesh-library-item':item.id,'data-hanamesh-kind':item.kind},h('h3',null,item.displayName),h('p',null,item.summary),
+      return h('article',{key:item.id,'data-hanamesh-library-item':item.id,'data-hanamesh-kind':item.kind,...(exact(item)?{'data-hanamesh-target':'exact'}:{})},h('h3',null,item.displayName),h('p',null,item.summary),
         h('small',null,KIND_TEXT[item.kind]+' · '+(item.publisher?.name??'未知发布者')+' · '+(item.latestVersion??'—')+((item.categories??[]).length?' · '+item.categories.join('、'):'')),
         state,action,op&&!busy?h('p',{role:op.failed?'alert':'status',className:op.failed?'hm-library-failed':'hm-library-ok'},op.text):null);};
     const catalogSection=receipt?h('div',{className:'hm-app-frame'},h('div',null,h('strong',null,receipt.instance.appId),h('button',{type:'button',disabled:closing,onClick:()=>void close()},closing?'关闭中…':'关闭视图')),h('iframe',{src:receipt.uiUrl,title:receipt.instance.appId,sandbox:'allow-forms allow-modals allow-popups allow-same-origin allow-scripts'})):
@@ -219,8 +246,14 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     return h('section',{className:embedded?'hm-market hm-market-embedded':'hm-library-overlay hm-market'},
       h('header',null,h('div',null,h('h1',null,'HanaMesh 市场')),embedded?null:h('button',{type:'button',onClick:()=>setLibraryVisible(false)},'关闭')),
       h(MarketConflictNotice,null),
-      h('div',{className:'hm-library-toolbar'},h('input',{type:'search',placeholder:'搜索应用与插件',value:query,onChange:e=>setQuery(e.target.value),onKeyDown:e=>{if(e.key==='Enter')void load();}}),h('button',{type:'button',onClick:()=>void load()},'搜索'),
-        h('select',{'aria-label':'类别',value:filter,onChange:e=>setFilter(e.target.value)},...filters.map(([value,label])=>h('option',{key:value||'all',value},label)))),
+      h('div',{className:'hm-library-toolbar'},h('input',{type:'search',placeholder:'搜索应用与插件',value:query,onChange:e=>{setTarget(null);setQuery(e.target.value);},onKeyDown:e=>{if(e.key==='Enter')void load();}}),h('button',{type:'button',onClick:()=>void load()},'搜索'),
+        h('select',{'aria-label':'类别',value:filter,onChange:e=>{setTarget(null);setFilter(e.target.value);}},...filters.map(([value,label])=>h('option',{key:value||'all',value},label)))),
+      targetState?h('p',{role:'status','data-hanamesh-target-state':targetState},
+        targetState==='found'?`已定位 ${target.packageName}，请确认条目后点击安装。`:
+        targetState==='protected'?` ${target.packageName} 是 HanaMesh 受保护套件包，不能从市场安装。`:
+        targetState==='catalog-unavailable'?`目录暂不可读，无法定位 ${target.packageName}。`:
+        targetState==='not-on-loaded-pages'?`已加载的结果里还没有 ${target.packageName}，点『加载更多』继续查找`:
+        `目录中没有找到 ${target.packageName}。`):null,
       restartRequired?h(RestartNotice,null):null,
       error?h('p',{role:'alert'},error):null,
       ...body);
