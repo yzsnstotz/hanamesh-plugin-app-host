@@ -86,7 +86,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   // the OS-level entry (an external browser or `open hanamesh://restart`), handled in the shell's deep_link.rs.
   const requestRestart=()=>{try{globalThis.window.parent.postMessage({type:RESTART_LINK},'*');}catch{}};
   // Mirrors PROTECTED_PACKAGES on the host: the suite is never offered an uninstall button (the host answers 403 anyway).
-  const PROTECTED=new Set(['@hanamesh/dsh-app-host','hanamesh-core','hanamesh-usage']);
+  const PROTECTED=new Set(['@hanamesh/dsh-app-host','hanamesh-core','hanamesh-usage','@hanamesh/dsh-core','@hanamesh/dsh-usage']);
   function RestartNotice({reason}){
     const shell=inShell();
     return h('p',{role:'status',className:'hm-restart-notice','data-hanamesh-restart':'required'},h('strong',null,'需重启 DSH'),' ',reason??'插件更改在 DSH 重启后生效。',' ',
@@ -235,7 +235,8 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     const card=item=>{const row=item.installed,op=pending[item.id],busy=op&&!op.failed&&op.text.endsWith('中…');const installBody={itemId:item.id,...(item.package?.name?{packageName:item.package.name}:{})};
       let action=h('span',null,'仅收录，不可安装'),state=null;
       if(row)state=h('span',{className:'hm-market-state','data-hanamesh-state':row.state},(STATE_TEXT[row.state]??row.state)+(row.version?' '+row.version:''));
-      if(busy)action=h('button',{type:'button',disabled:true},op.text);
+      if(PROTECTED.has(item.package?.name)||PROTECTED.has(row?.packageName))action=h('span',null,'HanaMesh 套件');
+      else if(busy)action=h('button',{type:'button',disabled:true},op.text);
       else if(item.kind!=='listing'&&!row)action=h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/install',installBody,item.id,'安装')},op?.failed?'重试安装':'安装');
       else if(row&&item.upgradeAvailable)action=h('span',{className:'hm-market-actions'},h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/install',installBody,item.id,'升级')},'升级到 '+item.latestVersion),row.state==='registered'?openButton(row):null);
       else if(row?.state==='runtime-missing')action=h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/provision',{appId:row.appId,packageName:row.packageName,runtimeItem:row.runtimeItem},item.id,'补齐运行时')},'补齐运行时');

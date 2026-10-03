@@ -67,6 +67,36 @@ test('AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite
   assert.equal(calls.length,1,'no DSH command ran for a refused name');
 });
 
+test('P06-PA03: legacy scoped suite dependencies appear in the real profile scan but plugin HTTP install/uninstall reject them before any DSH write',async t=>{
+  const aliases=['@hanamesh/dsh-core','@hanamesh/dsh-usage'];
+  const dependencies=Object.fromEntries(aliases.map(name=>[name,'0.1.0']));
+  const packages=Object.fromEntries(aliases.map(name=>[name,{version:'0.1.0',dsh:{bundle:{patch:'./profile/patch.yml'}}}]));
+  const profile=await profileFixture(t,{dependencies,packages});
+  const before=await readFile(join(profile.profile,'package.json'),'utf8');
+  const boot=await snapshotProfileDependencies(profile.profile);
+  const rows=await scanInstalledPlugins({profileDir:profile.profile,bootDependencies:boot});
+  assert.deepEqual(rows.map(row=>[row.packageName,row.state]),aliases.map(name=>[name,'installed']));
+  const{calls,installer}=installerDouble(profile);
+  let state={schema:1,revision:0,sources:[]};
+  const domain={global:{get:async()=>structuredClone(state),set:async next=>{state=structuredClone(next);}},close:async()=>{}};
+  const host={list:()=>({apps:[]}),instanceList:()=>[]};
+  const service=await createLibraryService({domain,host,config:{fixture,profileDir:profile.profile},dataRoot:profile.dataRoot,ledgerReader:async()=>({schema:1,items:{}}),installer}).init();
+  const server=createServer();await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
+  const origin=`http://127.0.0.1:${server.address().port}`;
+  server.on('request',createLibraryHttpHandler(service,{parentOrigin:origin,authenticate:async()=>({principalId:'fixture-browser'}),authorize:async()=>true}));
+  const headers={origin,'content-type':'application/json','x-hanamesh-client':'workspace-v1'};
+  for(const packageName of aliases){
+    for(const route of ['install','uninstall']){
+      const response=await http(origin+`/hanamesh/library/plugins/${route}`,{method:'POST',headers,body:JSON.stringify({packageName})});
+      assert.equal(response.status,403,`${route} ${packageName}`);
+      assert.equal(response.json.error.code,'PACKAGE_DENIED');
+    }
+  }
+  assert.deepEqual(calls,[],'no registry lookup or DSH CLI call');
+  assert.deepEqual(service.events().events,[],'no operation event');
+  assert.equal(await readFile(join(profile.profile,'package.json'),'utf8'),before,'profile manifest unchanged');
+});
+
 test('AH-M03: installed plugins = profile dependencies minus application packages, with restart states from the boot snapshot',async t=>{
   const profile=await profileFixture(t,{dependencies:{'hanamesh-core':'0.2.0-rc.27','dsh-plugin-tether':'0.1.17','@hanamesh/app-vibe-trading':'0.1.0','ghost-plugin':'1.0.0'},bundles:['@deepseek-ai/dsh-base','hanamesh-core'],
     packages:{'hanamesh-core':{version:'0.2.0-rc.27',dsh:{bundle:{patch:'./profile/cordis.patch.yml'}}},'dsh-plugin-tether':{version:'0.1.17',dsh:{bundle:{patch:'./p.yml'}}},'@hanamesh/app-vibe-trading':{version:'0.1.0',hanamesh:{app:'app.json'}},'some-lib':{version:'2.0.0'}}});
@@ -186,6 +216,6 @@ test('AH-M07 (client source): the entry is 「市场」, cards carry kind/state/
   assert.match(source,/item\.upgradeAvailable\)action=/,'upgrade action');
   assert.match(source,/'升级到 '\+item\.latestVersion/);
   assert.match(source,/'installed-not-loaded':'需重启'/);
-  assert.match(source,/const PROTECTED=new Set\(\['@hanamesh\/dsh-app-host','hanamesh-core','hanamesh-usage'\]\)/,'no uninstall button for the suite');
+  assert.match(source,/const PROTECTED=new Set\(\['@hanamesh\/dsh-app-host','hanamesh-core','hanamesh-usage','@hanamesh\/dsh-core','@hanamesh\/dsh-usage'\]\)/,'no install, upgrade, or uninstall button for the suite');
   assert.doesNotMatch(source,/ctx\.get\(/,'the browser bundle never reads host services');
 });
