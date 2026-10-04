@@ -61,7 +61,7 @@
 - **K5：** Electron 宿主必须显式给绝对且可执行的 `nodeBinary`；guardian/launcher 使用同一 Node，只继承 `DSH_HOME/HOME/LANG/TMPDIR/PATH` 白名单。未配置时 fail-closed 为 `NODE_RUNTIME_REQUIRED`。
 - **Router：** 合并授权、撤销、文件投射 ledger 与 `sets`，来源为 DSH credentials/LLM 目录和 coding-oauth gateway；不搬 key 探测、录入或 OAuth 端口。
 - **市场（原应用库）：** 自带侧栏入口与覆盖页；目录源同一时刻只启用一项；插件与应用同一入口、同一 `dsh plugin add/remove` 路径；已装列表含插件；区分已注册、待重启、可升级与缺 runtime。
-- **锁定 runtime 供给：** `@hanamesh/lib-provision@0.1.0-rc.1` 只在开发端使用 `file:vendor/`；build 校验 SHA-256 后将其内联到 `dist/provision/`。发布包无私有 peer；来源与许可边界见 `docs/PROVENANCE.json`。
+- **锁定 runtime 供给：** build 脚本直接读取 `vendor/hanamesh-lib-provision-0.1.0-rc.1.tgz`，校验 SHA-256 后内联到 `dist/provision/`。包清单没有该私有包的 dependency、peer 或 devDependency；来源与许可边界见 `docs/PROVENANCE.json`。
 
 ## 运行
 

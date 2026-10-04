@@ -78,9 +78,9 @@
     "zod": "4.5.4"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "~4.0.4",
+    "@deepseek-ai/cordis": "4.0.4",
     "@deepseek-ai/dsh-storage-domain": "0.2.0-rc.2",
-    "@deepseek-ai/schemastery": "~3.18.4",
+    "@deepseek-ai/schemastery": "3.18.4",
     "@deepseek-ai/dsh-host-webserver": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-connection": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-slots": "0.2.0-rc.2",
@@ -96,7 +96,6 @@
     "upstreamFilesModified": 0
   },
   "devDependencies": {
-    "@hanamesh/lib-provision": "file:vendor/hanamesh-lib-provision-0.1.0-rc.1.tgz",
     "@deepseek-ai/cordis": "4.0.4",
     "@deepseek-ai/dsh-host-webserver": "0.2.0-rc.2",
     "@deepseek-ai/dsh-scope": "0.2.0-rc.2",
