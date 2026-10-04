@@ -10,6 +10,7 @@ test('NPM-APPHOST-01: published metadata resolves against official DSH rc.2 with
   const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
   assert.equal(DSH_TARGET, '0.2.0-rc.2');
   assert.equal(pkg.hanamesh.dshTarget, DSH_TARGET);
+  assert.equal(pkg.hanamesh.deliveryStatus, undefined);
   assert.equal(pkg.peerDependencies['@deepseek-ai/dsh-storage-domain'], '0.2.0-rc.2');
   for (const name of ['@deepseek-ai/dsh-host-webserver', '@deepseek-ai/dsh-client-connection',
     '@deepseek-ai/dsh-client-ui-slots', '@deepseek-ai/dsh-client-ui-settings', '@deepseek-ai/dsh-client-locale'])
@@ -31,6 +32,7 @@ test('NPM-APPHOST-01: actual packed manifest has no local dependency spec or pri
     });
     const [{ filename, files }] = JSON.parse(raw);
     const manifest = JSON.parse(execFileSync('tar', ['-xOf', join(dir, filename), 'package/package.json'], { encoding: 'utf8' }));
+    assert.equal(manifest.hanamesh?.deliveryStatus, undefined);
     for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies', 'devDependencies']) {
       for (const [name, spec] of Object.entries(manifest[field] ?? {})) {
         assert.doesNotMatch(spec, /^(?:file:|link:)/, `${field}.${name}`);

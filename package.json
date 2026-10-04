@@ -91,7 +91,6 @@
   "hanamesh": {
     "module": "app-host",
     "contractVersion": 1,
-    "deliveryStatus": "DELIVERED-CANDIDATE",
     "dshTarget": "0.2.0-rc.2",
     "upstreamFilesModified": 0
   },
