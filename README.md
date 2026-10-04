@@ -1,4 +1,6 @@
-# HanaMesh app-host · 0.1.0-rc.41
+# HanaMesh app-host · 0.2.0-rc.1 本地候选
+
+> NPM-APPHOST-01（2026-10-05）：本地候选对齐官方 `@deepseek-ai/dsh@0.2.0-rc.2`、Cordis `4.0.4`、Schemastery `3.18.4` 与 storage-domain `0.2.0-rc.2`。`@hanamesh/lib-provision@0.1.0-rc.1` 仅以已核 SHA-256 的 vendor tgz 在构建期内联，公共 registry E404，因此不再声明它为运行时 peer。内联代码仍为 `UNLICENSED`；owner D-2026-10-05-02 明确公共分发许可前不发布含该代码的包。本地官方 DSH 装配不等于公开 npm 安装门或产品验收；当前卡证据见 BlueMap `NPM-APPHOST-01/REPORT.md`。
 
 > rc.41（2026-10-01，P01-U05-RI 修复）：真实原生市场重装 Vibe 时，受管 Python runtime 卸载后留有32个运行时生成的 `__pycache__/*.pyc`，后续原子提升因目标目录无所有权清单而拒绝（`E_PROMOTE`）。AppHost 在 lib-provision 精确移除受管文件后仅清理由该 runtime 生成的 Python 字节码及空目录；未知残留继续保留并报告 `RUNTIME_RESIDUE`，不以 force 覆盖。两项回归、模块 check/types 通过；仍需固定消费者组合和独立原生产品复验。
 
@@ -43,7 +45,7 @@
 
 **交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4–rc.12 为增量 🧪；rc.13 只补上架前提（MIT 许可证、`repository` 字段、DSH peer 精确钉 `0.1.5-alpha.1`）；rc.14 删除客户端里对 `hanameshCore` 的死读取（浏览器侧 cordis 上下文不含宿主服务，该读取恒为 null，且把「未安装 HanaMesh Core」误显给已装用户）——本包对 Core 现在零引用，Core 状态只在 Core 自己的设置段；仍待用户验收。**
 
-> 收录不代表审核或推荐。**套件与单包互斥（双向）：** 已单独安装本包的用户装 `hanamesh-core` 前先 `dsh plugin remove @hanamesh/dsh-app-host`；已装套件（core）再显式 `plugin add` 本包同样会以 `duplicate loader entry id` 起不来，移除那次显式安装即恢复。
+> 收录不代表审核或推荐。新客户端 seed 对 Core、Usage、AppHost 各安装并启用一次；同一 profile 不得再手工插入第二条 `hanamesh-app-host` loader entry。
 
 > rc.4 增加 `credentialEnv` / `credentialResolver`；rc.5 增加文件投射根与格式；rc.6 增加文件生命周期策略；rc.7 允许停止实例在下次打开时采用新定义；rc.8 增加 `credentialEnv[].sets` 声明。逐项证据见 `docs/acceptance/`。`ACCEPTED` 仍只有用户能给。
 
@@ -59,11 +61,11 @@
 - **K5：** Electron 宿主必须显式给绝对且可执行的 `nodeBinary`；guardian/launcher 使用同一 Node，只继承 `DSH_HOME/HOME/LANG/TMPDIR/PATH` 白名单。未配置时 fail-closed 为 `NODE_RUNTIME_REQUIRED`。
 - **Router：** 合并授权、撤销、文件投射 ledger 与 `sets`，来源为 DSH credentials/LLM 目录和 coding-oauth gateway；不搬 key 探测、录入或 OAuth 端口。
 - **市场（原应用库）：** 自带侧栏入口与覆盖页；目录源同一时刻只启用一项；插件与应用同一入口、同一 `dsh plugin add/remove` 路径；已装列表含插件；区分已注册、待重启、可升级与缺 runtime。
-- **锁定 runtime 供给：** `@hanamesh/lib-provision` 精确 peer 为 `0.1.0-rc.1`，开发端使用 `file:vendor/`；build 把该零运行时依赖产物内联到 `dist/provision/`，来源与 SHA-256 见 `docs/PROVENANCE.json`。
+- **锁定 runtime 供给：** `@hanamesh/lib-provision@0.1.0-rc.1` 只在开发端使用 `file:vendor/`；build 校验 SHA-256 后将其内联到 `dist/provision/`。发布包无私有 peer；来源与许可边界见 `docs/PROVENANCE.json`。
 
 ## 运行
 
-当前实测环境是 **macOS arm64 / Node 24.13.1 / npm 11.8.0 / pnpm 10.33.0 / DSH 0.1.5-alpha.1**。干净安装使用锁文件，运行依赖为 `zod 4.5.4`；私有 `@hanamesh/lib-provision` 不在 `dependencies`，而是精确 peer + vendor 内联产物。
+NPM-APPHOST-01 的本地开发环境是 **macOS arm64 / Node 24.13.1 / npm 11.8.0 / 官方 DSH 0.2.0-rc.2**。干净安装使用锁文件，运行依赖为 `zod 4.5.4`；私有 `@hanamesh/lib-provision` 不在运行时依赖或 peer 中，其代码作为受许可决策阻塞的内联产物存在。
 
 ```bash
 npm ci

@@ -1,4 +1,11 @@
 {
+  "currentCandidate": {
+    "version": "0.2.0-rc.1",
+    "dshTarget": "0.2.0-rc.2",
+    "vendorSha256VerifiedAtBuild": true,
+    "libProvisionDistribution": "UNLICENSED inline code; public npm publish blocked pending owner D-2026-10-05-02",
+    "publicNpmGate": "NOT_RUN"
+  },
   "module": "app-host",
   "version": "0.1.0-rc.12",
   "status": "PARTIAL",

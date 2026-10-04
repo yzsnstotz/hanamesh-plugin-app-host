@@ -1,6 +1,6 @@
 /**
  * DSH plugin entry for @hanamesh/dsh-app-host, bound to the PINNED public APIs
- * of DSH 0.1.5-alpha.1 (research checkout 5dda764):
+ * of the official DSH 0.2.0-rc.2 release:
  *
  *   ctx.storageDomain.open(spec)      @deepseek-ai/dsh-storage-domain  — `single` layout, one
  *                                     global snapshot; `global.set()` is one whole-image publish
@@ -38,7 +38,7 @@ import { createReceiptLedger } from './router/receipts.js';
 import { receiptsDomainSpec } from './router/receipts-domain.js';
 
 export const name = 'hanamesh-app-host';
-export const DSH_TARGET = '0.1.5-alpha.1';
+export const DSH_TARGET = '0.2.0-rc.2';
 export const inject = ['webServer', 'storageDomain', 'connection'];
 /** One authenticated local browser session per profile; DSH web has no per-user principals. */
 export const BROWSER_PRINCIPAL = 'dsh-browser';
