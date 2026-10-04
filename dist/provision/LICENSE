@@ -1,1 +1,6 @@
-UNLICENSED — bundled only as an internal locked HanaMesh build artifact.
+@hanamesh/lib-provision@0.1.0-rc.1
+Copyright (c) 2026 HanaMesh. All rights reserved.
+License identifier in the source package: UNLICENSED.
+The copyright owner has confirmed distribution of this inlined component
+within @hanamesh/dsh-app-host. No MIT or other open-source license is
+granted for this component by this notice.

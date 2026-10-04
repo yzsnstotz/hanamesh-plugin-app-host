@@ -1,6 +1,6 @@
-# HanaMesh app-host · 0.2.0-rc.1 本地候选
+# HanaMesh app-host · 0.2.0-rc.2 本地候选
 
-> NPM-APPHOST-01（2026-10-05）：本地候选对齐官方 `@deepseek-ai/dsh@0.2.0-rc.2`、Cordis `4.0.4`、Schemastery `3.18.4` 与 storage-domain `0.2.0-rc.2`。`@hanamesh/lib-provision@0.1.0-rc.1` 仅以已核 SHA-256 的 vendor tgz 在构建期内联，公共 registry E404，因此不再声明它为运行时 peer。内联代码仍为 `UNLICENSED`；owner D-2026-10-05-02 明确公共分发许可前不发布含该代码的包。本地官方 DSH 装配不等于公开 npm 安装门或产品验收；当前卡证据见 BlueMap `NPM-APPHOST-01/REPORT.md`。
+> NPM-APPHOST-01（2026-10-05）：本地候选 `0.2.0-rc.2` 对齐官方 `@deepseek-ai/dsh@0.2.0-rc.2`、Cordis `4.0.4`、Schemastery `3.18.4` 与 storage-domain `0.2.0-rc.2`。`@hanamesh/lib-provision@0.1.0-rc.1` 仅以已核 SHA-256 的 vendor tgz 在构建期内联，公共 registry E404，因此不声明为运行时 peer。owner D-2026-10-05-02 已确认该自有代码可分发；内联代码仍为 `UNLICENSED`，不推断新增 MIT 授权。包级许可分区见 [`LICENSE`](LICENSE) 与 [`docs/LICENSES.json`](docs/LICENSES.json)。本地官方 DSH 装配不等于公开 npm 安装门或产品验收；当前卡证据见 BlueMap `NPM-APPHOST-01/REPORT.md`。
 
 > rc.41（2026-10-01，P01-U05-RI 修复）：真实原生市场重装 Vibe 时，受管 Python runtime 卸载后留有32个运行时生成的 `__pycache__/*.pyc`，后续原子提升因目标目录无所有权清单而拒绝（`E_PROMOTE`）。AppHost 在 lib-provision 精确移除受管文件后仅清理由该 runtime 生成的 Python 字节码及空目录；未知残留继续保留并报告 `RUNTIME_RESIDUE`，不以 force 覆盖。两项回归、模块 check/types 通过；仍需固定消费者组合和独立原生产品复验。
 
@@ -65,7 +65,7 @@
 
 ## 运行
 
-NPM-APPHOST-01 的本地开发环境是 **macOS arm64 / Node 24.13.1 / npm 11.8.0 / 官方 DSH 0.2.0-rc.2**。干净安装使用锁文件，运行依赖为 `zod 4.5.4`；私有 `@hanamesh/lib-provision` 不在运行时依赖或 peer 中，其代码作为受许可决策阻塞的内联产物存在。
+NPM-APPHOST-01 的本地开发环境是 **macOS arm64 / Node 24.13.1 / npm 11.8.0 / 官方 DSH 0.2.0-rc.2**。干净安装使用锁文件，运行依赖为 `zod 4.5.4`；私有 `@hanamesh/lib-provision` 不在运行时依赖或 peer 中，其代码已获自有代码分发确认并按独立许可分区内联。
 
 ```bash
 npm ci
@@ -101,4 +101,4 @@ rc.3 修复只在本地隔离分支 `codex/app-host-acc-fix`；没有创建远�
 
 rc.1 原交付包的 ZIP 含本地 Git bundle 和提交信息。`scripts/publish-github.sh --create-private` 是**尚未执行**的历史发布辅助；执行前须重新核对目标仓与授权。
 
-当前标注 `UNLICENSED`，不是 MIT/Apache 授权声明；没有擅自给用户代码选择开源许可证。[`docs/PROVENANCE.json`](docs/PROVENANCE.json) 保留 rc.1 原始输入与当时环境记录；rc.3 的包摘要与复验证据见源码仓 `docs/acceptance/wave01-rc3-artifact.json`。
+rc.1 原始输入当时标注 `UNLICENSED`，不是 MIT/Apache 授权声明；没有擅自给用户代码选择开源许可证。[`docs/PROVENANCE.json`](docs/PROVENANCE.json) 保留 rc.1 原始输入与当时环境记录；rc.3 的包摘要与复验证据见源码仓 `docs/acceptance/wave01-rc3-artifact.json`。

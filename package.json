@@ -1,9 +1,9 @@
 {
   "name": "@hanamesh/dsh-app-host",
-  "version": "0.2.0-rc.1",
+  "version": "0.2.0-rc.2",
   "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.0-rc.2",
   "type": "module",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yzsnstotz/hanamesh-plugin-app-host.git"
@@ -44,6 +44,7 @@
     "docs/LIBRARY.md",
     "docs/SECURITY.md",
     "docs/PROVENANCE.json",
+    "docs/LICENSES.json",
     "schemas",
     "profile"
   ],

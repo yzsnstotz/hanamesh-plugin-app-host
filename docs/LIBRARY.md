@@ -29,7 +29,7 @@
 
 ## 锁定产物
 
-私有依赖同时保留精确 peer 与 `file:vendor/` 开发依赖。build 从 vendor tgz 提取 `lib/**` 到 `dist/provision/`，并带入 notices 与 `LICENSE` 标记；来源和 SHA-256 记录在 `docs/PROVENANCE.json`。
+私有 `@hanamesh/lib-provision` 不作为 package dependency 或 peer。build 校验 vendor tgz 的 SHA-256 后提取 `lib/**` 到 `dist/provision/`，并带入 notices 与独立 `LICENSE` 声明；来源、SHA-256 与许可分区记录在 `docs/PROVENANCE.json`、`docs/LICENSES.json` 和根 `LICENSE`。
 
 
 ## rc.16 · 浏览语义（2026-09-20 线上目录门后定）

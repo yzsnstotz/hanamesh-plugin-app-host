@@ -32,6 +32,27 @@ test('NPM-APPHOST-01: actual packed manifest has no local dependency spec or pri
     });
     const [{ filename, files }] = JSON.parse(raw);
     const manifest = JSON.parse(execFileSync('tar', ['-xOf', join(dir, filename), 'package/package.json'], { encoding: 'utf8' }));
+    const packedFile = path => execFileSync('tar', ['-xOf', join(dir, filename), `package/${path}`], { encoding: 'utf8' });
+    assert.equal(manifest.license, 'SEE LICENSE IN LICENSE');
+    assert.match(packedFile('LICENSE'), /dist\/provision\/.*(?:outside|excluded|not covered).*MIT/is);
+    assert.match(packedFile('dist/provision/LICENSE'), /@hanamesh\/lib-provision@0\.1\.0-rc\.1/);
+    assert.match(packedFile('dist/provision/LICENSE'), /UNLICENSED/);
+    assert.match(packedFile('dist/provision/LICENSE'), /No MIT.*license.*granted/is);
+    const licenses = JSON.parse(packedFile('docs/LICENSES.json'));
+    assert.equal(licenses.package.version, manifest.version);
+    assert.equal(licenses.package.license, manifest.license);
+    assert.equal(licenses.components['@hanamesh/lib-provision'].version, '0.1.0-rc.1');
+    assert.equal(licenses.components['@hanamesh/lib-provision'].license, 'UNLICENSED');
+    assert.equal(licenses.components['@hanamesh/lib-provision'].source, 'vendor/hanamesh-lib-provision-0.1.0-rc.1.tgz');
+    assert.match(licenses.components['@hanamesh/lib-provision'].purpose, /runtime/i);
+    for (const field of ['dependencies', 'peerDependencies', 'devDependencies']) {
+      for (const [name, version] of Object.entries(manifest[field] ?? {})) {
+        assert.equal(licenses.components[name]?.version, version, `${name} version`);
+        assert.ok(licenses.components[name]?.license, `${name} license`);
+        assert.ok(licenses.components[name]?.source, `${name} source`);
+        assert.ok(licenses.components[name]?.purpose, `${name} purpose`);
+      }
+    }
     assert.equal(manifest.hanamesh?.deliveryStatus, undefined);
     for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies', 'devDependencies']) {
       for (const [name, spec] of Object.entries(manifest[field] ?? {})) {

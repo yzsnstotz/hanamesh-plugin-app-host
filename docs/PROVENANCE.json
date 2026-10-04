@@ -1,9 +1,9 @@
 {
   "currentCandidate": {
-    "version": "0.2.0-rc.1",
+    "version": "0.2.0-rc.2",
     "dshTarget": "0.2.0-rc.2",
     "vendorSha256VerifiedAtBuild": true,
-    "libProvisionDistribution": "UNLICENSED inline code; public npm publish blocked pending owner D-2026-10-05-02",
+    "libProvisionDistribution": "Owner confirmed self-owned and distributable; source license remains UNLICENSED; see LICENSE and docs/LICENSES.json",
     "publicNpmGate": "NOT_RUN"
   },
   "module": "app-host",
@@ -55,9 +55,9 @@
       "version": "0.1.0-rc.1",
       "source": "vendor/hanamesh-lib-provision-0.1.0-rc.1.tgz",
       "sha256": "386d57361ccc3c8578f54cad8137acc291dd72e01b3ff987e65dfaa716f2e0b0",
-      "mode": "build-time inline into dist/provision; peer declaration retained"
+      "mode": "build-time inline into dist/provision; no package dependency or peer declaration"
     }
   },
   "sessionLogWrites": 0,
-  "license": "UNLICENSED; no upstream-license inheritance or open-source grant asserted"
+  "historicalCandidateLicense": "UNLICENSED; no upstream-license inheritance or open-source grant asserted"
 }

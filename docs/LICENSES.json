@@ -1,0 +1,185 @@
+{
+  "package": {
+    "name": "@hanamesh/dsh-app-host",
+    "version": "0.2.0-rc.2",
+    "license": "SEE LICENSE IN LICENSE",
+    "source": "git+https://github.com/yzsnstotz/hanamesh-plugin-app-host.git",
+    "purpose": "Application ownership, view leases, Router forwarding, and application library for official DSH"
+  },
+  "scope": "Direct dependencies and build-time inlined module. External packages retain their own licenses; the root MIT terms do not cover dist/provision/**.",
+  "components": {
+    "@hanamesh/lib-provision": {
+      "version": "0.1.0-rc.1",
+      "license": "UNLICENSED",
+      "source": "vendor/hanamesh-lib-provision-0.1.0-rc.1.tgz",
+      "purpose": "Inlined runtime download, extraction, atomic promotion, and ledger logic in dist/provision/**",
+      "sha256": "386d57361ccc3c8578f54cad8137acc291dd72e01b3ff987e65dfaa716f2e0b0"
+    },
+    "zod": {
+      "version": "4.5.4",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/zod/-/zod-4.5.4.tgz",
+      "purpose": "Runtime snapshot validation",
+      "usedAs": [
+        "dependencies"
+      ]
+    },
+    "@deepseek-ai/cordis": {
+      "version": "4.0.4",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/cordis/-/cordis-4.0.4.tgz",
+      "purpose": "Official DSH plugin lifecycle and service container",
+      "usedAs": [
+        "peerDependencies",
+        "devDependencies"
+      ]
+    },
+    "@deepseek-ai/dsh-storage-domain": {
+      "version": "0.2.0-rc.2",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-storage-domain/-/dsh-storage-domain-0.2.0-rc.2.tgz",
+      "purpose": "Official DSH persistent storage service",
+      "usedAs": [
+        "peerDependencies",
+        "devDependencies"
+      ]
+    },
+    "@deepseek-ai/schemastery": {
+      "version": "3.18.4",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/schemastery/-/schemastery-3.18.4.tgz",
+      "purpose": "Official DSH configuration schema service",
+      "usedAs": [
+        "peerDependencies",
+        "devDependencies"
+      ]
+    },
+    "@deepseek-ai/dsh-host-webserver": {
+      "version": "0.2.0-rc.2",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-host-webserver/-/dsh-host-webserver-0.2.0-rc.2.tgz",
+      "purpose": "Official DSH authenticated HTTP route host",
+      "usedAs": [
+        "peerDependencies",
+        "devDependencies"
+      ]
+    },
+    "@deepseek-ai/dsh-client-connection": {
+      "version": "0.2.0-rc.2",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-client-connection/-/dsh-client-connection-0.2.0-rc.2.tgz",
+      "purpose": "Official DSH client connection service",
+      "usedAs": [
+        "peerDependencies"
+      ]
+    },
+    "@deepseek-ai/dsh-client-ui-slots": {
+      "version": "0.2.0-rc.2",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-slots/-/dsh-client-ui-slots-0.2.0-rc.2.tgz",
+      "purpose": "Official DSH client UI placement",
+      "usedAs": [
+        "peerDependencies"
+      ]
+    },
+    "@deepseek-ai/dsh-client-ui-settings": {
+      "version": "0.2.0-rc.2",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-settings/-/dsh-client-ui-settings-0.2.0-rc.2.tgz",
+      "purpose": "Official DSH client settings surface",
+      "usedAs": [
+        "peerDependencies"
+      ]
+    },
+    "@deepseek-ai/dsh-client-locale": {
+      "version": "0.2.0-rc.2",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-client-locale/-/dsh-client-locale-0.2.0-rc.2.tgz",
+      "purpose": "Official DSH client localization",
+      "usedAs": [
+        "peerDependencies"
+      ]
+    },
+    "react": {
+      "version": "18.3.1",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/react/-/react-18.3.1.tgz",
+      "purpose": "Official DSH client UI peer",
+      "usedAs": [
+        "peerDependencies"
+      ]
+    },
+    "@deepseek-ai/dsh-scope": {
+      "version": "0.2.0-rc.2",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-scope/-/dsh-scope-0.2.0-rc.2.tgz",
+      "purpose": "Build and test fixture for official DSH scopes",
+      "usedAs": [
+        "devDependencies"
+      ]
+    },
+    "@deepseek-ai/dsh-session": {
+      "version": "0.2.0-rc.2",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-session/-/dsh-session-0.2.0-rc.2.tgz",
+      "purpose": "Build and test fixture for official DSH sessions",
+      "usedAs": [
+        "devDependencies"
+      ]
+    },
+    "@deepseek-ai/dsh-session-persistence": {
+      "version": "0.2.0-rc.2",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-session-persistence/-/dsh-session-persistence-0.2.0-rc.2.tgz",
+      "purpose": "Build and test fixture for official DSH session persistence",
+      "usedAs": [
+        "devDependencies"
+      ]
+    },
+    "@deepseek-ai/dsh-session-persistence-jsonl": {
+      "version": "0.2.0-rc.2",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-session-persistence-jsonl/-/dsh-session-persistence-jsonl-0.2.0-rc.2.tgz",
+      "purpose": "Build and test fixture for official DSH JSONL session persistence",
+      "usedAs": [
+        "devDependencies"
+      ]
+    },
+    "@deepseek-ai/dsh-session-projection": {
+      "version": "0.2.0-rc.2",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-session-projection/-/dsh-session-projection-0.2.0-rc.2.tgz",
+      "purpose": "Build and test fixture for official DSH session projections",
+      "usedAs": [
+        "devDependencies"
+      ]
+    },
+    "@deepseek-ai/dsh-storage": {
+      "version": "0.2.0-rc.2",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-storage/-/dsh-storage-0.2.0-rc.2.tgz",
+      "purpose": "Build and test fixture for official DSH storage",
+      "usedAs": [
+        "devDependencies"
+      ]
+    },
+    "@deepseek-ai/dsh-storage-json": {
+      "version": "0.2.0-rc.2",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-storage-json/-/dsh-storage-json-0.2.0-rc.2.tgz",
+      "purpose": "Build and test fixture for official DSH JSON storage",
+      "usedAs": [
+        "devDependencies"
+      ]
+    },
+    "typescript": {
+      "version": "5.8.3",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/typescript/-/typescript-5.8.3.tgz",
+      "purpose": "Build-time type checking and declarations",
+      "usedAs": [
+        "devDependencies"
+      ]
+    }
+  }
+}

@@ -1,3 +1,13 @@
+License scope for @hanamesh/dsh-app-host
+
+The MIT terms below cover this package's AppHost code and documentation,
+excluding dist/provision/**. That directory contains the inlined
+@hanamesh/lib-provision@0.1.0-rc.1 component. All dist/provision/** files are
+outside and excluded from this MIT license; see dist/provision/LICENSE for that
+component's separate notice. Installed dependencies and host peers keep their
+own licenses; their names, versions, sources, and purposes are recorded in
+docs/LICENSES.json.
+
 MIT License
 
 Copyright (c) 2026 HanaMesh

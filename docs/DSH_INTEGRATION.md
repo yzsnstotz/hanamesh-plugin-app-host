@@ -1,6 +1,6 @@
 # DSH 集成
 
-> **NPM-APPHOST-01（2026-10-05，当前候选）：** 目标为官方 `@deepseek-ai/dsh@0.2.0-rc.2`；本地 tarball 在隔离官方 profile 的 `dsh.profile.bundles` 中落座，`--dump-config` 可见 `hanamesh-app-host`。以下 rc.11 及更早说明保留为历史，不作为本候选的公开 npm 或真实 UI 门。公共包因内联 `UNLICENSED` 的 `lib-provision` 待 owner D-2026-10-05-02，禁止发布；浏览器可见性证据以 BlueMap 当前卡 REPORT 为准。
+> **NPM-APPHOST-01（2026-10-05，当前候选）：** 目标为官方 `@deepseek-ai/dsh@0.2.0-rc.2`；本地 tarball 在隔离官方 profile 的 `dsh.profile.bundles` 中落座，`--dump-config` 可见 `hanamesh-app-host`。以下 rc.11 及更早说明保留为历史，不作为本候选的公开 npm 门。owner D-2026-10-05-02 已确认内联 `lib-provision` 为自有且可分发；独立许可分区见根 `LICENSE`，PUBLIC_NPM 由 PM 执行。浏览器可见性证据以 BlueMap 当前卡 REPORT 为准。
 
 > **2026-09-19（rc.11）：** 本包现在声明 DSH bundle。对独立 profile 执行 `dsh plugin --profile <name> add <本包.tgz>` 即会通过 `profile/cordis.patch.yml` 激活包根 `@hanamesh/dsh-app-host`，不要再手写 insert。包根保留核心 API，并以懒加载方式落座 Host；固定版本 `dsh-client-modules` 只有在 loader entry 是包根时才会发现 `./client`。HanaMesh 套件已内含本包；套件用户不要单独安装。若此前装过单包，先 `plugin remove @hanamesh/dsh-app-host` 再安装套件，避免重复 `hanamesh-app-host` loader id。桌面 Electron 壳必须在 config 提供独立可执行 `nodeBinary`。
 >

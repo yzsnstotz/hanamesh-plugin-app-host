@@ -18,5 +18,11 @@ const extracted=spawnSync('tar',['-xzf',vendor,'-C',`${root}/dist/provision`,'--
 if(extracted.status!==0)process.exit(extracted.status??1);
 const notices=spawnSync('tar',['-xzf',vendor,'-C',`${root}/dist/provision`,'--strip-components=1','package/THIRD_PARTY_NOTICES.md'],{stdio:'inherit'});
 if(notices.status!==0)process.exit(notices.status??1);
-await writeFile(`${root}/dist/provision/LICENSE`,'UNLICENSED — bundled only as an internal locked HanaMesh build artifact.\n');
+await writeFile(`${root}/dist/provision/LICENSE`,
+  '@hanamesh/lib-provision@0.1.0-rc.1\n' +
+  'Copyright (c) 2026 HanaMesh. All rights reserved.\n' +
+  'License identifier in the source package: UNLICENSED.\n' +
+  'The copyright owner has confirmed distribution of this inlined component\n' +
+  'within @hanamesh/dsh-app-host. No MIT or other open-source license is\n' +
+  'granted for this component by this notice.\n');
 console.error('Build completed: self-contained ESM modules and public type declarations.');
