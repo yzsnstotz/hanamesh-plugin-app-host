@@ -1,0 +1,22 @@
+{
+  "METADATA-DEVKIT-01": {
+    "remoteRef": "69be0faea0b66ae49adf5988ebd1fab093a26290\trefs/heads/codex/metadata-devkit-01-verify-01a10cc4",
+    "mirrorSha256": "15ff93576466619f77e1b2bb2eb416c8e7893ddb536157f266b714aaf56a217a"
+  },
+  "METADATA-APPHOST-PROVISION-01": {
+    "remoteRef": "bbb1d9232d79f5851d0bd7bc7731de7e18ec767e\trefs/heads/codex/metadata-apphost-provision-01-verify-docs",
+    "mirrorSha256": "9ae062bd04463b03514dad6f264eaec1e1dbd40754b239e5235f9a6001b00cba"
+  },
+  "devkit": {
+    "sha256": "ae815e589c3e5a573e407da5c982bb0fc8df15b57683ebbfaccd828d9dd588e0",
+    "sha512": "sha512-eonr0qJSG3QwOCLLQVbQkeCU0pL1VE5UJcKMEfZZe1NnW5VXtjA5zsfyarurGmthglzpwEkNB+AX0Jqv4XQWZA==",
+    "implementationUnchanged": [
+      "package/src/check-toolchain.mjs",
+      "package/bin/devkit.mjs",
+      "package/src/index.mjs",
+      "package/src/mutations.mjs",
+      "package/src/preflight.mjs",
+      "package/src/verify-pack.mjs"
+    ]
+  }
+}

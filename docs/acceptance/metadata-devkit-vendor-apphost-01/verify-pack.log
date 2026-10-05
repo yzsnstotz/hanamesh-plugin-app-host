@@ -1,0 +1,7 @@
+
+> @hanamesh/dsh-app-host@0.2.0-rc.6 verify:pack
+> node scripts/verify-package.mjs /Users/yzliu/.cache/hanamesh-runs/METADATA-DEVKIT-VENDOR-APPHOST-01/artifacts/hanamesh-dsh-app-host-0.2.0-rc.6.tgz
+
+{"check":"ISOLATED_PACKAGE","status":"PASS","realOwnedPid":72383,"realAppData":true,"installedExports":[".","./client"],"dshEntry":"requires pinned DSH peers; verified separately in the real profile","sourceTreeImports":0}
+{"event":"pack_verified","sha256":"2294541a19575b246774b1d0566c48bf75d64499312edd0f4576730296bb826a","entries":82,"artifactConsumer":true}
+{"event":"pack_verified","sha256":"2294541a19575b246774b1d0566c48bf75d64499312edd0f4576730296bb826a","entries":82,"artifactConsumer":true}

@@ -9,19 +9,19 @@ import {javascript, typescript} from './scripts/package-probes.mjs';
 const root=import.meta.dirname;
 const pkg=JSON.parse(await readFile(join(root,'package.json'),'utf8'));
 const pins=JSON.parse(await readFile(join(root,'toolchain.json'),'utf8'));
-const devkitSha='3cf0b621ca2950fbe21c114d5b31ac1a55f97a67eb0a2dada77fb2d3bf2cb6ff';
+const devkitSha='ae815e589c3e5a573e407da5c982bb0fc8df15b57683ebbfaccd828d9dd588e0';
 const digest=value=>createHash('sha256').update(value).digest('hex');
 const cardRun=process.env.HANAMESH_APPHOST_RUN_DIR;
 const evidenceDir=resolve(cardRun??join(root,'artifacts'),'mutations');
 
 async function validateDevelopmentPolicy(){
-  assert.equal(pkg.peerDependencies['@hanamesh/devkit'],'0.1.0-rc.1');
+  assert.equal(pkg.peerDependencies['@hanamesh/devkit'],'0.1.0-rc.2');
   assert.deepEqual(pkg.peerDependenciesMeta['@hanamesh/devkit'],{optional:true});
-  assert.equal(pkg.devDependencies['@hanamesh/devkit'],'file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz');
+  assert.equal(pkg.devDependencies['@hanamesh/devkit'],'file:vendor/hanamesh-devkit-0.1.0-rc.2.tgz');
   assert.equal(pkg.dependencies['@hanamesh/devkit'],undefined);
-  assert.equal(digest(await readFile(join(root,'vendor/hanamesh-devkit-0.1.0-rc.1.tgz'))),devkitSha);
+  assert.equal(digest(await readFile(join(root,'vendor/hanamesh-devkit-0.1.0-rc.2.tgz'))),devkitSha);
   const installed=JSON.parse(await readFile(new URL('../package.json',import.meta.resolve('@hanamesh/devkit')),'utf8'));
-  assert.equal(installed.version,'0.1.0-rc.1');
+  assert.equal(installed.version,'0.1.0-rc.2');
 }
 
 // Per-case name filters and failure reasons are AppHost policy. Execution/copy/cleanup is devkit-owned.
@@ -56,7 +56,7 @@ function packOptions(tarball){
       assert.deepEqual(packed.dependencies,pkg.dependencies);
       assert.deepEqual(packed.exports,pkg.exports);
       assert.equal(packed.dependencies['@hanamesh/devkit'],undefined);
-      assert.equal(packed.peerDependencies['@hanamesh/devkit'],'0.1.0-rc.1');
+      assert.equal(packed.peerDependencies['@hanamesh/devkit'],'0.1.0-rc.2');
       assert.deepEqual(packed.peerDependenciesMeta['@hanamesh/devkit'],{optional:true});
     }};
 }

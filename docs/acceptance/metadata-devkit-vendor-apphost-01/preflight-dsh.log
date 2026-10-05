@@ -1,0 +1,39 @@
+
+> @hanamesh/dsh-app-host@0.2.0-rc.6 preflight:dsh
+> node scripts/preflight-dsh.mjs
+
+{
+  "target": "0.2.0-rc.2",
+  "complete": true,
+  "checks": [
+    {
+      "name": "@deepseek-ai/dsh",
+      "expected": "0.2.0-rc.2",
+      "installed": true,
+      "version": "0.2.0-rc.2",
+      "matching": true
+    },
+    {
+      "name": "@deepseek-ai/cordis",
+      "expected": "4.0.4",
+      "installed": true,
+      "version": "4.0.4",
+      "matching": true
+    },
+    {
+      "name": "@deepseek-ai/dsh-storage-domain",
+      "expected": "0.2.0-rc.2",
+      "installed": true,
+      "version": "0.2.0-rc.2",
+      "matching": true
+    },
+    {
+      "name": "@deepseek-ai/schemastery",
+      "expected": "3.18.4",
+      "installed": true,
+      "version": "3.18.4",
+      "matching": true
+    }
+  ],
+  "upstreamFilesModified": 0
+}

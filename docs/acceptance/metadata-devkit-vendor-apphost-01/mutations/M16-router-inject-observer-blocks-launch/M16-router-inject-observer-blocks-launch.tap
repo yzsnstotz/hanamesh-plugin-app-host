@@ -1,0 +1,39 @@
+TAP version 13
+# Subtest: AH-R12 (T6) every injection tells the receipt observer the routed provider and model — never the value — and local receipts are readable per app
+not ok 1 - AH-R12 (T6) every injection tells the receipt observer the routed provider and model — never the value — and local receipts are readable per app
+  ---
+  duration_ms: 2.471708
+  type: 'test'
+  location: '/Users/yzliu/.cache/hanamesh-runs/METADATA-DEVKIT-VENDOR-APPHOST-01/tmp/devkit-mut-H6mWZC/tests/router-broker.test.mjs:127:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Got unwanted rejection: observer down must never block credential resolution
+    Actual message: "observer down"
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  actual:
+  error: 'observer down'
+  stack: |-
+    onInject (file:///Users/yzliu/.cache/hanamesh-runs/METADATA-DEVKIT-VENDOR-APPHOST-01/tmp/devkit-mut-H6mWZC/tests/router-broker.test.mjs:140:332)
+    Object.credentialResolver (file:///Users/yzliu/.cache/hanamesh-runs/METADATA-DEVKIT-VENDOR-APPHOST-01/tmp/devkit-mut-H6mWZC/src/router/broker.js:149:25)
+    async file:///Users/yzliu/.cache/hanamesh-runs/METADATA-DEVKIT-VENDOR-APPHOST-01/tmp/devkit-mut-H6mWZC/tests/router-broker.test.mjs:141:62
+    async waitForActual (node:assert:646:5)
+    async strict.doesNotReject (node:assert:789:33)
+    async TestContext.<anonymous> (file:///Users/yzliu/.cache/hanamesh-runs/METADATA-DEVKIT-VENDOR-APPHOST-01/tmp/devkit-mut-H6mWZC/tests/router-broker.test.mjs:141:16)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  operator: 'doesNotReject'
+  stack: |-
+    async TestContext.<anonymous> (file:///Users/yzliu/.cache/hanamesh-runs/METADATA-DEVKIT-VENDOR-APPHOST-01/tmp/devkit-mut-H6mWZC/tests/router-broker.test.mjs:141:16)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 42.168042

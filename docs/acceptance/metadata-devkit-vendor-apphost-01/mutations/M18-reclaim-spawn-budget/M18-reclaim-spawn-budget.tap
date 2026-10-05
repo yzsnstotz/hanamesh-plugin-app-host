@@ -1,0 +1,27 @@
+TAP version 13
+# {"evidence":"REAL_PROCESS_ISOLATED","result":"TIMEOUT","elapsedMs":5005,"orphanAlive":true,"lockOwnerUnchanged":true,"trace":[{"at":1791219109952,"message":"ORPHAN_READY"},{"at":1791219110015,"message":"ORPHAN_TERM_IGNORED"}]}
+# Subtest: AH-L07: proven orphan reclamation gets its declared grace before the launch handshake budget
+not ok 1 - AH-L07: proven orphan reclamation gets its declared grace before the launch handshake budget
+  ---
+  duration_ms: 5064.800875
+  type: 'test'
+  location: '/Users/yzliu/.cache/hanamesh-runs/METADATA-DEVKIT-VENDOR-APPHOST-01/tmp/devkit-mut-iII0Bt/tests/reclaim-spawn.test.mjs:9:1'
+  failureType: 'testCodeFailure'
+  error: 'proven orphan reclaim followed by launch must succeed, got TIMEOUT'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  operator: 'fail'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/.cache/hanamesh-runs/METADATA-DEVKIT-VENDOR-APPHOST-01/tmp/devkit-mut-iII0Bt/tests/reclaim-spawn.test.mjs:29:12)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5132.516

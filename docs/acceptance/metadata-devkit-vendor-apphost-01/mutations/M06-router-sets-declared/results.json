@@ -1,0 +1,14 @@
+{
+  "baseline": {
+    "exitCode": 0
+  },
+  "results": [
+    {
+      "id": "M06-router-sets-declared",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "detected": true,
+      "assertionFailure": true
+    }
+  ]
+}

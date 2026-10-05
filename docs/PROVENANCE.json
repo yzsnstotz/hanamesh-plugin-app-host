@@ -1,6 +1,6 @@
 {
   "currentCandidate": {
-    "version": "0.2.0-rc.5",
+    "version": "0.2.0-rc.6",
     "dshTarget": "0.2.0-rc.2",
     "vendorSha256VerifiedAtBuild": true,
     "libProvisionDistribution": "HanaMesh-owned distribution authorization record copied verbatim from canonical provision rc3; see dist/provision/LICENSE and docs/LICENSES.json; no new MIT or relicensing grant",
@@ -61,5 +61,26 @@
     }
   },
   "sessionLogWrites": 0,
-  "historicalCandidateLicense": "UNLICENSED; no upstream-license inheritance or open-source grant asserted"
+  "historicalCandidateLicense": "UNLICENSED; no upstream-license inheritance or open-source grant asserted",
+  "developmentArtifacts": {
+    "@hanamesh/devkit": {
+      "version": "0.1.0-rc.2",
+      "source": "vendor/hanamesh-devkit-0.1.0-rc.2.tgz",
+      "sha256": "ae815e589c3e5a573e407da5c982bb0fc8df15b57683ebbfaccd828d9dd588e0",
+      "sourceCommit": "067a41e7138ca6a9d8f180991711f1b27aefba5a",
+      "independentVerifyCommit": "69be0faea0b66ae49adf5988ebd1fab093a26290",
+      "mode": "optional development peer plus file vendor; absent from runtime dependencies and packed code",
+      "license": "SEE LICENSE IN LICENSE",
+      "distributionNotice": "Canonical LICENSE and LICENSE_RECORD.md copied verbatim to docs/LICENSES.json; no new MIT or relicensing grant",
+      "configuration": {
+        "path": "devkit.config.mjs",
+        "sha256": "3a5221c210b5a4fa367ea902a7acbd95d9b3dcd9af55e561f80cb921ff807add"
+      },
+      "integrity": "sha512-eonr0qJSG3QwOCLLQVbQkeCU0pL1VE5UJcKMEfZZe1NnW5VXtjA5zsfyarurGmthglzpwEkNB+AX0Jqv4XQWZA==",
+      "lockfile": {
+        "path": "package-lock.json",
+        "sha256": "af8da8705393433c97ec3e952df8b6c882b1839c01e1b8efe80178bdbbd5eb94"
+      }
+    }
+  }
 }

@@ -60,12 +60,12 @@ test('NPM-APPHOST-01: actual packed manifest allows only the exact optional deve
     assert.equal(manifest.hanamesh?.deliveryStatus, undefined);
     for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies', 'devDependencies']) {
       for (const [name, spec] of Object.entries(manifest[field] ?? {})) {
-        if(field==='devDependencies'&&name==='@hanamesh/devkit')assert.equal(spec,'file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz');
+        if(field==='devDependencies'&&name==='@hanamesh/devkit')assert.equal(spec,'file:vendor/hanamesh-devkit-0.1.0-rc.2.tgz');
         else assert.doesNotMatch(spec, /^(?:file:|link:)/, `${field}.${name}`);
       }
     }
     assert.ok(Object.keys(manifest.peerDependencies ?? {}).every(name => !name.startsWith('@hanamesh/') || name==='@hanamesh/devkit'));
-    assert.equal(manifest.peerDependencies['@hanamesh/devkit'],'0.1.0-rc.1');
+    assert.equal(manifest.peerDependencies['@hanamesh/devkit'],'0.1.0-rc.2');
     assert.deepEqual(manifest.peerDependenciesMeta['@hanamesh/devkit'],{optional:true});
     assert.equal(manifest.dependencies['@hanamesh/devkit'],undefined);
     assert.ok(files.some(file => file.path === 'dist/provision/LICENSE'));

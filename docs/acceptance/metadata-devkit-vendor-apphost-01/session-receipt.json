@@ -1,0 +1,22 @@
+{
+  "thread": "01a10cf2-25b0-79a3-a44c-f7d12bace2b4",
+  "rollout": "/Users/yzliu/.codex/sessions/2026/10/06/rollout-2026-10-06T01-42-38-01a10cf2-25b0-79a3-a44c-f7d12bace2b4.jsonl",
+  "actual": {
+    "cwd": "/Users/yzliu/work/projects/hanamesh",
+    "model": "gpt-6.1-sol",
+    "effort": "high",
+    "approval_policy": "never",
+    "sandbox_policy": {
+      "type": "danger-full-access"
+    }
+  },
+  "probe": {
+    "actualTool": "exec_command",
+    "chunkId": "3fb86f",
+    "exitCode": 0,
+    "cwd": "/private/tmp",
+    "exactTempPath": "/tmp/hanamesh-apphost-session-40trow87",
+    "writeReadAssertUnlinkAssertAbsent": true,
+    "approvalRequest": false
+  }
+}

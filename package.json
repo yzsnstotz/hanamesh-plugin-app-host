@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/dsh-app-host",
-  "version": "0.2.0-rc.5",
+  "version": "0.2.0-rc.6",
   "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.0-rc.2",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
@@ -91,7 +91,7 @@
     "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-locale": "0.2.0-rc.2",
     "react": "18.3.1",
-    "@hanamesh/devkit": "0.1.0-rc.1"
+    "@hanamesh/devkit": "0.1.0-rc.2"
   },
   "hanamesh": {
     "module": "app-host",
@@ -112,7 +112,7 @@
     "@deepseek-ai/dsh-storage-json": "0.2.0-rc.2",
     "@deepseek-ai/schemastery": "3.18.4",
     "typescript": "5.8.3",
-    "@hanamesh/devkit": "file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz"
+    "@hanamesh/devkit": "file:vendor/hanamesh-devkit-0.1.0-rc.2.tgz"
   },
   "peerDependenciesMeta": {
     "@hanamesh/devkit": {

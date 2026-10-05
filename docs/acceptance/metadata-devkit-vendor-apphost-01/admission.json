@@ -1,0 +1,10 @@
+{
+  "sourceHead": "0e36611d5f0eeaac154bd69023d614b31fdc63b1",
+  "sourceBranch": "codex/metadata-apphost-provision-01",
+  "sourceStatus": "",
+  "sourceRemote": "0e36611d5f0eeaac154bd69023d614b31fdc63b1\trefs/heads/codex/metadata-apphost-provision-01",
+  "worktrees": "worktree /Users/yzliu/work/projects/hanamesh/hanamesh-plugin-app-host\nHEAD 0e36611d5f0eeaac154bd69023d614b31fdc63b1\nbranch refs/heads/codex/metadata-apphost-provision-01\n\nworktree /Users/yzliu/work/projects/hanamesh/.worktrees/app-host-acc-fix\nHEAD 49fe1f6b57434157fc9e65dd6859ab3297392fa1\nbranch refs/heads/codex/app-host-acc-fix\n\nworktree /Users/yzliu/work/projects/hanamesh/.worktrees/p3-app-host\nHEAD 1d1aceb96cc4fbed8d7cd55aef1021b5d1e032e5\nbranch refs/heads/codex/p3-app-host",
+  "docsPreexistingStatus": "M PROCEDURE.md\n M bluemap/LAUNCH.md\n?? bluemap/cards/METADATA-DEVKIT-VENDOR-CLAIM-01/SESSION-VERIFY.md\n?? bluemap/cards/METADATA-DEVKIT-VENDOR-CUSTODY-01/REPORT.md\n?? bluemap/cards/METADATA-DEVKIT-VENDOR-CUSTODY-01/SESSION.md\n?? bluemap/cards/METADATA-DEVKIT-VENDOR-IDENTITY-01/SESSION-VERIFY.md\n?? bluemap/cards/METADATA-DEVKIT-VENDOR-INDEXER-01/SESSION-VERIFY.md\n?? bluemap/cards/METADATA-DEVKIT-VENDOR-PROVISION-01/SESSION-VERIFY.md\n?? bluemap/cards/METADATA-DEVKIT-VENDOR-RECOMMENDER-01/SESSION-VERIFY.md\n?? bluemap/cards/METADATA-DEVKIT-VENDOR-REGISTRY-01/SESSION-VERIFY.md\n?? bluemap/cards/METADATA-DEVKIT-VENDOR-SEMANTIC-01/SESSION-VERIFY.md\n?? bluemap/cards/METADATA-DEVKIT-VENDOR-SRV-USAGE-01/SESSION-VERIFY.md\n?? bluemap/cards/METADATA-DEVKIT-VENDOR-VIBE-01/REPORT.md\n?? bluemap/cards/METADATA-DEVKIT-VENDOR-VIBE-01/SESSION.md\n?? bluemap/cards/METADATA-DEVKIT-VENDOR-VIBE-01/evidence/\n?? bluemap/cards/METADATA-PROVISION-01/SESSION.md\n?? bluemap/cards/METADATA-PROVISION-01/verification-evidence/",
+  "docsBase": "d2c98c403cb0fcafc318685ad3e9517179b023ba",
+  "previousImplementAndVerifier": "actual wait_threads both latestTurn completed, no wake or message sent"
+}

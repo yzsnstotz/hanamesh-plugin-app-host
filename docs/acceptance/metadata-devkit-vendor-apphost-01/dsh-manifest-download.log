@@ -1,0 +1,116 @@
+[
+  {
+    "id": "@deepseek-ai/dsh@0.2.0-rc.2",
+    "name": "@deepseek-ai/dsh",
+    "version": "0.2.0-rc.2",
+    "size": 24265,
+    "unpackedSize": 73328,
+    "shasum": "dfc8f7e09cfa96b854d6f0cf3a973ce7f2948925",
+    "integrity": "sha512-EAJ3gPNcVt/uv8X19PMm9NkVhWgT7xXNMk0UKCVm+IQ5rpSQOcsMUa0HWlnYYVybKMsccjcRB21vVVsaXQ6IdA==",
+    "filename": "deepseek-ai-dsh-0.2.0-rc.2.tgz",
+    "files": [
+      {
+        "path": "LICENSE",
+        "size": 1065,
+        "mode": 420
+      },
+      {
+        "path": "README.i18n.yaml",
+        "size": 767,
+        "mode": 420
+      },
+      {
+        "path": "README.md",
+        "size": 7224,
+        "mode": 420
+      },
+      {
+        "path": "README.zh.md",
+        "size": 7157,
+        "mode": 420
+      },
+      {
+        "path": "lib/bin.js",
+        "size": 11697,
+        "mode": 493
+      },
+      {
+        "path": "lib/dump-config-BEDI-dNY.js",
+        "size": 2708,
+        "mode": 420
+      },
+      {
+        "path": "lib/dump-config-crgOY3tW.js",
+        "size": 90,
+        "mode": 420
+      },
+      {
+        "path": "lib/dump-config-schema-DhhNOaro.js",
+        "size": 2037,
+        "mode": 420
+      },
+      {
+        "path": "lib/plugin-BGnVfe_D.js",
+        "size": 5928,
+        "mode": 420
+      },
+      {
+        "path": "lib/profile-boot-BZ2ZjNWi.js",
+        "size": 12593,
+        "mode": 420
+      },
+      {
+        "path": "lib/profile-boot.js",
+        "size": 310,
+        "mode": 420
+      },
+      {
+        "path": "lib/types/args.d.ts",
+        "size": 2989,
+        "mode": 420
+      },
+      {
+        "path": "lib/types/bin.d.ts",
+        "size": 770,
+        "mode": 420
+      },
+      {
+        "path": "lib/types/dump-config-schema.d.ts",
+        "size": 979,
+        "mode": 420
+      },
+      {
+        "path": "lib/types/dump-config.d.ts",
+        "size": 1587,
+        "mode": 420
+      },
+      {
+        "path": "lib/types/plugin.d.ts",
+        "size": 667,
+        "mode": 420
+      },
+      {
+        "path": "lib/types/process-shutdown.d.ts",
+        "size": 1345,
+        "mode": 420
+      },
+      {
+        "path": "lib/types/profile-boot.d.ts",
+        "size": 4992,
+        "mode": 420
+      },
+      {
+        "path": "lib/types/startup-diagnostics.d.ts",
+        "size": 1090,
+        "mode": 420
+      },
+      {
+        "path": "package.json",
+        "size": 7333,
+        "mode": 420
+      }
+    ],
+    "entryCount": 20,
+    "bundled": []
+  }
+]
