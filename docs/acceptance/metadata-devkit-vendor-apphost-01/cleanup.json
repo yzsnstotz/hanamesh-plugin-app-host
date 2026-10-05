@@ -1,0 +1,19 @@
+{
+  "removedOwnPaths": [
+    "/Users/yzliu/.cache/hanamesh-runs/METADATA-DEVKIT-VENDOR-APPHOST-01/fresh",
+    "/Users/yzliu/.cache/hanamesh-runs/METADATA-DEVKIT-VENDOR-APPHOST-01/downloads",
+    "/Users/yzliu/.cache/hanamesh-runs/METADATA-DEVKIT-VENDOR-APPHOST-01/tmp",
+    "/Users/yzliu/.cache/hanamesh-runs/METADATA-DEVKIT-VENDOR-APPHOST-01/dsh-home",
+    "/Users/yzliu/.cache/hanamesh-runs/METADATA-DEVKIT-VENDOR-APPHOST-01/hanamesh-plugin-app-host/node_modules",
+    "/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/tmp.gcZiEj1TVC",
+    "/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/tmp.Xqt1e5ndmx",
+    "/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/tmp.MynVPkLQpp"
+  ],
+  "retained": [
+    "one latest rc6 tgz plus sha256 in run/artifacts",
+    "own _evidence including rollback rc5/devkitrc1",
+    "latest source generated dist in own source worktree",
+    "own docs delivery worktree"
+  ],
+  "originalWorktreesAndEvidencePreserved": true
+}

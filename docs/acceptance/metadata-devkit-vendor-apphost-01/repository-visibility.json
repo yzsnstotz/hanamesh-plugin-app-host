@@ -1,0 +1,11 @@
+{
+  "AppHost": {
+    "url": "https://github.com/yzsnstotz/hanamesh-plugin-app-host.git",
+    "private": false,
+    "authorization": "existing public origin per owner D16/B, ordinary task push; no visibility change"
+  },
+  "docs": {
+    "url": "https://github.com/yzsnstotz/hanamesh-docs.git",
+    "private": true
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "sourceCommit": "82723e3ac086af3f4b0b59661470ebf60177fbc3",
+  "packageSha256": "2294541a19575b246774b1d0566c48bf75d64499312edd0f4576730296bb826a",
+  "sameBytePackage": true,
+  "sameByteLock": true,
+  "freshTreeClean": true,
+  "versions": {
+    "node": "v24.13.1",
+    "npm": "11.8.0",
+    "pnpm": "10.33.0",
+    "typescript": "Version 5.8.3"
+  }
+}

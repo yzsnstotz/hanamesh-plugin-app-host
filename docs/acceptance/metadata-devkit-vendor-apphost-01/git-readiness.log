@@ -1,0 +1,2 @@
+repo                                 git    main  clean  version=tag  remote=local   lock         worktree sha   note
+hanamesh-plugin-app-host             yes    NO(codex/metadata-apphost-provision-01) yes    NO(no v0.2.0-rc.5) NO(5881527!=0e36611) yes          3(other) yes   
