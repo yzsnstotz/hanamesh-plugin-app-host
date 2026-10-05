@@ -1,6 +1,15 @@
-@hanamesh/lib-provision@0.1.0-rc.1
-Copyright (c) 2026 HanaMesh. All rights reserved.
-License identifier in the source package: UNLICENSED.
-The copyright owner has confirmed distribution of this inlined component
-within @hanamesh/dsh-app-host. No MIT or other open-source license is
-granted for this component by this notice.
+HanaMesh-owned code: distribution authorization record
+
+Package: @hanamesh/lib-provision 0.1.0-rc.3
+Source: https://github.com/yzsnstotz/hanamesh-lib-provision
+Use: Node.js library and CLI for verified archive provisioning.
+
+The project owner confirmed distribution of this HanaMesh-owned code under
+D-2026-10-05-02 (D02). The recorded original statement is:
+“那么这个我早就确认过了，而且是我们自己的代码，完全可以分发，你问这个有毛病吧”。
+
+This record documents the existing authorization to distribute this package.
+No SPDX license was designated in that authorization. This record does not
+assign MIT or another new license, or grant additional relicensing rights.
+The package metadata points here to avoid the obsolete UNLICENSED marker.
+Third-party components retain their own licenses; see THIRD_PARTY_NOTICES.md.

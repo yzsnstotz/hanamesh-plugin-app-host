@@ -1,6 +1,6 @@
 # HanaMesh app-host · 0.2.0-rc.2 本地候选
 
-> NPM-APPHOST-01（2026-10-05）：本地候选 `0.2.0-rc.2` 对齐官方 `@deepseek-ai/dsh@0.2.0-rc.2`、Cordis `4.0.4`、Schemastery `3.18.4` 与 storage-domain `0.2.0-rc.2`。`@hanamesh/lib-provision@0.1.0-rc.1` 仅以已核 SHA-256 的 vendor tgz 在构建期内联，公共 registry E404，因此不声明为运行时 peer。owner D-2026-10-05-02 已确认该自有代码可分发；内联代码仍为 `UNLICENSED`，不推断新增 MIT 授权。包级许可分区见 [`LICENSE`](LICENSE) 与 [`docs/LICENSES.json`](docs/LICENSES.json)。本地官方 DSH 装配不等于公开 npm 安装门或产品验收；当前卡证据见 BlueMap `NPM-APPHOST-01/REPORT.md`。
+> NPM-APPHOST-01（2026-10-05）：本地候选 `0.2.0-rc.5` 对齐官方 `@deepseek-ai/dsh@0.2.0-rc.2`、Cordis `4.0.4`、Schemastery `3.18.4` 与 storage-domain `0.2.0-rc.2`。`@hanamesh/lib-provision@0.1.0-rc.3` 仅以已核 SHA-256 的 vendor tgz 在构建期内联，公共 registry E404，因此不声明为运行时 peer。owner D-2026-10-05-02 已确认该自有代码可分发；内联代码的自有分发授权原文随 canonical rc3 包复制，不推断新增 MIT 或再许可授权。包级许可分区见 [`LICENSE`](LICENSE) 与 [`docs/LICENSES.json`](docs/LICENSES.json)。本地官方 DSH 装配不等于公开 npm 安装门或产品验收；当前卡证据见 BlueMap `NPM-APPHOST-01/REPORT.md`。
 
 > rc.41（2026-10-01，P01-U05-RI 修复）：真实原生市场重装 Vibe 时，受管 Python runtime 卸载后留有32个运行时生成的 `__pycache__/*.pyc`，后续原子提升因目标目录无所有权清单而拒绝（`E_PROMOTE`）。AppHost 在 lib-provision 精确移除受管文件后仅清理由该 runtime 生成的 Python 字节码及空目录；未知残留继续保留并报告 `RUNTIME_RESIDUE`，不以 force 覆盖。两项回归、模块 check/types 通过；仍需固定消费者组合和独立原生产品复验。
 
@@ -61,7 +61,7 @@
 - **K5：** Electron 宿主必须显式给绝对且可执行的 `nodeBinary`；guardian/launcher 使用同一 Node，只继承 `DSH_HOME/HOME/LANG/TMPDIR/PATH` 白名单。未配置时 fail-closed 为 `NODE_RUNTIME_REQUIRED`。
 - **Router：** 合并授权、撤销、文件投射 ledger 与 `sets`，来源为 DSH credentials/LLM 目录和 coding-oauth gateway；不搬 key 探测、录入或 OAuth 端口。
 - **市场（原应用库）：** 自带侧栏入口与覆盖页；目录源同一时刻只启用一项；插件与应用同一入口、同一 `dsh plugin add/remove` 路径；已装列表含插件；区分已注册、待重启、可升级与缺 runtime。
-- **锁定 runtime 供给：** build 脚本直接读取 `vendor/hanamesh-lib-provision-0.1.0-rc.1.tgz`，校验 SHA-256 后内联到 `dist/provision/`。包清单没有该私有包的 dependency、peer 或 devDependency；来源与许可边界见 `docs/PROVENANCE.json`。
+- **锁定 runtime 供给：** build 脚本直接读取 `vendor/hanamesh-lib-provision-0.1.0-rc.3.tgz`，校验 SHA-256 后内联到 `dist/provision/`。包清单没有该私有包的 dependency、peer 或 devDependency；来源与许可边界见 `docs/PROVENANCE.json`。
 
 ## 运行
 
@@ -78,7 +78,7 @@ npm run test:types
 npm run demo -- --smoke
 ```
 
-开发工具只通过 `@hanamesh/devkit@0.1.0-rc.1` 的公开 API 执行；精确可选 peer + `file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz` 固定开发安装，SHA-256 为 `3cf0b621ca2950fbe21c114d5b31ac1a55f97a67eb0a2dada77fb2d3bf2cb6ff`。运行依赖、业务 `src/`、公开 exports 与 inlined provision 均保持原字节；devkit 不进入 runtime。模块自身保留 pins、DSH 检查、原 22 个变异 target/name filter/失败原因，以及原纯包消费者的断言。
+开发工具只通过 `@hanamesh/devkit@0.1.0-rc.1` 的公开 API 执行；精确可选 peer + `file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz` 固定开发安装，SHA-256 为 `3cf0b621ca2950fbe21c114d5b31ac1a55f97a67eb0a2dada77fb2d3bf2cb6ff`。运行依赖、业务 `src/`、公开 exports 均保持原字节；后续 provision 分发记录更新见下文；devkit 不进入 runtime。模块自身保留 pins、DSH 检查、原 22 个变异 target/name filter/失败原因，以及原纯包消费者的断言。
 
 `npm run check` 包含工具链、build、一致性声明、显式 TAP 全量 test、22 个断言变异、原类型消费与开发 preflight。`npm pack --pack-destination <目录>` 后运行 `npm run verify:pack -- <tgz绝对路径>`：devkit 在独立目录离线安装纯包并验证真实自有进程，另在只装固定宿主 peer 的独立目录验证公开严格 TS；两者均不安装 devkit。离线 JS 消费之前，pnpm store 须已有本包唯一 runtime dependency `zod@4.5.4`（在线准备环境后再离线核证），不跳过离线失败。`npm run preflight:dsh` 继续要求原四个 DSH pins；单纯 `npm ci` 没有官方 DSH 本体时仍以 exit 2 拒绝。真正 DSH 加载/UI 门另外执行，组件检查不代替它。
 
@@ -110,3 +110,7 @@ rc.3 修复只在本地隔离分支 `codex/app-host-acc-fix`；没有创建远�
 rc.1 原交付包的 ZIP 含本地 Git bundle 和提交信息。`scripts/publish-github.sh --create-private` 是**尚未执行**的历史发布辅助；执行前须重新核对目标仓与授权。
 
 rc.1 原始输入当时标注 `UNLICENSED`，不是 MIT/Apache 授权声明；没有擅自给用户代码选择开源许可证。[`docs/PROVENANCE.json`](docs/PROVENANCE.json) 保留 rc.1 原始输入与当时环境记录；rc.3 的包摘要与复验证据见源码仓 `docs/acceptance/wave01-rc3-artifact.json`。
+
+## METADATA-APPHOST-PROVISION-01（2026-10-06）
+
+AppHost `0.2.0-rc.5` 内联 canonical `@hanamesh/lib-provision@0.1.0-rc.3`，源码提交 `e8707089409ffd3483fc4c964d6032c370dae634`，vendor SHA-256 `b7d149dcbf51c30fd0226fb170afdf268501057b0c7149903c02c17abe93b2c7`。原 build 验证归档摘要并提取 `lib/`、`LICENSE` 与 `THIRD_PARTY_NOTICES.md`；两个分发记录保留上游原文。根 `SEE LICENSE IN LICENSE` / AppHost MIT 分区保持，`dist/provision/**` 自有分发记录不改为 MIT。业务源码与公开 API 不变，无新增依赖或运行时功能；devkit 仍精确 rc1。只交工程新包，未发布 npm 或安装物，产品界面与干净机未运行。

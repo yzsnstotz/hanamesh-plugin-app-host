@@ -35,16 +35,20 @@ test('NPM-APPHOST-01: actual packed manifest allows only the exact optional deve
     const packedFile = path => execFileSync('tar', ['-xOf', join(dir, filename), `package/${path}`], { encoding: 'utf8' });
     assert.equal(manifest.license, 'SEE LICENSE IN LICENSE');
     assert.match(packedFile('LICENSE'), /dist\/provision\/.*(?:outside|excluded|not covered).*MIT/is);
-    assert.match(packedFile('dist/provision/LICENSE'), /@hanamesh\/lib-provision@0\.1\.0-rc\.1/);
-    assert.match(packedFile('dist/provision/LICENSE'), /UNLICENSED/);
-    assert.match(packedFile('dist/provision/LICENSE'), /No MIT.*license.*granted/is);
+    assert.match(packedFile('dist/provision/LICENSE'), /@hanamesh\/lib-provision 0\.1\.0-rc\.3/);
+    assert.match(packedFile('dist/provision/LICENSE'), /distribution authorization record/);
+    assert.match(packedFile('dist/provision/LICENSE'), /does not\s+assign MIT or another new license, or grant additional relicensing rights/is);
     const licenses = JSON.parse(packedFile('docs/LICENSES.json'));
     assert.equal(licenses.package.version, manifest.version);
     assert.equal(licenses.package.license, manifest.license);
-    assert.equal(licenses.components['@hanamesh/lib-provision'].version, '0.1.0-rc.1');
-    assert.equal(licenses.components['@hanamesh/lib-provision'].license, 'UNLICENSED');
-    assert.equal(licenses.components['@hanamesh/lib-provision'].source, 'vendor/hanamesh-lib-provision-0.1.0-rc.1.tgz');
+    assert.equal(licenses.components['@hanamesh/lib-provision'].version, '0.1.0-rc.3');
+    assert.equal(licenses.components['@hanamesh/lib-provision'].license, 'SEE LICENSE IN LICENSE');
+    assert.equal(licenses.components['@hanamesh/lib-provision'].source, 'vendor/hanamesh-lib-provision-0.1.0-rc.3.tgz');
     assert.match(licenses.components['@hanamesh/lib-provision'].purpose, /runtime/i);
+    const vendor = new URL('../vendor/hanamesh-lib-provision-0.1.0-rc.3.tgz', import.meta.url).pathname;
+    for (const name of ['LICENSE', 'THIRD_PARTY_NOTICES.md'])
+      assert.equal(packedFile(`dist/provision/${name}`), execFileSync('tar', ['-xOf', vendor, `package/${name}`], { encoding: 'utf8' }), name);
+
     for (const field of ['dependencies', 'peerDependencies', 'devDependencies']) {
       for (const [name, version] of Object.entries(manifest[field] ?? {})) {
         assert.equal(licenses.components[name]?.specs?.[field] ?? licenses.components[name]?.version, version, `${name} version`);

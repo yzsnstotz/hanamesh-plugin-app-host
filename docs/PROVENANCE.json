@@ -1,9 +1,9 @@
 {
   "currentCandidate": {
-    "version": "0.2.0-rc.2",
+    "version": "0.2.0-rc.5",
     "dshTarget": "0.2.0-rc.2",
     "vendorSha256VerifiedAtBuild": true,
-    "libProvisionDistribution": "Owner confirmed self-owned and distributable; source license remains UNLICENSED; see LICENSE and docs/LICENSES.json",
+    "libProvisionDistribution": "HanaMesh-owned distribution authorization record copied verbatim from canonical provision rc3; see dist/provision/LICENSE and docs/LICENSES.json; no new MIT or relicensing grant",
     "publicNpmGate": "NOT_RUN"
   },
   "module": "app-host",
@@ -52,10 +52,12 @@
   "upstreamFilesModified": 0,
   "bundledArtifacts": {
     "@hanamesh/lib-provision": {
-      "version": "0.1.0-rc.1",
-      "source": "vendor/hanamesh-lib-provision-0.1.0-rc.1.tgz",
-      "sha256": "386d57361ccc3c8578f54cad8137acc291dd72e01b3ff987e65dfaa716f2e0b0",
-      "mode": "build-time inline into dist/provision; no package dependency or peer declaration"
+      "version": "0.1.0-rc.3",
+      "source": "vendor/hanamesh-lib-provision-0.1.0-rc.3.tgz",
+      "sha256": "b7d149dcbf51c30fd0226fb170afdf268501057b0c7149903c02c17abe93b2c7",
+      "mode": "build-time inline into dist/provision; no package dependency or peer declaration",
+      "sourceCommit": "e8707089409ffd3483fc4c964d6032c370dae634",
+      "license": "SEE LICENSE IN LICENSE"
     }
   },
   "sessionLogWrites": 0,

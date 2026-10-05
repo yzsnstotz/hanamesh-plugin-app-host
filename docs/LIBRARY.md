@@ -17,7 +17,7 @@
 
 钉版本 DSH 没有向插件公开 profile 目录或 profile 名。桌面壳通过 overlay 显式给出 `library.profileDir`（绝对路径）、`library.profileName`、`library.dshBin` 与 `nodeBinary`，显式值永远优先。**纯 DSH CLI profile（rc.26）** 下缺省值按 `CONTRACT.md`「应用库配置」推断：`profileDir` 来自本包自身真实安装位置所属的 profile、`profileName` 为其目录名、`dshBin` 只取启动本进程的 `@deepseek-ai/dsh/lib/bin.js`、`nodeBinary` 只在非 Electron 进程取 `process.execPath`。Electron 下仍必须由 dsh-runtime/core 提供绝对 `nodeBinary`；应用库不会在 Electron 里回退到 `process.execPath`。
 
-安装先向 registry 的 `latest` 端点复核精确稳定版本，再用显式 Node 执行 DSH 自己的 `bin.js plugin --profile <name> add --save-exact <package>@<version>`。成功后读取包内 `app.json`；如果描述符声明 runtime，则调用随包内联的锁定 `@hanamesh/lib-provision@0.1.0-rc.1`。生产默认拒绝 prerelease；隔离 Verdaccio 验收可显式设 `allowPrerelease: true`。
+安装先向 registry 的 `latest` 端点复核精确稳定版本，再用显式 Node 执行 DSH 自己的 `bin.js plugin --profile <name> add --save-exact <package>@<version>`。成功后读取包内 `app.json`；如果描述符声明 runtime，则调用随包内联的锁定 `@hanamesh/lib-provision@0.1.0-rc.3`。生产默认拒绝 prerelease；隔离 Verdaccio 验收可显式设 `allowPrerelease: true`。
 
 安装/卸载完成只返回 `restart-required`，绝不静默重启 DSH。卸载只删除包与 lib-provision 账本认领的 runtime 文件，保留 `<dataRoot>` 下应用数据；彻底删除需用户手动处理对应数据目录。
 
