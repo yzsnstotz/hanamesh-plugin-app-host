@@ -22,7 +22,7 @@ test('NPM-APPHOST-01: published metadata resolves against official DSH rc.2 with
   assert.equal(pkg.dependencies['@hanamesh/lib-provision'], undefined);
 });
 
-test('NPM-APPHOST-01: actual packed manifest has no local dependency spec or private peer', async () => {
+test('NPM-APPHOST-01: actual packed manifest allows only the exact optional development devkit peer/vendor spec', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'hm-apphost-pack-'));
   try {
     const raw = execFileSync('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', dir], {
@@ -47,7 +47,7 @@ test('NPM-APPHOST-01: actual packed manifest has no local dependency spec or pri
     assert.match(licenses.components['@hanamesh/lib-provision'].purpose, /runtime/i);
     for (const field of ['dependencies', 'peerDependencies', 'devDependencies']) {
       for (const [name, version] of Object.entries(manifest[field] ?? {})) {
-        assert.equal(licenses.components[name]?.version, version, `${name} version`);
+        assert.equal(licenses.components[name]?.specs?.[field] ?? licenses.components[name]?.version, version, `${name} version`);
         assert.ok(licenses.components[name]?.license, `${name} license`);
         assert.ok(licenses.components[name]?.source, `${name} source`);
         assert.ok(licenses.components[name]?.purpose, `${name} purpose`);
@@ -56,10 +56,14 @@ test('NPM-APPHOST-01: actual packed manifest has no local dependency spec or pri
     assert.equal(manifest.hanamesh?.deliveryStatus, undefined);
     for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies', 'devDependencies']) {
       for (const [name, spec] of Object.entries(manifest[field] ?? {})) {
-        assert.doesNotMatch(spec, /^(?:file:|link:)/, `${field}.${name}`);
+        if(field==='devDependencies'&&name==='@hanamesh/devkit')assert.equal(spec,'file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz');
+        else assert.doesNotMatch(spec, /^(?:file:|link:)/, `${field}.${name}`);
       }
     }
-    assert.ok(Object.keys(manifest.peerDependencies ?? {}).every(name => !name.startsWith('@hanamesh/')));
+    assert.ok(Object.keys(manifest.peerDependencies ?? {}).every(name => !name.startsWith('@hanamesh/') || name==='@hanamesh/devkit'));
+    assert.equal(manifest.peerDependencies['@hanamesh/devkit'],'0.1.0-rc.1');
+    assert.deepEqual(manifest.peerDependenciesMeta['@hanamesh/devkit'],{optional:true});
+    assert.equal(manifest.dependencies['@hanamesh/devkit'],undefined);
     assert.ok(files.some(file => file.path === 'dist/provision/LICENSE'));
     assert.ok(files.every(file => !file.path.startsWith('vendor/')));
   } finally {

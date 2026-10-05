@@ -138,7 +138,7 @@ test('AH-R12 (T6) every injection tells the receipt observer the routed provider
   await router.setMode('vibe-trading','app-owned');await launch();assert.equal(injections.length,2);await router.setMode('vibe-trading','managed');
   const throwing=createRouter({credentials:{describe:async()=>({configured:true}),resolve:async()=>({value:'v'}),describeRecord:async()=>({configured:false})},domain:{global:{get:()=>({schema:1,apps:{}}),set:async()=>{}}},
     apps:{list:()=>({apps:[{id:'vibe-trading',deployments:[{id:'local',mode:'owned',credentialEnv:declared}]}]})},sources:{list:async()=>[{id:'openai',source:'dsh-models',kind:'api-key',ref:'OPENAI_API_KEY',state:'configured'}],resolve:async()=>({value:'v',provider:{id:'openai'}}),enableGateway:async()=>({})},onInject:()=>{throw new Error('observer down');}});
-  const resolved=await throwing.credentialResolver({appId:'vibe-trading',deploymentId:'local',instanceId:'two',principalId:'dsh-browser',credentialEnv:declared});assert.equal(resolved.env.OPENAI_API_KEY,'v');
+  let resolved;await assert.doesNotReject(async()=>{resolved=await throwing.credentialResolver({appId:'vibe-trading',deploymentId:'local',instanceId:'two',principalId:'dsh-browser',credentialEnv:declared});},'observer down must never block credential resolution');assert.equal(resolved.env.OPENAI_API_KEY,'v');
   // Local receipts: per app (validated id) or all; unknown app is APP_NOT_FOUND; rows never carry values.
   assert.deepEqual(router.receipts('vibe-trading').items.map(i=>[i.providerId,i.count]),[['openai',1]]);assert.equal(router.receipts().items.length,1);
   await assert.rejects(async()=>router.receipts('nobody'),{code:'APP_NOT_FOUND'});await assert.rejects(async()=>router.receipts('../x'),{code:'INVALID_APP'});

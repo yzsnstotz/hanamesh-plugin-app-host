@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/dsh-app-host",
-  "version": "0.2.0-rc.2",
+  "version": "0.2.0-rc.4",
   "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.0-rc.2",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
@@ -50,14 +50,17 @@
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node --test --test-concurrency=1 tests/*.test.mjs",
+    "test": "node --test --test-reporter=tap --test-concurrency=1 tests/*.test.mjs",
     "test:mutation": "node scripts/mutations.mjs",
     "test:types": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext tests/consumer.mts",
-    "check": "npm run build && npm run check:consistency && npm test && npm run test:mutation",
+    "check": "npm run check:toolchain && npm run build && npm run check:consistency && npm test && npm run test:mutation && npm run test:types && npm run preflight",
     "prepack": "npm run build",
     "demo": "node examples/demo.mjs",
     "preflight:dsh": "node scripts/preflight-dsh.mjs",
-    "check:consistency": "node scripts/check-consistency.mjs"
+    "check:consistency": "node scripts/check-consistency.mjs",
+    "check:toolchain": "node scripts/check-toolchain.mjs",
+    "preflight": "node scripts/preflight.mjs",
+    "verify:pack": "node scripts/verify-package.mjs"
   },
   "dsh": {
     "bundle": {
@@ -87,7 +90,8 @@
     "@deepseek-ai/dsh-client-ui-slots": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-locale": "0.2.0-rc.2",
-    "react": "18.3.1"
+    "react": "18.3.1",
+    "@hanamesh/devkit": "0.1.0-rc.1"
   },
   "hanamesh": {
     "module": "app-host",
@@ -107,6 +111,12 @@
     "@deepseek-ai/dsh-storage-domain": "0.2.0-rc.2",
     "@deepseek-ai/dsh-storage-json": "0.2.0-rc.2",
     "@deepseek-ai/schemastery": "3.18.4",
-    "typescript": "5.8.3"
+    "typescript": "5.8.3",
+    "@hanamesh/devkit": "file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz"
+  },
+  "peerDependenciesMeta": {
+    "@hanamesh/devkit": {
+      "optional": true
+    }
   }
 }

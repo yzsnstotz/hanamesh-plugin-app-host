@@ -65,16 +65,24 @@
 
 ## 运行
 
-NPM-APPHOST-01 的本地开发环境是 **macOS arm64 / Node 24.13.1 / npm 11.8.0 / 官方 DSH 0.2.0-rc.2**。干净安装使用锁文件，运行依赖为 `zod 4.5.4`；私有 `@hanamesh/lib-provision` 不在运行时依赖或 peer 中，其代码已获自有代码分发确认并按独立许可分区内联。
+NPM-APPHOST-01 的本地开发环境是 **macOS arm64 / Node 24.13.1 / npm 11.8.0 / 官方 DSH 0.2.0-rc.2**。 本轮私有工具迁移候选为 `0.2.0-rc.4`，集中工具另固定 `pnpm 10.33.0`。干净安装使用锁文件，运行依赖为 `zod 4.5.4`；私有 `@hanamesh/lib-provision` 不在运行时依赖或 peer 中，其代码已获自有代码分发确认并按独立许可分区内联。
 
 ```bash
+export npm_config_cache=$(mktemp -d)
 npm ci
+npm run check:toolchain
 npm run build
 npm test
 npm run test:mutation
 npm run test:types
 npm run demo -- --smoke
 ```
+
+开发工具只通过 `@hanamesh/devkit@0.1.0-rc.1` 的公开 API 执行；精确可选 peer + `file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz` 固定开发安装，SHA-256 为 `3cf0b621ca2950fbe21c114d5b31ac1a55f97a67eb0a2dada77fb2d3bf2cb6ff`。运行依赖、业务 `src/`、公开 exports 与 inlined provision 均保持原字节；devkit 不进入 runtime。模块自身保留 pins、DSH 检查、原 22 个变异 target/name filter/失败原因，以及原纯包消费者的断言。
+
+`npm run check` 包含工具链、build、一致性声明、显式 TAP 全量 test、22 个断言变异、原类型消费与开发 preflight。`npm pack --pack-destination <目录>` 后运行 `npm run verify:pack -- <tgz绝对路径>`：devkit 在独立目录离线安装纯包并验证真实自有进程，另在只装固定宿主 peer 的独立目录验证公开严格 TS；两者均不安装 devkit。离线 JS 消费之前，pnpm store 须已有本包唯一 runtime dependency `zod@4.5.4`（在线准备环境后再离线核证），不跳过离线失败。`npm run preflight:dsh` 继续要求原四个 DSH pins；单纯 `npm ci` 没有官方 DSH 本体时仍以 exit 2 拒绝。真正 DSH 加载/UI 门另外执行，组件检查不代替它。
+
+`devkit.config.mjs` 与 `scripts/*-cases/policy/probes` 是本模块策略，不是通用执行器。`HANAMESH_APPHOST_RUN_DIR` 可把变异证据放入卡的隔离 run；未设置时写入 `artifacts/mutations`。工具链与开发 preflight 也可经 `hanamesh-devkit check-toolchain` / `hanamesh-devkit preflight` 调用；变异与封包使用本模块 npm 入口以保留全部专用断言。
 
 `npm run demo` 启动一个受控示例应用，并让两个视图共用同一实例；终端打印应用 URL，Ctrl+C 清理自有进程和临时示例目录。它不是 DSH、工作台或两个上游应用的演示。
 

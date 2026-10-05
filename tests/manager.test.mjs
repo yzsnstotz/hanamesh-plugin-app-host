@@ -6,7 +6,8 @@ import { setup,definition,input,leaseInput,http,pidAlive,until,temporary,externa
 
 test('H02: eight concurrent opens reserve one actual application process',async t=>{
   const {host}=await setup(t);
-  const results=await Promise.all(Array.from({length:8},(_,i)=>host.open(input(`view-${i}`))));
+  let results;
+  await assert.doesNotReject(async()=>{results=await Promise.all(Array.from({length:8},(_,i)=>host.open(input(`view-${i}`))));},'single-instance concurrent opens must share ownership without DATA_ROOT_BUSY or SPAWN_FAILED');
   assert.equal(new Set(results.map(r=>r.instance.id)).size,1);
   const pids=await Promise.all(results.map(r=>identity(r.uiUrl).then(v=>v.pid)));
   assert.equal(new Set(pids).size,1);assert(pidAlive(pids[0]));

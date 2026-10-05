@@ -92,6 +92,7 @@ test('AH-MS02: dshmarket installed in the profile — the seat is left alone, th
   const{ctx,record}=contextDouble();
   module.apply(ctx);
   await settle();
+  assert.equal(record.provided.length,0,'the seat is never contested');
   assert.deepEqual(record.provided,[],'the seat is never contested');
   assert.equal(module.marketState().conflict,module.MARKET_CONFLICT_TEXT);
   assert.match(module.MARKET_CONFLICT_TEXT,/dshmarket/);
@@ -111,6 +112,7 @@ test('AH-MS03: dshmarket already holding the seat is detected before we try to p
   const{ctx,record}=contextDouble({seatHolder:{render(){return null;},setSettingsVisible(){}}});
   module.apply(ctx);
   await settle();
+  assert.equal(record.provided.length,0,'a registered seat is never overwritten');
   assert.deepEqual(record.provided,[],'a registered seat is never overwritten');
   assert.equal(module.marketState().conflict,module.MARKET_CONFLICT_TEXT);
   assert.deepEqual(record.reflectReads,[['market',false]],'the seat is read non-strictly: a pending provider still counts');
