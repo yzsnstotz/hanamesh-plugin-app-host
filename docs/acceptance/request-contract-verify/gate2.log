@@ -1,0 +1,9 @@
+file:///Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/hanamesh-plugin-app-host/docs/acceptance/request-contract-verify/gate.mjs:32
+ ctx.plugin(Storage);ctx.plugin(JsonStorage,{root:join(root,label,'storage')});ctx.plugin(Domain,{backend:'json'});ctx.plugin(WebServer,{host:'127.0.0.1',port:0});ctx.plugin(Connection);await ctx.start();
+                                                                                                                                                                                                    ^
+
+TypeError: ctx.start is not a function
+    at boot (file:///Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/hanamesh-plugin-app-host/docs/acceptance/request-contract-verify/gate.mjs:32:197)
+    at file:///Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/hanamesh-plugin-app-host/docs/acceptance/request-contract-verify/gate.mjs:54:16
+
+Node.js v24.13.1

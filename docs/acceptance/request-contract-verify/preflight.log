@@ -1,0 +1,4 @@
+
+> @hanamesh/dsh-app-host@0.2.0-rc.6 preflight
+> node scripts/preflight.mjs
+

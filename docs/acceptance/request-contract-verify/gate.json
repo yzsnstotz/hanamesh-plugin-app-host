@@ -1,0 +1,172 @@
+{
+  "root": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/tmp/independent-apphost-lo1snN",
+  "evidence": [
+    "SOURCE",
+    "FIXTURE",
+    "REAL_RUNTIME component HTTP/process only"
+  ],
+  "formalParameters": "NOT_CAPTURED",
+  "Chromium": "NOT_RUN",
+  "Vibe": "NOT_RUN",
+  "modelRequests": 0,
+  "cases": [
+    {
+      "name": "no-origin",
+      "status": 403,
+      "code": "CSRF_DENIED",
+      "connectionRejection": "admitted",
+      "downloads": 0,
+      "operations": 0,
+      "ledgerUnchanged": true
+    },
+    {
+      "name": "custom-origin",
+      "status": 403,
+      "code": "ORIGIN_DENIED",
+      "connectionRejection": 403,
+      "downloads": 0,
+      "operations": 0,
+      "ledgerUnchanged": true
+    },
+    {
+      "name": "null-origin",
+      "status": 403,
+      "code": "ORIGIN_DENIED",
+      "connectionRejection": 403,
+      "downloads": 0,
+      "operations": 0,
+      "ledgerUnchanged": true
+    },
+    {
+      "name": "foreign-origin",
+      "status": 403,
+      "code": "ORIGIN_DENIED",
+      "connectionRejection": 403,
+      "downloads": 0,
+      "operations": 0,
+      "ledgerUnchanged": true
+    },
+    {
+      "name": "other-origin-port",
+      "status": 403,
+      "code": "ORIGIN_DENIED",
+      "connectionRejection": 403,
+      "downloads": 0,
+      "operations": 0,
+      "ledgerUnchanged": true
+    },
+    {
+      "name": "foreign-host",
+      "status": 403,
+      "code": "HOST_DENIED",
+      "connectionRejection": 403,
+      "downloads": 0,
+      "operations": 0,
+      "ledgerUnchanged": true
+    },
+    {
+      "name": "other-host-port",
+      "status": 403,
+      "code": "HOST_DENIED",
+      "connectionRejection": 403,
+      "downloads": 0,
+      "operations": 0,
+      "ledgerUnchanged": true
+    },
+    {
+      "name": "no-marker",
+      "status": 403,
+      "code": "CSRF_DENIED",
+      "connectionRejection": "admitted",
+      "downloads": 0,
+      "operations": 0,
+      "ledgerUnchanged": true
+    },
+    {
+      "name": "fake-marker",
+      "status": 403,
+      "code": "CSRF_DENIED",
+      "connectionRejection": "admitted",
+      "downloads": 0,
+      "operations": 0,
+      "ledgerUnchanged": true
+    },
+    {
+      "name": "no-cookie",
+      "status": 401,
+      "code": "UNAUTHENTICATED",
+      "connectionRejection": 401,
+      "downloads": 0,
+      "operations": 0,
+      "ledgerUnchanged": true
+    },
+    {
+      "name": "bad-cookie",
+      "status": 401,
+      "code": "UNAUTHENTICATED",
+      "connectionRejection": 401,
+      "downloads": 0,
+      "operations": 0,
+      "ledgerUnchanged": true
+    },
+    {
+      "name": "iframe",
+      "status": 403,
+      "code": "FRAME_CONTROL_DENIED",
+      "connectionRejection": "admitted",
+      "downloads": 0,
+      "operations": 0,
+      "ledgerUnchanged": true
+    },
+    {
+      "name": "cross-site",
+      "status": 401,
+      "code": "UNAUTHENTICATED",
+      "connectionRejection": 403,
+      "downloads": 0,
+      "operations": 0,
+      "ledgerUnchanged": true
+    },
+    {
+      "name": "business-denial",
+      "status": 403,
+      "code": "FORBIDDEN",
+      "authorizationCalls": 1,
+      "supplyCalls": 0,
+      "ledgerUnchanged": true,
+      "evidence": "FIXTURE callback + real route/Connection"
+    },
+    {
+      "name": "normal-supply",
+      "status": 202,
+      "event": "library.provision-done",
+      "result": "restart-required",
+      "httpDownloadCount": 0,
+      "assetKind": "file fixture",
+      "archiveSha256": "b61f0ac2df04b0e8f54bdbf6c18115ca4832276dba58c0fbfe95db93d224aa1f",
+      "ledgerWriter": "original installer -> original inline provision",
+      "binaryEqual": true,
+      "binaryExecuted": true,
+      "installedState": "registered"
+    }
+  ],
+  "config": [
+    "real independent Node inferred; fixture Electron undefined",
+    "external shared store link does not infer profile",
+    "top-level Node and explicit library profileDir/profileName/dshBin win; public CLI export fixture resolves",
+    "library.nodeBinary is not the public Node input",
+    "real Loader missing installer -> authenticated HTTP503 / zero operations"
+  ],
+  "fixtures": [
+    "test credential record provider",
+    "new installed test app descriptor",
+    "local file runtime archive",
+    "authorization denial callback",
+    "Electron process facts"
+  ],
+  "port": "60029",
+  "sessionExchange": 303,
+  "passed": true,
+  "disposed": true,
+  "signalsSent": 0
+}

@@ -1,0 +1,202 @@
+TAP version 13
+# Subtest: H01 (harness half): the plugin activates on a real Cordis root and provides ctx.hanameshApps
+ok 1 - H01 (harness half): the plugin activates on a real Cordis root and provides ctx.hanameshApps
+  ---
+  duration_ms: 77.009542
+  type: 'test'
+  ...
+# Subtest: H11: lease/instance state lands in the storage-domain sidecar and DSH still reads its own session
+ok 2 - H11: lease/instance state lands in the storage-domain sidecar and DSH still reads its own session
+  ---
+  duration_ms: 424.714625
+  type: 'test'
+  ...
+# Subtest: H14/AC-07 on the real web server: unauthenticated, wrong origin and iframe callers are refused
+ok 3 - H14/AC-07 on the real web server: unauthenticated, wrong origin and iframe callers are refused
+  ---
+  duration_ms: 69.754125
+  type: 'test'
+  ...
+# Subtest: H09/dispose: unloading the plugin removes its routes, stops owned instances, and closes the domain
+ok 4 - H09/dispose: unloading the plugin removes its routes, stops owned instances, and closes the domain
+  ---
+  duration_ms: 337.561375
+  type: 'test'
+  ...
+# Subtest: AC-26 shape: without the connection service the plugin never activates, so no route is public
+ok 5 - AC-26 shape: without the connection service the plugin never activates, so no route is public
+  ---
+  duration_ms: 334.948334
+  type: 'test'
+  ...
+# Subtest: unit: bare apply() cannot masquerade as a loaded plugin
+ok 6 - unit: bare apply() cannot masquerade as a loaded plugin
+  ---
+  duration_ms: 0.338958
+  type: 'test'
+  ...
+# Subtest: teardown: a whole-root unload (profile shutdown) never orphans an owned process, even though the storage domain closes concurrently
+ok 7 - teardown: a whole-root unload (profile shutdown) never orphans an owned process, even though the storage domain closes concurrently
+  ---
+  duration_ms: 343.972875
+  type: 'test'
+  ...
+# Subtest: AH-L07 (plugin): an unconfigured library seeds the HanaMesh catalog source through the real Config schema; an explicit [] does not
+ok 8 - AH-L07 (plugin): an unconfigured library seeds the HanaMesh catalog source through the real Config schema; an explicit [] does not
+  ---
+  duration_ms: 143.853792
+  type: 'test'
+  ...
+# Subtest: AH-U07 (plugin): usage evidence reaches ctx.hanameshUsage.record when that sibling is provided — before or after this plugin — and its absence changes nothing
+ok 9 - AH-U07 (plugin): usage evidence reaches ctx.hanameshUsage.record when that sibling is provided — before or after this plugin — and its absence changes nothing
+  ---
+  duration_ms: 1198.401917
+  type: 'test'
+  ...
+# Subtest: AH-M08 (plugin): rc.28 market routes are registered on the real web server behind the same auth chain; without an installer the plugin seats answer 503, never 500
+ok 10 - AH-M08 (plugin): rc.28 market routes are registered on the real web server behind the same auth chain; without an installer the plugin seats answer 503, never 500
+  ---
+  duration_ms: 69.57675
+  type: 'test'
+  ...
+# Subtest: the library entry never pulls a DSH-only peer into a plain consumer import graph
+ok 11 - the library entry never pulls a DSH-only peer into a plain consumer import graph
+  ---
+  duration_ms: 2.977167
+  type: 'test'
+  ...
+# Subtest: AH-L04/L05: install uses explicit Node + DSH argv, exact stable registry version, then provisions the declared item
+ok 12 - AH-L04/L05: install uses explicit Node + DSH argv, exact stable registry version, then provisions the declared item
+  ---
+  duration_ms: 15.615416
+  type: 'test'
+  ...
+# Subtest: AH-L06: uninstall removes the package and owned runtime but preserves application data
+ok 13 - AH-L06: uninstall removes the package and owned runtime but preserves application data
+  ---
+  duration_ms: 2.702916
+  type: 'test'
+  ...
+# Subtest: AH-RI01: uninstall clears generated Python bytecode left by provision remove
+ok 14 - AH-RI01: uninstall clears generated Python bytecode left by provision remove
+  ---
+  duration_ms: 1.578125
+  type: 'test'
+  ...
+# Subtest: AH-RI02: uninstall preserves unknown runtime residue and reports incomplete cleanup
+ok 15 - AH-RI02: uninstall preserves unknown runtime residue and reports incomplete cleanup
+  ---
+  duration_ms: 0.7865
+  type: 'test'
+  ...
+# Subtest: AH-L07: library.sources unset → the HanaMesh catalog source is seeded; an explicit [] stays empty
+ok 16 - AH-L07: library.sources unset → the HanaMesh catalog source is seeded; an explicit [] stays empty
+  ---
+  duration_ms: 3.656042
+  type: 'test'
+  ...
+# Subtest: AH-L08: profileDir/profileName are inferred from the package's own real location inside a `dsh plugin` profile
+ok 17 - AH-L08: profileDir/profileName are inferred from the package's own real location inside a `dsh plugin` profile
+  ---
+  duration_ms: 11.837792
+  type: 'test'
+  ...
+# Subtest: AH-L09: nodeBinary is this process only outside Electron; explicit configuration always wins
+ok 18 - AH-L09: nodeBinary is this process only outside Electron; explicit configuration always wins
+  ---
+  duration_ms: 1.816958
+  type: 'test'
+  ...
+# Subtest: AH-L10: dshBin is taken from argv[1] only when that script is @deepseek-ai/dsh/lib/bin.js
+ok 19 - AH-L10: dshBin is taken from argv[1] only when that script is @deepseek-ai/dsh/lib/bin.js
+  ---
+  duration_ms: 0.442083
+  type: 'test'
+  ...
+# Subtest: AH-M01: a catalog plugin installs through the same `dsh plugin add --save-exact` path as an application, reads no app.json and provisions nothing
+ok 20 - AH-M01: a catalog plugin installs through the same `dsh plugin add --save-exact` path as an application, reads no app.json and provisions nothing
+  ---
+  duration_ms: 5.047
+  type: 'test'
+  ...
+# Subtest: AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite itself is refused both ways (PACKAGE_DENIED)
+ok 21 - AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite itself is refused both ways (PACKAGE_DENIED)
+  ---
+  duration_ms: 1.782375
+  type: 'test'
+  ...
+# Subtest: AH-M03: installed plugins = profile dependencies minus application packages, with restart states from the boot snapshot
+ok 22 - AH-M03: installed plugins = profile dependencies minus application packages, with restart states from the boot snapshot
+  ---
+  duration_ms: 8.719625
+  type: 'test'
+  ...
+# Subtest: AH-M04: upgrade = catalog latestVersion strictly newer than the installed version (semver, prerelease below release)
+ok 23 - AH-M04: upgrade = catalog latestVersion strictly newer than the installed version (semver, prerelease below release)
+  ---
+  duration_ms: 0.241458
+  type: 'test'
+  ...
+# Subtest: AH-M05: the market listing annotates every entry with kind / installed row / upgradeAvailable, lists categories, installed plugins and restartRequired
+ok 24 - AH-M05: the market listing annotates every entry with kind / installed row / upgradeAvailable, lists categories, installed plugins and restartRequired
+  ---
+  duration_ms: 4.157458
+  type: 'test'
+  ...
+# Subtest: AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall / plugin fields answer 400 INVALID_INPUT before any operation starts; installedPlugins and the plugin routes are served
+ok 25 - AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall / plugin fields answer 400 INVALID_INPUT before any operation starts; installedPlugins and the plugin routes are served
+  ---
+  duration_ms: 79.870916
+  type: 'test'
+  ...
+# Subtest: AH-M07 (client source): the entry is 「市场」, cards carry kind/state/upgrade, and a plugin change shows 「需重启 DSH」 with the hanamesh://restart deep link only inside the shell
+ok 26 - AH-M07 (client source): the entry is 「市场」, cards carry kind/state/upgrade, and a plugin change shows 「需重启 DSH」 with the hanamesh://restart deep link only inside the shell
+  ---
+  duration_ms: 0.592459
+  type: 'test'
+  ...
+# Subtest: NPM-APPHOST-01: published metadata resolves against official DSH rc.2 without private provision peer
+ok 27 - NPM-APPHOST-01: published metadata resolves against official DSH rc.2 without private provision peer
+  ---
+  duration_ms: 1.694292
+  type: 'test'
+  ...
+# Subtest: NPM-APPHOST-01: actual packed manifest allows only the exact optional development devkit peer/vendor spec
+ok 28 - NPM-APPHOST-01: actual packed manifest allows only the exact optional development devkit peer/vendor spec
+  ---
+  duration_ms: 343.464917
+  type: 'test'
+  ...
+# Subtest: H14: every browser command/env/cwd/path/url override is rejected before spawn
+ok 29 - H14: every browser command/env/cwd/path/url override is rejected before spawn
+  ---
+  duration_ms: 24.969
+  type: 'test'
+  ...
+# Subtest: H14: control routes require authentication, CSRF header, exact origin and host
+ok 30 - H14: control routes require authentication, CSRF header, exact origin and host
+  ---
+  duration_ms: 11.214334
+  type: 'test'
+  ...
+# Subtest: AH routes: startup receipt can be cancelled and tokens are not leaked through list/events
+ok 31 - AH routes: startup receipt can be cancelled and tokens are not leaked through list/events
+  ---
+  duration_ms: 151.534542
+  type: 'test'
+  ...
+# Subtest: H08: busy Stop is HTTP 409 and names the occupying view
+ok 32 - H08: busy Stop is HTTP 409 and names the occupying view
+  ---
+  duration_ms: 155.691792
+  type: 'test'
+  ...
+1..32
+# tests 32
+# suites 0
+# pass 32
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4200.669917

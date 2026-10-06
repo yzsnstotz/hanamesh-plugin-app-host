@@ -1,0 +1,23 @@
+{
+  "root": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/tmp/independent-apphost-wzaypH",
+  "evidence": [
+    "SOURCE",
+    "FIXTURE",
+    "REAL_RUNTIME component HTTP/process only"
+  ],
+  "formalParameters": "NOT_CAPTURED",
+  "Chromium": "NOT_RUN",
+  "Vibe": "NOT_RUN",
+  "modelRequests": 0,
+  "cases": [],
+  "config": [],
+  "fixtures": [
+    "test credential record provider",
+    "new installed test app descriptor",
+    "local HTTP runtime archive",
+    "authorization denial callback",
+    "Electron process facts"
+  ],
+  "disposed": true,
+  "signalsSent": 0
+}

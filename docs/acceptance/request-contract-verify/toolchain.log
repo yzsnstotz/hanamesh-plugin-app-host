@@ -1,0 +1,5 @@
+
+> @hanamesh/dsh-app-host@0.2.0-rc.6 check:toolchain
+> node scripts/check-toolchain.mjs
+
+{"event":"toolchain_verified","node":"24.13.1","pnpm":"10.33.0","typescript":"5.8.3"}

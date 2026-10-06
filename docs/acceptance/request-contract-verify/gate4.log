@@ -1,0 +1,10 @@
+file:///Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/hanamesh-plugin-app-host/docs/acceptance/request-contract-verify/gate.mjs:37
+ const cookie=exchange.headers['set-cookie'].split(';')[0];
+                                             ^
+
+TypeError: exchange.headers.set-cookie.split is not a function
+    at boot (file:///Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/hanamesh-plugin-app-host/docs/acceptance/request-contract-verify/gate.mjs:37:46)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async file:///Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/hanamesh-plugin-app-host/docs/acceptance/request-contract-verify/gate.mjs:54:10
+
+Node.js v24.13.1

@@ -1,0 +1,14 @@
+file:///Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/hanamesh-plugin-app-host/dist/errors.js:8
+  if (!ok) throw new AppHostError(code, message, details, status);
+                 ^
+
+AppHostError: runtime manifest sources are invalid.
+    at requireCondition (file:///Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/hanamesh-plugin-app-host/dist/errors.js:8:18)
+    at validateDefinition (file:///Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/hanamesh-plugin-app-host/dist/descriptor.js:53:9)
+    at file:///Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/hanamesh-plugin-app-host/docs/acceptance/request-contract-verify/gate.mjs:53:2 {
+  code: 'INVALID_RUNTIME',
+  details: {},
+  status: 400
+}
+
+Node.js v24.13.1
