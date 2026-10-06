@@ -1,0 +1,35 @@
+{
+  "removed": [
+    "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/home",
+    "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/dsh-home",
+    "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/tmp"
+  ],
+  "lsof": [
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/home",
+      "exit_code": 1,
+      "output": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/dsh-home",
+      "exit_code": 1,
+      "output": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/tmp",
+      "exit_code": 1,
+      "output": "",
+      "stderr": ""
+    }
+  ],
+  "signalsSent": 0,
+  "preserved": [
+    "source/Git",
+    "fresh clone/Git",
+    "all evidence",
+    "original artifacts"
+  ],
+  "newRuntimeExecution": false
+}

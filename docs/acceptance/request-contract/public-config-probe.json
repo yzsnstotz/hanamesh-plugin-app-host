@@ -1,0 +1,23 @@
+{
+  "evidenceClass": "SOURCE/FIXTURE",
+  "realDesktop": "NOT_RUN",
+  "realRuntime": "NOT_RUN",
+  "cases": [
+    {
+      "name": "external-store-link-and-electron-do-not-prove-profile-or-node",
+      "pass": true
+    },
+    {
+      "name": "public-profile-relative-cli-export-resolves",
+      "pass": true
+    },
+    {
+      "name": "existing-explicit-public-config-wins-under-electron-facts",
+      "pass": true
+    },
+    {
+      "name": "missing-installer-is-503-with-zero-operations",
+      "pass": true
+    }
+  ]
+}

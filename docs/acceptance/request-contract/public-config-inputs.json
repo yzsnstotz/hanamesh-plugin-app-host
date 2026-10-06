@@ -1,0 +1,34 @@
+{
+  "evidenceClass": "SOURCE",
+  "formalEffectiveConfig": "NOT_CAPTURED",
+  "files": [
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/source/src/dsh.js",
+      "sha256": "5480b41e45c6c8f7153c605244b91394148f742533d7cbb7c649edfdc2bc1cdb"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/source/src/dsh.d.ts",
+      "sha256": "3a3e870716f51974eee909280281a106fbb75b9d39556805f9e225e3bc3d970a"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/source/src/runtime.js",
+      "sha256": "47480b9465e37b1219e59ccdfdc9c07412657da8c3c8a2629d0d934651f528fe"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/source/src/library/locate.js",
+      "sha256": "35dd3e090992e0eb7960027e64c14726ff351a888e1505a3f907c7f0812eb9b9"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/source/src/library/service.js",
+      "sha256": "ddc4cfc9486af7ed6ea6c65ec46ec7f27f18e884e7c786ba06dd6b867a49a275"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/source/src/library/install.js",
+      "sha256": "126fd4e8c60cb2dbdc848f9700cecc1e68c63ed1942c239d347fd4482264a1fc"
+    },
+    {
+      "path": "/Users/yzliu/work/projects/hanamesh/hanamesh-desktop/apps/cli/package.json",
+      "sha256": "96845d9efaa4ab078f1405fbe28445b606b5ab79377fd607866dd46b0c0b52c1"
+    }
+  ]
+}

@@ -27,7 +27,7 @@ SOURCE/FIXTURE隔离实测：带真实Connection生成的测试cookie但无Origi
 
 因此当前没有可在本origin单独实施且保持原信任语义的生产修复。最小下一项由PM协调现任Desktop公共载体writer：交付与实际浏览器/原生sender相绑定、已由现有公开Connection承认的请求载体及公开参数证据，或使用现有真正HTTP workspace载体保留浏览器自然产生的合法Origin。不能合成HTTPOrigin、信任任意renderer、删Origin后把cookie当工作台来源证明、改Core/DSH私有源或为AppHost加Desktop专用分支。
 
-如果只能提供新的trusted provenance能力，先向PM交实际 owning module/API签名、语义、来源/认证/frame拒绝矩阵；实质扩大信任边界先交产品级决定。本卡收到确切公开contract后由同实现者仅在AppHost边界对齐。当前不创建自定义header/配置、RPC旁路或猜测证明格式；不投递另writer。
+PM新路线优先复用既有同源Host HTTP入口承载原生窗口，AppHost已有协议/公开启动配置可用，详见PUBLIC_CONFIG.md。本轮不提出新的Admission/header/provenance架构；实际HTTP承载、正常认证、有效Node/profile/CLI参数由原Desktop writer核。参数与请求边界各有独立证据，不能用市场可浏览代运行时可启动。
 
 ## 复跑
 
