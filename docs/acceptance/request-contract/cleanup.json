@@ -1,0 +1,43 @@
+{
+  "deleted": [
+    "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/source/node_modules",
+    "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/home",
+    "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/dsh-home",
+    "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/tmp",
+    "/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/tmp.Yz5Oi07xgN"
+  ],
+  "preserved": [
+    "source/Git/tracked dist",
+    "check-origin fresh clone/Git",
+    "all _evidence",
+    "existing canonical rc6 artifact and original rc2 artifact (other producers)"
+  ],
+  "signalsSent": 0,
+  "checks": [
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/source/node_modules",
+      "lsofExit": 1,
+      "rows": 0
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/home",
+      "lsofExit": 1,
+      "rows": 0
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/dsh-home",
+      "lsofExit": 1,
+      "rows": 0
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/tmp",
+      "lsofExit": 1,
+      "rows": 0
+    },
+    {
+      "path": "/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/tmp.Yz5Oi07xgN",
+      "lsofExit": 1,
+      "rows": 0
+    }
+  ]
+}

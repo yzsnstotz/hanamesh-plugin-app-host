@@ -1,0 +1,6 @@
+{
+  "exit": 1,
+  "reason": "own mktemp-created npm cache is outside run; containment assertion stopped before any deletion",
+  "deleted": [],
+  "cacheCreationEvidence": "npm-cache-path captured immediately after export during install tool fa5163"
+}

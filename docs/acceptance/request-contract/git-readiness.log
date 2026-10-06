@@ -1,0 +1,2 @@
+repo                                 git    main  clean  version=tag  remote=local   lock         worktree sha   note
+hanamesh-plugin-app-host             yes    NO(codex/p02-apphost-request-01) yes    NO(no v0.2.0-rc.6) NO(5881527!=fd243fc) yes          none     yes   
