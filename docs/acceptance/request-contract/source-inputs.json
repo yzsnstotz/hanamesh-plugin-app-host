@@ -1,0 +1,339 @@
+{
+  "taskBase": "2788ecfc29e2d63d96094ec114d63119b3e207f4",
+  "taskBaseVersion": "0.2.0-rc.6",
+  "formalProductAppHostSource": "5881527d6eea459a1ce24ca06e1a6ee68218dd49",
+  "formalProductAppHostVersion": "0.2.0-rc.2",
+  "formalProductMappingEvidence": "P02-ENTRY-01 VERIFY d54fb5d + NPM-APPHOST-01 REPORT (not a fresh product inventory)",
+  "inputs": [
+    {
+      "path": "/Users/yzliu/work/projects/hanamesh/hanamesh-app-vibe-trading/vendor/hanamesh-dsh-app-host-0.2.0-rc.2.tgz",
+      "sha256": "1a40359723795efd5d86530db593e818801ef4245efbed5a77ccec5fd3265f40",
+      "bytes": 148014
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/METADATA-DEVKIT-VENDOR-APPHOST-01/artifacts/hanamesh-dsh-app-host-0.2.0-rc.6.tgz",
+      "sha256": "2294541a19575b246774b1d0566c48bf75d64499312edd0f4576730296bb826a",
+      "bytes": 152183
+    }
+  ],
+  "requestBoundaryComparisons": [
+    {
+      "path": "dist/client-ui.js",
+      "rc2_sha256": "4cf484fc8558c610b8a30f147260fba3f3e52e5254a0dfcf1c295d2fd37d18b5",
+      "rc6_sha256": "4cf484fc8558c610b8a30f147260fba3f3e52e5254a0dfcf1c295d2fd37d18b5",
+      "built_sha256": "4cf484fc8558c610b8a30f147260fba3f3e52e5254a0dfcf1c295d2fd37d18b5",
+      "source_sha256": "4cf484fc8558c610b8a30f147260fba3f3e52e5254a0dfcf1c295d2fd37d18b5",
+      "equal": true
+    },
+    {
+      "path": "dist/dsh.js",
+      "rc2_sha256": "5480b41e45c6c8f7153c605244b91394148f742533d7cbb7c649edfdc2bc1cdb",
+      "rc6_sha256": "5480b41e45c6c8f7153c605244b91394148f742533d7cbb7c649edfdc2bc1cdb",
+      "built_sha256": "5480b41e45c6c8f7153c605244b91394148f742533d7cbb7c649edfdc2bc1cdb",
+      "source_sha256": "5480b41e45c6c8f7153c605244b91394148f742533d7cbb7c649edfdc2bc1cdb",
+      "equal": true
+    },
+    {
+      "path": "dist/library/routes.js",
+      "rc2_sha256": "6612c92c57b1320fb16d20884313381d986f680dc1965f2d610a0d3b2c7fdeb3",
+      "rc6_sha256": "6612c92c57b1320fb16d20884313381d986f680dc1965f2d610a0d3b2c7fdeb3",
+      "built_sha256": "6612c92c57b1320fb16d20884313381d986f680dc1965f2d610a0d3b2c7fdeb3",
+      "source_sha256": "6612c92c57b1320fb16d20884313381d986f680dc1965f2d610a0d3b2c7fdeb3",
+      "equal": true
+    },
+    {
+      "path": "dist/library/service.js",
+      "rc2_sha256": "ddc4cfc9486af7ed6ea6c65ec46ec7f27f18e884e7c786ba06dd6b867a49a275",
+      "rc6_sha256": "ddc4cfc9486af7ed6ea6c65ec46ec7f27f18e884e7c786ba06dd6b867a49a275",
+      "built_sha256": "ddc4cfc9486af7ed6ea6c65ec46ec7f27f18e884e7c786ba06dd6b867a49a275",
+      "source_sha256": "ddc4cfc9486af7ed6ea6c65ec46ec7f27f18e884e7c786ba06dd6b867a49a275",
+      "equal": true
+    },
+    {
+      "path": "dist/library/install.js",
+      "rc2_sha256": "126fd4e8c60cb2dbdc848f9700cecc1e68c63ed1942c239d347fd4482264a1fc",
+      "rc6_sha256": "126fd4e8c60cb2dbdc848f9700cecc1e68c63ed1942c239d347fd4482264a1fc",
+      "built_sha256": "126fd4e8c60cb2dbdc848f9700cecc1e68c63ed1942c239d347fd4482264a1fc",
+      "source_sha256": "126fd4e8c60cb2dbdc848f9700cecc1e68c63ed1942c239d347fd4482264a1fc",
+      "equal": true
+    },
+    {
+      "path": "dist/routes.js",
+      "rc2_sha256": "740ad47960a7e7a6d6d3cbf8726f42a986e3ac511bc69833e8ec6e3871030b42",
+      "rc6_sha256": "740ad47960a7e7a6d6d3cbf8726f42a986e3ac511bc69833e8ec6e3871030b42",
+      "built_sha256": "740ad47960a7e7a6d6d3cbf8726f42a986e3ac511bc69833e8ec6e3871030b42",
+      "source_sha256": "740ad47960a7e7a6d6d3cbf8726f42a986e3ac511bc69833e8ec6e3871030b42",
+      "equal": true
+    },
+    {
+      "path": "dist/router/routes.js",
+      "rc2_sha256": "470aacb365d88a4a002bb4d1a968c8931cda1c97d4e9c7d6a4c441a4122bd2bb",
+      "rc6_sha256": "470aacb365d88a4a002bb4d1a968c8931cda1c97d4e9c7d6a4c441a4122bd2bb",
+      "built_sha256": "470aacb365d88a4a002bb4d1a968c8931cda1c97d4e9c7d6a4c441a4122bd2bb",
+      "source_sha256": "470aacb365d88a4a002bb4d1a968c8931cda1c97d4e9c7d6a4c441a4122bd2bb",
+      "equal": true
+    }
+  ],
+  "rc2Manifest": {
+    "name": "@hanamesh/dsh-app-host",
+    "version": "0.2.0-rc.2",
+    "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.0-rc.2",
+    "type": "module",
+    "license": "SEE LICENSE IN LICENSE",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/yzsnstotz/hanamesh-plugin-app-host.git"
+    },
+    "engines": {
+      "node": ">=24.13.1 <25"
+    },
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./dsh": {
+        "types": "./dist/dsh.d.ts",
+        "default": "./dist/dsh.js"
+      },
+      "./package.json": "./package.json",
+      "./client": {
+        "types": "./dist/client.d.ts",
+        "node": "./dist/client.js",
+        "default": "./dist/client-ui.js"
+      },
+      "./client-ui": {
+        "types": "./dist/client-ui.d.ts",
+        "default": "./dist/client-ui.js"
+      }
+    },
+    "files": [
+      "dist",
+      "consistency.json",
+      "README.md",
+      "LICENSE",
+      "docs/CONTRACT.md",
+      "docs/DSH_INTEGRATION.md",
+      "docs/APP_PACKAGE.md",
+      "docs/LIBRARY.md",
+      "docs/SECURITY.md",
+      "docs/PROVENANCE.json",
+      "docs/LICENSES.json",
+      "schemas",
+      "profile"
+    ],
+    "scripts": {
+      "build": "node scripts/build.mjs",
+      "test": "node --test --test-concurrency=1 tests/*.test.mjs",
+      "test:mutation": "node scripts/mutations.mjs",
+      "test:types": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext tests/consumer.mts",
+      "check": "npm run build && npm run check:consistency && npm test && npm run test:mutation",
+      "prepack": "npm run build",
+      "demo": "node examples/demo.mjs",
+      "preflight:dsh": "node scripts/preflight-dsh.mjs",
+      "check:consistency": "node scripts/check-consistency.mjs"
+    },
+    "dsh": {
+      "bundle": {
+        "patch": "./profile/cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-ui-slots",
+          "@deepseek-ai/dsh-client-ui-settings",
+          "@deepseek-ai/dsh-client-locale"
+        ],
+        "platform": "web",
+        "external": [
+          "react"
+        ]
+      }
+    },
+    "dependencies": {
+      "zod": "4.5.4"
+    },
+    "peerDependencies": {
+      "@deepseek-ai/cordis": "4.0.4",
+      "@deepseek-ai/dsh-storage-domain": "0.2.0-rc.2",
+      "@deepseek-ai/schemastery": "3.18.4",
+      "@deepseek-ai/dsh-host-webserver": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-client-connection": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-client-ui-slots": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-client-locale": "0.2.0-rc.2",
+      "react": "18.3.1"
+    },
+    "hanamesh": {
+      "module": "app-host",
+      "contractVersion": 1,
+      "dshTarget": "0.2.0-rc.2",
+      "upstreamFilesModified": 0
+    },
+    "devDependencies": {
+      "@deepseek-ai/cordis": "4.0.4",
+      "@deepseek-ai/dsh-host-webserver": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-scope": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-session": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-session-persistence": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-session-persistence-jsonl": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-session-projection": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-storage": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-storage-domain": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-storage-json": "0.2.0-rc.2",
+      "@deepseek-ai/schemastery": "3.18.4",
+      "typescript": "5.8.3"
+    }
+  },
+  "rc6Manifest": {
+    "name": "@hanamesh/dsh-app-host",
+    "version": "0.2.0-rc.6",
+    "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.0-rc.2",
+    "type": "module",
+    "license": "SEE LICENSE IN LICENSE",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/yzsnstotz/hanamesh-plugin-app-host.git"
+    },
+    "engines": {
+      "node": ">=24.13.1 <25"
+    },
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./dsh": {
+        "types": "./dist/dsh.d.ts",
+        "default": "./dist/dsh.js"
+      },
+      "./package.json": "./package.json",
+      "./client": {
+        "types": "./dist/client.d.ts",
+        "node": "./dist/client.js",
+        "default": "./dist/client-ui.js"
+      },
+      "./client-ui": {
+        "types": "./dist/client-ui.d.ts",
+        "default": "./dist/client-ui.js"
+      }
+    },
+    "files": [
+      "dist",
+      "consistency.json",
+      "README.md",
+      "LICENSE",
+      "docs/CONTRACT.md",
+      "docs/DSH_INTEGRATION.md",
+      "docs/APP_PACKAGE.md",
+      "docs/LIBRARY.md",
+      "docs/SECURITY.md",
+      "docs/PROVENANCE.json",
+      "docs/LICENSES.json",
+      "schemas",
+      "profile"
+    ],
+    "scripts": {
+      "build": "node scripts/build.mjs",
+      "test": "node --test --test-reporter=tap --test-concurrency=1 tests/*.test.mjs",
+      "test:mutation": "node scripts/mutations.mjs",
+      "test:types": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext tests/consumer.mts",
+      "check": "npm run check:toolchain && npm run build && npm run check:consistency && npm test && npm run test:mutation && npm run test:types && npm run preflight",
+      "prepack": "npm run build",
+      "demo": "node examples/demo.mjs",
+      "preflight:dsh": "node scripts/preflight-dsh.mjs",
+      "check:consistency": "node scripts/check-consistency.mjs",
+      "check:toolchain": "node scripts/check-toolchain.mjs",
+      "preflight": "node scripts/preflight.mjs",
+      "verify:pack": "node scripts/verify-package.mjs"
+    },
+    "dsh": {
+      "bundle": {
+        "patch": "./profile/cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-ui-slots",
+          "@deepseek-ai/dsh-client-ui-settings",
+          "@deepseek-ai/dsh-client-locale"
+        ],
+        "platform": "web",
+        "external": [
+          "react"
+        ]
+      }
+    },
+    "dependencies": {
+      "zod": "4.5.4"
+    },
+    "peerDependencies": {
+      "@deepseek-ai/cordis": "4.0.4",
+      "@deepseek-ai/dsh-storage-domain": "0.2.0-rc.2",
+      "@deepseek-ai/schemastery": "3.18.4",
+      "@deepseek-ai/dsh-host-webserver": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-client-connection": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-client-ui-slots": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-client-locale": "0.2.0-rc.2",
+      "react": "18.3.1",
+      "@hanamesh/devkit": "0.1.0-rc.2"
+    },
+    "hanamesh": {
+      "module": "app-host",
+      "contractVersion": 1,
+      "dshTarget": "0.2.0-rc.2",
+      "upstreamFilesModified": 0
+    },
+    "devDependencies": {
+      "@deepseek-ai/cordis": "4.0.4",
+      "@deepseek-ai/dsh-host-webserver": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-scope": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-session": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-session-persistence": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-session-persistence-jsonl": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-session-projection": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-storage": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-storage-domain": "0.2.0-rc.2",
+      "@deepseek-ai/dsh-storage-json": "0.2.0-rc.2",
+      "@deepseek-ai/schemastery": "3.18.4",
+      "typescript": "5.8.3",
+      "@hanamesh/devkit": "file:vendor/hanamesh-devkit-0.1.0-rc.2.tgz"
+    },
+    "peerDependenciesMeta": {
+      "@hanamesh/devkit": {
+        "optional": true
+      }
+    }
+  },
+  "connection": {
+    "version": "0.2.0-rc.2",
+    "publicPackagePath": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/source/node_modules/@deepseek-ai/dsh-client-connection",
+    "files": [
+      {
+        "path": "lib/index.js",
+        "sha256": "3950f524aed44e28240140a254cd928ea40eba8e2d04cc8fd04f92a687f5c91d"
+      },
+      {
+        "path": "lib/types/index.d.ts",
+        "sha256": "d83649e8d3f48e7e28fe930df033632ae303843d5512ddd1b81a2098d4e33d78"
+      },
+      {
+        "path": "lib/types/rpc.d.ts",
+        "sha256": "3ca86c027408eb2dd6f1aa6efba0778b0f14802d638fc2f66bced8c5e698b0a4"
+      }
+    ]
+  },
+  "preserved": {
+    "package.json": "4461451f81604b89bd9aab0e0b8982e48b4840010bf6ad979d2e6cf76b6c843a",
+    "package-lock.json": "af8da8705393433c97ec3e952df8b6c882b1839c01e1b8efe80178bdbbd5eb94",
+    "devkit.config.mjs": "3a5221c210b5a4fa367ea902a7acbd95d9b3dcd9af55e561f80cb921ff807add",
+    "scripts/build.mjs": "c03d356fdb0437bed907e4c37634491f4b780d8df8d506524f30ec56de985f96",
+    "docs/PROVENANCE.json": "baaec40ec590f777789f6dc9faa6381ebf2093a42aba54292b73a0e2feb82279",
+    "docs/LICENSES.json": "5adf46910f4706d4bd3b839e803d554a099aab6912334db5a705a0cdf387f898",
+    "vendor/hanamesh-devkit-0.1.0-rc.2.tgz": "ae815e589c3e5a573e407da5c982bb0fc8df15b57683ebbfaccd828d9dd588e0",
+    "vendor/hanamesh-lib-provision-0.1.0-rc.3.tgz": "b7d149dcbf51c30fd0226fb170afdf268501057b0c7149903c02c17abe93b2c7"
+  }
+}

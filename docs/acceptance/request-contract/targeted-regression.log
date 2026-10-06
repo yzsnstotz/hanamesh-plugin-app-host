@@ -1,0 +1,178 @@
+TAP version 13
+# Subtest: H01 (harness half): the plugin activates on a real Cordis root and provides ctx.hanameshApps
+ok 1 - H01 (harness half): the plugin activates on a real Cordis root and provides ctx.hanameshApps
+  ---
+  duration_ms: 74.774458
+  type: 'test'
+  ...
+# Subtest: H11: lease/instance state lands in the storage-domain sidecar and DSH still reads its own session
+ok 2 - H11: lease/instance state lands in the storage-domain sidecar and DSH still reads its own session
+  ---
+  duration_ms: 480.941208
+  type: 'test'
+  ...
+# Subtest: H14/AC-07 on the real web server: unauthenticated, wrong origin and iframe callers are refused
+ok 3 - H14/AC-07 on the real web server: unauthenticated, wrong origin and iframe callers are refused
+  ---
+  duration_ms: 68.951583
+  type: 'test'
+  ...
+# Subtest: H09/dispose: unloading the plugin removes its routes, stops owned instances, and closes the domain
+ok 4 - H09/dispose: unloading the plugin removes its routes, stops owned instances, and closes the domain
+  ---
+  duration_ms: 332.754
+  type: 'test'
+  ...
+# Subtest: AC-26 shape: without the connection service the plugin never activates, so no route is public
+ok 5 - AC-26 shape: without the connection service the plugin never activates, so no route is public
+  ---
+  duration_ms: 339.16175
+  type: 'test'
+  ...
+# Subtest: unit: bare apply() cannot masquerade as a loaded plugin
+ok 6 - unit: bare apply() cannot masquerade as a loaded plugin
+  ---
+  duration_ms: 0.989459
+  type: 'test'
+  ...
+# Subtest: teardown: a whole-root unload (profile shutdown) never orphans an owned process, even though the storage domain closes concurrently
+ok 7 - teardown: a whole-root unload (profile shutdown) never orphans an owned process, even though the storage domain closes concurrently
+  ---
+  duration_ms: 301.376125
+  type: 'test'
+  ...
+# Subtest: AH-L07 (plugin): an unconfigured library seeds the HanaMesh catalog source through the real Config schema; an explicit [] does not
+ok 8 - AH-L07 (plugin): an unconfigured library seeds the HanaMesh catalog source through the real Config schema; an explicit [] does not
+  ---
+  duration_ms: 135.070209
+  type: 'test'
+  ...
+# Subtest: AH-U07 (plugin): usage evidence reaches ctx.hanameshUsage.record when that sibling is provided — before or after this plugin — and its absence changes nothing
+ok 9 - AH-U07 (plugin): usage evidence reaches ctx.hanameshUsage.record when that sibling is provided — before or after this plugin — and its absence changes nothing
+  ---
+  duration_ms: 843.113292
+  type: 'test'
+  ...
+# Subtest: AH-M08 (plugin): rc.28 market routes are registered on the real web server behind the same auth chain; without an installer the plugin seats answer 503, never 500
+ok 10 - AH-M08 (plugin): rc.28 market routes are registered on the real web server behind the same auth chain; without an installer the plugin seats answer 503, never 500
+  ---
+  duration_ms: 67.985792
+  type: 'test'
+  ...
+# Subtest: the library entry never pulls a DSH-only peer into a plain consumer import graph
+ok 11 - the library entry never pulls a DSH-only peer into a plain consumer import graph
+  ---
+  duration_ms: 2.614375
+  type: 'test'
+  ...
+# Subtest: AH-L04/L05: install uses explicit Node + DSH argv, exact stable registry version, then provisions the declared item
+ok 12 - AH-L04/L05: install uses explicit Node + DSH argv, exact stable registry version, then provisions the declared item
+  ---
+  duration_ms: 11.480208
+  type: 'test'
+  ...
+# Subtest: AH-L06: uninstall removes the package and owned runtime but preserves application data
+ok 13 - AH-L06: uninstall removes the package and owned runtime but preserves application data
+  ---
+  duration_ms: 1.557375
+  type: 'test'
+  ...
+# Subtest: AH-RI01: uninstall clears generated Python bytecode left by provision remove
+ok 14 - AH-RI01: uninstall clears generated Python bytecode left by provision remove
+  ---
+  duration_ms: 1.299583
+  type: 'test'
+  ...
+# Subtest: AH-RI02: uninstall preserves unknown runtime residue and reports incomplete cleanup
+ok 15 - AH-RI02: uninstall preserves unknown runtime residue and reports incomplete cleanup
+  ---
+  duration_ms: 0.7025
+  type: 'test'
+  ...
+# Subtest: AH-M01: a catalog plugin installs through the same `dsh plugin add --save-exact` path as an application, reads no app.json and provisions nothing
+ok 16 - AH-M01: a catalog plugin installs through the same `dsh plugin add --save-exact` path as an application, reads no app.json and provisions nothing
+  ---
+  duration_ms: 5.540791
+  type: 'test'
+  ...
+# Subtest: AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite itself is refused both ways (PACKAGE_DENIED)
+ok 17 - AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite itself is refused both ways (PACKAGE_DENIED)
+  ---
+  duration_ms: 1.344625
+  type: 'test'
+  ...
+# Subtest: AH-M03: installed plugins = profile dependencies minus application packages, with restart states from the boot snapshot
+ok 18 - AH-M03: installed plugins = profile dependencies minus application packages, with restart states from the boot snapshot
+  ---
+  duration_ms: 9.350042
+  type: 'test'
+  ...
+# Subtest: AH-M04: upgrade = catalog latestVersion strictly newer than the installed version (semver, prerelease below release)
+ok 19 - AH-M04: upgrade = catalog latestVersion strictly newer than the installed version (semver, prerelease below release)
+  ---
+  duration_ms: 0.234
+  type: 'test'
+  ...
+# Subtest: AH-M05: the market listing annotates every entry with kind / installed row / upgradeAvailable, lists categories, installed plugins and restartRequired
+ok 20 - AH-M05: the market listing annotates every entry with kind / installed row / upgradeAvailable, lists categories, installed plugins and restartRequired
+  ---
+  duration_ms: 4.329167
+  type: 'test'
+  ...
+# Subtest: AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall / plugin fields answer 400 INVALID_INPUT before any operation starts; installedPlugins and the plugin routes are served
+ok 21 - AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall / plugin fields answer 400 INVALID_INPUT before any operation starts; installedPlugins and the plugin routes are served
+  ---
+  duration_ms: 76.140583
+  type: 'test'
+  ...
+# Subtest: AH-M07 (client source): the entry is 「市场」, cards carry kind/state/upgrade, and a plugin change shows 「需重启 DSH」 with the hanamesh://restart deep link only inside the shell
+ok 22 - AH-M07 (client source): the entry is 「市场」, cards carry kind/state/upgrade, and a plugin change shows 「需重启 DSH」 with the hanamesh://restart deep link only inside the shell
+  ---
+  duration_ms: 0.566292
+  type: 'test'
+  ...
+# Subtest: NPM-APPHOST-01: published metadata resolves against official DSH rc.2 without private provision peer
+ok 23 - NPM-APPHOST-01: published metadata resolves against official DSH rc.2 without private provision peer
+  ---
+  duration_ms: 2.675875
+  type: 'test'
+  ...
+# Subtest: NPM-APPHOST-01: actual packed manifest allows only the exact optional development devkit peer/vendor spec
+ok 24 - NPM-APPHOST-01: actual packed manifest allows only the exact optional development devkit peer/vendor spec
+  ---
+  duration_ms: 353.205208
+  type: 'test'
+  ...
+# Subtest: H14: every browser command/env/cwd/path/url override is rejected before spawn
+ok 25 - H14: every browser command/env/cwd/path/url override is rejected before spawn
+  ---
+  duration_ms: 23.32025
+  type: 'test'
+  ...
+# Subtest: H14: control routes require authentication, CSRF header, exact origin and host
+ok 26 - H14: control routes require authentication, CSRF header, exact origin and host
+  ---
+  duration_ms: 9.641666
+  type: 'test'
+  ...
+# Subtest: AH routes: startup receipt can be cancelled and tokens are not leaked through list/events
+ok 27 - AH routes: startup receipt can be cancelled and tokens are not leaked through list/events
+  ---
+  duration_ms: 152.671041
+  type: 'test'
+  ...
+# Subtest: H08: busy Stop is HTTP 409 and names the occupying view
+ok 28 - H08: busy Stop is HTTP 409 and names the occupying view
+  ---
+  duration_ms: 139.457667
+  type: 'test'
+  ...
+1..28
+# tests 28
+# suites 0
+# pass 28
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3766.723709

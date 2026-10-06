@@ -1,0 +1,9 @@
+file:///Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/source/tests/helpers.mjs:43
+  throw new Error(`Condition did not become true: ${last}`);
+        ^
+
+Error: Condition did not become true: undefined
+    at until (file:///Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/source/tests/helpers.mjs:43:9)
+    at async file:///Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/source/docs/acceptance/request-contract/probe.mjs:81:3
+
+Node.js v24.13.1

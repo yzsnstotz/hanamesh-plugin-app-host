@@ -1,0 +1,133 @@
+{
+  "evidence": [
+    "SOURCE",
+    "FIXTURE"
+  ],
+  "root": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/tmp/apphost-contract-IZdpbJ",
+  "modelRequests": 0,
+  "fixtures": [
+    "in-memory credential record provider",
+    "installed test application",
+    "local file runtime archive"
+  ],
+  "production": [
+    "Cordis",
+    "Connection BrowserAuth and admission",
+    "storage-json/storage-domain",
+    "webServer",
+    "AppHost apply and HTTP routes",
+    "library service/installer",
+    "inlined provision rc3"
+  ],
+  "cases": [
+    {
+      "name": "missing-origin",
+      "status": 403,
+      "code": "CSRF_DENIED",
+      "connectionRejection": "admitted",
+      "operationsStarted": 0
+    },
+    {
+      "name": "custom-scheme-origin",
+      "status": 403,
+      "code": "ORIGIN_DENIED",
+      "connectionRejection": 403,
+      "operationsStarted": 0
+    },
+    {
+      "name": "opaque-origin",
+      "status": 403,
+      "code": "ORIGIN_DENIED",
+      "connectionRejection": 403,
+      "operationsStarted": 0
+    },
+    {
+      "name": "foreign-origin",
+      "status": 403,
+      "code": "ORIGIN_DENIED",
+      "connectionRejection": 403,
+      "operationsStarted": 0
+    },
+    {
+      "name": "different-loopback-port",
+      "status": 403,
+      "code": "ORIGIN_DENIED",
+      "connectionRejection": 403,
+      "operationsStarted": 0
+    },
+    {
+      "name": "foreign-host",
+      "status": 403,
+      "code": "HOST_DENIED",
+      "connectionRejection": 403,
+      "operationsStarted": 0
+    },
+    {
+      "name": "missing-client-marker",
+      "status": 403,
+      "code": "CSRF_DENIED",
+      "connectionRejection": "admitted",
+      "operationsStarted": 0
+    },
+    {
+      "name": "forged-client-marker",
+      "status": 403,
+      "code": "CSRF_DENIED",
+      "connectionRejection": "admitted",
+      "operationsStarted": 0
+    },
+    {
+      "name": "missing-authentication",
+      "status": 401,
+      "code": "UNAUTHENTICATED",
+      "connectionRejection": 401,
+      "operationsStarted": 0
+    },
+    {
+      "name": "invalid-authentication",
+      "status": 401,
+      "code": "UNAUTHENTICATED",
+      "connectionRejection": 401,
+      "operationsStarted": 0
+    },
+    {
+      "name": "application-frame",
+      "status": 403,
+      "code": "FRAME_CONTROL_DENIED",
+      "connectionRejection": "admitted",
+      "operationsStarted": 0
+    },
+    {
+      "name": "cross-site-metadata",
+      "status": 401,
+      "code": "UNAUTHENTICATED",
+      "connectionRejection": 403,
+      "operationsStarted": 0
+    },
+    {
+      "name": "denied-operation-authorization",
+      "status": 403,
+      "code": "FORBIDDEN",
+      "authorizeCalls": 1,
+      "provisionCalls": 0,
+      "evidence": "FIXTURE route authorization callback"
+    },
+    {
+      "name": "authenticated-same-origin-provision",
+      "status": 202,
+      "operation": "library.provision-done",
+      "ledgerCreatedBy": "unmodified inlined provision rc3",
+      "archiveSha256": "3676b3a1f7012457598ef00b5514f368f54c66f3f212cd071f28abbdc5251c35",
+      "executableBytesEqual": true,
+      "operatorPeerIdentityEqual": true
+    }
+  ],
+  "tokenExchangeStatus": 303,
+  "installedBefore": "runtime-missing",
+  "installedAfter": "registered",
+  "productionChanges": 0,
+  "cleanup": {
+    "rootRemoved": true,
+    "signalsSent": 0
+  }
+}

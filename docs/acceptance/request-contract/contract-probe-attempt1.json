@@ -1,0 +1,27 @@
+{
+  "evidence": [
+    "SOURCE",
+    "FIXTURE"
+  ],
+  "root": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/tmp/apphost-contract-5zqcGk",
+  "modelRequests": 0,
+  "fixtures": [
+    "in-memory credential record provider",
+    "installed test application",
+    "local file runtime archive"
+  ],
+  "production": [
+    "Cordis",
+    "Connection BrowserAuth and admission",
+    "storage-json/storage-domain",
+    "webServer",
+    "AppHost apply and HTTP routes",
+    "library service/installer",
+    "inlined provision rc3"
+  ],
+  "cases": [],
+  "cleanup": {
+    "rootRemoved": true,
+    "signalsSent": 0
+  }
+}
