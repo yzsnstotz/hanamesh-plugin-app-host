@@ -1,0 +1,44 @@
+{
+  "deleted": [
+    "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/hanamesh-plugin-app-host/node_modules",
+    "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/home",
+    "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/dsh-home",
+    "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/tmp",
+    "/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/tmp.jM4fK5wqE9"
+  ],
+  "checks": [
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/hanamesh-plugin-app-host/node_modules",
+      "lsofExit": 1,
+      "openFiles": 0
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/home",
+      "lsofExit": 1,
+      "openFiles": 0
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/dsh-home",
+      "lsofExit": 1,
+      "openFiles": 0
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P02-APPHOST-REQUEST-01/request-contract-verify/tmp",
+      "lsofExit": 1,
+      "openFiles": 0
+    },
+    {
+      "path": "/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/tmp.jM4fK5wqE9",
+      "lsofExit": 1,
+      "openFiles": 0
+    }
+  ],
+  "signalsSent": 0,
+  "kept": [
+    "own checkout/source/Git/tracked dist",
+    "all parent _evidence/request-contract-verify",
+    "latest producer rc6 and original rc2 tgz",
+    "other actors run trees"
+  ],
+  "newPackages": 0
+}

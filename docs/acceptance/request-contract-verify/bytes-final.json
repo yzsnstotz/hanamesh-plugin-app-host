@@ -1,0 +1,114 @@
+{
+  "frozenSource": "1697ac87f56afdd9302ba380c9785eff8247dff6",
+  "remoteImplementationRef": "1697ac87f56afdd9302ba380c9785eff8247dff6",
+  "base": "2788ecfc29e2d63d96094ec114d63119b3e207f4",
+  "changedFiles": [
+    "docs/acceptance/request-contract/BOUNDARY.md",
+    "docs/acceptance/request-contract/CLEANUP.md",
+    "docs/acceptance/request-contract/PUBLIC_CONFIG.md",
+    "docs/acceptance/request-contract/SESSION.md",
+    "docs/acceptance/request-contract/build.log",
+    "docs/acceptance/request-contract/cleanup-attempt1.json",
+    "docs/acceptance/request-contract/cleanup.json",
+    "docs/acceptance/request-contract/commands.jsonl",
+    "docs/acceptance/request-contract/config-probe.mjs",
+    "docs/acceptance/request-contract/contract-probe-attempt1.json",
+    "docs/acceptance/request-contract/contract-probe-attempt1.log",
+    "docs/acceptance/request-contract/contract-probe.json",
+    "docs/acceptance/request-contract/contract-probe.log",
+    "docs/acceptance/request-contract/diff-check.log",
+    "docs/acceptance/request-contract/fresh-clone.json",
+    "docs/acceptance/request-contract/git-readiness.log",
+    "docs/acceptance/request-contract/install.log",
+    "docs/acceptance/request-contract/probe.mjs",
+    "docs/acceptance/request-contract/project-preflight.log",
+    "docs/acceptance/request-contract/public-config-cleanup.json",
+    "docs/acceptance/request-contract/public-config-inputs.json",
+    "docs/acceptance/request-contract/public-config-probe.json",
+    "docs/acceptance/request-contract/public-config-probe.log",
+    "docs/acceptance/request-contract/public-config-regression.log",
+    "docs/acceptance/request-contract/run.py",
+    "docs/acceptance/request-contract/source-inputs.json",
+    "docs/acceptance/request-contract/targeted-regression.log",
+    "docs/acceptance/request-contract/toolchain.log",
+    "docs/acceptance/request-contract/types.log"
+  ],
+  "changedFileCount": 29,
+  "productionChanges": 0,
+  "builtTrackedBytesUnchanged": true,
+  "packages": [
+    {
+      "path": "/Users/yzliu/work/projects/hanamesh/hanamesh-app-vibe-trading/vendor/hanamesh-dsh-app-host-0.2.0-rc.2.tgz",
+      "version": "0.2.0-rc.2",
+      "sha256": "1a40359723795efd5d86530db593e818801ef4245efbed5a77ccec5fd3265f40"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/METADATA-DEVKIT-VENDOR-APPHOST-01/artifacts/hanamesh-dsh-app-host-0.2.0-rc.6.tgz",
+      "version": "0.2.0-rc.6",
+      "sha256": "2294541a19575b246774b1d0566c48bf75d64499312edd0f4576730296bb826a"
+    }
+  ],
+  "comparisons": [
+    {
+      "path": "dist/client-ui.js",
+      "allFiveEqual": true,
+      "sha256": "4cf484fc8558c610b8a30f147260fba3f3e52e5254a0dfcf1c295d2fd37d18b5"
+    },
+    {
+      "path": "dist/dsh.js",
+      "allFiveEqual": true,
+      "sha256": "5480b41e45c6c8f7153c605244b91394148f742533d7cbb7c649edfdc2bc1cdb"
+    },
+    {
+      "path": "dist/library/routes.js",
+      "allFiveEqual": true,
+      "sha256": "6612c92c57b1320fb16d20884313381d986f680dc1965f2d610a0d3b2c7fdeb3"
+    },
+    {
+      "path": "dist/library/service.js",
+      "allFiveEqual": true,
+      "sha256": "ddc4cfc9486af7ed6ea6c65ec46ec7f27f18e884e7c786ba06dd6b867a49a275"
+    },
+    {
+      "path": "dist/library/install.js",
+      "allFiveEqual": true,
+      "sha256": "126fd4e8c60cb2dbdc848f9700cecc1e68c63ed1942c239d347fd4482264a1fc"
+    },
+    {
+      "path": "dist/routes.js",
+      "allFiveEqual": true,
+      "sha256": "740ad47960a7e7a6d6d3cbf8726f42a986e3ac511bc69833e8ec6e3871030b42"
+    },
+    {
+      "path": "dist/router/routes.js",
+      "allFiveEqual": true,
+      "sha256": "470aacb365d88a4a002bb4d1a968c8931cda1c97d4e9c7d6a4c441a4122bd2bb"
+    }
+  ],
+  "publicCLI": {
+    "path": "/Users/yzliu/work/projects/hanamesh/hanamesh-desktop/apps/cli/package.json",
+    "sha256": "96845d9efaa4ab078f1405fbe28445b606b5ab79377fd607866dd46b0c0b52c1",
+    "version": "0.2.0-rc.2",
+    "exports": {
+      "./profile-boot": {
+        "types": "./lib/types/profile-boot.d.ts",
+        "default": "./lib/profile-boot.js"
+      },
+      "./lib/*": "./lib/*",
+      "./package.json": "./package.json"
+    }
+  },
+  "inputs": {
+    "package.json": "4461451f81604b89bd9aab0e0b8982e48b4840010bf6ad979d2e6cf76b6c843a",
+    "package-lock.json": "af8da8705393433c97ec3e952df8b6c882b1839c01e1b8efe80178bdbbd5eb94",
+    "src/dsh.d.ts": "3a3e870716f51974eee909280281a106fbb75b9d39556805f9e225e3bc3d970a",
+    "src/runtime.js": "47480b9465e37b1219e59ccdfdc9c07412657da8c3c8a2629d0d934651f528fe",
+    "src/library/locate.js": "35dd3e090992e0eb7960027e64c14726ff351a888e1505a3f907c7f0812eb9b9",
+    "vendor/hanamesh-devkit-0.1.0-rc.2.tgz": "ae815e589c3e5a573e407da5c982bb0fc8df15b57683ebbfaccd828d9dd588e0",
+    "vendor/hanamesh-lib-provision-0.1.0-rc.3.tgz": "b7d149dcbf51c30fd0226fb170afdf268501057b0c7149903c02c17abe93b2c7",
+    "node_modules/@deepseek-ai/dsh-client-connection/lib/index.js": "3950f524aed44e28240140a254cd928ea40eba8e2d04cc8fd04f92a687f5c91d",
+    "node_modules/@deepseek-ai/dsh-client-connection/lib/types/rpc.d.ts": "3ca86c027408eb2dd6f1aa6efba0778b0f14802d638fc2f66bced8c5e698b0a4"
+  },
+  "newPackages": 0,
+  "formalEffectiveParameters": "NOT_CAPTURED"
+}
