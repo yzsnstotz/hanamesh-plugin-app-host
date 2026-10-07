@@ -11,9 +11,17 @@ export function LibraryAction():unknown;
 export function LibraryOverlay(props?:{embedded?:boolean,preferredSubsectionId?:string}):unknown;
 /** rc.32: the「只能其一」notice shown at the top of the market page when dshmarket holds the seat. */
 export function MarketConflictNotice():unknown;
+/** Identifiers only; metadata and confirmation are owned by the client's market. */
+export interface InstallTarget {itemId?:string;packageName?:string;}
+export interface InstallTargetReceipt {status:'confirmation-required'|'installing'|'already-installed'|'superseded';itemId?:string;packageName?:string;}
+/** Show/resolve a target without installing. Resolves once confirmation is ready; rejects with a visible market error. */
+export function openInstallTarget(input:InstallTarget):Promise<InstallTargetReceipt>;
 /** rc.32: the client-side `market` service object read by the shell's Extension Management panel. */
-export function createMarketSeat():{render(options?:{preferredSubsectionId?:string}):unknown,setSettingsVisible(visible:boolean):void};
+export function createMarketSeat():{render(options?:{preferredSubsectionId?:string}):unknown,setSettingsVisible(visible:boolean):void,openInstallTarget(input:InstallTarget):Promise<InstallTargetReceipt>};
 export const MARKET_SEAT:'market';
 export const MARKET_CONFLICT_TEXT:string;
 /** Test/inspection view of the module-level market state; not part of the DSH contract. */
 export function marketState():{conflict:string,entryVisible:boolean};
+
+/** Normal navigation on the authenticated workspace URL; app-host consumes this fragment. */
+export const INSTALL_TARGET_HASH:'#hanamesh-install?';

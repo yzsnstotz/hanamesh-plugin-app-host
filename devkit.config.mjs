@@ -47,7 +47,7 @@ export async function runAppHostMutations(runner=runMutations){
 
 function packOptions(tarball){
   return {root,tarball:resolve(tarball??join(root,`hanamesh-dsh-app-host-${pkg.version}.tgz`)),
-    required:['package.json','dist/index.js','dist/index.d.ts','dist/client.js','dist/client.d.ts','dist/dsh.js','dist/provision/LICENSE'],
+    required:['package.json','dist/index.js','dist/index.d.ts','dist/client.js','dist/client.d.ts','dist/client-ui.js','dist/client-ui.d.ts','docs/INSTALL_TARGET.md','dist/dsh.js','dist/provision/LICENSE'],
     forbidden:/node_modules\/|vendor\/|tests?\/|scripts\/|artifacts\/|devkit\.config\.mjs|toolchain\.json/u,
     temporaryRoot:undefined,
     validate:async({read})=>{
@@ -58,6 +58,7 @@ function packOptions(tarball){
       assert.equal(packed.dependencies['@hanamesh/devkit'],undefined);
       assert.equal(packed.peerDependencies['@hanamesh/devkit'],'0.1.0-rc.2');
       assert.deepEqual(packed.peerDependenciesMeta['@hanamesh/devkit'],{optional:true});
+      for(const path of ['client-ui.js','client-ui.d.ts','library/routes.js','library/service.js'])assert.deepEqual(read('dist/'+path),await readFile(join(root,'src',path)),'packed install-target bytes: '+path);
     }};
 }
 

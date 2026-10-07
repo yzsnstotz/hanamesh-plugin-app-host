@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/dsh-app-host",
-  "version": "0.2.0-rc.6",
+  "version": "0.2.0-rc.7",
   "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.0-rc.2",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
@@ -46,7 +46,8 @@
     "docs/PROVENANCE.json",
     "docs/LICENSES.json",
     "schemas",
-    "profile"
+    "profile",
+    "docs/INSTALL_TARGET.md"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",

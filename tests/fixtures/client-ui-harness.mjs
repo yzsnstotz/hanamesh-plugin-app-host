@@ -16,10 +16,10 @@ export async function clientHarness({fetch,clock,embedded=true}={}){
     useRef(initial){const id=cursor++;return hooks[id]??=( {current:initial} );},
     useCallback(fn,deps){const id=cursor++,old=hooks[id];if(!old||deps.some((v,i)=>v!==old.deps[i]))hooks[id]={value:fn,deps};return hooks[id].value;},
     useEffect(run,deps){const id=cursor++,old=hooks[id];if(!old||deps.some((v,i)=>v!==old.deps[i])){hooks[id]={deps,cleanup:old?.cleanup};pendingEffects.push(()=>{hooks[id].cleanup?.();hooks[id].cleanup=run();});}}};
-  const listeners=new Map(),documentListeners=new Map(),document={visibilityState:'visible',
+  const listeners=new Map(),documentListeners=new Map(),document={visibilityState:'visible',createElement:()=>({textContent:'',remove(){}}),head:{append(){}},
     addEventListener(name,fn){documentListeners.set(name,fn);},removeEventListener(name,fn){if(documentListeners.get(name)===fn)documentListeners.delete(name);}};
   const window={__ModuleLoader__:{load:module=>{loaded=module;}},self:{},top:{},parent:{postMessage(){}}};
-  const scope={window,fetch,crypto:globalThis.crypto,console,URLSearchParams,AbortController,
+  const scope={window,fetch,location:{hash:''},crypto:globalThis.crypto,console,URLSearchParams,AbortController,
     addEventListener(name,fn){listeners.set(name,fn);},removeEventListener(name,fn){if(listeners.get(name)===fn)listeners.delete(name);}};
   const timer=clock??{Date,setTimeout,clearTimeout};scope.Date=timer.Date;scope.setTimeout=timer.setTimeout.bind(timer);scope.clearTimeout=timer.clearTimeout.bind(timer);
   new Function('window','document','globalThis','setTimeout','clearTimeout','Date',source)(window,document,scope,scope.setTimeout,scope.clearTimeout,timer.Date);
@@ -27,6 +27,7 @@ export async function clientHarness({fetch,clock,embedded=true}={}){
   function render(){cursor=0;tree=module.LibraryOverlay(props);for(const effect of pendingEffects.splice(0))effect();return tree;}
   function find(node,predicate){if(!node)return; if(Array.isArray(node)){for(const child of node){const match=find(child,predicate);if(match)return match;}return;}if(typeof node!=='object')return;if(predicate(node))return node;return find(node.children,predicate);}
   const api={module,render,find:predicate=>find(tree,predicate),get tree(){return tree;},async click(label){const button=find(tree,node=>node.type==='button'&&node.children.includes(label));assert(button,'visible button '+label);button.props.onClick();await settle();},
+    hashchange(hash){scope.location.hash=hash;listeners.get('hashchange')?.();},
     unmount(){dead=true;for(const hook of hooks)hook?.cleanup?.();},pagehide(){listeners.get('pagehide')?.();},pageshow(){listeners.get('pageshow')?.();},
     visibility(state){document.visibilityState=state;documentListeners.get('visibilitychange')?.();},
     async show(){module.LibraryAction().props.onClick();await settle();},async hide(){const close=find(tree,node=>node.type==='button'&&node.children.includes('关闭'));assert(close);close.props.onClick();await settle();}};

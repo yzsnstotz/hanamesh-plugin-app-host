@@ -8,9 +8,10 @@ const PACKAGE_NAME=/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/;
 const text=(value,max)=>typeof value==='string'&&value.length>0&&value.length<=max;
 const RESTART_STATES=new Set(['installed-not-loaded','uninstalled-not-unloaded']);
 const protectedPackage=name=>PROTECTED_PACKAGES.includes(name);
+const present=row=>row&&['registered','installed','installed-not-loaded'].includes(row.state);
 
 export function createLibraryService({domain,host,config={},dataRoot,ledgerReader,installer}){
-  const events=[];let sequence=0;let state;const running=new Map();let bootDependencies;
+  const events=[];let sequence=0;let state;const running=new Map(),installing=new Map();let bootDependencies;
   const emit=event=>{const value={sequence:++sequence,at:Date.now(),...event};events.push(value);if(events.length>512)events.shift();return value;};
   // Real sources hold ~10k entries (2026-09-20: market.hanamesh.com 12,121). `/hanamesh/library` keeps its rc.16 default
   // (`category=hanamesh-app`, backward compatible); the rc.28 market page asks for `category=''` (everything) explicitly.
@@ -20,13 +21,31 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   async function persist(next){next.revision=state.revision+1;await domain.global.set(next);state=next;}
   async function operation(type,task){const operationId=randomUUID();emit({type:`library.${type}-started`,operationId});const work=Promise.resolve().then(task).then(result=>{emit({type:`library.${type}-done`,operationId,result});return result;},error=>{emit({type:`library.${type}-failed`,operationId,code:error.code??'LIBRARY_OPERATION_FAILED'});throw error;}).finally(()=>running.delete(operationId));running.set(operationId,work);work.catch(()=>{});return{operationId,status:'started'};}
   const requireInstaller=(message)=>requireCondition(installer,'LIBRARY_INSTALL_UNAVAILABLE',message,{},503);
-  /** Find one catalog entry by id; a package name narrows the provider query (the catalog has no get-by-id, but `q=<package>` matches exactly). */
-  async function findItem({itemId,packageName}){
-    requireCondition(text(itemId,160),'INVALID_INPUT','itemId is required.');
+  async function resolveTarget(input){
+    requireCondition(input&&typeof input==='object'&&!Array.isArray(input)&&Object.keys(input).every(key=>['itemId','packageName'].includes(key)),'INVALID_INPUT','Only itemId and packageName are accepted.');
+    const{itemId,packageName}=input;
+    requireCondition(itemId!==undefined||packageName!==undefined,'INVALID_INPUT','itemId or packageName is required.');
+    requireCondition(itemId===undefined||(text(itemId,160)&&!/[\u0000-\u001f\u007f]/.test(itemId)),'INVALID_INPUT','itemId is invalid.');
     requireCondition(packageName===undefined||(text(packageName,214)&&PACKAGE_NAME.test(packageName)),'INVALID_INPUT','packageName is invalid.');
-    const page=packageName?await catalog({q:packageName,category:''}):await catalog();
-    const item=page.items.find(row=>row.id===itemId&&(packageName===undefined||row.package?.name===packageName));
-    requireCondition(item,'CATALOG_ITEM_MISSING','Catalog item was not found.',{itemId},404);return item;
+    let cursor;const seen=new Set();
+    do{
+      const page=await catalog({q:packageName??'',category:'',cursor});
+      const found=page.items.find(row=>(itemId===undefined||row.id===itemId)&&(packageName===undefined||row.package?.name===packageName));
+      if(found){
+        requireCondition(found.package?.registry==='npm','NOT_INSTALLABLE','This catalog entry cannot be installed.');
+        requireCondition(!protectedPackage(found.package.name),'PACKAGE_DENIED','The HanaMesh suite is not managed through the market.',{},403);
+        const rows=[...await installedPlugins(),...await installed()],row=rows.find(value=>value.packageName===found.package.name)??null;
+        return{source:page.source,item:{...found,kind:itemKind(found),installed:row,upgradeAvailable:Boolean(row?.version&&row.state!=='uninstalled-not-unloaded'&&upgradeAvailable(found.latestVersion,row.version))}};
+      }
+      cursor=page.page?.nextCursor;
+      requireCondition(!cursor||!seen.has(cursor),'INVALID_CURSOR','Catalog cursor repeated.');if(cursor)seen.add(cursor);
+    }while(cursor);
+    throw new AppHostError('CATALOG_ITEM_MISSING','The market catalog does not contain this target.',{},404);
+  }
+  function installItem(item){
+    const key=item.package.name;if(installing.has(key))return installing.get(key);
+    const started=operation('install',async()=>{try{return await installer.install(item);}finally{installing.delete(key);}});
+    installing.set(key,started);return started;
   }
   async function findByPackage(packageName){
     requireCondition(text(packageName,214)&&PACKAGE_NAME.test(packageName),'INVALID_INPUT','packageName is required.');
@@ -50,7 +69,8 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
     sources(){return{sources:structuredClone(state.sources),revision:state.revision};},
     async replaceSources(input){requireCondition(Array.isArray(input?.sources)&&input.sources.length<=16,'INVALID_SOURCES','sources must be an array of at most 16 entries.');const sources=input.sources.map(source=>({manifestUrl:validateManifestUrl(source.manifestUrl).href,enabled:source.enabled===true}));requireCondition(sources.length===0||sources.filter(source=>source.enabled).length===1,'CATALOG_SOURCE_REQUIRED','Exactly one catalog source must be enabled.');await persist({...state,sources});return this.sources();},
     /** `{itemId, packageName?}`: applications and plugins take the same path (`dsh plugin add --save-exact`); also the upgrade path. */
-    async install(input){requireInstaller('Install requires absolute profileDir, nodeBinary, dshBin and profileName.');const item=await findItem(input??{});return await operation('install',()=>installer.install(item));},
+    resolveTarget,
+    async install(input){requireInstaller('Install requires absolute profileDir, nodeBinary, dshBin and profileName.');const{item}=await resolveTarget(input??{});if(present(item.installed)&&!item.upgradeAvailable)return{status:'already-installed',itemId:item.id,packageName:item.package.name};return await installItem(item);},
     async provision(input){requireInstaller('Runtime provision is unavailable.');
       // LIB-PROVISION-INPUT: a missing field is the caller's error (400), not an internal TypeError inside the operation.
       requireCondition(text(input?.appId,160),'INVALID_INPUT','appId is required.');requireCondition(text(input?.packageName,214)&&PACKAGE_NAME.test(input.packageName),'INVALID_INPUT','packageName is required.');requireCondition(text(input?.runtimeItem,160),'INVALID_INPUT','runtimeItem is required.');
@@ -59,7 +79,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       requireCondition(text(input?.appId,160),'INVALID_INPUT','appId is required.');requireCondition(text(input?.packageName,214)&&PACKAGE_NAME.test(input.packageName),'INVALID_INPUT','packageName is required.');requireCondition(input.runtimeItem===undefined||text(input.runtimeItem,160),'INVALID_INPUT','runtimeItem is invalid.');
       const{appId,packageName,runtimeItem}=input;return await operation('uninstall',()=>installer.uninstall({appId,packageName,runtimeItem,running:runningApp(appId)}));},
     /** rc.28 `{packageName}`: the package must be listed by the enabled catalog; an application package takes the application path. */
-    async installPlugin(input){requireInstaller('Plugin install requires absolute profileDir, nodeBinary, dshBin and profileName.');const item=await findByPackage(input?.packageName);return await operation('install',()=>installer.install(item));},
+    async installPlugin(input){requireInstaller('Plugin install requires absolute profileDir, nodeBinary, dshBin and profileName.');const item=await findByPackage(input?.packageName);return await installItem(item);},
     /** rc.28 `{packageName}`: `dsh plugin remove`; an installed application package is routed through the application uninstall (runtime + running check). */
     async uninstallPlugin(input){requireInstaller('Plugin uninstall is unavailable.');const packageName=input?.packageName;requireCondition(text(packageName,214)&&PACKAGE_NAME.test(packageName),'INVALID_INPUT','packageName is required.');requireCondition(!protectedPackage(packageName),'PACKAGE_DENIED','The HanaMesh suite is not managed through the market.',{packageName},403);
       const app=(await installed()).find(row=>row.packageName===packageName&&row.appId);

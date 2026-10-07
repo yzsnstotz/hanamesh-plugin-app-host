@@ -15,6 +15,12 @@ await writeProbeFile(joinProbePath(import.meta.dirname,'app.mjs'), \`import {cre
   
 `;
 export const typescript = `
+import {openInstallTarget,INSTALL_TARGET_HASH,createMarketSeat} from '@hanamesh/dsh-app-host/client-ui';
+await openInstallTarget({packageName:'example-plugin'});
+await createMarketSeat().openInstallTarget({itemId:'catalog-id'});
+INSTALL_TARGET_HASH satisfies '#hanamesh-install?';
+// @ts-expect-error Download URLs and version metadata are owned by the market.
+await openInstallTarget({itemId:'catalog-id',url:'https://example.test/pkg.tgz',version:'9.0.0'});
 import { AppHost,AtomicFileStore,createHttpHandler,type AppDefinition,type DshStorageBinding } from '@hanamesh/dsh-app-host';
 import { WorkspaceAppClient } from '@hanamesh/dsh-app-host/client';
 import { apply,domainBinding,browserAuthentication,type DshPluginConfig } from '@hanamesh/dsh-app-host/dsh';

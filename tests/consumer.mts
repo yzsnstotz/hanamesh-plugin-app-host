@@ -1,6 +1,12 @@
 import { AppHost,AtomicFileStore,createHttpHandler,type AppDefinition,type DshStorageBinding } from '../dist/index.js';
 import { WorkspaceAppClient } from '../dist/client.js';
 import { apply,domainBinding,browserAuthentication,type DshPluginConfig } from '../dist/dsh.js';
+import {createMarketSeat,openInstallTarget,type InstallTargetReceipt} from '../dist/client-ui.js';
+const targetReceipt:InstallTargetReceipt=await openInstallTarget({itemId:'catalog-id',packageName:'example-plugin'});
+await createMarketSeat().openInstallTarget({packageName:'example-plugin'});
+// @ts-expect-error Versions and download URLs are resolved by the market, never supplied by callers.
+await openInstallTarget({packageName:'example-plugin',version:'9.0.0',url:'https://example.test/pkg.tgz'});
+void targetReceipt;
 const definition:AppDefinition={id:'example',name:'Example',deployments:[{id:'local',dataId:'data1',mode:'owned',command:'/absolute/node',args:['app.mjs','{{port}}','{{dataDir}}'],readiness:{path:'/health',status:200,bodyIncludes:'EXAMPLE'}}]};
 const host=new AppHost({store:new AtomicFileStore('/tmp/example-state'),dataRoot:'/tmp/example-data',parentOrigin:'http://127.0.0.1:40000'});
 host.register(definition);
