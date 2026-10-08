@@ -1,0 +1,144 @@
+{
+  "contract": "hanamesh.install-target",
+  "contractVersion": "1",
+  "workspace": "http://127.0.0.1:43123/workspace/fixture-session?token=fixture-token#previous",
+  "targets": [
+    {
+      "id": "CN01",
+      "note": "both identifiers (current Desktop link shape)",
+      "target": {
+        "itemId": "fixture.install-target.plugin",
+        "packageName": "@hanamesh-fixture/install-target-plugin"
+      },
+      "expect": "navigate",
+      "resolves": "fixture.install-target.plugin"
+    },
+    {
+      "id": "CN02",
+      "note": "scoped application",
+      "target": {
+        "itemId": "fixture.install-target.app",
+        "packageName": "@hanamesh-fixture/install-target-app"
+      },
+      "expect": "navigate",
+      "resolves": "fixture.install-target.app"
+    },
+    {
+      "id": "CN03",
+      "note": "package name only; a consumer may require both identifiers",
+      "target": {
+        "packageName": "@hanamesh-fixture/install-target-plugin"
+      },
+      "expect": "navigate",
+      "optional": true,
+      "resolves": "fixture.install-target.plugin"
+    },
+    {
+      "id": "CN04",
+      "note": "item id only; a consumer may require both identifiers",
+      "target": {
+        "itemId": "fixture.install-target.plugin"
+      },
+      "expect": "navigate",
+      "optional": true,
+      "resolves": "fixture.install-target.plugin"
+    },
+    {
+      "id": "CR01",
+      "note": "caller-supplied version",
+      "target": {
+        "itemId": "fixture.install-target.plugin",
+        "packageName": "@hanamesh-fixture/install-target-plugin",
+        "version": "9.0.0"
+      },
+      "expect": "refuse"
+    },
+    {
+      "id": "CR02",
+      "note": "caller-supplied download location",
+      "target": {
+        "itemId": "fixture.install-target.plugin",
+        "packageName": "@hanamesh-fixture/install-target-plugin",
+        "url": "https://evil.example/pkg.tgz"
+      },
+      "expect": "refuse"
+    },
+    {
+      "id": "CR03",
+      "note": "package name grammar",
+      "target": {
+        "itemId": "fixture.install-target.plugin",
+        "packageName": "../escape"
+      },
+      "expect": "refuse"
+    },
+    {
+      "id": "CR04",
+      "note": "item id longer than 160",
+      "target": {
+        "itemId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "packageName": "@hanamesh-fixture/install-target-plugin"
+      },
+      "expect": "refuse"
+    },
+    {
+      "id": "CR05",
+      "note": "control character",
+      "target": {
+        "itemId": "fixture\u0007id",
+        "packageName": "@hanamesh-fixture/install-target-plugin"
+      },
+      "expect": "refuse"
+    },
+    {
+      "id": "CR06",
+      "note": "no identifier",
+      "target": {},
+      "expect": "refuse"
+    }
+  ],
+  "handshake": [
+    {
+      "id": "CH01",
+      "note": "provider implementing v1",
+      "provider": {
+        "contract": "hanamesh.install-target",
+        "contractVersion": "1",
+        "supported": [
+          "1"
+        ]
+      },
+      "expect": "accept"
+    },
+    {
+      "id": "CH02",
+      "note": "provider implementing only a future version",
+      "provider": {
+        "contract": "hanamesh.install-target",
+        "contractVersion": "2",
+        "supported": [
+          "2"
+        ]
+      },
+      "expect": "refuse"
+    },
+    {
+      "id": "CH03",
+      "note": "provider without a declaration (0.2.0-rc.7 and older)",
+      "provider": null,
+      "expect": "refuse"
+    },
+    {
+      "id": "CH04",
+      "note": "declaration for a different contract",
+      "provider": {
+        "contract": "hanamesh.something-else",
+        "contractVersion": "1",
+        "supported": [
+          "1"
+        ]
+      },
+      "expect": "refuse"
+    }
+  ]
+}

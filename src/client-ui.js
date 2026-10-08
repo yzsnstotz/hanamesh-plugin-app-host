@@ -36,14 +36,17 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   const setLibraryVisible=value=>{libraryVisible=value;for(const listener of libraryListeners)listener(value);};
   let targetSelection=null,targetSequence=0,pendingOperations={};
   const targetListeners=new Set(),pendingListeners=new Set();
-  const INSTALL_TARGET_HASH='#hanamesh-install?';
+  const INSTALL_TARGET_HASH='#hanamesh-install?',INSTALL_TARGET_CONTRACT_VERSION='1';
   const setTarget=value=>{targetSelection=value;for(const listener of targetListeners)listener(value);};
   const setPending=update=>{pendingOperations=typeof update==='function'?update(pendingOperations):update;for(const listener of pendingListeners)listener(pendingOperations);};
   /** Public client entry: identifiers only; the market fetches its own catalog and owns confirmation. */
   async function openInstallTarget(input){
     const sequence=++targetSequence;if(entryVisible)setLibraryVisible(true);
     try{
-      if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(key=>!['itemId','packageName'].includes(key))||(!input.itemId&&!input.packageName)||
+      if(!input||typeof input!=='object'||Array.isArray(input))throw new Error('INVALID_INPUT');
+      // rc.8: optional contract declaration; absent keeps v1 semantics, an unsupported version is refused before any request.
+      if(input.contractVersion!==undefined&&input.contractVersion!==INSTALL_TARGET_CONTRACT_VERSION)throw new Error('CONTRACT_VERSION_UNSUPPORTED');
+      if(Object.keys(input).some(key=>!['itemId','packageName','contractVersion'].includes(key))||(!input.itemId&&!input.packageName)||
         (input.itemId!==undefined&&(typeof input.itemId!=='string'||!input.itemId.length||input.itemId.length>160||/[\u0000-\u001f\u007f]/.test(input.itemId)))||
         (input.packageName!==undefined&&(typeof input.packageName!=='string'||input.packageName.length>214||!/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(input.packageName))))throw new Error('INVALID_INPUT');
       setTarget({status:'resolving',input:{...input}});
@@ -322,5 +325,5 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     ctx.effect(()=>claimMarketSeat(ctx),'hanamesh-app-host:market-seat');
     ctx.effect(()=>{globalThis.addEventListener?.('hashchange',consumeInstallTargetHash);consumeInstallTargetHash();return()=>globalThis.removeEventListener?.('hashchange',consumeInstallTargetHash);},'hanamesh-app-host:install-target-navigation');}
   return{name,inject,apply,ProvidersSection,LibrarySourcesSection,LibraryAction,LibraryOverlay,MarketConflictNotice,createMarketSeat,openInstallTarget,
-    MARKET_SEAT,MARKET_CONFLICT_TEXT,INSTALL_TARGET_HASH,marketState:()=>({conflict:marketConflict,entryVisible})};
+    MARKET_SEAT,MARKET_CONFLICT_TEXT,INSTALL_TARGET_HASH,INSTALL_TARGET_CONTRACT_VERSION,marketState:()=>({conflict:marketConflict,entryVisible})};
 }});

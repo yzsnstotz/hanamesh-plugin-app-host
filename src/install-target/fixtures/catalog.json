@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "1.0.0",
+  "revision": "install-target-contract-fixture-1",
+  "items": [
+    {
+      "id": "fixture.install-target.plugin",
+      "name": "@hanamesh-fixture/install-target-plugin",
+      "displayName": "测试目录 · 安装目标插件",
+      "summary": "Install-target contract fixture (test catalog, not a real product).",
+      "latestVersion": "1.2.3",
+      "categories": [
+        "utility"
+      ],
+      "package": {
+        "registry": "npm",
+        "name": "@hanamesh-fixture/install-target-plugin"
+      },
+      "publisher": {
+        "name": "HanaMesh fixture"
+      }
+    },
+    {
+      "id": "fixture.install-target.app",
+      "name": "@hanamesh-fixture/install-target-app",
+      "displayName": "测试目录 · 安装目标应用",
+      "summary": "Install-target contract fixture application (test catalog).",
+      "latestVersion": "0.4.0",
+      "categories": [
+        "hanamesh-app"
+      ],
+      "package": {
+        "registry": "npm",
+        "name": "@hanamesh-fixture/install-target-app"
+      },
+      "publisher": {
+        "name": "HanaMesh fixture"
+      }
+    },
+    {
+      "id": "fixture.install-target.repository-only",
+      "name": "install-target-repository-only",
+      "displayName": "测试目录 · 仅源码",
+      "summary": "Repository-only listing; the market cannot install it.",
+      "categories": [
+        "utility"
+      ],
+      "repository": {
+        "url": "https://example.com/repository"
+      },
+      "publisher": {
+        "name": "HanaMesh fixture"
+      }
+    }
+  ],
+  "page": {
+    "total": 3
+  }
+}

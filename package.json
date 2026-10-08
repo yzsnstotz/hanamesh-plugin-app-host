@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/dsh-app-host",
-  "version": "0.2.0-rc.7",
+  "version": "0.2.0-rc.8",
   "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.0-rc.2",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
@@ -31,7 +31,13 @@
     "./client-ui": {
       "types": "./dist/client-ui.d.ts",
       "default": "./dist/client-ui.js"
-    }
+    },
+    "./install-target/suite": {
+      "types": "./dist/install-target/suite.d.ts",
+      "default": "./dist/install-target/suite.js"
+    },
+    "./install-target/schema.json": "./schemas/install-target.schema.json",
+    "./install-target/fixtures/*": "./dist/install-target/fixtures/*"
   },
   "files": [
     "dist",
@@ -98,7 +104,15 @@
     "module": "app-host",
     "contractVersion": 1,
     "dshTarget": "0.2.0-rc.2",
-    "upstreamFilesModified": 0
+    "upstreamFilesModified": 0,
+    "installTarget": {
+      "contract": "hanamesh.install-target",
+      "contractVersion": "1",
+      "supported": [
+        "1"
+      ],
+      "schema": "./schemas/install-target.schema.json"
+    }
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "4.0.4",

@@ -1,0 +1,272 @@
+{
+  "contract": "hanamesh.install-target",
+  "contractVersion": "1",
+  "catalog": "./catalog.json",
+  "targets": [
+    {
+      "id": "PV01",
+      "semantic": "public",
+      "note": "package name resolves through the market's own catalog",
+      "input": {
+        "packageName": "@hanamesh-fixture/install-target-plugin"
+      },
+      "expect": {
+        "status": "confirmation-required",
+        "itemId": "fixture.install-target.plugin",
+        "packageName": "@hanamesh-fixture/install-target-plugin"
+      }
+    },
+    {
+      "id": "PV02",
+      "semantic": "public",
+      "note": "catalog item id resolves",
+      "input": {
+        "itemId": "fixture.install-target.plugin"
+      },
+      "expect": {
+        "status": "confirmation-required",
+        "itemId": "fixture.install-target.plugin",
+        "packageName": "@hanamesh-fixture/install-target-plugin"
+      }
+    },
+    {
+      "id": "PV03",
+      "semantic": "public",
+      "note": "matching pair resolves",
+      "input": {
+        "itemId": "fixture.install-target.app",
+        "packageName": "@hanamesh-fixture/install-target-app"
+      },
+      "expect": {
+        "status": "confirmation-required",
+        "itemId": "fixture.install-target.app",
+        "packageName": "@hanamesh-fixture/install-target-app"
+      }
+    },
+    {
+      "id": "PV04",
+      "semantic": "version-match",
+      "note": "declared contract version 1 is accepted and changes nothing else",
+      "input": {
+        "packageName": "@hanamesh-fixture/install-target-plugin",
+        "contractVersion": "1"
+      },
+      "expect": {
+        "status": "confirmation-required",
+        "itemId": "fixture.install-target.plugin",
+        "packageName": "@hanamesh-fixture/install-target-plugin"
+      }
+    },
+    {
+      "id": "PV05",
+      "semantic": "version-mismatch",
+      "note": "unsupported declaration is refused explicitly",
+      "input": {
+        "packageName": "@hanamesh-fixture/install-target-plugin",
+        "contractVersion": "2"
+      },
+      "expect": {
+        "error": "CONTRACT_VERSION_UNSUPPORTED",
+        "http": 400
+      }
+    },
+    {
+      "id": "PV06",
+      "semantic": "version-mismatch",
+      "note": "a newer caller's extra fields are refused as a version mismatch, not silently accepted",
+      "input": {
+        "packageName": "@hanamesh-fixture/install-target-plugin",
+        "contractVersion": "2",
+        "channel": "beta"
+      },
+      "expect": {
+        "error": "CONTRACT_VERSION_UNSUPPORTED",
+        "http": 400
+      }
+    },
+    {
+      "id": "PV07",
+      "semantic": "version-mismatch",
+      "note": "empty declaration is not treated as absent",
+      "input": {
+        "packageName": "@hanamesh-fixture/install-target-plugin",
+        "contractVersion": ""
+      },
+      "expect": {
+        "error": "CONTRACT_VERSION_UNSUPPORTED",
+        "http": 400
+      }
+    },
+    {
+      "id": "PV08",
+      "semantic": "invalid",
+      "note": "no identifier",
+      "input": {},
+      "expect": {
+        "error": "INVALID_INPUT",
+        "http": 400
+      }
+    },
+    {
+      "id": "PV09",
+      "semantic": "invalid",
+      "note": "caller-supplied version is refused",
+      "input": {
+        "packageName": "@hanamesh-fixture/install-target-plugin",
+        "version": "9.0.0"
+      },
+      "expect": {
+        "error": "INVALID_INPUT",
+        "http": 400
+      }
+    },
+    {
+      "id": "PV10",
+      "semantic": "invalid",
+      "note": "caller-supplied download location is refused",
+      "input": {
+        "itemId": "fixture.install-target.plugin",
+        "url": "https://evil.example/pkg.tgz"
+      },
+      "expect": {
+        "error": "INVALID_INPUT",
+        "http": 400
+      }
+    },
+    {
+      "id": "PV11",
+      "semantic": "invalid",
+      "note": "package name grammar",
+      "input": {
+        "packageName": "../escape"
+      },
+      "expect": {
+        "error": "INVALID_INPUT",
+        "http": 400
+      }
+    },
+    {
+      "id": "PV12",
+      "semantic": "invalid",
+      "note": "item id longer than 160",
+      "input": {
+        "itemId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "expect": {
+        "error": "INVALID_INPUT",
+        "http": 400
+      }
+    },
+    {
+      "id": "PV13",
+      "semantic": "invalid",
+      "note": "control character in item id",
+      "input": {
+        "itemId": "fixture\u0007id"
+      },
+      "expect": {
+        "error": "INVALID_INPUT",
+        "http": 400
+      }
+    },
+    {
+      "id": "PV14",
+      "semantic": "missing-catalog",
+      "note": "identifier absent from the catalog",
+      "input": {
+        "packageName": "@hanamesh-fixture/not-in-catalog"
+      },
+      "expect": {
+        "error": "CATALOG_ITEM_MISSING",
+        "http": 404
+      }
+    },
+    {
+      "id": "PV15",
+      "semantic": "missing-catalog",
+      "note": "identifiers naming two different items",
+      "input": {
+        "itemId": "fixture.install-target.plugin",
+        "packageName": "@hanamesh-fixture/install-target-app"
+      },
+      "expect": {
+        "error": "CATALOG_ITEM_MISSING",
+        "http": 404
+      }
+    },
+    {
+      "id": "PV16",
+      "semantic": "invalid",
+      "note": "catalog entry that is not an npm package",
+      "input": {
+        "itemId": "fixture.install-target.repository-only"
+      },
+      "expect": {
+        "error": "NOT_INSTALLABLE",
+        "http": 400
+      }
+    }
+  ],
+  "fragments": [
+    {
+      "id": "PF01",
+      "semantic": "public",
+      "note": "legacy fragment without declaration",
+      "fragment": "#hanamesh-install?packageName=%40hanamesh-fixture%2Finstall-target-plugin",
+      "expect": {
+        "status": "confirmation-required",
+        "itemId": "fixture.install-target.plugin"
+      }
+    },
+    {
+      "id": "PF02",
+      "semantic": "version-match",
+      "note": "declared v1 fragment",
+      "fragment": "#hanamesh-install?itemId=fixture.install-target.plugin&packageName=%40hanamesh-fixture%2Finstall-target-plugin&contractVersion=1",
+      "expect": {
+        "status": "confirmation-required",
+        "itemId": "fixture.install-target.plugin"
+      }
+    },
+    {
+      "id": "PF03",
+      "semantic": "version-mismatch",
+      "note": "unsupported declaration",
+      "fragment": "#hanamesh-install?packageName=%40hanamesh-fixture%2Finstall-target-plugin&contractVersion=2",
+      "expect": {
+        "status": "failed",
+        "error": "CONTRACT_VERSION_UNSUPPORTED"
+      }
+    },
+    {
+      "id": "PF04",
+      "semantic": "invalid",
+      "note": "duplicate field",
+      "fragment": "#hanamesh-install?packageName=%40hanamesh-fixture%2Finstall-target-plugin&packageName=evil",
+      "expect": {
+        "status": "failed",
+        "error": "INVALID_INPUT"
+      }
+    },
+    {
+      "id": "PF05",
+      "semantic": "invalid",
+      "note": "extra download location",
+      "fragment": "#hanamesh-install?packageName=%40hanamesh-fixture%2Finstall-target-plugin&url=https%3A%2F%2Fevil.example",
+      "expect": {
+        "status": "failed",
+        "error": "INVALID_INPUT"
+      }
+    },
+    {
+      "id": "PF06",
+      "semantic": "missing-catalog",
+      "note": "identifier absent from the catalog",
+      "fragment": "#hanamesh-install?packageName=%40hanamesh-fixture%2Fnot-in-catalog",
+      "expect": {
+        "status": "failed",
+        "error": "CATALOG_ITEM_MISSING"
+      }
+    }
+  ]
+}

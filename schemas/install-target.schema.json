@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hanamesh.com/schemas/app-host/install-target.schema.json",
+  "title": "HanaMesh AppHost install target",
+  "description": "Public identifiers a caller may hand to the AppHost market. The market resolves its own catalog, shows its own confirmation and performs the install; callers never supply versions, download locations or confirmation. Lengths are JavaScript string lengths.",
+  "x-hanamesh-contract": {
+    "name": "hanamesh.install-target",
+    "version": "1",
+    "supported": ["1"],
+    "package": "@hanamesh/dsh-app-host",
+    "since": "0.2.0-rc.8",
+    "fragmentPrefix": "#hanamesh-install?",
+    "routes": {
+      "resolve": "GET /hanamesh/library/target",
+      "install": "POST /hanamesh/library/install"
+    },
+    "clientEntry": "openInstallTarget",
+    "versionField": "contractVersion",
+    "unversioned": "An input without contractVersion keeps the v1 semantics shipped in 0.2.0-rc.7.",
+    "mismatch": "Any contractVersion other than a supported value is refused with CONTRACT_VERSION_UNSUPPORTED (HTTP 400, details.supported) before other field checks; nothing is resolved or installed."
+  },
+  "$ref": "#/$defs/target",
+  "$defs": {
+    "itemId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+    },
+    "packageName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 214,
+      "pattern": "^(?:@[a-z0-9][a-z0-9._-]*\\/)?[a-z0-9][a-z0-9._-]*$"
+    },
+    "contractVersion": {
+      "description": "Optional declaration of the contract version the caller speaks.",
+      "type": "string",
+      "enum": ["1"]
+    },
+    "target": {
+      "description": "openInstallTarget input, GET /hanamesh/library/target query and #hanamesh-install? fragment fields. At least one identifier; both must name the same catalog item. Every other field is refused.",
+      "type": "object",
+      "properties": {
+        "itemId": { "$ref": "#/$defs/itemId" },
+        "packageName": { "$ref": "#/$defs/packageName" },
+        "contractVersion": { "$ref": "#/$defs/contractVersion" }
+      },
+      "additionalProperties": false,
+      "anyOf": [
+        { "required": ["itemId"] },
+        { "required": ["packageName"] }
+      ]
+    },
+    "receipt": {
+      "description": "openInstallTarget resolution receipt; not an install result.",
+      "type": "object",
+      "properties": {
+        "status": { "type": "string", "enum": ["confirmation-required", "installing", "already-installed", "superseded"] },
+        "itemId": { "type": "string" },
+        "packageName": { "type": "string" }
+      },
+      "required": ["status"],
+      "additionalProperties": false
+    },
+    "resolution": {
+      "description": "GET /hanamesh/library/target 200 body. contractVersion is the provider's declaration (added in 0.2.0-rc.8).",
+      "type": "object",
+      "properties": {
+        "contractVersion": { "type": "string", "enum": ["1"] },
+        "item": {
+          "type": "object",
+          "properties": {
+            "id": { "$ref": "#/$defs/itemId" },
+            "displayName": { "type": "string" },
+            "latestVersion": { "type": "string" },
+            "kind": { "type": "string", "enum": ["application", "plugin", "listing"] },
+            "upgradeAvailable": { "type": "boolean" },
+            "package": {
+              "type": "object",
+              "properties": {
+                "registry": { "type": "string", "const": "npm" },
+                "name": { "$ref": "#/$defs/packageName" }
+              },
+              "required": ["registry", "name"]
+            }
+          },
+          "required": ["id", "kind", "package", "upgradeAvailable"]
+        },
+        "source": {
+          "type": "object",
+          "properties": { "kind": { "type": "string" } },
+          "required": ["kind"]
+        },
+        "traceId": { "type": "string" }
+      },
+      "required": ["contractVersion", "item", "source", "traceId"]
+    },
+    "error": {
+      "description": "Refusal body of the HTTP routes; the client rejects with the same code.",
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "enum": ["INVALID_INPUT", "CONTRACT_VERSION_UNSUPPORTED", "CATALOG_ITEM_MISSING", "NOT_INSTALLABLE", "PACKAGE_DENIED", "HOST_DENIED", "ORIGIN_DENIED", "FRAME_CONTROL_DENIED", "CSRF_DENIED", "UNAUTHENTICATED", "FORBIDDEN", "METHOD_NOT_ALLOWED", "LIBRARY_INSTALL_UNAVAILABLE"]
+            },
+            "message": { "type": "string" }
+          },
+          "required": ["code"]
+        },
+        "traceId": { "type": "string" }
+      },
+      "required": ["error"]
+    },
+    "providerDeclaration": {
+      "description": "package.json hanamesh.installTarget of a provider package.",
+      "type": "object",
+      "properties": {
+        "contract": { "type": "string", "const": "hanamesh.install-target" },
+        "contractVersion": { "type": "string" },
+        "supported": { "type": "array", "items": { "type": "string" } },
+        "schema": { "type": "string" }
+      },
+      "required": ["contract", "contractVersion", "supported"]
+    }
+  }
+}

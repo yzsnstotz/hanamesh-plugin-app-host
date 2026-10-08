@@ -1,6 +1,6 @@
 # 客户端市场安装目标入口
 
-AppHost `0.2.0-rc.7`。目标输入、目录解析、确认、安装与结果全部归本模块；调用方只传目录标识，负责呈现原市场表面。
+AppHost `0.2.0-rc.8`（安装目标入口自 rc7；合约声明与随包套件自 rc8）。目标输入、目录解析、确认、安装与结果全部归本模块；调用方只传目录标识，负责呈现原市场表面。
 
 ## Desktop 正常导航入口
 
@@ -30,6 +30,42 @@ Promise 在目录解析后返回 `{status,itemId?,packageName?}`：
 新增只读 `GET /hanamesh/library/target?itemId=...&packageName=...`，查询字段仍只接受上述两个标识。宿主用当前市场目录逐页解析，返回 `{item,source,traceId}`；item 含 kind、installed、upgradeAvailable 和原目录元数据，source 含市场自己的 manifestUrl；fixture 来源明确标「测试目录」。查询不会安装。
 
 沿用原 Host、Origin、非 iframe、authenticate、authorize 检查。GET 允许同源浏览器默认不带 Origin；不接受外来 Origin。实际安装只用原 `POST /hanamesh/library/install`，要求精确同源 Origin、`X-HanaMesh-Client: workspace-v1`、资源端身份及授权；重新解析当前目录，不信任请求内版本或地址。进行中返回原 `202 {operationId,status:'started'}`；相同包共享该 operationId。已经安装且没有目录升级时返回 `200 {status:'already-installed',itemId,packageName}`。安装事件/结果与既有安装器不改。目录版本是原目录 latestVersion，既有安装器仍自行核 registry 的 latest 并固定精确版本；最终显示的已安装版本来自 profile 扫描，并与操作结果版本一致才报告读回成功。
+
+## 合约版本与一致性套件
+
+契约名 `hanamesh.install-target`，当前版本 `1`。单一来源是随包 schema `schemas/install-target.schema.json`（出口 `@hanamesh/dsh-app-host/install-target/schema.json`，`x-hanamesh-contract` 节写版本、片段前缀、路由与拒绝规则）。
+
+**变更说明（rc8，小版本，只加不改）：** 新增可选字段 `contractVersion`，可出现在 `openInstallTarget` 入参、`#hanamesh-install?` 片段与 `GET /hanamesh/library/target`、`POST /hanamesh/library/install` 的输入中；`GET target` 的 200 结果新增 `contractVersion:'1'`；包 `package.json` 的 `hanamesh.installTarget` 声明提供方实现的版本。itemId/packageName、字段语法、确认、取消、auth、同源与既有拒绝码都不变。影响：Desktop 现有不带版本的安装链接按 v1 照常工作，无需改动；要声明版本时由唯一宿主收尾卡改钉 rc8 后再做。Vibe 钉的应用包协议（rc2）与本契约无关，不受影响。
+
+**握手：**
+- 不带 `contractVersion`：保持 rc7 的 v1 语义。
+- `contractVersion:'1'`：接受，其余语义不变。
+- 其他任何值（含空串）：在其他字段检查之前明确拒绝 `CONTRACT_VERSION_UNSUPPORTED`（HTTP 400，`details.supported:['1']`；客户端 reject 同名码并在市场显示）。不解析目录、不安装、不静默降级。新版本调用方的额外字段也按版本不符拒绝，不当作普通字段错误。
+- 调用方声明了版本时应先读提供方声明（`hanamesh.installTarget`），`supported` 不含自己的版本、或没有声明（rc7 及更早）时自己拒绝，不发送。
+
+**随包内容：**
+
+| 出口 | 内容 |
+| --- | --- |
+| `./install-target/schema.json` | schema 与契约元数据 |
+| `./install-target/suite` | `runProviderSuite()`、`runConsumerSuite(consumer)`、`runChainSuite(consumer)`、`validate()`、`loadContract()` |
+| `./install-target/fixtures/catalog.json` | 测试目录（市场界面标「测试目录（fixture）」） |
+| `./install-target/fixtures/provider-cases.json` | 提供方用例：公开、版本匹配/不符、无效、缺目录，HTTP/客户端/片段三条入口 |
+| `./install-target/fixtures/consumer-cases.json` | 消费方用例：合法目标导航、无效目标拒绝、提供方声明握手 |
+| `./install-target/fixtures/reference-consumer.js` | 消费方 fixture：规则全部从 schema 读取（测试用，不是产品编码 API） |
+
+提供方套件驱动本包真实的 HTTP 路由、目录服务与客户端模块（测试目录 + 计数安装器），覆盖 auth/同源/非 iframe/授权拒绝、取消不安装、只有明确确认才经原路由安装一次。链路套件把消费方生成的导航片段交给本包真实的片段入口，确认到达市场确认且不安装，并验证同一导航改报不支持的版本会被明确拒绝。
+
+**运行（在安装了本包的消费方项目里）：**
+
+```sh
+node node_modules/@hanamesh/dsh-app-host/dist/install-target/run.js provider
+node node_modules/@hanamesh/dsh-app-host/dist/install-target/run.js consumer --module ./my-consumer.mjs --export consumer
+node node_modules/@hanamesh/dsh-app-host/dist/install-target/run.js consumer            # 随包消费方 fixture（v1 声明）
+node node_modules/@hanamesh/dsh-app-host/dist/install-target/run.js consumer --unversioned
+```
+
+消费方对象 `{name, contractVersion?, navigate(workspaceUrl, target) → {ok:true,url}|{ok:false,code}, handshake?(declaration) → {ok,code?}}`；导出也可以是返回该对象的无参工厂。每个套件输出一行 JSON 报告，有失败时退出码 1。
 
 ## 开发小界面
 

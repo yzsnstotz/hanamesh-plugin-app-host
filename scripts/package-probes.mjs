@@ -13,12 +13,27 @@ await writeProbeFile(joinProbePath(import.meta.dirname,'app.mjs'), \`import {cre
     console.log(JSON.stringify({check:'ISOLATED_PACKAGE',status:'PASS',realOwnedPid:result.instance.pid,realAppData:true,installedExports:['.','./client'],dshEntry:'requires pinned DSH peers; verified separately in the real profile',sourceTreeImports:0}));}
     finally{await host.dispose();}
   
+
+import assertInstallTarget from 'node:assert/strict';
+import {runProviderSuite,runConsumerSuite,runChainSuite} from '@hanamesh/dsh-app-host/install-target/suite';
+import {createReferenceConsumer} from '@hanamesh/dsh-app-host/install-target/fixtures/reference-consumer.js';
+// The shipped contract suite runs from the installed tarball without host peers: provider routes/client and both consumer fixtures.
+const installTargetReports=[await runProviderSuite()];
+for(const consumer of [createReferenceConsumer(),createReferenceConsumer({contractVersion:undefined})])installTargetReports.push(await runConsumerSuite(consumer),await runChainSuite(consumer));
+for(const report of installTargetReports)assertInstallTarget.equal(report.fail,0,JSON.stringify(report.results.filter(result=>result.outcome==='fail')));
+console.log(JSON.stringify({check:'INSTALL_TARGET_CONTRACT',status:'PASS',reports:installTargetReports.map(({suite,consumer,total,pass,fail,skipped})=>({suite,consumer,total,pass,fail,skipped}))}));
 `;
 export const typescript = `
 import {openInstallTarget,INSTALL_TARGET_HASH,createMarketSeat} from '@hanamesh/dsh-app-host/client-ui';
 await openInstallTarget({packageName:'example-plugin'});
 await createMarketSeat().openInstallTarget({itemId:'catalog-id'});
 INSTALL_TARGET_HASH satisfies '#hanamesh-install?';
+await openInstallTarget({packageName:'example-plugin',contractVersion:'1'});
+// @ts-expect-error Only a supported install-target contract version can be declared.
+await openInstallTarget({packageName:'example-plugin',contractVersion:'2'});
+import {runProviderSuite,runConsumerSuite,runChainSuite,type InstallTargetConsumer,type ContractSuiteReport} from '@hanamesh/dsh-app-host/install-target/suite';
+const probeConsumer:InstallTargetConsumer={contractVersion:'1',navigate:()=>({ok:false,code:'INVALID_INSTALL_TARGET'}),handshake:()=>({ok:false,code:'CONTRACT_VERSION_UNSUPPORTED'})};
+const probeReports:Promise<ContractSuiteReport>[]=[runProviderSuite(),runConsumerSuite(probeConsumer),runChainSuite(probeConsumer)];void probeReports;
 // @ts-expect-error Download URLs and version metadata are owned by the market.
 await openInstallTarget({itemId:'catalog-id',url:'https://example.test/pkg.tgz',version:'9.0.0'});
 import { AppHost,AtomicFileStore,createHttpHandler,type AppDefinition,type DshStorageBinding } from '@hanamesh/dsh-app-host';

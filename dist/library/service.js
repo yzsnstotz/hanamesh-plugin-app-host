@@ -4,6 +4,8 @@ import { loadCatalog, isApplication, itemKind, upgradeAvailable, validateManifes
 import { scanInstalled, scanInstalledPlugins, snapshotProfileDependencies } from './installed.js';
 import { PROTECTED_PACKAGES } from './install.js';
 
+/** Install-target contract version this market implements (schemas/install-target.schema.json). */
+export const INSTALL_TARGET_CONTRACT_VERSION='1';
 const PACKAGE_NAME=/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/;
 const text=(value,max)=>typeof value==='string'&&value.length>0&&value.length<=max;
 const RESTART_STATES=new Set(['installed-not-loaded','uninstalled-not-unloaded']);
@@ -22,7 +24,10 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   async function operation(type,task){const operationId=randomUUID();emit({type:`library.${type}-started`,operationId});const work=Promise.resolve().then(task).then(result=>{emit({type:`library.${type}-done`,operationId,result});return result;},error=>{emit({type:`library.${type}-failed`,operationId,code:error.code??'LIBRARY_OPERATION_FAILED'});throw error;}).finally(()=>running.delete(operationId));running.set(operationId,work);work.catch(()=>{});return{operationId,status:'started'};}
   const requireInstaller=(message)=>requireCondition(installer,'LIBRARY_INSTALL_UNAVAILABLE',message,{},503);
   async function resolveTarget(input){
-    requireCondition(input&&typeof input==='object'&&!Array.isArray(input)&&Object.keys(input).every(key=>['itemId','packageName'].includes(key)),'INVALID_INPUT','Only itemId and packageName are accepted.');
+    requireCondition(input&&typeof input==='object'&&!Array.isArray(input),'INVALID_INPUT','Only itemId and packageName are accepted.');
+    // rc.8: optional install-target contract declaration. Absent keeps the v1 semantics; anything but '1' is refused explicitly, before field checks.
+    requireCondition(input.contractVersion===undefined||input.contractVersion===INSTALL_TARGET_CONTRACT_VERSION,'CONTRACT_VERSION_UNSUPPORTED','This market does not implement the requested install-target contract version.',{supported:[INSTALL_TARGET_CONTRACT_VERSION]});
+    requireCondition(Object.keys(input).every(key=>['itemId','packageName','contractVersion'].includes(key)),'INVALID_INPUT','Only itemId and packageName are accepted.');
     const{itemId,packageName}=input;
     requireCondition(itemId!==undefined||packageName!==undefined,'INVALID_INPUT','itemId or packageName is required.');
     requireCondition(itemId===undefined||(text(itemId,160)&&!/[\u0000-\u001f\u007f]/.test(itemId)),'INVALID_INPUT','itemId is invalid.');
@@ -35,7 +40,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
         requireCondition(found.package?.registry==='npm','NOT_INSTALLABLE','This catalog entry cannot be installed.');
         requireCondition(!protectedPackage(found.package.name),'PACKAGE_DENIED','The HanaMesh suite is not managed through the market.',{},403);
         const rows=[...await installedPlugins(),...await installed()],row=rows.find(value=>value.packageName===found.package.name)??null;
-        return{source:page.source,item:{...found,kind:itemKind(found),installed:row,upgradeAvailable:Boolean(row?.version&&row.state!=='uninstalled-not-unloaded'&&upgradeAvailable(found.latestVersion,row.version))}};
+        return{contractVersion:INSTALL_TARGET_CONTRACT_VERSION,source:page.source,item:{...found,kind:itemKind(found),installed:row,upgradeAvailable:Boolean(row?.version&&row.state!=='uninstalled-not-unloaded'&&upgradeAvailable(found.latestVersion,row.version))}};
       }
       cursor=page.page?.nextCursor;
       requireCondition(!cursor||!seen.has(cursor),'INVALID_CURSOR','Catalog cursor repeated.');if(cursor)seen.add(cursor);

@@ -12,7 +12,8 @@ export function LibraryOverlay(props?:{embedded?:boolean,preferredSubsectionId?:
 /** rc.32: the「只能其一」notice shown at the top of the market page when dshmarket holds the seat. */
 export function MarketConflictNotice():unknown;
 /** Identifiers only; metadata and confirmation are owned by the client's market. */
-export interface InstallTarget {itemId?:string;packageName?:string;}
+/** rc.8: `contractVersion` optionally declares the install-target contract the caller speaks; absent means v1, any other value is refused with CONTRACT_VERSION_UNSUPPORTED. */
+export interface InstallTarget {itemId?:string;packageName?:string;contractVersion?:'1';}
 export interface InstallTargetReceipt {status:'confirmation-required'|'installing'|'already-installed'|'superseded';itemId?:string;packageName?:string;}
 /** Show/resolve a target without installing. Resolves once confirmation is ready; rejects with a visible market error. */
 export function openInstallTarget(input:InstallTarget):Promise<InstallTargetReceipt>;
@@ -25,3 +26,5 @@ export function marketState():{conflict:string,entryVisible:boolean};
 
 /** Normal navigation on the authenticated workspace URL; app-host consumes this fragment. */
 export const INSTALL_TARGET_HASH:'#hanamesh-install?';
+/** Install-target contract version this market implements; see schemas/install-target.schema.json. */
+export const INSTALL_TARGET_CONTRACT_VERSION:'1';
