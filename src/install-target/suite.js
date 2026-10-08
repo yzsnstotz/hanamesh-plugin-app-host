@@ -5,7 +5,7 @@
  * real provider. Fixture data is a test catalog and is labelled as such in the market UI.
  */
 import { readFile } from 'node:fs/promises';
-import { createServer } from 'node:http';
+import { createServer, request } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { createLibraryService, INSTALL_TARGET_CONTRACT_VERSION } from '../library/service.js';
@@ -68,11 +68,12 @@ export async function startProvider({catalogPath}){
   server.on('request',createLibraryHttpHandler(service,{parentOrigin:origin,
     authenticate:async req=>req.headers['x-install-target-suite']===token?{principalId:'install-target-suite'}:null,
     authorize:async(_subject,_path,input)=>input.packageName!=='@hanamesh-fixture/forbidden'}));
+  const origins=[origin,origin.replace('127.0.0.1','localhost')];
   const posts=[];
   /** Same-origin browser fetch as the workspace page would issue it. */
-  const browserFetch=async(path,init={})=>{const method=init.method??'GET';if(method!=='GET')posts.push({path,headers:{...init.headers}});
-    return await fetch(origin+path,{...init,headers:{...init.headers,'x-install-target-suite':token,...(method==='GET'?{}:{origin})}});};
-  return{origin,token,service,installs,posts,browserFetch,
+  const browserFetchFor=workspaceOrigin=>async(path,init={})=>{const method=init.method??'GET';if(method!=='GET')posts.push({path,headers:{...init.headers}});
+    return await fetch(workspaceOrigin+path,{...init,headers:{...init.headers,'x-install-target-suite':token,...(method==='GET'?{}:{origin:workspaceOrigin})}});};
+  return{origin,origins,token,service,installs,posts,browserFetch:browserFetchFor(origin),browserFetchFor,
     get:(query,headers={})=>fetch(origin+ROUTE+(query?'?'+query:''),{headers:{'x-install-target-suite':token,...headers}}),
     close:async()=>{await new Promise(r=>server.close(r));await service.close();}};
 }
@@ -107,6 +108,24 @@ export async function runProviderSuite(){
       const unsupported=await fetch(host.origin+'/hanamesh/library/install',{method:'POST',headers:{'x-install-target-suite':host.token,origin:host.origin,'x-hanamesh-client':'workspace-v1','content-type':'application/json'},body:JSON.stringify({packageName:'@hanamesh-fixture/install-target-plugin',contractVersion:'2'})});
       expectEqual([unsupported.status,(await unsupported.json()).error?.code],[400,'CONTRACT_VERSION_UNSUPPORTED'],'install with unsupported declaration');
     });
+    await record('PD02','loopback','schema and fixture name exactly the two aliases at one configured instance/port',async()=>{
+      expectEqual(cases.loopback.aliases,contract.contract.loopback.aliases,'declared aliases');
+      expectEqual(host.origins.map(value=>new URL(value).hostname),cases.loopback.aliases,'provider aliases');
+      expectEqual(new Set(host.origins.map(value=>new URL(value).port)).size,1,'one provider port');
+    });
+    for(const workspaceOrigin of host.origins)for(const item of cases.loopback.cases)await record(item.id+'/'+new URL(workspaceOrigin).hostname,'loopback',item.note,async()=>{
+      const url=new URL(workspaceOrigin),otherOrigin=host.origins.find(value=>value!==workspaceOrigin);
+      const replacements={origin:workspaceOrigin,otherOrigin,port:url.port,otherPort:String(Number(url.port)===65535?65534:Number(url.port)+1),hostname:url.hostname};
+      const headers=Object.fromEntries(Object.entries(item.headers).map(([key,value])=>[key,value.replace(/\$(origin|otherOrigin|port|otherPort|hostname)\b/gu,(_,name)=>replacements[name])]));
+      const path=item.method==='GET'?ROUTE+'?'+new URLSearchParams(item.input):'/hanamesh/library/install';
+      const response=await new Promise((resolve,reject)=>{
+        const req=request(workspaceOrigin+path,{method:item.method,headers:{'x-install-target-suite':host.token,'content-type':'application/json',...headers}},res=>{const chunks=[];res.on('data',chunk=>chunks.push(chunk));res.on('end',()=>resolve({status:res.statusCode,json:async()=>JSON.parse(Buffer.concat(chunks).toString('utf8'))}));});
+        req.on('error',reject);req.end(item.method==='POST'?JSON.stringify(item.input):undefined);
+      });
+      const body=await response.json();expectEqual([response.status,body.error?.code??null],[item.expect.http,item.expect.error??null],'loopback boundary');
+      if(!item.expect.error)expectEqual([body.contractVersion,body.item.package.name],['1',item.input.packageName],'resolved target');
+      expectEqual([host.posts.length,host.installs.length],[0,0],'no installation from transport/refusal cases');
+    });
     client=await loadClient({fetch:host.browserFetch});
     for(const item of cases.targets)await record(item.id+'/client',item.semantic,item.note,async()=>{
       let receipt;try{receipt=await client.module.openInstallTarget(item.input);}catch(error){if(!item.expect.error)throw error;expectEqual(String(error.message),item.expect.error,'client refusal');await client.idle();if(!client.text().includes(item.expect.error))throw new Error('refusal is not visible in the market');return;}
@@ -129,8 +148,19 @@ export async function runProviderSuite(){
       expectEqual(host.posts.map(p=>[p.path,p.headers['x-hanamesh-client']]),[['/hanamesh/library/install','workspace-v1']],'install requests');
       expectEqual(host.installs,['@hanamesh-fixture/install-target-app'],'installer calls');
     });
+    client.unmount();client=await loadClient({fetch:host.browserFetchFor(host.origins[1])});
+    await record('PC03','confirm','localhost fragment reaches confirmation, cancellation does not install, explicit confirmation installs once',async()=>{
+      const postsBefore=host.posts.length,installsBefore=host.installs.length;
+      await client.navigate('#hanamesh-install?packageName=%40hanamesh-fixture%2Finstall-target-plugin&contractVersion=1');
+      if(!client.button('确认安装'))throw new Error('localhost fragment did not reach confirmation');
+      await client.click('取消');expectEqual([host.posts.length,host.installs.length],[postsBefore,installsBefore],'localhost cancellation');
+      await client.module.openInstallTarget({packageName:'@hanamesh-fixture/install-target-plugin',contractVersion:'1'});await client.idle();
+      const confirm=client.button('确认安装');confirm.props.onClick();confirm.props.onClick();await client.idle();
+      expectEqual([host.posts.length,host.installs.length],[postsBefore+1,installsBefore+1],'localhost confirmed install once');
+      expectEqual(host.installs.at(-1),'@hanamesh-fixture/install-target-plugin','localhost installer target');
+    });
   }finally{client?.unmount();await host.close();}
-  return summary({contract:contract.contract.name,contractVersion:contract.contract.version,package:'@hanamesh/dsh-app-host@'+contract.packageVersion});
+  return summary({contract:contract.contract.name,contractVersion:contract.contract.version,package:'@hanamesh/dsh-app-host@'+contract.packageVersion,loopback:{parentOrigin:host.origin,origins:host.origins,sameInstanceSamePort:true}});
 }
 
 /**
@@ -146,11 +176,11 @@ export async function runConsumerSuite(consumer){
     if(!contract.contract.supported.includes(declared))throw new Error('declares unsupported version '+JSON.stringify(declared));
     if(typeof consumer.handshake!=='function')throw new Error('a versioned consumer must implement handshake');
   });
-  for(const item of cases.targets)await record(item.id,item.expect==='navigate'?'public':'invalid',item.note,async()=>{
-    const result=await consumer.navigate(cases.workspace,item.target);
+  for(const workspaceUrl of cases.workspaces??[cases.workspace])for(const item of cases.targets)await record(item.id+(new URL(workspaceUrl).hostname==='localhost'?'/localhost':''),item.expect==='navigate'?'public':'invalid',item.note,async()=>{
+    const result=await consumer.navigate(workspaceUrl,item.target);
     if(item.expect==='refuse'){if(result?.ok!==false||result.url)throw new Error('consumer forwarded an invalid target: '+JSON.stringify(result));return;}
     if(result?.ok!==true){if(item.optional)return'skipped';throw new Error('consumer refused a valid target: '+JSON.stringify(result));}
-    const workspace=new URL(cases.workspace),url=new URL(result.url);
+    const workspace=new URL(workspaceUrl),url=new URL(result.url);
     expectEqual([url.origin,url.pathname,url.search],[workspace.origin,workspace.pathname,workspace.search],'workspace origin/path/authentication');
     const prefix=contract.contract.fragmentPrefix;if(!url.hash.startsWith(prefix))throw new Error('fragment does not start with '+prefix);
     const params=new URLSearchParams(url.hash.slice(prefix.length)),keys=[...params.keys()];
@@ -171,24 +201,30 @@ export async function runConsumerSuite(consumer){
 /** Chain: consumer output → this package's real fragment entry, catalog resolution and confirmation; nothing installs. */
 export async function runChainSuite(consumer){
   const contract=await loadContract();const {consumer:cases}=contract;const {record,summary}=recorder('chain');
-  const host=await startProvider(contract);const client=await loadClient({fetch:host.browserFetch});
+  const host=await startProvider(contract);let client;
   try{
-    if(consumer.contractVersion!==undefined)await record('CX00','handshake','consumer accepts this provider package declaration',async()=>{const result=await consumer.handshake(contract.declaration);if(result?.ok!==true)throw new Error('consumer refused the shipped provider: '+JSON.stringify(result));});
-    for(const item of cases.targets.filter(c=>c.expect==='navigate'))await record('CX-'+item.id,'public',item.note+' → market confirmation',async()=>{
-      const result=await consumer.navigate(cases.workspace,item.target);if(result?.ok!==true){if(item.optional)return'skipped';throw new Error('consumer refused');}
+    for(const workspaceOrigin of host.origins){
+    client=await loadClient({fetch:host.browserFetchFor(workspaceOrigin)});
+    const workspaceUrl=workspaceOrigin+'/workspace/fixture-session?token=fixture-token#previous';
+    const aliasSuffix='/'+new URL(workspaceOrigin).hostname;
+    if(consumer.contractVersion!==undefined)await record('CX00'+aliasSuffix,'handshake','consumer accepts this provider package declaration',async()=>{const result=await consumer.handshake(contract.declaration);if(result?.ok!==true)throw new Error('consumer refused the shipped provider: '+JSON.stringify(result));});
+    for(const item of cases.targets.filter(c=>c.expect==='navigate'))await record('CX-'+item.id+aliasSuffix,'public',item.note+' → market confirmation',async()=>{
+      const result=await consumer.navigate(workspaceUrl,item.target);if(result?.ok!==true){if(item.optional)return'skipped';throw new Error('consumer refused');}
       await client.navigate(new URL(result.url).hash);
       if(!client.button('确认安装'))throw new Error('market did not reach confirmation: '+client.text().slice(0,400));
       const resolved=await client.module.openInstallTarget(Object.fromEntries(new URLSearchParams(new URL(result.url).hash.slice(contract.contract.fragmentPrefix.length))));
       expectEqual(resolved.itemId,item.resolves,'resolved catalog item');expectEqual([host.posts.length,host.installs.length],[0,0],'installs');
       await client.click('取消');
     });
-    await record('CX-MISMATCH','version-mismatch','the same navigation declaring an unsupported version is refused by the market',async()=>{
-      const item=cases.targets.find(c=>c.expect==='navigate'&&!c.optional);const result=await consumer.navigate(cases.workspace,item.target);
+    await record('CX-MISMATCH'+(new URL(workspaceOrigin).hostname==='localhost'?'/localhost':''),'version-mismatch','the same navigation declaring an unsupported version is refused by the market',async()=>{
+      const item=cases.targets.find(c=>c.expect==='navigate'&&!c.optional);const result=await consumer.navigate(workspaceUrl,item.target);
       const url=new URL(result.url),params=new URLSearchParams(url.hash.slice(contract.contract.fragmentPrefix.length));params.set('contractVersion','2');
       await client.navigate(contract.contract.fragmentPrefix+params);
       if(client.button('确认安装')||!client.text().includes('CONTRACT_VERSION_UNSUPPORTED'))throw new Error('unsupported declaration was not refused visibly');
       expectEqual([host.posts.length,host.installs.length],[0,0],'installs');
     });
-  }finally{client.unmount();await host.close();}
+    client.unmount();
+    }
+  }finally{client?.unmount();await host.close();}
   return summary({contract:contract.contract.name,contractVersion:contract.contract.version,consumer:consumer.name??'unnamed',declared:consumer.contractVersion??null});
 }

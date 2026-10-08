@@ -268,5 +268,351 @@
         "error": "CATALOG_ITEM_MISSING"
       }
     }
-  ]
+  ],
+  "loopback": {
+    "aliases": [
+      "127.0.0.1",
+      "localhost"
+    ],
+    "cases": [
+      {
+        "id": "LB01",
+        "method": "GET",
+        "headers": {},
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 200
+        },
+        "note": "authenticated resolution without Origin"
+      },
+      {
+        "id": "LB02",
+        "method": "GET",
+        "headers": {
+          "origin": "$origin"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 200
+        },
+        "note": "authenticated same-origin resolution"
+      },
+      {
+        "id": "LB03",
+        "method": "GET",
+        "headers": {
+          "host": "unknown.example:$port"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 403,
+          "error": "HOST_DENIED"
+        },
+        "note": "unknown Host"
+      },
+      {
+        "id": "LB04",
+        "method": "GET",
+        "headers": {
+          "host": "$hostname:$otherPort"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 403,
+          "error": "HOST_DENIED"
+        },
+        "note": "different Host port"
+      },
+      {
+        "id": "LB05",
+        "method": "GET",
+        "headers": {
+          "origin": "$otherOrigin"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 403,
+          "error": "ORIGIN_DENIED"
+        },
+        "note": "the other alias remains a different browser origin"
+      },
+      {
+        "id": "LB06",
+        "method": "GET",
+        "headers": {
+          "origin": "http://$hostname:$otherPort"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 403,
+          "error": "ORIGIN_DENIED"
+        },
+        "note": "different Origin port"
+      },
+      {
+        "id": "LB07",
+        "method": "GET",
+        "headers": {
+          "origin": "https://foreign.example"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 403,
+          "error": "ORIGIN_DENIED"
+        },
+        "note": "foreign Origin"
+      },
+      {
+        "id": "LB08",
+        "method": "GET",
+        "headers": {
+          "sec-fetch-dest": "iframe"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 403,
+          "error": "FRAME_CONTROL_DENIED"
+        },
+        "note": "iframe"
+      },
+      {
+        "id": "LB09",
+        "method": "GET",
+        "headers": {
+          "x-install-target-suite": "wrong"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 401,
+          "error": "UNAUTHENTICATED"
+        },
+        "note": "missing authentication"
+      },
+      {
+        "id": "LB10",
+        "method": "POST",
+        "headers": {
+          "origin": "$origin"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 403,
+          "error": "CSRF_DENIED"
+        },
+        "note": "missing explicit client header"
+      },
+      {
+        "id": "LB11",
+        "method": "POST",
+        "headers": {
+          "x-hanamesh-client": "workspace-v1"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 403,
+          "error": "CSRF_DENIED"
+        },
+        "note": "missing Origin"
+      },
+      {
+        "id": "LB12",
+        "method": "POST",
+        "headers": {
+          "origin": "$otherOrigin",
+          "x-hanamesh-client": "workspace-v1"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 403,
+          "error": "ORIGIN_DENIED"
+        },
+        "note": "cross-alias install"
+      },
+      {
+        "id": "LB13",
+        "method": "POST",
+        "headers": {
+          "origin": "$origin",
+          "x-hanamesh-client": "workspace-v1",
+          "sec-fetch-dest": "iframe"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 403,
+          "error": "FRAME_CONTROL_DENIED"
+        },
+        "note": "iframe install"
+      },
+      {
+        "id": "LB14",
+        "method": "POST",
+        "headers": {
+          "origin": "$origin",
+          "x-hanamesh-client": "workspace-v1",
+          "x-install-target-suite": "wrong"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 401,
+          "error": "UNAUTHENTICATED"
+        },
+        "note": "unauthenticated install"
+      },
+      {
+        "id": "LB15",
+        "method": "POST",
+        "headers": {
+          "origin": "$origin",
+          "x-hanamesh-client": "workspace-v1"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "2"
+        },
+        "expect": {
+          "http": 400,
+          "error": "CONTRACT_VERSION_UNSUPPORTED"
+        },
+        "note": "unsupported install version"
+      },
+      {
+        "id": "LB16",
+        "method": "GET",
+        "headers": {
+          "origin": "null"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 403,
+          "error": "ORIGIN_DENIED"
+        },
+        "note": "opaque Origin"
+      },
+      {
+        "id": "LB17",
+        "method": "GET",
+        "headers": {
+          "host": "localhost.:$port"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 403,
+          "error": "HOST_DENIED"
+        },
+        "note": "unlisted localhost spelling"
+      },
+      {
+        "id": "LB18",
+        "method": "GET",
+        "headers": {
+          "host": "[::1]:$port"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 403,
+          "error": "HOST_DENIED"
+        },
+        "note": "unlisted IPv6 Host"
+      },
+      {
+        "id": "LB19",
+        "method": "POST",
+        "headers": {
+          "origin": "https://$hostname:$port",
+          "x-hanamesh-client": "workspace-v1"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 403,
+          "error": "ORIGIN_DENIED"
+        },
+        "note": "different Origin scheme"
+      },
+      {
+        "id": "LB20",
+        "method": "GET",
+        "headers": {},
+        "input": {
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "contractVersion": "2"
+        },
+        "expect": {
+          "http": 400,
+          "error": "CONTRACT_VERSION_UNSUPPORTED"
+        },
+        "note": "unsupported resolve version"
+      },
+      {
+        "id": "LB21",
+        "method": "POST",
+        "headers": {
+          "origin": "$origin",
+          "x-hanamesh-client": "workspace-v1"
+        },
+        "input": {
+          "packageName": "@hanamesh-fixture/forbidden",
+          "contractVersion": "1"
+        },
+        "expect": {
+          "http": 403,
+          "error": "FORBIDDEN"
+        },
+        "note": "unauthorized installation"
+      }
+    ]
+  }
 }

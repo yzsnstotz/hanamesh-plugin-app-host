@@ -10,9 +10,11 @@ const passed=(report,id)=>report.results.find(result=>result.id===id)?.outcome==
 test('ITC01: provider suite passes on this package, including version match, mismatch, public, invalid, missing-catalog, auth and cancel semantics',async()=>{
   const report=await runProviderSuite();
   assert.deepEqual(failed(report),[]);
-  for(const semantic of ['declaration','public','version-match','version-mismatch','invalid','missing-catalog','auth','cancel','confirm'])
+  for(const semantic of ['declaration','public','version-match','version-mismatch','invalid','missing-catalog','auth','cancel','confirm','loopback'])
     assert(report.results.some(result=>result.semantic===semantic&&result.outcome==='pass'),'covered: '+semantic);
   assert(passed(report,'PV05/http')&&passed(report,'PV05/client')&&passed(report,'PF03/fragment'),'unsupported declaration refused on every entry');
+  for(const alias of ['127.0.0.1','localhost'])for(let i=1;i<=21;i++)assert(passed(report,'LB'+String(i).padStart(2,'0')+'/'+alias));
+  assert(passed(report,'PC03'));
   assert(passed(report,'PF01/fragment')&&passed(report,'PV01/client'),'unversioned v1 input keeps working');
 });
 test('ITC02: versioned and unversioned reference consumers pass the consumer and chain suites',async()=>{
@@ -39,4 +41,10 @@ test('ITC04: schema, package declaration and validator agree; the v1 field gramm
   assert.deepEqual(validate(schema,{packageName:'@hanamesh/utility-plugin'}),[]);
   assert.deepEqual(validate(schema,{itemId:'x'.repeat(160)}),[]);
   for(const bad of [{},{itemId:'x'.repeat(161)},{packageName:'../escape'},{packageName:'a',version:'1'},{packageName:'a',contractVersion:'2'}])assert.notDeepEqual(validate(schema,bad),[],JSON.stringify(bad));
+});
+
+test('ITC05: a consumer that silently rewrites localhost to 127 is refused by the consumer suite',async()=>{
+  const honest=createReferenceConsumer();
+  const redirected={...honest,navigate(workspace,target){const result=honest.navigate(workspace,target);if(result.ok){const url=new URL(result.url);url.hostname='127.0.0.1';return{ok:true,url:url.href};}return result;}};
+  assert(failed(await runConsumerSuite(redirected)).includes('CN01/localhost'));
 });

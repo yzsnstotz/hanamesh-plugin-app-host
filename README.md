@@ -2,7 +2,7 @@
 
 > METADATA-DEVKIT-VENDOR-APPHOST-01（2026-10-06）：既有开发工具 `@hanamesh/devkit` 更新为精确 optional peer `0.1.0-rc.2` 与同版 file vendor，SHA256 `ae815e589c3e5a573e407da5c982bb0fc8df15b57683ebbfaccd828d9dd588e0`。devkit 不进入运行时依赖或随包代码；canonical 分发授权原文记录于 `docs/LICENSES.json`，不新增 MIT 或再许可。AppHost 根许可分区和内联 provision rc3 保持不变。
 
-> NPM-APPHOST-01（2026-10-05）：本地候选 `0.2.0-rc.8` 对齐官方 `@deepseek-ai/dsh@0.2.0-rc.2`、Cordis `4.0.4`、Schemastery `3.18.4` 与 storage-domain `0.2.0-rc.2`。`@hanamesh/lib-provision@0.1.0-rc.3` 仅以已核 SHA-256 的 vendor tgz 在构建期内联，公共 registry E404，因此不声明为运行时 peer。owner D-2026-10-05-02 已确认该自有代码可分发；内联代码的自有分发授权原文随 canonical rc3 包复制，不推断新增 MIT 或再许可授权。包级许可分区见 [`LICENSE`](LICENSE) 与 [`docs/LICENSES.json`](docs/LICENSES.json)。本地官方 DSH 装配不等于公开 npm 安装门或产品验收；当前卡证据见 BlueMap `NPM-APPHOST-01/REPORT.md`。
+> NPM-APPHOST-01（2026-10-05）：本地候选 `0.2.0-rc.9` 对齐官方 `@deepseek-ai/dsh@0.2.0-rc.2`、Cordis `4.0.4`、Schemastery `3.18.4` 与 storage-domain `0.2.0-rc.2`。`@hanamesh/lib-provision@0.1.0-rc.3` 仅以已核 SHA-256 的 vendor tgz 在构建期内联，公共 registry E404，因此不声明为运行时 peer。owner D-2026-10-05-02 已确认该自有代码可分发；内联代码的自有分发授权原文随 canonical rc3 包复制，不推断新增 MIT 或再许可授权。包级许可分区见 [`LICENSE`](LICENSE) 与 [`docs/LICENSES.json`](docs/LICENSES.json)。本地官方 DSH 装配不等于公开 npm 安装门或产品验收；当前卡证据见 BlueMap `NPM-APPHOST-01/REPORT.md`。
 
 > rc.41（2026-10-01，P01-U05-RI 修复）：真实原生市场重装 Vibe 时，受管 Python runtime 卸载后留有32个运行时生成的 `__pycache__/*.pyc`，后续原子提升因目标目录无所有权清单而拒绝（`E_PROMOTE`）。AppHost 在 lib-provision 精确移除受管文件后仅清理由该 runtime 生成的 Python 字节码及空目录；未知残留继续保留并报告 `RUNTIME_RESIDUE`，不以 force 覆盖。两项回归、模块 check/types 通过；仍需固定消费者组合和独立原生产品复验。
 
@@ -122,3 +122,5 @@ AppHost `0.2.0-rc.5` 内联 canonical `@hanamesh/lib-provision@0.1.0-rc.3`，源
 AppHost rc7 提供 `market.openInstallTarget({itemId?,packageName?})` 及同名公开客户端出口。市场查询自己的当前目录、显示四字段确认；只在用户明确确认后走原鉴权安装路由，重复输入共享安装状态。市场顶部「安装目标」小界面调用同一入口；fixture 来源醒目标注。输入/调用方式、回执及 HTTP 语义见 [INSTALL_TARGET.md](docs/INSTALL_TARGET.md)。本轮源码/包自测不代统一客户端安装、真实首步或 owner 验收。
 
 安装目标合约（rc8，`hanamesh.install-target` v1，只加不改）：schema `schemas/install-target.schema.json`（出口 `./install-target/schema.json`），提供方/消费方 fixture 与一致性套件随包（`./install-target/suite`、`./install-target/fixtures/*`）。调用方可选声明 `contractVersion: '1'`；不声明保持 rc7 语义，其他值明确拒绝 `CONTRACT_VERSION_UNSUPPORTED`。见 [INSTALL_TARGET.md](docs/INSTALL_TARGET.md#合约版本与一致性套件)。
+
+rc9 installation-target contract: the library accepts exact 127.0.0.1/localhost aliases at the same configured port; Origin must match the request Host. Cross-alias/foreign Origin, unknown Host/port, iframe, CSRF, authentication and version refusals remain explicit. See [INSTALL_TARGET](docs/INSTALL_TARGET.md).

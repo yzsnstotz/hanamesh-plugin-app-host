@@ -140,5 +140,9 @@
       },
       "expect": "refuse"
     }
+  ],
+  "workspaces": [
+    "http://127.0.0.1:43123/workspace/fixture-session?token=fixture-token#previous",
+    "http://localhost:43123/workspace/fixture-session?token=fixture-token#previous"
   ]
 }

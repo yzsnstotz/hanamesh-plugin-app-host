@@ -1,6 +1,6 @@
 # 客户端市场安装目标入口
 
-AppHost `0.2.0-rc.8`（安装目标入口自 rc7；合约声明与随包套件自 rc8）。目标输入、目录解析、确认、安装与结果全部归本模块；调用方只传目录标识，负责呈现原市场表面。
+AppHost `0.2.0-rc.9`（安装目标入口自 rc7；合约声明与随包套件自 rc8）。目标输入、目录解析、确认、安装与结果全部归本模块；调用方只传目录标识，负责呈现原市场表面。
 
 ## Desktop 正常导航入口
 
@@ -29,13 +29,15 @@ Promise 在目录解析后返回 `{status,itemId?,packageName?}`：
 
 新增只读 `GET /hanamesh/library/target?itemId=...&packageName=...`，查询字段仍只接受上述两个标识。宿主用当前市场目录逐页解析，返回 `{item,source,traceId}`；item 含 kind、installed、upgradeAvailable 和原目录元数据，source 含市场自己的 manifestUrl；fixture 来源明确标「测试目录」。查询不会安装。
 
-沿用原 Host、Origin、非 iframe、authenticate、authorize 检查。GET 允许同源浏览器默认不带 Origin；不接受外来 Origin。实际安装只用原 `POST /hanamesh/library/install`，要求精确同源 Origin、`X-HanaMesh-Client: workspace-v1`、资源端身份及授权；重新解析当前目录，不信任请求内版本或地址。进行中返回原 `202 {operationId,status:'started'}`；相同包共享该 operationId。已经安装且没有目录升级时返回 `200 {status:'already-installed',itemId,packageName}`。安装事件/结果与既有安装器不改。目录版本是原目录 latestVersion，既有安装器仍自行核 registry 的 latest 并固定精确版本；最终显示的已安装版本来自 profile 扫描，并与操作结果版本一致才报告读回成功。
+同实例同端口的精确 `127.0.0.1:<port>` 与 `localhost:<port>` Host 同时可用（同一 parentOrigin 配置，无切换）。Origin 若出现必须与本次请求 Host 的 http origin 精确一致；两个别名仍是不同的浏览器 origin，不允许跨别名请求。未知 Host、其他端口、IPv6/尾点别名、外来或 opaque Origin 明确拒绝；非 iframe、authenticate、authorize 检查保持。GET 允许同源浏览器默认不带 Origin；不接受外来 Origin。实际安装只用原 `POST /hanamesh/library/install`，要求精确同源 Origin、`X-HanaMesh-Client: workspace-v1`、资源端身份及授权；重新解析当前目录，不信任请求内版本或地址。进行中返回原 `202 {operationId,status:'started'}`；相同包共享该 operationId。已经安装且没有目录升级时返回 `200 {status:'already-installed',itemId,packageName}`。安装事件/结果与既有安装器不改。目录版本是原目录 latestVersion，既有安装器仍自行核 registry 的 latest 并固定精确版本；最终显示的已安装版本来自 profile 扫描，并与操作结果版本一致才报告读回成功。
 
 ## 合约版本与一致性套件
 
 契约名 `hanamesh.install-target`，当前版本 `1`。单一来源是随包 schema `schemas/install-target.schema.json`（出口 `@hanamesh/dsh-app-host/install-target/schema.json`，`x-hanamesh-contract` 节写版本、片段前缀、路由与拒绝规则）。
 
 **变更说明（rc8，小版本，只加不改）：** 新增可选字段 `contractVersion`，可出现在 `openInstallTarget` 入参、`#hanamesh-install?` 片段与 `GET /hanamesh/library/target`、`POST /hanamesh/library/install` 的输入中；`GET target` 的 200 结果新增 `contractVersion:'1'`；包 `package.json` 的 `hanamesh.installTarget` 声明提供方实现的版本。itemId/packageName、字段语法、确认、取消、auth、同源与既有拒绝码都不变。影响：Desktop 现有不带版本的安装链接按 v1 照常工作，无需改动；要声明版本时由唯一宿主收尾卡改钉 rc8 后再做。Vibe 钉的应用包协议（rc2）与本契约无关，不受影响。
+
+**变更说明（rc9，只加同实例别名）：** library 路由允许同一端口的两个精确回环 Host，各自必须使用本 origin 的正常 DSH 认证。目标字段、版本 1、目录解析、明确确认、取消、安装事务与失败回滚不改；不新增依赖、配置或权限。schema 的 `loopback` 节与双方 fixture/suite 覆盖两别名及跨 Origin/未知 Host/port/iframe/CSRF/auth/版本拒绝。范围限 library HTTP 与安装目标导航；应用网关、app/router 控制路由及其他插件不变。现有 127 消费方保持，localhost 消费方保持自己的 URL/auth 参数；Desktop/Vibe 无需本轮改动。
 
 **握手：**
 - 不带 `contractVersion`：保持 rc7 的 v1 语义。
@@ -54,7 +56,7 @@ Promise 在目录解析后返回 `{status,itemId?,packageName?}`：
 | `./install-target/fixtures/consumer-cases.json` | 消费方用例：合法目标导航、无效目标拒绝、提供方声明握手 |
 | `./install-target/fixtures/reference-consumer.js` | 消费方 fixture：规则全部从 schema 读取（测试用，不是产品编码 API） |
 
-提供方套件驱动本包真实的 HTTP 路由、目录服务与客户端模块（测试目录 + 计数安装器），覆盖 auth/同源/非 iframe/授权拒绝、取消不安装、只有明确确认才经原路由安装一次。链路套件把消费方生成的导航片段交给本包真实的片段入口，确认到达市场确认且不安装，并验证同一导航改报不支持的版本会被明确拒绝。
+提供方套件在同一配置同一随机端口通过两个别名驱动本包真实的 HTTP 路由、目录服务与客户端模块（测试目录 + 计数安装器），覆盖 auth/同源/非 iframe/授权拒绝、取消不安装、只有明确确认才经原路由安装一次。链路套件把消费方生成的导航片段交给本包真实的片段入口，确认到达市场确认且不安装，并验证同一导航改报不支持的版本会被明确拒绝。
 
 **运行（在安装了本包的消费方项目里）：**
 

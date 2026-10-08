@@ -14,6 +14,19 @@
       "resolve": "GET /hanamesh/library/target",
       "install": "POST /hanamesh/library/install"
     },
+    "loopback": {
+      "since": "0.2.0-rc.9",
+      "scope": "library HTTP routes and install-target navigation",
+      "aliases": [
+        "127.0.0.1",
+        "localhost"
+      ],
+      "sameInstanceSamePort": true,
+      "host": "Only exact alias:<configured parentOrigin port> Host headers are accepted; no extra Host, port or spelling. The configured parentOrigin remains the canonical 127.0.0.1 origin.",
+      "origin": "When supplied, Origin must exactly match the request Host with the configured http scheme. The aliases are separate browser origins: cross-alias, cross-port, foreign and opaque origins are refused.",
+      "install": "POST still requires exact request Origin, X-HanaMesh-Client: workspace-v1, non-iframe, host authentication and authorization; only explicit market confirmation installs.",
+      "authentication": "Each alias uses its own normal DSH authentication; no cookie/token copying or authentication bypass."
+    },
     "clientEntry": "openInstallTarget",
     "versionField": "contractVersion",
     "unversioned": "An input without contractVersion keeps the v1 semantics shipped in 0.2.0-rc.7.",
