@@ -1,0 +1,45 @@
+{
+  "scope": "SIGNED_SOURCE_LOCATION_DIAGNOSTIC; not product UI",
+  "actualDaemonArgv": [
+    "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node",
+    "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/bin.js",
+    "web",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "0",
+    "--no-open",
+    "--trusted-host",
+    "localhost"
+  ],
+  "installedModule": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/dsh-home/profiles/web/node_modules/@hanamesh/dsh-app-host/dist/library/locate.js",
+  "probeNodeBinary": "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node",
+  "probeCwd": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/dsh-home/profiles/web",
+  "probeCompleteEnv": {
+    "HOME": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/home",
+    "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/dsh-home",
+    "LANG": "C.UTF-8",
+    "PATH": "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin:/usr/bin:/bin"
+  },
+  "locations": {
+    "profileDir": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/dsh-home/profiles/web",
+    "profileName": "web",
+    "dshBin": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/bin.js",
+    "nodeBinary": "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node",
+    "sources": [
+      {
+        "manifestUrl": "https://market.hanamesh.com/catalog-source.json",
+        "enabled": true
+      }
+    ],
+    "inferred": [
+      "profileDir",
+      "profileName",
+      "dshBin",
+      "nodeBinary",
+      "sources"
+    ]
+  },
+  "expectedNewProfileMatched": true,
+  "codeModified": false
+}

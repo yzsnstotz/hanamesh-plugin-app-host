@@ -1,0 +1,8 @@
+{
+  "exitCode": 0,
+  "stdoutLog": "official-plugin-add.stdout.log",
+  "stderrLog": "official-plugin-add.stderr.log",
+  "attempts": 1,
+  "force": false,
+  "globalConfigurationChanged": false
+}

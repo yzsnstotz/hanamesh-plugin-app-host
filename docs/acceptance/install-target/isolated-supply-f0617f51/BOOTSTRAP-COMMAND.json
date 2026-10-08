@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node",
+    "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/bin.js",
+    "plugin",
+    "--profile",
+    "web",
+    "add",
+    "--save-exact",
+    "@hanamesh/dsh-app-host@file:/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-LOOPBACK-01/release/out/hanamesh-dsh-app-host-0.2.0-rc.9.tgz"
+  ],
+  "cwd": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686",
+  "environment": {
+    "HOME": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/home",
+    "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/dsh-home",
+    "LANG": "C.UTF-8",
+    "PATH": "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin:/usr/bin:/bin"
+  },
+  "completeEnvironment": true,
+  "freshProfileBeforeCommand": true,
+  "officialCliOnly": true
+}

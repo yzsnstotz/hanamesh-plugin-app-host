@@ -1,0 +1,18 @@
+{
+  "subprocessEnvironment": {
+    "HOME": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/home",
+    "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/dsh-home",
+    "LANG": "C.UTF-8",
+    "PATH": "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin:/usr/bin:/bin"
+  },
+  "isCompleteEnvironment": true,
+  "nodeBinary": "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node",
+  "dshBin": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/bin.js",
+  "officialDshVersion": "0.2.0-rc.2",
+  "bootstrapCwd": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686",
+  "profile": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/dsh-home/profiles/web",
+  "package": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-LOOPBACK-01/release/out/hanamesh-dsh-app-host-0.2.0-rc.9.tgz",
+  "packageSha256": "9d3dc5cd55fde289ea8b0d14cc24f9c187415af0f6d9e0fd06f8a6d5fa945f3b",
+  "noAdditionalEnvInherited": true,
+  "npmCacheCreatedButNotPassedToFourVariableEnvironment": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/npm-cache"
+}

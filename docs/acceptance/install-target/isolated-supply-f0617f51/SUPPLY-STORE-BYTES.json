@@ -1,0 +1,406 @@
+{
+  "scope": "ENGINEERING_SUPPLY_ONLY; not product UI",
+  "profile": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/dsh-home/profiles/web",
+  "businessDependencies": {
+    "@hanamesh/dsh-app-host": "file:/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-LOOPBACK-01/release/out/hanamesh-dsh-app-host-0.2.0-rc.9.tgz"
+  },
+  "profileBundles": [
+    "@deepseek-ai/dsh-base",
+    "@deepseek-ai/dsh-web-app",
+    "@hanamesh/dsh-app-host"
+  ],
+  "installedVersion": "0.2.0-rc.9",
+  "signedPack": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-LOOPBACK-01/release/out/hanamesh-dsh-app-host-0.2.0-rc.9.tgz",
+  "signedPackSha256": "9d3dc5cd55fde289ea8b0d14cc24f9c187415af0f6d9e0fd06f8a6d5fa945f3b",
+  "installedFilesByteEqual": 92,
+  "files": [
+    {
+      "path": "dist/provision/LICENSE",
+      "sha256": "616a3400817c06dc20991506fce17203070f555fa8c79331394ba37b8ae37b76"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "ed562e2428f9d2b5cb17a2cac9f25b522a2c8116d0792b1aacfae38d988ad9da"
+    },
+    {
+      "path": "dist/provision/archive.js",
+      "sha256": "10d316eb1c9e4e84deab6660dbdca24f72a8ce4f45d863819d7aef1f12a576c8"
+    },
+    {
+      "path": "dist/router/broker.js",
+      "sha256": "9c24e70fe7bae62d20510a15fb21f9a07c387a6e0fbf75d4f8cc349fa22e5734"
+    },
+    {
+      "path": "dist/library/catalog.js",
+      "sha256": "6680d03538e210dae575cc73069b785d93c2703c41b109f020a3e4515c4ea143"
+    },
+    {
+      "path": "dist/provision/check.js",
+      "sha256": "1f1051cbeacc41cb5800c6a8429835d555052d015c15114c3fc79d55ff46e9af"
+    },
+    {
+      "path": "dist/provision/checkpoints.js",
+      "sha256": "ac0f55eabf569fc58d63e81710946c4eb19df9eb91983522bbd11a9f4c58bf1b"
+    },
+    {
+      "path": "dist/provision/cli.js",
+      "sha256": "e8ddbb633645fceff6d9c8f76baaf9523213900603c9699aecad6b66f9a22fb7"
+    },
+    {
+      "path": "dist/client-ui.js",
+      "sha256": "9cda60ce7f072534d2b902d33b29ea3ae646182a19ce3c8eff6974915f020ccb"
+    },
+    {
+      "path": "dist/client.js",
+      "sha256": "6f2ccb4323d7c86f156cbfd847ff73aa674f829d8f60dcadf8e9ccb1c21fe375"
+    },
+    {
+      "path": "dist/consistency.js",
+      "sha256": "1d2bf5814e0424333f013dc2e9b176c2ea32074a41dfda81069b454634e58f29"
+    },
+    {
+      "path": "dist/descriptor.js",
+      "sha256": "294d10b20f7dde614f4a9e7d492c6668ed6c47be8d026822896aefdcdd7cdd1e"
+    },
+    {
+      "path": "dist/library/domain.js",
+      "sha256": "d91bef7280dc6ca8682bf4fc24133e65fd740af83a0a2cc53e0fa3fc7234358d"
+    },
+    {
+      "path": "dist/router/domain.js",
+      "sha256": "40396605a064f1d2a4db71c7191fba0029bc9320bfbeecdb926290e3a7a479af"
+    },
+    {
+      "path": "dist/provision/download.js",
+      "sha256": "cc435a9647d12fd45a11529997298b45483a987039064dca29b80b8ee4eca3ff"
+    },
+    {
+      "path": "dist/dsh.js",
+      "sha256": "5480b41e45c6c8f7153c605244b91394148f742533d7cbb7c649edfdc2bc1cdb"
+    },
+    {
+      "path": "dist/errors.js",
+      "sha256": "8c83a53edf564b7d25e6a83401c0f6c8d1f6dacc96ccc272068fe899ee9df452"
+    },
+    {
+      "path": "dist/provision/errors.js",
+      "sha256": "2379b57ed3621e7c75cc2b73b6fdaee4199525886e3cc5d5bb3c689c1ece99d2"
+    },
+    {
+      "path": "dist/provision/extract.js",
+      "sha256": "57b68396d1ff1d3e604975d03b9193051f4c584058069ec04d48ae0d34a40ae4"
+    },
+    {
+      "path": "dist/provision/fsutil.js",
+      "sha256": "32915dd657f4385514a2aa8f5c4c4f10c548112f639c1ba9ce4806cff538d4f9"
+    },
+    {
+      "path": "dist/gateway.js",
+      "sha256": "049d1cbf16f54a51960bc241a43ad86b56724c421892a26cadd6cb26c16e0a68"
+    },
+    {
+      "path": "dist/guardian.js",
+      "sha256": "bcea1961839d65d646d039a56ae671e6bbd92b543606cf810e25124dcd567c33"
+    },
+    {
+      "path": "dist/install-target/harness.js",
+      "sha256": "762ccd631aa13aa13843a58a0140deb8347ae673d80a8b3b9e1a0d87563cb376"
+    },
+    {
+      "path": "dist/index.js",
+      "sha256": "364dab7148d86de4166012ff0e2226e7aea912dbd3f370a3d981793c3761f476"
+    },
+    {
+      "path": "dist/provision/index.js",
+      "sha256": "18eb581b4b6da442c99157fb399375af08ae263c4dd60d05dad5a7f1d9c20fde"
+    },
+    {
+      "path": "dist/library/install.js",
+      "sha256": "126fd4e8c60cb2dbdc848f9700cecc1e68c63ed1942c239d347fd4482264a1fc"
+    },
+    {
+      "path": "dist/library/installed.js",
+      "sha256": "b925c27b47204e408a6d6da60735b21b8bdb5c198d4c7b5320b0b23a1397bdfa"
+    },
+    {
+      "path": "dist/launcher.js",
+      "sha256": "0c4c5fa02c382723c7b209892232f37e00e13e21db547a938b3c50b027732bc6"
+    },
+    {
+      "path": "dist/provision/ledger.js",
+      "sha256": "51de5304876e83cb76566324cca7da0ab325a51bf7e06a90d079e10bdf358fc0"
+    },
+    {
+      "path": "dist/library/locate.js",
+      "sha256": "35dd3e090992e0eb7960027e64c14726ff351a888e1505a3f907c7f0812eb9b9"
+    },
+    {
+      "path": "dist/manager.js",
+      "sha256": "77deca20afe7e4af381e4c170ddd9481d8d7af492f35a8211307df0ec7553010"
+    },
+    {
+      "path": "dist/provision/manifest.js",
+      "sha256": "46eed4b4c87f913bc1c3a238c53bc20b38245acf3d81a5957c94c071ba948c42"
+    },
+    {
+      "path": "dist/provision/paths.js",
+      "sha256": "aa6c37fadf094d6319ab6e913f6e1267a29e2308cea744d1097ff5fd5e8dff7b"
+    },
+    {
+      "path": "dist/provision/platform.js",
+      "sha256": "ddb2fe71a5544fdc32541c91daadfec46feb4b29d68d6b9a208e90d4e24b80f4"
+    },
+    {
+      "path": "dist/provision/provision.js",
+      "sha256": "72dba00747b97b52a5c20e61430dcc939757bd8854cfba0de314c4276014d664"
+    },
+    {
+      "path": "dist/router/receipts-domain.js",
+      "sha256": "2b17c0d9cb29ae8cd05c47e0fefdd37cbbb8541474dbba960e80f9cc20a97e39"
+    },
+    {
+      "path": "dist/router/receipts.js",
+      "sha256": "55d58767bc33a83a2b35d24efb198088b6f728b7c0145123b924764719c9bc8f"
+    },
+    {
+      "path": "dist/install-target/fixtures/reference-consumer.js",
+      "sha256": "247b2f03e5791174e55dc2194223ab4761f1037999a6a781ea5cbc79accd2475"
+    },
+    {
+      "path": "dist/library/routes.js",
+      "sha256": "3a4eff555f2bfe1a1139d919cb8a78933bfffc1b41798c388bda4295141c97a2"
+    },
+    {
+      "path": "dist/router/routes.js",
+      "sha256": "470aacb365d88a4a002bb4d1a968c8931cda1c97d4e9c7d6a4c441a4122bd2bb"
+    },
+    {
+      "path": "dist/routes.js",
+      "sha256": "740ad47960a7e7a6d6d3cbf8726f42a986e3ac511bc69833e8ec6e3871030b42"
+    },
+    {
+      "path": "dist/install-target/run.js",
+      "sha256": "e6a83390d978badcca76ba71d7f6950e32ff1409388faf3326b4ed63a086b483"
+    },
+    {
+      "path": "dist/runtime.js",
+      "sha256": "47480b9465e37b1219e59ccdfdc9c07412657da8c3c8a2629d0d934651f528fe"
+    },
+    {
+      "path": "dist/library/service.js",
+      "sha256": "09ff2a4379df8f56c08c0f1eb44849f47348bd8a19d3963582ff41c2561693d2"
+    },
+    {
+      "path": "dist/router/sources.js",
+      "sha256": "67c59661a87461a830464ceb99637a795284839284f715693de24ad3305d2720"
+    },
+    {
+      "path": "dist/store.js",
+      "sha256": "3daa98b79de16823c7e0540dc2ec62649718263bbc79b781c0ff4c3fa54543ea"
+    },
+    {
+      "path": "dist/install-target/suite.js",
+      "sha256": "efadfab1b07bc2dc7ae579c05810f4a84059e77f5ddc875d6927443db57456c6"
+    },
+    {
+      "path": "dist/provision/tar.js",
+      "sha256": "20329375e7d6273c21c1ac032bd2cb5a877f022911441ddc3289b0c50a418545"
+    },
+    {
+      "path": "dist/provision/types.js",
+      "sha256": "3c2cdb85a349cd2ef8f5b0fd08c19949d22dc3db7262a29ac6f1a6193478c6a0"
+    },
+    {
+      "path": "dist/usage-evidence.js",
+      "sha256": "0bf5bcca1439fdf9b641c3cebbb7a6095811f4ebf173a47932884fedd06667b2"
+    },
+    {
+      "path": "dist/provision/zip.js",
+      "sha256": "1b0a0104626843b7cc7415122013e8ec0a829a344ccddb38a0e6551567ce0eb1"
+    },
+    {
+      "path": "schemas/catalog-provider-page.schema.json",
+      "sha256": "eb09cb4002cc9a26311bf23b1e24b99e439fbc8b5eaee1fe74ba5e21bf7a52d4"
+    },
+    {
+      "path": "schemas/catalog-source.schema.json",
+      "sha256": "fb220f479886c90ef5c0aaadaf55138a80c16775ca327012d74b4d687cefce84"
+    },
+    {
+      "path": "dist/install-target/fixtures/catalog.json",
+      "sha256": "45b07c631df818efe11b8916812f84d419f266695ffe6ee05b8b694cefd605cd"
+    },
+    {
+      "path": "consistency.json",
+      "sha256": "9f8c79b59e46d795d7623b5e3faf1a0e35ed2bc9da80a3c5d2b240293e95b32c"
+    },
+    {
+      "path": "dist/install-target/fixtures/consumer-cases.json",
+      "sha256": "1f38f17b5f06a01252250e9d2b2d41a3b4d14bae09a78d22e3c6cb5a4228fb63"
+    },
+    {
+      "path": "schemas/install-target.schema.json",
+      "sha256": "6a20f3c1b163def6b27f7f4fbcc0acd5389c94deefea6b3b03f135ee3bbed816"
+    },
+    {
+      "path": "docs/LICENSES.json",
+      "sha256": "fcc93639fce7aabdb945824529eae98f273998a00743cd9b736387e869005f5f"
+    },
+    {
+      "path": "package.json",
+      "sha256": "15830ef5e6e15f52a90f6a9e14713ab85aa47da974794bf19e1f9c7f05345323"
+    },
+    {
+      "path": "docs/PROVENANCE.json",
+      "sha256": "2f7925039b62ecc3e4b10614259c83a4ba5378fcc25317a5a59d9aa02347af42"
+    },
+    {
+      "path": "dist/install-target/fixtures/provider-cases.json",
+      "sha256": "48f9d62efa0cb2d283ec6bece1621740d9b6ddf2f98499c5ca946933e94c064f"
+    },
+    {
+      "path": "docs/APP_PACKAGE.md",
+      "sha256": "c071e0fc7c61c9a99f65cbf60291111c39259ff9ab8e995ac00b124a3f4e751e"
+    },
+    {
+      "path": "docs/CONTRACT.md",
+      "sha256": "31cbe72dbfb61ab6afdb6508a765909fd4dc95e283f929fa52e3187e9ca75bf8"
+    },
+    {
+      "path": "docs/DSH_INTEGRATION.md",
+      "sha256": "8ed15aaa671d5c24a38f6dd5377e48db960f8b39aa313ea240c32941ce716325"
+    },
+    {
+      "path": "docs/INSTALL_TARGET.md",
+      "sha256": "43bc378dc751eacd77adadf9252d7bbb6bf2c261353d3e0de5eb90124cc3a1b6"
+    },
+    {
+      "path": "docs/LIBRARY.md",
+      "sha256": "3f84991ff84d987ddf2842f5ae01956687aa9cf2d221cd95bf8f1bda2dd07864"
+    },
+    {
+      "path": "README.md",
+      "sha256": "9ad9e8cc1e70e5117bf96708bc9a15c701d32c6c04745778922aaa9133df0ec9"
+    },
+    {
+      "path": "docs/SECURITY.md",
+      "sha256": "e829ea29bf8f877a3dc57f4ab0aec0eb63ce40a6f1c702883e076b270e34b63f"
+    },
+    {
+      "path": "dist/provision/THIRD_PARTY_NOTICES.md",
+      "sha256": "669a88abcf2fc7c7aea275f1d50cefc797c7d322e615c104c4a613d3be533ae0"
+    },
+    {
+      "path": "dist/provision/archive.d.ts",
+      "sha256": "f97ff84cc5f04306a7cea57b46f05d135245f3eef0b9bb6eb0ab8fe5b44555b2"
+    },
+    {
+      "path": "dist/provision/check.d.ts",
+      "sha256": "6c45a5c677b430d0a94ca626756911fb97c8c0117206dfa0952b7839e1559b88"
+    },
+    {
+      "path": "dist/provision/checkpoints.d.ts",
+      "sha256": "e30a7cfd86a54e8f0972b70996c5923a1bd7d4edf3a90f253fd24453090d7895"
+    },
+    {
+      "path": "dist/provision/cli.d.ts",
+      "sha256": "f612d39beb421892dbd980a6470232e566c023d61f96c092efe96f9aab5f17fe"
+    },
+    {
+      "path": "dist/client-ui.d.ts",
+      "sha256": "2ef86c7c5f2e18239951e6e858f8e7ac191fe4c8d9d34993822a55d9d26fb9ba"
+    },
+    {
+      "path": "dist/client.d.ts",
+      "sha256": "25ee82ebb7d74fd0f6e25efb3270a46b04c202f667acb15e6d1b8cabaf295c6c"
+    },
+    {
+      "path": "dist/provision/download.d.ts",
+      "sha256": "28746d82a4fca0948f733f8ec79513215a3ef43fa3d6c0da800a4e83e7d988ab"
+    },
+    {
+      "path": "dist/dsh.d.ts",
+      "sha256": "3a3e870716f51974eee909280281a106fbb75b9d39556805f9e225e3bc3d970a"
+    },
+    {
+      "path": "dist/provision/errors.d.ts",
+      "sha256": "80671ce87e27d78915d36caec6735579d3d5b990d0c83b06a9b9debdc310ae92"
+    },
+    {
+      "path": "dist/provision/extract.d.ts",
+      "sha256": "6522a838f313354148c29483a490de6044b2b6ed3f4c33ab241d553bfd3e8577"
+    },
+    {
+      "path": "dist/provision/fsutil.d.ts",
+      "sha256": "031f99f078e7f2add82a1f67d8bacf669f3a5fcb88a78a066d1dc5b4dacf4c8a"
+    },
+    {
+      "path": "dist/index.d.ts",
+      "sha256": "104b6f197656f8495955902a929f94858f0017526544318893883beff00479ff"
+    },
+    {
+      "path": "dist/provision/index.d.ts",
+      "sha256": "b6015a4649c235072a0a399abc45b3a383d3a065e2310119b007b652d6cc7681"
+    },
+    {
+      "path": "dist/provision/ledger.d.ts",
+      "sha256": "d23cbf53ecce27ef1fc55a63c69654e5f32baef597e741994f4cea7839fd1c92"
+    },
+    {
+      "path": "dist/provision/manifest.d.ts",
+      "sha256": "cc50a2f84d7f635ef1e1d77f44d3ee387c2780b516c4a6312fcc709bdd1c4fd2"
+    },
+    {
+      "path": "dist/provision/paths.d.ts",
+      "sha256": "797fad14527a274c018d184d775ca7f8c7a6d13c1c950349deda3723c78e537f"
+    },
+    {
+      "path": "dist/provision/platform.d.ts",
+      "sha256": "9269864f0d7c4a99648de659c89762c2defebdc5029abf6ae56a1d21c0cf565b"
+    },
+    {
+      "path": "dist/provision/provision.d.ts",
+      "sha256": "6da04dca35e4bc385369e140cfd681c79ccd9c1e1f3719e310fa04e2b14a27d3"
+    },
+    {
+      "path": "dist/install-target/suite.d.ts",
+      "sha256": "cd9f48abb2416bae571a18ca85fb71b26b37515cea477bf0d00265eff4324e89"
+    },
+    {
+      "path": "dist/provision/tar.d.ts",
+      "sha256": "ffa17175614c3ff72d3e3dfc67b104127b8a532fce33eed3285813b0070ed877"
+    },
+    {
+      "path": "dist/provision/types.d.ts",
+      "sha256": "2bb3ba654727f6baa75b780b679b42daaa09a9e221ae941eb04fffae82bd25f6"
+    },
+    {
+      "path": "dist/provision/zip.d.ts",
+      "sha256": "966d2806ed22a975400bc21895c5026be8da6acc8696c708e77eb538218b0744"
+    },
+    {
+      "path": "profile/cordis.patch.yml",
+      "sha256": "e3ac2655581d127007d53bd9e276651e5bc5fa70c70a829bf80ec2ee73206f57"
+    }
+  ],
+  "profileModuleMetadataSha256": "2edce826b5efbd9e5665047374f0dac7ec44c6cc4c8cbafad8fc0c33e4287c36",
+  "storeDirFromModuleMetadata": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/home/Library/pnpm/store/v10",
+  "storePathCommand": [
+    "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/pnpm",
+    "store",
+    "path"
+  ],
+  "storePathCwd": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/dsh-home/profiles/web",
+  "storePathCompleteEnvironment": {
+    "HOME": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/home",
+    "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/dsh-home",
+    "LANG": "C.UTF-8",
+    "PATH": "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin:/usr/bin:/bin"
+  },
+  "storePathExitCode": 0,
+  "storePathStdout": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/home/Library/pnpm/store/v10",
+  "storePathsEqual": true,
+  "storeInsideIsolatedHome": true,
+  "metadataEdited": false,
+  "oldProfileCopied": false
+}

@@ -1,0 +1,64 @@
+{
+  "files": [
+    {
+      "path": "BOOTSTRAP-COMMAND.json",
+      "sha256": "ed8b4960c0211b339a029ba687845e60249c54ff49a9faa5461457061eca3b64"
+    },
+    {
+      "path": "BOOTSTRAP-RESULT.json",
+      "sha256": "992526f6d0ea91771d0ccab79c2ef97390b12282bc7c83111e180caafc6d702f"
+    },
+    {
+      "path": "CATALOG-SOURCE.json",
+      "sha256": "9d40b6d7d4db0e0c1154039377ce7996bbd30a36e4cb8b00f9357ea53cf63977"
+    },
+    {
+      "path": "CONTROL-ENV.json",
+      "sha256": "146d5b7f231d55aaba2b4806239c14c8022e045454f6fe8cdd3d8e96877ca8c8"
+    },
+    {
+      "path": "DAEMON.json",
+      "sha256": "5b7bf068f3a3ba381fcba3558630b4c8c2b34ac9ef7034c21e4b989a9825dcbf"
+    },
+    {
+      "path": "INSTALLED-LOCATION-PROBE.json",
+      "sha256": "81c80abc323cb7c317216abd29fce472b34f68d9823367a000f781777a47d8ea"
+    },
+    {
+      "path": "OLD-ENVIRONMENT-GUARD.json",
+      "sha256": "e39ee59f3f96b7320c9cb5de82388448f39baba62012cf1ef515cd73eefc6682"
+    },
+    {
+      "path": "README.md",
+      "sha256": "0ab39e2170fe122693a04a6c5ada5fbccaa06530f2a65692dfb5ef79c5c4c2fc"
+    },
+    {
+      "path": "RESULT.json",
+      "sha256": "5f8b6564ae0daf160cb92a7e2fe1c9173106854e64e6448632f55eda402e01d1"
+    },
+    {
+      "path": "SUPPLY-STORE-BYTES.json",
+      "sha256": "b87d1a53b5127125a965f7ba77012e5e4dd6760c3951e4491a0a3f202a5818e9"
+    },
+    {
+      "path": "VERSIONS.json",
+      "sha256": "146632794d1a94ab44ccc573d6541f01e1a7e08cb75afe4fb0330d17e95f7587"
+    },
+    {
+      "path": "WEB-STARTUP.json",
+      "sha256": "2b96cc68bd352d5358cb9bd5a7417c2a104bb4d9ce90be84d6c11e94c6a8ca04"
+    },
+    {
+      "path": "dsh-runtime.redacted.log",
+      "sha256": "6e17d4ab285ca4211ca908b5a46352348632db2257b84e930ee91abe1536bdfa"
+    },
+    {
+      "path": "official-plugin-add.stderr.log",
+      "sha256": "d8ec9da82fcaaaf3f085c48f504d09fb80b6a64cdde13f16368697b1a733b807"
+    },
+    {
+      "path": "official-plugin-add.stdout.log",
+      "sha256": "2e5aede3b85bb3f06a56b8ed35b9a4e581d4b0aa8e435c6f770354cc3141d817"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "sourceFixtureExport": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/dsh-home/profiles/web/node_modules/@hanamesh/dsh-app-host/dist/install-target/fixtures/catalog.json",
+  "canonicalSha256": "45b07c631df818efe11b8916812f84d419f266695ffe6ee05b8b694cefd605cd",
+  "fixture": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/catalog-fixture.json",
+  "derivedSha256": "9ca13bf888f99be3f51c1b46f923492ec74a138ae89e897f950791166a1c9b59",
+  "originalThreeItemsEqual": true,
+  "publicTestTarget": "fixture.public.dsh-notify",
+  "testLabel": "测试目录（fixture）",
+  "productionCatalog": false
+}

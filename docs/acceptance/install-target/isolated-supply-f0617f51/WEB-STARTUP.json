@@ -1,0 +1,30 @@
+{
+  "startupReady": true,
+  "pid": 43282,
+  "ppid": 1,
+  "port": 63684,
+  "cleanUrl": "http://127.0.0.1:63684/",
+  "psAfterLauncherExit": "43282     1 /Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node /Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/bin.js web --host 127.0.0.1 --port 0 --no-open --trusted-host localhost",
+  "unauthenticatedRootStatusFromCompletedRead": 401,
+  "mountedLibraryTargetRequest": {
+    "method": "GET",
+    "url": "http://127.0.0.1:63684/hanamesh/library/target?itemId=fixture.public.dsh-notify",
+    "credentialsSent": false,
+    "status": 401,
+    "body": {
+      "error": {
+        "code": "UNAUTHENTICATED",
+        "message": "Host authentication is required.",
+        "details": {}
+      },
+      "traceId": "6ecad8ed-aaf0-4d81-99b8-0d6031e46e2d"
+    }
+  },
+  "scope": "REAL_RUNTIME_ENGINEERING_SUPPLY; no browser UI/auth exchange",
+  "serverLaunchAttempts": 1,
+  "guiActions": 0,
+  "localhostRequests": 0,
+  "initialPpidReceiptCheck": "Checked while launch helper still parent; assertion corrected after helper exit, same PID, no restart",
+  "rawLogMode": "0o600",
+  "privateEntryMode": "0o600"
+}
