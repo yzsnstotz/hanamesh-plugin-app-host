@@ -1,0 +1,17 @@
+{
+  "command": "npm run check",
+  "exit_code": 0,
+  "tests": 183,
+  "pass": 180,
+  "fail": 0,
+  "skipped": 3,
+  "mutations": 26,
+  "detected": 26,
+  "strict_types": "PASS",
+  "preflight": "PASS",
+  "evidence_root": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-LOOPBACK-01/check",
+  "source_implementation": "10491d3",
+  "pack_sha256": "9d3dc5cd55fde289ea8b0d14cc24f9c187415af0f6d9e0fd06f8a6d5fa945f3b",
+  "product_runtime": "NOT_RUN",
+  "product_ui": "NOT_RUN"
+}

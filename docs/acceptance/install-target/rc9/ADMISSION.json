@@ -1,0 +1,21 @@
+{
+  "timestamp_utc": "2026-10-08T09:46:47.317041+00:00",
+  "native_command": "python3 cross-cwd filesystem probe",
+  "checks": [
+    {
+      "root": "/Users/yzliu/work/projects/hanamesh",
+      "read_write_delete": true
+    },
+    {
+      "root": "/Users/yzliu/work/Docs/Projects/hanamesh",
+      "read_write_delete": true
+    },
+    {
+      "root": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-LOOPBACK-01",
+      "read_write_delete": true
+    }
+  ],
+  "approval_prompt_observed": false,
+  "no_approval_verified": true,
+  "secrets_accessed": false
+}
