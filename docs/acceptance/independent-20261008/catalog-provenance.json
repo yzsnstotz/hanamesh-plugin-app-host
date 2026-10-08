@@ -1,0 +1,12 @@
+{
+  "tag": "v0.2.0-rc.8",
+  "package": "@hanamesh/dsh-app-host",
+  "sourceExport": "./install-target/fixtures/catalog.json",
+  "sourcePath": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/dsh-home/profiles/web/node_modules/@hanamesh/dsh-app-host/dist/install-target/fixtures/catalog.json",
+  "sourceSHA256": "45b07c631df818efe11b8916812f84d419f266695ffe6ee05b8b694cefd605cd",
+  "runtimeFixture": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/catalog-fixture.json",
+  "derivedFixtureSHA256": "9ca13bf888f99be3f51c1b46f923492ec74a138ae89e897f950791166a1c9b59",
+  "change": "canonical three entries retained; added one labelled public real npm target dsh-notify 0.1.7",
+  "installer": "UNMODIFIED_REAL_DSH",
+  "fakeInstaller": false
+}

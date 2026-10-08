@@ -1,0 +1,14 @@
+{
+  "packageJSONSHA256": "f90c5f76fd8762205881bbbcd8e70b65448a9e6ad53af423b839a9376e046578",
+  "directDependencies": {
+    "@hanamesh/dsh-app-host": "file:/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-INSTALL-01/release/out/hanamesh-dsh-app-host-0.2.0-rc.8.tgz"
+  },
+  "bundles": [
+    "@deepseek-ai/dsh-base",
+    "@deepseek-ai/dsh-web-app",
+    "@hanamesh/dsh-app-host"
+  ],
+  "coreInstalled": false,
+  "usageInstalled": false,
+  "notifyInstalled": false
+}

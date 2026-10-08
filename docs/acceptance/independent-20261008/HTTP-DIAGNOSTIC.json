@@ -1,0 +1,92 @@
+{
+  "evidence": "REAL_RUNTIME_HTTP_DIAGNOSTIC_NOT_UI_GATE",
+  "requests": [
+    {
+      "host": "127.0.0.1",
+      "kind": "unauthenticated-root",
+      "status": 401
+    },
+    {
+      "host": "127.0.0.1",
+      "kind": "official-token-exchange-and-clean-redirect",
+      "status": 200,
+      "byteCount": 35132,
+      "bodySHA256": "c54ea8381715ad014ad02b6dd070ba0411e9e5b7180069b72713ec09b54128e3",
+      "cleanFinalURL": "http://127.0.0.1:49228/",
+      "cookieCount": 1
+    },
+    {
+      "host": "127.0.0.1",
+      "kind": "authenticated-root-with-query",
+      "status": 200,
+      "byteCount": 35132,
+      "bodySHA256": "c54ea8381715ad014ad02b6dd070ba0411e9e5b7180069b72713ec09b54128e3",
+      "cleanFinalURL": "http://127.0.0.1:49228/"
+    },
+    {
+      "host": "127.0.0.1",
+      "kind": "authenticated-public-target-resolution",
+      "status": 200,
+      "byteCount": 646,
+      "bodySHA256": "876cce2f3db7cb95afa75248883fdc10f8371f13f90cb4d718b3d3e216d1324c",
+      "cleanFinalURL": "http://127.0.0.1:49228/hanamesh/library/target",
+      "contractVersion": "1",
+      "item": {
+        "id": "fixture.public.dsh-notify",
+        "displayName": "测试目录 · dsh-notify（公开真实包）",
+        "latestVersion": "0.1.7",
+        "package": {
+          "registry": "npm",
+          "name": "dsh-notify"
+        }
+      },
+      "sourceKind": "fixture"
+    },
+    {
+      "host": "127.0.0.1",
+      "kind": "unauthenticated-target-refused",
+      "status": 401
+    },
+    {
+      "host": "localhost",
+      "kind": "unauthenticated-root",
+      "status": 401
+    },
+    {
+      "host": "localhost",
+      "kind": "official-token-exchange-and-clean-redirect",
+      "status": 200,
+      "byteCount": 35132,
+      "bodySHA256": "c54ea8381715ad014ad02b6dd070ba0411e9e5b7180069b72713ec09b54128e3",
+      "cleanFinalURL": "http://localhost:49228/",
+      "cookieCount": 1
+    },
+    {
+      "host": "localhost",
+      "kind": "authenticated-root-with-query",
+      "status": 200,
+      "byteCount": 35132,
+      "bodySHA256": "c54ea8381715ad014ad02b6dd070ba0411e9e5b7180069b72713ec09b54128e3",
+      "cleanFinalURL": "http://localhost:49228/"
+    },
+    {
+      "host": "localhost",
+      "kind": "authenticated-public-target-resolution",
+      "status": 403,
+      "contractVersion": null,
+      "item": {
+        "id": null,
+        "displayName": null,
+        "latestVersion": null,
+        "package": null
+      },
+      "sourceKind": null
+    },
+    {
+      "host": "localhost",
+      "kind": "unauthenticated-target-refused",
+      "status": 403
+    }
+  ],
+  "installRequests": 0
+}

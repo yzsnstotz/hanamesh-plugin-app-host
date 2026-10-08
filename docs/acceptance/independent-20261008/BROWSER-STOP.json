@@ -1,0 +1,11 @@
+{
+  "tool": "mcp__cua_repl.js",
+  "action": "cua.createBrowserTab(iab, http://127.0.0.1:49228/, visible:true)",
+  "result": "Browser Use cannot open http://127.0.0.1:49228 in tab 2. Browser reported: net::ERR_BLOCKED_BY_CLIENT",
+  "attempts": 1,
+  "screenshots": 0,
+  "alternateBrowser": false,
+  "policyBypass": false,
+  "guiLock": "RELEASED",
+  "conclusion": "UI_NOT_ESTABLISHED; browser rejection cause unknown, do not infer an AppHost source bug"
+}

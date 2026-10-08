@@ -1,0 +1,23 @@
+{
+  "name": "dsh-notify",
+  "version": "0.1.7",
+  "license": "MIT",
+  "repository": {
+    "url": "git+https://github.com/Pasumao/dsh-plugin-notify.git",
+    "type": "git"
+  },
+  "dist": {
+    "shasum": "84cec36a735996ffb8e7f49a462b4875bd62c370",
+    "tarball": "https://registry.npmjs.org/dsh-notify/-/dsh-notify-0.1.7.tgz",
+    "fileCount": 16,
+    "integrity": "sha512-B+Y9I15fbv3N/2JC12SmHXsdJdaAKPZzZUQmINozzF7uVGNTafm970zrFOLcwmYitmaAbzAyjjq9e/Iu046mnA==",
+    "signatures": [
+      {
+        "sig": "MEUCIFBfvJ7+Lh0hN2CKS031KOXX3t84Z/4ACARzL51kXjNQAiEAlyph7UnKuhyEHZyFK4UTE/8AowzTX1allsTTvsZzmWM=",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      }
+    ],
+    "unpackedSize": 209091
+  },
+  "sourceURL": "https://registry.npmjs.org/dsh-notify/latest"
+}
