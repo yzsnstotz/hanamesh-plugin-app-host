@@ -1,0 +1,41 @@
+- button "新建会话":
+- button "收起侧边栏":
+- button "新建会话":
+  - generic: 新会话
+  - generic: ⌥
+  - generic: ⌘
+  - generic: "N"
+- navigation "全局面板":
+  - button "插件":
+    - generic: 插件
+- generic: 工作区
+- button "搜索会话":
+- textbox "搜索会话名称"
+- button "视图选项":
+- button "添加工作区":
+- tree "会话":
+  - treeitem "默认工作区" [expanded]:
+    - generic: 默认工作区
+  - treeitem "新会话":
+    - generic: 新会话
+- button "市场"
+- button "设置":
+  - generic: 设置
+- button "返回插件列表":
+  - generic: 插件列表
+- button "卸载 dsh-notify":
+  - text: 卸载
+- switch "启用 dsh-notify" [checked]
+- heading "dsh-notify" [level=3]
+- generic: v0.1.7
+- paragraph:
+  - code: dsh-notify
+- paragraph: "Native Windows toast + system tray for DeepSeek Harness (dsh): the only dsh plugin with a tray icon. Pops the moment the agent stops running — finished / aborted / error / output limit / waiting for your choice / session closed — body labeled with workspace · session, so you can switch windows during long tasks and glance at the tray instead of watching a spinner. Pure host-side, zero dependencies, zero build."
+- heading "包含的组件" [level=4]
+- generic: 共 1 个 · 1 运行中
+- list:
+  - generic: dsh-notify
+  - generic: "Native Windows toast + system tray for DeepSeek Harness (dsh): the only dsh plugin with a tray icon. Pops the moment the agent stops running — finished / aborted / error / output limit / waiting for your choice / session closed — body labeled with workspace · session, so you can switch windows during long tasks and glance at the tray instead of watching a spinner. Pure host-side, zero dependencies, zero build."
+  - code: dsh-plugin-notify
+  - generic: 运行中
+  - switch "启用组件 dsh-notify" [checked]

@@ -1,0 +1,7 @@
+# P06 normal legal 127 Chrome UI · f0617f51
+
+PARTIAL / NOT_TO_TEST / NOT_ACCEPTED. Same new isolated official DSH profile, signed rc9, PID43282 / PPID1 / port63684. No source/model/config/dependency change. Official generated entry authentication, visible original market UI, explicit confirmation, actual original install POST202 and events done, installed dsh-notify 0.1.7 readback, original host plugin detail v0.1.7 with running component.
+
+One target install POST. Cancel/invalid/missing and parameter navigation did not install. Same-target reread displays already installed without additional POST; simultaneous host POST dedup not run. No localhost navigation/token alias, no restart or old instance mutation. No failure injection: authorization-failure UI and post-add/runtime whole rollback not run. Plugin detail opening does not prove application view lease opening. Market preserves restart-required notice; worker did not restart either daemon or exercise Windows notifications.
+
+UI-NETWORK is a read-only CDP observer of actual browser requests, excluding headers/cookies/auth values. UI-RESPONSE-BODIES reads actual browser responses, not a replay or substitute installer. UI-POSTSTATE is supplementary actual profile evidence; UI screenshots and DOM are product evidence. Runtime private entry and raw log remain outside Git in 0600 files. Prior supply receipts remain in isolated-supply-f0617f51.

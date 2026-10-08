@@ -1,0 +1,100 @@
+- button "新建会话":
+- button "收起侧边栏":
+- button "新建会话":
+  - generic: 新会话
+  - generic: ⌥
+  - generic: ⌘
+  - generic: "N"
+- navigation "全局面板":
+  - button "插件":
+    - generic: 插件
+- generic: 工作区
+- button "搜索会话":
+- textbox "搜索会话名称"
+- button "视图选项":
+- button "添加工作区":
+- tree "会话":
+  - treeitem "默认工作区" [expanded]:
+    - generic: 默认工作区
+  - treeitem "新会话":
+    - generic: 新会话
+- button "市场" [active]
+- button "设置":
+  - generic: 设置
+- button "返回插件列表":
+  - generic: 插件列表
+- button "卸载 dsh-notify":
+  - text: 卸载
+- switch "启用 dsh-notify" [checked]
+- heading "dsh-notify" [level=3]
+- generic: v0.1.7
+- paragraph:
+  - code: dsh-notify
+- paragraph: "Native Windows toast + system tray for DeepSeek Harness (dsh): the only dsh plugin with a tray icon. Pops the moment the agent stops running — finished / aborted / error / output limit / waiting for your choice / session closed — body labeled with workspace · session, so you can switch windows during long tasks and glance at the tray instead of watching a spinner. Pure host-side, zero dependencies, zero build."
+- heading "包含的组件" [level=4]
+- generic: 共 1 个 · 1 运行中
+- list:
+  - generic: dsh-notify
+  - generic: "Native Windows toast + system tray for DeepSeek Harness (dsh): the only dsh plugin with a tray icon. Pops the moment the agent stops running — finished / aborted / error / output limit / waiting for your choice / session closed — body labeled with workspace · session, so you can switch windows during long tasks and glance at the tray instead of watching a spinner. Pure host-side, zero dependencies, zero build."
+  - code: dsh-plugin-notify
+  - generic: 运行中
+  - switch "启用组件 dsh-notify" [checked]
+- heading "HanaMesh 市场" [level=1]
+- button "关闭"
+- region "安装目标开发小界面":
+  - heading "安装目标" [level=2]
+  - paragraph: 输入目录条目 ID 或包名，市场查询当前目录后确认安装。
+  - textbox "目录条目 ID":
+    - /placeholder: itemId（可选）
+    - text: fixture.public.dsh-notify
+  - textbox "包名":
+    - /placeholder: packageName（可选）
+    - text: dsh-notify
+  - button "查看安装目标"
+  - status "市场安装确认":
+    - term: 插件名
+    - definition: 测试目录 · dsh-notify（公开真实包）
+    - term: 包名
+    - definition: dsh-notify
+    - term: 版本
+    - definition: 0.1.7
+    - term: 来源
+    - definition: 测试目录（fixture）
+    - status: 已安装，无需重复安装
+    - status: 安装完成，重启 DSH 后生效
+- searchbox "搜索应用与插件"
+- button "搜索"
+- combobox "类别":
+  - option "全部" [selected]
+  - option "应用"
+  - option "插件"
+  - option "utility"
+- status:
+  - strong: 需重启 DSH
+  - text: 插件更改在 DSH 重启后生效。 请手动重启 DSH。
+- article:
+  - heading "测试目录 · 安装目标插件" [level=3]
+  - paragraph: Install-target contract fixture (test catalog, not a real product).
+  - generic: 插件 · HanaMesh fixture · 1.2.3 · utility
+  - button "安装"
+- article:
+  - heading "测试目录 · 安装目标应用" [level=3]
+  - paragraph: Install-target contract fixture application (test catalog).
+  - generic: 应用 · HanaMesh fixture · 0.4.0 · hanamesh-app
+  - button "安装"
+- article:
+  - heading "测试目录 · 仅源码" [level=3]
+  - paragraph: Repository-only listing; the market cannot install it.
+  - generic: 仅收录 · HanaMesh fixture · — · utility
+  - generic: 仅收录，不可安装
+- article:
+  - heading "测试目录 · dsh-notify（公开真实包）" [level=3]
+  - paragraph: 测试目录条目；确认后实际安装公开 dsh-notify。
+  - generic: 插件 · 测试供给 · dsh-notify · 0.1.7 · utility
+  - generic: 需重启 0.1.7
+  - generic: 已安装，重启 DSH 后生效
+  - status: 安装完成，重启 DSH 后生效
+- heading "已安装" [level=2]
+- list:
+  - listitem: 插件 · @hanamesh/dsh-app-host 0.2.0-rc.9 · 已安装
+  - listitem: 插件 · dsh-notify 0.1.7 · 需重启

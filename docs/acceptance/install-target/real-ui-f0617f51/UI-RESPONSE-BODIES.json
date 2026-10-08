@@ -1,0 +1,83 @@
+[
+  {
+    "requestId": "60517.122",
+    "url": "http://127.0.0.1:63684/hanamesh/library/target?itemId=fixture.public.dsh-notify",
+    "status": 200,
+    "response": {
+      "base64Encoded": false,
+      "body": "{\"contractVersion\":\"1\",\"source\":{\"kind\":\"fixture\",\"path\":\"/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/catalog-fixture.json\"},\"item\":{\"id\":\"fixture.public.dsh-notify\",\"name\":\"dsh-notify\",\"displayName\":\"测试目录 · dsh-notify（公开真实包）\",\"summary\":\"测试目录条目；确认后实际安装公开 dsh-notify。\",\"latestVersion\":\"0.1.7\",\"categories\":[\"utility\"],\"package\":{\"registry\":\"npm\",\"name\":\"dsh-notify\"},\"publisher\":{\"name\":\"测试供给 · dsh-notify\"},\"license\":\"MIT\",\"kind\":\"plugin\",\"installed\":null,\"upgradeAvailable\":false},\"traceId\":\"4a529cc7-1261-4243-b29e-fcd380735473\"}"
+    }
+  },
+  {
+    "requestId": "60517.123",
+    "url": "http://127.0.0.1:63684/hanamesh/library/target?itemId=fixture.public.absent",
+    "status": 404,
+    "response": {
+      "base64Encoded": false,
+      "body": "{\"error\":{\"code\":\"CATALOG_ITEM_MISSING\",\"message\":\"The market catalog does not contain this target.\",\"details\":{}},\"traceId\":\"ae97a7d8-8af3-42dc-b1d3-99b8c639333d\"}"
+    }
+  },
+  {
+    "requestId": "60517.124",
+    "url": "http://127.0.0.1:63684/hanamesh/library/target?itemId=fixture.public.dsh-notify&packageName=dsh-notify&contractVersion=1",
+    "status": 200,
+    "response": {
+      "base64Encoded": false,
+      "body": "{\"contractVersion\":\"1\",\"source\":{\"kind\":\"fixture\",\"path\":\"/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/catalog-fixture.json\"},\"item\":{\"id\":\"fixture.public.dsh-notify\",\"name\":\"dsh-notify\",\"displayName\":\"测试目录 · dsh-notify（公开真实包）\",\"summary\":\"测试目录条目；确认后实际安装公开 dsh-notify。\",\"latestVersion\":\"0.1.7\",\"categories\":[\"utility\"],\"package\":{\"registry\":\"npm\",\"name\":\"dsh-notify\"},\"publisher\":{\"name\":\"测试供给 · dsh-notify\"},\"license\":\"MIT\",\"kind\":\"plugin\",\"installed\":null,\"upgradeAvailable\":false},\"traceId\":\"35741d38-9a95-4ac9-9612-6bc25fe2b343\"}"
+    }
+  },
+  {
+    "requestId": "60517.128",
+    "url": "http://127.0.0.1:63684/hanamesh/library/install",
+    "status": 202,
+    "response": {
+      "base64Encoded": false,
+      "body": "{\"operationId\":\"d5ee2a5f-75dd-4a86-a8c7-ac82e1f30c3a\",\"status\":\"started\",\"traceId\":\"3136af47-64b9-42ab-88a4-0cab706d392e\"}"
+    }
+  },
+  {
+    "requestId": "60517.129",
+    "url": "http://127.0.0.1:63684/hanamesh/library/events?after=0",
+    "status": 200,
+    "response": {
+      "base64Encoded": false,
+      "body": "{\"events\":[{\"sequence\":1,\"at\":1791463576241,\"type\":\"library.install-started\",\"operationId\":\"d5ee2a5f-75dd-4a86-a8c7-ac82e1f30c3a\"},{\"sequence\":2,\"at\":1791463576242,\"type\":\"library.install-started\",\"itemId\":\"fixture.public.dsh-notify\",\"packageName\":\"dsh-notify\",\"kind\":\"plugin\"}],\"sequence\":2,\"operations\":[\"d5ee2a5f-75dd-4a86-a8c7-ac82e1f30c3a\"],\"traceId\":\"66b24699-3cc4-41cf-aa96-4e44dcd0ce26\"}"
+    }
+  },
+  {
+    "requestId": "60517.130",
+    "url": "http://127.0.0.1:63684/hanamesh/library/events?after=2",
+    "status": 200,
+    "response": {
+      "base64Encoded": false,
+      "body": "{\"events\":[],\"sequence\":2,\"operations\":[\"d5ee2a5f-75dd-4a86-a8c7-ac82e1f30c3a\"],\"traceId\":\"fdafe3a5-7722-4e0b-8870-aec979c30e30\"}"
+    }
+  },
+  {
+    "requestId": "60517.131",
+    "url": "http://127.0.0.1:63684/hanamesh/library/events?after=2",
+    "status": 200,
+    "response": {
+      "base64Encoded": false,
+      "body": "{\"events\":[{\"sequence\":3,\"at\":1791463579287,\"type\":\"library.install-done\",\"status\":\"restart-required\",\"kind\":\"plugin\",\"packageName\":\"dsh-notify\",\"version\":\"0.1.7\"},{\"sequence\":4,\"at\":1791463579287,\"type\":\"library.install-done\",\"operationId\":\"d5ee2a5f-75dd-4a86-a8c7-ac82e1f30c3a\",\"result\":{\"status\":\"restart-required\",\"kind\":\"plugin\",\"packageName\":\"dsh-notify\",\"version\":\"0.1.7\"}}],\"sequence\":4,\"operations\":[],\"traceId\":\"cb628377-4e16-4e0f-8430-850733b6567b\"}"
+    }
+  },
+  {
+    "requestId": "60517.133",
+    "url": "http://127.0.0.1:63684/hanamesh/library/target?itemId=fixture.public.dsh-notify&packageName=dsh-notify",
+    "status": 200,
+    "response": {
+      "base64Encoded": false,
+      "body": "{\"contractVersion\":\"1\",\"source\":{\"kind\":\"fixture\",\"path\":\"/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/catalog-fixture.json\"},\"item\":{\"id\":\"fixture.public.dsh-notify\",\"name\":\"dsh-notify\",\"displayName\":\"测试目录 · dsh-notify（公开真实包）\",\"summary\":\"测试目录条目；确认后实际安装公开 dsh-notify。\",\"latestVersion\":\"0.1.7\",\"categories\":[\"utility\"],\"package\":{\"registry\":\"npm\",\"name\":\"dsh-notify\"},\"publisher\":{\"name\":\"测试供给 · dsh-notify\"},\"license\":\"MIT\",\"kind\":\"plugin\",\"installed\":{\"packageName\":\"dsh-notify\",\"version\":\"0.1.7\",\"kind\":\"plugin\",\"bundle\":true,\"active\":true,\"state\":\"installed-not-loaded\"},\"upgradeAvailable\":false},\"traceId\":\"9907e63f-e62a-4591-b5fe-f1a469bf1297\"}"
+    }
+  },
+  {
+    "requestId": "60517.135",
+    "url": "http://127.0.0.1:63684/hanamesh/library/target?itemId=fixture.public.dsh-notify&packageName=dsh-notify",
+    "status": 200,
+    "response": {
+      "base64Encoded": false,
+      "body": "{\"contractVersion\":\"1\",\"source\":{\"kind\":\"fixture\",\"path\":\"/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/catalog-fixture.json\"},\"item\":{\"id\":\"fixture.public.dsh-notify\",\"name\":\"dsh-notify\",\"displayName\":\"测试目录 · dsh-notify（公开真实包）\",\"summary\":\"测试目录条目；确认后实际安装公开 dsh-notify。\",\"latestVersion\":\"0.1.7\",\"categories\":[\"utility\"],\"package\":{\"registry\":\"npm\",\"name\":\"dsh-notify\"},\"publisher\":{\"name\":\"测试供给 · dsh-notify\"},\"license\":\"MIT\",\"kind\":\"plugin\",\"installed\":{\"packageName\":\"dsh-notify\",\"version\":\"0.1.7\",\"kind\":\"plugin\",\"bundle\":true,\"active\":true,\"state\":\"installed-not-loaded\"},\"upgradeAvailable\":false},\"traceId\":\"224596f8-ff68-4d98-8936-9f3285735ae0\"}"
+    }
+  }
+]

@@ -1,0 +1,39 @@
+{
+  "classification": "REAL_PROFILE_READBACK_SUPPORTS_REAL_UI",
+  "profile": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/dsh-home/profiles/web",
+  "installedPackage": {
+    "name": "dsh-notify",
+    "version": "0.1.7",
+    "realPath": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/dsh-home/profiles/web/node_modules/dsh-notify/package.json"
+  },
+  "manifest": {
+    "name": "dsh-profile-web",
+    "private": true,
+    "dependencies": {
+      "@hanamesh/dsh-app-host": "file:/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-LOOPBACK-01/release/out/hanamesh-dsh-app-host-0.2.0-rc.9.tgz",
+      "dsh-notify": "0.1.7"
+    },
+    "dsh": {
+      "profile": {
+        "bundles": [
+          "@deepseek-ai/dsh-base",
+          "@deepseek-ai/dsh-web-app",
+          "@hanamesh/dsh-app-host",
+          "dsh-notify"
+        ]
+      }
+    }
+  },
+  "fileHashes": {
+    "package.json": "fcbdde970ef78bc2b4179b23cf0e11adf43f6d089264c92800d58bcabb4c41be",
+    "pnpm-lock.yaml": "27eb256c27c86cd277299df5d61b432a253501498451e1f09b9fb899d58a01b0",
+    "node_modules/.modules.yaml": "1015aa51b836a985412a34da9a20c108ea5cb6af4ef3e651a775db02a601a37e"
+  },
+  "storeDir": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/home/Library/pnpm/store/v10",
+  "actualProcesses": [
+    "43282     1   0.3 /Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node /Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/bin.js web --host 127.0.0.1 --port 0 --no-open --trusted-host localhost",
+    "63068     1   0.5 /Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node /Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/bin.js web --host 127.0.0.1 --port 49228 --no-open --trusted-host localhost"
+  ],
+  "localhostRequests": 0,
+  "handEditedMetadata": false
+}

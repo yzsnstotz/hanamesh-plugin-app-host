@@ -1,0 +1,26 @@
+{
+  "profile": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/f0617f51-1d81-4790-917e-6dcbc2adc686/dsh-home/profiles/web",
+  "fileHashes": {
+    "package.json": "4b28826d37c30f43839a5eed85d27dc70ff694ea929aee775626128ba42523c4",
+    "pnpm-lock.yaml": "1ce33f6f125d80a7a8242566ef8db8863cda2f76955f43b97838e14cf21e9fc9",
+    "node_modules/.modules.yaml": "2edce826b5efbd9e5665047374f0dac7ec44c6cc4c8cbafad8fc0c33e4287c36"
+  },
+  "manifest": {
+    "name": "dsh-profile-web",
+    "private": true,
+    "dependencies": {
+      "@hanamesh/dsh-app-host": "file:/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-LOOPBACK-01/release/out/hanamesh-dsh-app-host-0.2.0-rc.9.tgz"
+    },
+    "dsh": {
+      "profile": {
+        "bundles": [
+          "@deepseek-ai/dsh-base",
+          "@deepseek-ai/dsh-web-app",
+          "@hanamesh/dsh-app-host"
+        ]
+      }
+    }
+  },
+  "phase": "legal 127 normal Chrome only",
+  "localhostAllowed": false
+}

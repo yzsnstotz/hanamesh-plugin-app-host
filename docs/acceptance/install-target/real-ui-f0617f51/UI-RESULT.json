@@ -1,0 +1,34 @@
+{
+  "phase": "REAL_UI legal 127 Chrome",
+  "origin": "http://127.0.0.1:63684",
+  "authenticated": "official generated entry, normal DSH cookie exchange",
+  "onboarding": "non-binding preview notice continued; model API key later, no credentials configured",
+  "parameterNavigation": "#hanamesh-install?itemId=fixture.public.dsh-notify&packageName=dsh-notify&contractVersion=1",
+  "confirmation": "name/package/version/fixture source visible, explicit confirm",
+  "installPostCount": 1,
+  "installRequest": {
+    "sequence": 68,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.128",
+    "url": "http://127.0.0.1:63684/hanamesh/library/install",
+    "httpMethod": "POST",
+    "postData": "{\"itemId\":\"fixture.public.dsh-notify\",\"packageName\":\"dsh-notify\"}"
+  },
+  "installDone": "dsh-notify 0.1.7 / restart-required",
+  "alreadyInstalled": "same target reread displays 已安装，无需重复安装",
+  "originalEntry": "host 插件 → 查看 dsh-notify → v0.1.7 / 1运行中 component",
+  "cancel": "confirmation cancelled, POST0 before explicit confirm",
+  "invalid": "INVALID_INPUT visible",
+  "missing": "CATALOG_ITEM_MISSING visible, GET404",
+  "localhostRequests": 0,
+  "localhost": "existing ERR_BLOCKED_BY_CLIENT retained, never navigated",
+  "notRun": [
+    "visible authorization failure",
+    "simultaneous server POST dedup",
+    "post-add/runtime failure whole rollback",
+    "application view lease opening",
+    "localhost alias UI"
+  ],
+  "sourceOrConfigChanges": 0,
+  "result": "PARTIAL / NOT_TO_TEST / NOT_ACCEPTED"
+}

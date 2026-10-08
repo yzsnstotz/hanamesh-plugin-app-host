@@ -1,0 +1,463 @@
+[
+  {
+    "sequence": 23,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.121",
+    "url": "http://127.0.0.1:63684/hanamesh/library?category=",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 24,
+    "method": "Network.responseReceived",
+    "requestId": "60517.121",
+    "url": "http://127.0.0.1:63684/hanamesh/library?category=",
+    "status": 200,
+    "mimeType": "application/json"
+  },
+  {
+    "sequence": 26,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.121"
+  },
+  {
+    "sequence": 27,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.122",
+    "url": "http://127.0.0.1:63684/hanamesh/library/target?itemId=fixture.public.dsh-notify",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 30,
+    "method": "Network.responseReceived",
+    "requestId": "60517.122",
+    "url": "http://127.0.0.1:63684/hanamesh/library/target?itemId=fixture.public.dsh-notify",
+    "status": 200,
+    "mimeType": "application/json"
+  },
+  {
+    "sequence": 32,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.122"
+  },
+  {
+    "sequence": 33,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.123",
+    "url": "http://127.0.0.1:63684/hanamesh/library/target?itemId=fixture.public.absent",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 36,
+    "method": "Network.responseReceived",
+    "requestId": "60517.123",
+    "url": "http://127.0.0.1:63684/hanamesh/library/target?itemId=fixture.public.absent",
+    "status": 404,
+    "mimeType": "application/json"
+  },
+  {
+    "sequence": 38,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.123"
+  },
+  {
+    "sequence": 43,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.124",
+    "url": "http://127.0.0.1:63684/hanamesh/library/target?itemId=fixture.public.dsh-notify&packageName=dsh-notify&contractVersion=1",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 45,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.125",
+    "url": "http://127.0.0.1:63684/favicon.ico",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 46,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.126",
+    "url": "http://127.0.0.1:63684/favicon.ico",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 47,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.127",
+    "url": "http://127.0.0.1:63684/favicon-dark.svg",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 52,
+    "method": "Network.responseReceived",
+    "requestId": "60517.125",
+    "url": "http://127.0.0.1:63684/favicon.ico",
+    "status": 404,
+    "mimeType": "text/plain"
+  },
+  {
+    "sequence": 53,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.125"
+  },
+  {
+    "sequence": 55,
+    "method": "Network.responseReceived",
+    "requestId": "60517.126",
+    "url": "http://127.0.0.1:63684/favicon.ico",
+    "status": 404,
+    "mimeType": "text/plain"
+  },
+  {
+    "sequence": 56,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.126"
+  },
+  {
+    "sequence": 58,
+    "method": "Network.responseReceived",
+    "requestId": "60517.127",
+    "url": "http://127.0.0.1:63684/favicon-dark.svg",
+    "status": 200,
+    "mimeType": "image/svg+xml"
+  },
+  {
+    "sequence": 61,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.127"
+  },
+  {
+    "sequence": 63,
+    "method": "Network.responseReceived",
+    "requestId": "60517.124",
+    "url": "http://127.0.0.1:63684/hanamesh/library/target?itemId=fixture.public.dsh-notify&packageName=dsh-notify&contractVersion=1",
+    "status": 200,
+    "mimeType": "application/json"
+  },
+  {
+    "sequence": 66,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.124"
+  },
+  {
+    "sequence": 68,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.128",
+    "url": "http://127.0.0.1:63684/hanamesh/library/install",
+    "httpMethod": "POST",
+    "postData": "{\"itemId\":\"fixture.public.dsh-notify\",\"packageName\":\"dsh-notify\"}"
+  },
+  {
+    "sequence": 70,
+    "method": "Network.responseReceived",
+    "requestId": "60517.128",
+    "url": "http://127.0.0.1:63684/hanamesh/library/install",
+    "status": 202,
+    "mimeType": "application/json"
+  },
+  {
+    "sequence": 72,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.128"
+  },
+  {
+    "sequence": 77,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.129",
+    "url": "http://127.0.0.1:63684/hanamesh/library/events?after=0",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 80,
+    "method": "Network.responseReceived",
+    "requestId": "60517.129",
+    "url": "http://127.0.0.1:63684/hanamesh/library/events?after=0",
+    "status": 200,
+    "mimeType": "application/json"
+  },
+  {
+    "sequence": 82,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.129"
+  },
+  {
+    "sequence": 83,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.130",
+    "url": "http://127.0.0.1:63684/hanamesh/library/events?after=2",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 86,
+    "method": "Network.responseReceived",
+    "requestId": "60517.130",
+    "url": "http://127.0.0.1:63684/hanamesh/library/events?after=2",
+    "status": 200,
+    "mimeType": "application/json"
+  },
+  {
+    "sequence": 88,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.130"
+  },
+  {
+    "sequence": 89,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.131",
+    "url": "http://127.0.0.1:63684/hanamesh/library/events?after=2",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 92,
+    "method": "Network.responseReceived",
+    "requestId": "60517.131",
+    "url": "http://127.0.0.1:63684/hanamesh/library/events?after=2",
+    "status": 200,
+    "mimeType": "application/json"
+  },
+  {
+    "sequence": 94,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.131"
+  },
+  {
+    "sequence": 95,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.132",
+    "url": "http://127.0.0.1:63684/hanamesh/library?category=",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 98,
+    "method": "Network.responseReceived",
+    "requestId": "60517.132",
+    "url": "http://127.0.0.1:63684/hanamesh/library?category=",
+    "status": 200,
+    "mimeType": "application/json"
+  },
+  {
+    "sequence": 100,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.132"
+  },
+  {
+    "sequence": 101,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.133",
+    "url": "http://127.0.0.1:63684/hanamesh/library/target?itemId=fixture.public.dsh-notify&packageName=dsh-notify",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 104,
+    "method": "Network.responseReceived",
+    "requestId": "60517.133",
+    "url": "http://127.0.0.1:63684/hanamesh/library/target?itemId=fixture.public.dsh-notify&packageName=dsh-notify",
+    "status": 200,
+    "mimeType": "application/json"
+  },
+  {
+    "sequence": 106,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.133"
+  },
+  {
+    "sequence": 107,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.134",
+    "url": "http://127.0.0.1:63684/hanamesh/library?category=",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 110,
+    "method": "Network.responseReceived",
+    "requestId": "60517.134",
+    "url": "http://127.0.0.1:63684/hanamesh/library?category=",
+    "status": 200,
+    "mimeType": "application/json"
+  },
+  {
+    "sequence": 112,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.134"
+  },
+  {
+    "sequence": 113,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.135",
+    "url": "http://127.0.0.1:63684/hanamesh/library/target?itemId=fixture.public.dsh-notify&packageName=dsh-notify",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 116,
+    "method": "Network.responseReceived",
+    "requestId": "60517.135",
+    "url": "http://127.0.0.1:63684/hanamesh/library/target?itemId=fixture.public.dsh-notify&packageName=dsh-notify",
+    "status": 200,
+    "mimeType": "application/json"
+  },
+  {
+    "sequence": 118,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.135"
+  },
+  {
+    "sequence": 120,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.136",
+    "url": "http://127.0.0.1:63684/api/pluginInventory/list",
+    "httpMethod": "POST"
+  },
+  {
+    "sequence": 122,
+    "method": "Network.responseReceived",
+    "requestId": "60517.136",
+    "url": "http://127.0.0.1:63684/api/pluginInventory/list",
+    "status": 200,
+    "mimeType": "application/json"
+  },
+  {
+    "sequence": 124,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.136"
+  },
+  {
+    "sequence": 125,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.137",
+    "url": "http://127.0.0.1:63684/api/pluginManager/listBundles",
+    "httpMethod": "POST"
+  },
+  {
+    "sequence": 126,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.138",
+    "url": "http://127.0.0.1:63684/api/pluginManager/listPlugins",
+    "httpMethod": "POST"
+  },
+  {
+    "sequence": 130,
+    "method": "Network.responseReceived",
+    "requestId": "60517.137",
+    "url": "http://127.0.0.1:63684/api/pluginManager/listBundles",
+    "status": 200,
+    "mimeType": "application/json"
+  },
+  {
+    "sequence": 135,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.137"
+  },
+  {
+    "sequence": 136,
+    "method": "Network.responseReceived",
+    "requestId": "60517.138",
+    "url": "http://127.0.0.1:63684/api/pluginManager/listPlugins",
+    "status": 200,
+    "mimeType": "application/json"
+  },
+  {
+    "sequence": 139,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.138"
+  },
+  {
+    "sequence": 140,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.139",
+    "url": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNMTMuMzAyNyAxNy4xMDc3SDkuMDMxMjVWMTIuODM3MkgxMy4zMDI3VjE3LjEwNzdaTTE3LjU3NDIgMTIuODM3MkMxNy41NzQgMTUuMTk1OCAxNS42NjIzIDE3LjEwNzUgMTMuMzAzNyAxNy4xMDc3VjguNTY1NjdIMTcuNTc0MlYxMi44MzcyWiIgZmlsbD0idXJsKCNhKSIgLz4KICA8cGF0aCBkPSJNMTguNTIyOSAxMi44MzcyVjguNTY1NjdIMjIuNzk0NFYxMi44MzcySDI3LjA2NTlWMTcuMTA3N0gyMi43OTQ0QzIwLjQzNTcgMTcuMTA3NyAxOC41MjMyIDE1LjE5NTkgMTguNTIyOSAxMi44MzcyWiIgZmlsbD0iI0YyQUY2MyIgLz4KICA8cGF0aCBkPSJNMTcuNTc0MiAyNi42MDcySDEzLjMwMzdWMTguMDY0MkMxNS42NjI1IDE4LjA2NDQgMTcuNTc0MiAxOS45NzY5IDE3LjU3NDIgMjIuMzM1N1YyNi42MDcyWk0xMy4zMDI3IDIyLjMzNTdIOS4wMzEyNVYxOC4wNjQySDEzLjMwMjdWMjIuMzM1N1oiIGZpbGw9IiM3Q0I3RkYiIC8+CiAgPHBhdGggZD0iTTIyLjc5NDQgMjYuNjA3MkgxOC41MjI5VjIyLjMzNTdDMTguNTIyOSAxOS45NzY4IDIwLjQzNTUgMTguMDY0MiAyMi43OTQ0IDE4LjA2NDJIMjcuMDY1OVYyMi4zMzU3SDIyLjc5NDRWMjYuNjA3MloiIGZpbGw9IiM0NUQ5RTciIC8+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImEiIHgxPSIxNi4xMjQ3IiB5MT0iNi42NjEzIiB4Mj0iOS4wMzEyNSIgeTI9IjE5LjIyMDYiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agc3RvcC1jb2xvcj0iIzdDQjdGRiIgLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMTQ1QUYzIiAvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+Cjwvc3ZnPgo=",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 142,
+    "method": "Network.responseReceived",
+    "requestId": "60517.139",
+    "url": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNMTMuMzAyNyAxNy4xMDc3SDkuMDMxMjVWMTIuODM3MkgxMy4zMDI3VjE3LjEwNzdaTTE3LjU3NDIgMTIuODM3MkMxNy41NzQgMTUuMTk1OCAxNS42NjIzIDE3LjEwNzUgMTMuMzAzNyAxNy4xMDc3VjguNTY1NjdIMTcuNTc0MlYxMi44MzcyWiIgZmlsbD0idXJsKCNhKSIgLz4KICA8cGF0aCBkPSJNMTguNTIyOSAxMi44MzcyVjguNTY1NjdIMjIuNzk0NFYxMi44MzcySDI3LjA2NTlWMTcuMTA3N0gyMi43OTQ0QzIwLjQzNTcgMTcuMTA3NyAxOC41MjMyIDE1LjE5NTkgMTguNTIyOSAxMi44MzcyWiIgZmlsbD0iI0YyQUY2MyIgLz4KICA8cGF0aCBkPSJNMTcuNTc0MiAyNi42MDcySDEzLjMwMzdWMTguMDY0MkMxNS42NjI1IDE4LjA2NDQgMTcuNTc0MiAxOS45NzY5IDE3LjU3NDIgMjIuMzM1N1YyNi42MDcyWk0xMy4zMDI3IDIyLjMzNTdIOS4wMzEyNVYxOC4wNjQySDEzLjMwMjdWMjIuMzM1N1oiIGZpbGw9IiM3Q0I3RkYiIC8+CiAgPHBhdGggZD0iTTIyLjc5NDQgMjYuNjA3MkgxOC41MjI5VjIyLjMzNTdDMTguNTIyOSAxOS45NzY4IDIwLjQzNTUgMTguMDY0MiAyMi43OTQ0IDE4LjA2NDJIMjcuMDY1OVYyMi4zMzU3SDIyLjc5NDRWMjYuNjA3MloiIGZpbGw9IiM0NUQ5RTciIC8+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImEiIHgxPSIxNi4xMjQ3IiB5MT0iNi42NjEzIiB4Mj0iOS4wMzEyNSIgeTI9IjE5LjIyMDYiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agc3RvcC1jb2xvcj0iIzdDQjdGRiIgLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMTQ1QUYzIiAvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+Cjwvc3ZnPgo=",
+    "status": 200,
+    "mimeType": "image/svg+xml"
+  },
+  {
+    "sequence": 144,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.139"
+  },
+  {
+    "sequence": 145,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.140",
+    "url": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxLjUgMS41KSBzY2FsZSgwLjkxNjY2NjY2NjcpIj4KICAgIDxwYXRoIGQ9Ik0xOCA2TDI4LjUgOS41VjE3LjJDMjguNSAyMy4xIDI0LjA4IDI4LjQgMTggMzBDMTEuOTIgMjguNCA3LjUgMjMuMSA3LjUgMTcuMlY5LjVMMTggNloiIGZpbGw9InVybCgjYSkiIGZpbGwtb3BhY2l0eT0iMC44IiAvPgogICAgPHBhdGggZD0iTTE0LjIgMThMMTYuODQgMjAuNjNMMjIuMiAxNS4yNyIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjIuMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiAvPgogIDwvZz4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYSIgeDE9IjE4IiB5MT0iNiIgeDI9IjE4IiB5Mj0iMzAiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agc3RvcC1jb2xvcj0iIzdBQzJGRiIgLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNEE2NUU4IiAvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+Cjwvc3ZnPgo=",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 147,
+    "method": "Network.responseReceived",
+    "requestId": "60517.140",
+    "url": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxLjUgMS41KSBzY2FsZSgwLjkxNjY2NjY2NjcpIj4KICAgIDxwYXRoIGQ9Ik0xOCA2TDI4LjUgOS41VjE3LjJDMjguNSAyMy4xIDI0LjA4IDI4LjQgMTggMzBDMTEuOTIgMjguNCA3LjUgMjMuMSA3LjUgMTcuMlY5LjVMMTggNloiIGZpbGw9InVybCgjYSkiIGZpbGwtb3BhY2l0eT0iMC44IiAvPgogICAgPHBhdGggZD0iTTE0LjIgMThMMTYuODQgMjAuNjNMMjIuMiAxNS4yNyIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjIuMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiAvPgogIDwvZz4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYSIgeDE9IjE4IiB5MT0iNiIgeDI9IjE4IiB5Mj0iMzAiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agc3RvcC1jb2xvcj0iIzdBQzJGRiIgLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNEE2NUU4IiAvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+Cjwvc3ZnPgo=",
+    "status": 200,
+    "mimeType": "image/svg+xml"
+  },
+  {
+    "sequence": 149,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.140"
+  },
+  {
+    "sequence": 150,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.141",
+    "url": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE4LjU0MDQgMTcuOTE0M0wyMi4yNTI2IDE5LjM4ODVMMjEuNTk5OCAyMS4wMzMyTDE3Ljg4NzUgMTkuNTZDMTcuMjEzNCAxOS4yOTI0IDE2Ljc3MSAxOC42Mzk4IDE2Ljc3MSAxNy45MTQzVjEzLjYzOTlIMTguNTQwNFYxNy45MTQzWiIgZmlsbD0idXJsKCNwYWludDBfbGluZWFyXzM3ODZfOTY0NjEpIiBzdHJva2U9InVybCgjcGFpbnQxX2xpbmVhcl8zNzg2Xzk2NDYxKSIgc3Ryb2tlLXdpZHRoPSIwLjI4NDM1MiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8cGF0aCBkPSJNMTcuOTk3NiA4QzIxLjQ1MTUgOCAyNC40OTY4IDkuNzUxMjcgMjYuMjkzNSAxMi40MTQxTDI2LjY0NiAxMC45MTg5TDI4LjEyMTYgMTEuMjY2NkwyNy4yNjcxIDE0LjkwMzNMMjcuMTExOCAxNS41NjI1TDI2LjQzOSAxNS40ODI0TDIyLjczIDE1LjA0MkwyMi45MDc3IDEzLjUzNzFMMjQuNjcxNCAxMy43NDUxQzIzLjI2NTUgMTEuNTQ1IDIwLjgwMTkgMTAuMDg1OSAxNy45OTc2IDEwLjA4NTlDMTMuNjI2OCAxMC4wODYyIDEwLjA4MzYgMTMuNjI5MiAxMC4wODM1IDE4QzEwLjA4MzYgMjIuMzcwOCAxMy42MjY4IDI1LjkxNDggMTcuOTk3NiAyNS45MTVDMjIuMzY4NSAyNS45MTUgMjUuOTEyNSAyMi4zNzA5IDI1LjkxMjYgMThWMTcuOTUzMUgyNy45OTc2VjE4QzI3Ljk5NzQgMjMuNTIyNiAyMy41MjAyIDI4IDE3Ljk5NzYgMjhDMTIuNDc1MiAyNy45OTk4IDcuOTk3NjggMjMuNTIyNCA3Ljk5NzU2IDE4QzcuOTk3NjQgMTIuNDc3NSAxMi40NzUxIDguMDAwMjQgMTcuOTk3NiA4Wk0xNC4xMjM1IDI3LjE2OTlDMTQuMTY1NyAyNy4xODc3IDE0LjIwOTEgMjcuMjAyNSAxNC4yNTE1IDI3LjIxOTdDMTQuMTY4MyAyNy4xODU5IDE0LjA4NTcgMjcuMTUwNyAxNC4wMDM0IDI3LjExNTJMMTQuMTIzNSAyNy4xNjk5WiIgZmlsbD0idXJsKCNwYWludDJfbGluZWFyXzM3ODZfOTY0NjEpIi8+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MF9saW5lYXJfMzc4Nl85NjQ2MSIgeDE9IjE1LjYzMzQiIHkxPSIxMy4yNjA3IiB4Mj0iMjkuOTA5MiIgeTI9IjI3LjM2OTYiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzU4QkNDOCIvPgo8c3RvcCBvZmZzZXQ9IjAuNTUiIHN0b3AtY29sb3I9IiM2NThFRkYiLz4KPC9saW5lYXJHcmFkaWVudD4KPGxpbmVhckdyYWRpZW50IGlkPSJwYWludDFfbGluZWFyXzM3ODZfOTY0NjEiIHgxPSIxNi41ODEyIiB5MT0iMTMuMjYwNyIgeDI9IjI5LjkwOTIiIHkyPSIyNy4zNjk2IiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+CjxzdG9wIHN0b3AtY29sb3I9IiM1OEJDQzgiLz4KPHN0b3Agb2Zmc2V0PSIwLjU1IiBzdG9wLWNvbG9yPSIjNjU4RUZGIi8+CjwvbGluZWFyR3JhZGllbnQ+CjxsaW5lYXJHcmFkaWVudCBpZD0icGFpbnQyX2xpbmVhcl8zNzg2Xzk2NDYxIiB4MT0iMTMuMjE4NCIgeTE9IjcuNTIzODEiIHgyPSIzMS4wMTk0IiB5Mj0iMjcuMjI0NSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPgo8c3RvcCBzdG9wLWNvbG9yPSIjNTJDRUQ4Ii8+CjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzYxN0JFQiIvPgo8L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+Cjwvc3ZnPgo=",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 152,
+    "method": "Network.responseReceived",
+    "requestId": "60517.141",
+    "url": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE4LjU0MDQgMTcuOTE0M0wyMi4yNTI2IDE5LjM4ODVMMjEuNTk5OCAyMS4wMzMyTDE3Ljg4NzUgMTkuNTZDMTcuMjEzNCAxOS4yOTI0IDE2Ljc3MSAxOC42Mzk4IDE2Ljc3MSAxNy45MTQzVjEzLjYzOTlIMTguNTQwNFYxNy45MTQzWiIgZmlsbD0idXJsKCNwYWludDBfbGluZWFyXzM3ODZfOTY0NjEpIiBzdHJva2U9InVybCgjcGFpbnQxX2xpbmVhcl8zNzg2Xzk2NDYxKSIgc3Ryb2tlLXdpZHRoPSIwLjI4NDM1MiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8cGF0aCBkPSJNMTcuOTk3NiA4QzIxLjQ1MTUgOCAyNC40OTY4IDkuNzUxMjcgMjYuMjkzNSAxMi40MTQxTDI2LjY0NiAxMC45MTg5TDI4LjEyMTYgMTEuMjY2NkwyNy4yNjcxIDE0LjkwMzNMMjcuMTExOCAxNS41NjI1TDI2LjQzOSAxNS40ODI0TDIyLjczIDE1LjA0MkwyMi45MDc3IDEzLjUzNzFMMjQuNjcxNCAxMy43NDUxQzIzLjI2NTUgMTEuNTQ1IDIwLjgwMTkgMTAuMDg1OSAxNy45OTc2IDEwLjA4NTlDMTMuNjI2OCAxMC4wODYyIDEwLjA4MzYgMTMuNjI5MiAxMC4wODM1IDE4QzEwLjA4MzYgMjIuMzcwOCAxMy42MjY4IDI1LjkxNDggMTcuOTk3NiAyNS45MTVDMjIuMzY4NSAyNS45MTUgMjUuOTEyNSAyMi4zNzA5IDI1LjkxMjYgMThWMTcuOTUzMUgyNy45OTc2VjE4QzI3Ljk5NzQgMjMuNTIyNiAyMy41MjAyIDI4IDE3Ljk5NzYgMjhDMTIuNDc1MiAyNy45OTk4IDcuOTk3NjggMjMuNTIyNCA3Ljk5NzU2IDE4QzcuOTk3NjQgMTIuNDc3NSAxMi40NzUxIDguMDAwMjQgMTcuOTk3NiA4Wk0xNC4xMjM1IDI3LjE2OTlDMTQuMTY1NyAyNy4xODc3IDE0LjIwOTEgMjcuMjAyNSAxNC4yNTE1IDI3LjIxOTdDMTQuMTY4MyAyNy4xODU5IDE0LjA4NTcgMjcuMTUwNyAxNC4wMDM0IDI3LjExNTJMMTQuMTIzNSAyNy4xNjk5WiIgZmlsbD0idXJsKCNwYWludDJfbGluZWFyXzM3ODZfOTY0NjEpIi8+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MF9saW5lYXJfMzc4Nl85NjQ2MSIgeDE9IjE1LjYzMzQiIHkxPSIxMy4yNjA3IiB4Mj0iMjkuOTA5MiIgeTI9IjI3LjM2OTYiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzU4QkNDOCIvPgo8c3RvcCBvZmZzZXQ9IjAuNTUiIHN0b3AtY29sb3I9IiM2NThFRkYiLz4KPC9saW5lYXJHcmFkaWVudD4KPGxpbmVhckdyYWRpZW50IGlkPSJwYWludDFfbGluZWFyXzM3ODZfOTY0NjEiIHgxPSIxNi41ODEyIiB5MT0iMTMuMjYwNyIgeDI9IjI5LjkwOTIiIHkyPSIyNy4zNjk2IiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+CjxzdG9wIHN0b3AtY29sb3I9IiM1OEJDQzgiLz4KPHN0b3Agb2Zmc2V0PSIwLjU1IiBzdG9wLWNvbG9yPSIjNjU4RUZGIi8+CjwvbGluZWFyR3JhZGllbnQ+CjxsaW5lYXJHcmFkaWVudCBpZD0icGFpbnQyX2xpbmVhcl8zNzg2Xzk2NDYxIiB4MT0iMTMuMjE4NCIgeTE9IjcuNTIzODEiIHgyPSIzMS4wMTk0IiB5Mj0iMjcuMjI0NSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPgo8c3RvcCBzdG9wLWNvbG9yPSIjNTJDRUQ4Ii8+CjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzYxN0JFQiIvPgo8L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+Cjwvc3ZnPgo=",
+    "status": 200,
+    "mimeType": "image/svg+xml"
+  },
+  {
+    "sequence": 154,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.141"
+  },
+  {
+    "sequence": 155,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.142",
+    "url": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNMjMuNzMyNCA4Ljc3MTQ4VjI3LjIyOTVMMjEuMjMyNCAyNy4yMjg1VjguNzcwNTFMMjMuNzMyNCA4Ljc3MTQ4Wk0xNC42Nzk3IDEwLjc3MTVMMTQuNjc4NyAyNS4yMjk1TDEyLjE3ODcgMjUuMjI4NUwxMi4xNzk3IDEwLjc3MDVMMTQuNjc5NyAxMC43NzE1Wk0xOS4zOTI2IDIyLjQxMzFIMTYuODkyNlYxMy41ODU5SDE5LjM5MjZWMjIuNDEzMVpNMTAuMDYyNSAyMC43MDhINy41NjI1VjE1LjI5MUgxMC4wNjI1VjIwLjcwOFpNMjguNDM3NSAyMC43MDhIMjUuOTM3NVYxNS4yOTFIMjguNDM3NVYyMC43MDhaIiBmaWxsPSJ1cmwoI3BhaW50MF9saW5lYXJfMzM3MV84NTIwMykiIC8+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MF9saW5lYXJfMzM3MV84NTIwMyIgeDE9IjguMjQ2MDIiIHkxPSIxNi40MDgzIiB4Mj0iMzIuNTYxMSIgeTI9IjIyLjk2OTkiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agc3RvcC1jb2xvcj0iIzY3QzdGRSIgLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjM0Y3N0Q4IiAvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+Cjwvc3ZnPgo=",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 157,
+    "method": "Network.responseReceived",
+    "requestId": "60517.142",
+    "url": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNMjMuNzMyNCA4Ljc3MTQ4VjI3LjIyOTVMMjEuMjMyNCAyNy4yMjg1VjguNzcwNTFMMjMuNzMyNCA4Ljc3MTQ4Wk0xNC42Nzk3IDEwLjc3MTVMMTQuNjc4NyAyNS4yMjk1TDEyLjE3ODcgMjUuMjI4NUwxMi4xNzk3IDEwLjc3MDVMMTQuNjc5NyAxMC43NzE1Wk0xOS4zOTI2IDIyLjQxMzFIMTYuODkyNlYxMy41ODU5SDE5LjM5MjZWMjIuNDEzMVpNMTAuMDYyNSAyMC43MDhINy41NjI1VjE1LjI5MUgxMC4wNjI1VjIwLjcwOFpNMjguNDM3NSAyMC43MDhIMjUuOTM3NVYxNS4yOTFIMjguNDM3NVYyMC43MDhaIiBmaWxsPSJ1cmwoI3BhaW50MF9saW5lYXJfMzM3MV84NTIwMykiIC8+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MF9saW5lYXJfMzM3MV84NTIwMyIgeDE9IjguMjQ2MDIiIHkxPSIxNi40MDgzIiB4Mj0iMzIuNTYxMSIgeTI9IjIyLjk2OTkiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agc3RvcC1jb2xvcj0iIzY3QzdGRSIgLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjM0Y3N0Q4IiAvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+Cjwvc3ZnPgo=",
+    "status": 200,
+    "mimeType": "image/svg+xml"
+  },
+  {
+    "sequence": 159,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.142"
+  },
+  {
+    "sequence": 161,
+    "method": "Network.requestWillBeSent",
+    "requestId": "60517.143",
+    "url": "http://127.0.0.1:63684/hanamesh/library?category=",
+    "httpMethod": "GET"
+  },
+  {
+    "sequence": 163,
+    "method": "Network.responseReceived",
+    "requestId": "60517.143",
+    "url": "http://127.0.0.1:63684/hanamesh/library?category=",
+    "status": 200,
+    "mimeType": "application/json"
+  },
+  {
+    "sequence": 165,
+    "method": "Network.loadingFinished",
+    "requestId": "60517.143"
+  }
+]
