@@ -1,0 +1,9 @@
+{
+  "old_pid": 68995,
+  "old_port": 49228,
+  "signal": "SIGTERM",
+  "command_identity_checked": true,
+  "terminated": true,
+  "rollback_copy_present": true,
+  "other_processes_signaled": []
+}

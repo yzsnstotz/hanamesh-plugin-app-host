@@ -1,0 +1,7 @@
+{
+  "url": "http://localhost:49228/",
+  "result": "net::ERR_BLOCKED_BY_CLIENT",
+  "attempts": 1,
+  "authenticationAttempted": false,
+  "bypassAttempted": false
+}

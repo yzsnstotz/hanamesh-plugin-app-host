@@ -1,0 +1,23 @@
+{
+  "scope": "Diagnosis in copied profile only; not a product installation result",
+  "command": [
+    "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node",
+    "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/bin.js",
+    "plugin",
+    "--profile",
+    "web",
+    "add",
+    "--save-exact",
+    "dsh-notify@0.1.7"
+  ],
+  "envVariableNames": [
+    "HOME",
+    "DSH_HOME",
+    "LANG",
+    "PATH"
+  ],
+  "path": "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin:/usr/bin:/bin",
+  "exitCode": 1,
+  "stdout": "\u2009ERR_PNPM_UNEXPECTED_STORE\u2009 Unexpected store location\n\nThe dependencies at \"/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/eb565835-fc0b-4e09-9f68-503fd86ada6c/diagnostic-dsh-home/profiles/web/node_modules\" are currently linked from the store at \"/Users/yzliu/Library/pnpm/store/v10\".\n\npnpm now wants to use the store at \"/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/home/Library/pnpm/store/v10\" to link dependencies.\n\nIf you want to use the new store location, reinstall your dependencies with \"pnpm install\".\n\nYou may change the global store location by running \"pnpm config set store-dir <dir> --global\".\n(This error may happen if the node_modules was installed with a different major version of pnpm)\n",
+  "stderr": "dsh: plugin command failed; diagnostics: /Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/eb565835-fc0b-4e09-9f68-503fd86ada6c/diagnostic-dsh-home/profiles/web/.plugin-manager/logs/operation-cBuvqA/pnpm.log\n"
+}

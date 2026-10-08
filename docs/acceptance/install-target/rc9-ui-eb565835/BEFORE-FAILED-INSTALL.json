@@ -1,0 +1,9 @@
+{
+  "package.json": "4b28826d37c30f43839a5eed85d27dc70ff694ea929aee775626128ba42523c4",
+  "pnpm-lock.yaml": "1ce33f6f125d80a7a8242566ef8db8863cda2f76955f43b97838e14cf21e9fc9",
+  "node_modules/.modules.yaml": "3c43cf083bde8d22dca93abff98b2222e6101f4d9d1349d3bc08d830749b7746",
+  "node_modules/.pnpm/lock.yaml": "1ce33f6f125d80a7a8242566ef8db8863cda2f76955f43b97838e14cf21e9fc9",
+  "dependencies": {
+    "@hanamesh/dsh-app-host": "file:/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-LOOPBACK-01/release/out/hanamesh-dsh-app-host-0.2.0-rc.9.tgz"
+  }
+}

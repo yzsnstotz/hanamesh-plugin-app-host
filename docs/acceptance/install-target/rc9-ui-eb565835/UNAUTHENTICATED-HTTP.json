@@ -1,0 +1,8 @@
+{
+  "method": "GET",
+  "url": "http://127.0.0.1:49228/hanamesh/library/target?itemId=fixture.public.dsh-notify",
+  "credentialsSent": false,
+  "status": 401,
+  "body": "{\"error\":{\"code\":\"UNAUTHENTICATED\",\"message\":\"Host authentication is required.\",\"details\":{}},\"traceId\":\"5e7f81ad-f3f9-4987-b4bd-a48c913ff24f\"}",
+  "scope": "HTTP authorization evidence; not a browser UI test"
+}

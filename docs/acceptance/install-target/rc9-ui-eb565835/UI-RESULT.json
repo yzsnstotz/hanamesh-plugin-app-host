@@ -1,0 +1,32 @@
+{
+  "cardId": "P06-APPHOST-INSTALL-TARGET-01",
+  "result": "PARTIAL / NOT_TO_TEST / NOT_ACCEPTED",
+  "businessVersion": "0.2.0-rc.9",
+  "signedTag": "v0.2.0-rc.9",
+  "signedCommit": "9632c64ba8d0685174a45cc2ecb6caf87aa140f3",
+  "tgzSha256": "9d3dc5cd55fde289ea8b0d14cc24f9c187415af0f6d9e0fd06f8a6d5fa945f3b",
+  "installedBytesEqual": "92/92",
+  "runtimePid": 63068,
+  "runtimePort": 49228,
+  "chrome127": "authenticated market first step observed",
+  "chromeLocalhost": "ERR_BLOCKED_BY_CLIENT; 1 navigation; stopped without authentication or bypass",
+  "confirmedInstallPosts": 2,
+  "publicTargetInstallPosts": 1,
+  "publicTargetReentry": "installing state retained; no second confirmation and no second POST",
+  "publicTargetOutcome": "DSH_PLUGIN_FAILED",
+  "diagnosticRootCause": "ERR_PNPM_UNEXPECTED_STORE in copied profile using installer env; existing node_modules uses /Users/yzliu/Library/pnpm/store/v10, child expects isolated HOME/Library/pnpm/store/v10",
+  "actualProfileFilesUnchanged": true,
+  "targetInstalled": false,
+  "productGatesNotRun": [
+    "successful install + installed version readback",
+    "open installed target",
+    "127 parameter browser navigation",
+    "localhost authenticated UI",
+    "visible authorization failure",
+    "already-installed dedup",
+    "post-add/runtime failure whole rollback"
+  ],
+  "guiLock": "released",
+  "codeChanged": false,
+  "contractSuiteThisTurn": "not rerun; exact admitted signed rc9 reused"
+}

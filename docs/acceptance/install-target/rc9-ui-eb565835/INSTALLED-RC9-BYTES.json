@@ -1,0 +1,12 @@
+{
+  "package": "@hanamesh/dsh-app-host",
+  "version": "0.2.0-rc.9",
+  "tag": "v0.2.0-rc.9",
+  "sha256": "9d3dc5cd55fde289ea8b0d14cc24f9c187415af0f6d9e0fd06f8a6d5fa945f3b",
+  "files_equal": 92,
+  "official_cli_named_install_exit": 0,
+  "business_dependencies": {
+    "@hanamesh/dsh-app-host": "file:/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-LOOPBACK-01/release/out/hanamesh-dsh-app-host-0.2.0-rc.9.tgz"
+  },
+  "profile": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/dsh-home/profiles/web"
+}

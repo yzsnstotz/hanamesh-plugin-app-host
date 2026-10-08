@@ -1,0 +1,17 @@
+{
+  "command": [
+    "pnpm",
+    "--version"
+  ],
+  "envVariableNames": [
+    "HOME",
+    "DSH_HOME",
+    "LANG",
+    "PATH"
+  ],
+  "path": "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin:/usr/bin:/bin",
+  "pnpm": "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/pnpm",
+  "exitCode": 0,
+  "stdout": "10.33.0\n",
+  "stderr": ""
+}

@@ -1,0 +1,100 @@
+{
+  "files": [
+    {
+      "path": "UI-RESULT.json",
+      "sha256": "e6c72632e3304054c9484bbf6f8ed5310b7851385442444f82e209bb2fb33404"
+    },
+    {
+      "path": "INSTALLED-RC9-BYTES.json",
+      "sha256": "d99d1089116936bf7e13e872ec38e587960c7550b3153a256005056870006e27"
+    },
+    {
+      "path": "OWNED-RESTART.json",
+      "sha256": "a659c0bf9410aa497e6b158e1bc55009df59c123104e2607a12fafe580ed22bc"
+    },
+    {
+      "path": "CHROME-OPENER.json",
+      "sha256": "2b2ba5ed5d26c68edd9ddb43cfc458d75630bf4a52727b0c313b2076398578aa"
+    },
+    {
+      "path": "CATALOG-SOURCE-IDENTITY.json",
+      "sha256": "09d2d2ea928b249940ddb339556e5896bbe7d10b2a593c7f069488bf979e6c4a"
+    },
+    {
+      "path": "CHROME-LIBRARY-NETWORK.json",
+      "sha256": "f59b7ad0196749af1fd5b731852e2f6ebbf9404e3487ad7aaadac5975a4659fa"
+    },
+    {
+      "path": "BEFORE-FAILED-INSTALL.json",
+      "sha256": "ca54cc2a97bbd100647be69739eb09bc769194dce65f42da26f0d21b7c3db14c"
+    },
+    {
+      "path": "FAILED-INSTALL-STATE.json",
+      "sha256": "83d6f478f0d088c28d95e673741dbb8f44138c5e9971587a611c2618e60777f0"
+    },
+    {
+      "path": "REAL-INSTALL-FAILED-STATE.json",
+      "sha256": "059b190d9e61d7e280c9b2918c564efa83d355dcbeca8a8b3d154dd229fc0638"
+    },
+    {
+      "path": "UNAUTHENTICATED-HTTP.json",
+      "sha256": "04eecb7200faea22f2faf14188712de77f2f3d2c95ff5471a45b0b9df56f4e28"
+    },
+    {
+      "path": "INSTALLER-ENV-PNPM.json",
+      "sha256": "3c85c7195d904e36dfcec4b3b65baee48e40d99bdb7c92c049ab83e761552662"
+    },
+    {
+      "path": "OFFICIAL-CLI-SAME-ENV-DIAGNOSTIC.json",
+      "sha256": "eba6222d7a86bc589c0d336d814e001f00a210d5ce04e4b9b37274d61b9318ff"
+    },
+    {
+      "path": "actual-dsh-notify-pnpm-failure.log",
+      "sha256": "7d1639300ea55d431740b03e498f379738b79f43bb251518e57375972d9d443b"
+    },
+    {
+      "path": "12-localhost-browser-refusal.json",
+      "sha256": "07bd443913a890eb79c931a8469289e74e2a6dc6bab07ca11c75bf806ffbc65a"
+    },
+    {
+      "path": "01-market-first-step.jpg",
+      "sha256": "8a07501e3658569b0c5aae9f43e069769deffdefa8f4651962d1a1d04e8aea6c"
+    },
+    {
+      "path": "02-confirm-four-fields.jpg",
+      "sha256": "b0db6c089d7392a8503838270258e244da9a7904cefe27ad172d451924376c20"
+    },
+    {
+      "path": "03-cancelled.jpg",
+      "sha256": "1e952fd54148e6754e6858d1db1d77896fc0bfd9c0c661060f60212b3f2ded81"
+    },
+    {
+      "path": "04-invalid-target.jpg",
+      "sha256": "7e89eade615a66cc661984a867e2c7aff7a7fe04dcd1206de94f65439b8c0816"
+    },
+    {
+      "path": "05-catalog-missing.jpg",
+      "sha256": "2484e3b963f2976ecf39a5b4d7fcc2f1689929d76e3ca3f11ed2a780f1cc622b"
+    },
+    {
+      "path": "09-real-install-progress.jpg",
+      "sha256": "5cda53efd9d4f73f1f7e33a4515cd0c13103be4a4d195d5c3d838df3441f5e88"
+    },
+    {
+      "path": "10-running-target-reentry.jpg",
+      "sha256": "d2b13d9708d1a7b1e6dd0b2ee12479925ed8a89bbeb537310333ed3ac2f0a9ea"
+    },
+    {
+      "path": "11-real-install-readback.jpg",
+      "sha256": "51fc7219a39429ed642739bd9d28d852eb1dadbdffd5b423e298ece22f18baca"
+    },
+    {
+      "path": "12-localhost-browser-refusal.jpg",
+      "sha256": "a3723ab40e3cd0c3c2b2d37a46bbe4ea7b254224e7ed95ca465981b7c492e815"
+    },
+    {
+      "path": "README.md",
+      "sha256": "a11549d3b78541abf7d559b14283834f390743ce281764ad67ee115f7dc22910"
+    }
+  ]
+}

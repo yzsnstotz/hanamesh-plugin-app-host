@@ -1,0 +1,680 @@
+[
+  {
+    "sequence": 21,
+    "event": "Network.requestWillBeSent",
+    "requestId": "66256.122",
+    "url": "http://127.0.0.1:49228/hanamesh/library/target?itemId=fixture.absent.target",
+    "method": "GET",
+    "headers": {
+      "x-hanamesh-client": "workspace-v1"
+    }
+  },
+  {
+    "sequence": 24,
+    "event": "Network.responseReceived",
+    "requestId": "66256.122",
+    "url": "http://127.0.0.1:49228/hanamesh/library/target?itemId=fixture.absent.target",
+    "status": 404,
+    "body": {
+      "error": {
+        "code": "CATALOG_ITEM_MISSING",
+        "message": "The market catalog does not contain this target.",
+        "details": {}
+      },
+      "traceId": "a32ea0df-99ad-4879-bc6e-8cfbf6ec6bdf"
+    }
+  },
+  {
+    "sequence": 27,
+    "event": "Network.requestWillBeSent",
+    "requestId": "66256.123",
+    "url": "http://127.0.0.1:49228/hanamesh/library/target?itemId=fixture.install-target.plugin",
+    "method": "GET",
+    "headers": {
+      "x-hanamesh-client": "workspace-v1"
+    }
+  },
+  {
+    "sequence": 30,
+    "event": "Network.responseReceived",
+    "requestId": "66256.123",
+    "url": "http://127.0.0.1:49228/hanamesh/library/target?itemId=fixture.install-target.plugin",
+    "status": 200,
+    "body": {
+      "contractVersion": "1",
+      "source": {
+        "kind": "fixture",
+        "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/catalog-fixture.json"
+      },
+      "item": {
+        "id": "fixture.install-target.plugin",
+        "name": "@hanamesh-fixture/install-target-plugin",
+        "displayName": "测试目录 · 安装目标插件",
+        "summary": "Install-target contract fixture (test catalog, not a real product).",
+        "latestVersion": "1.2.3",
+        "categories": [
+          "utility"
+        ],
+        "package": {
+          "registry": "npm",
+          "name": "@hanamesh-fixture/install-target-plugin"
+        },
+        "publisher": {
+          "name": "HanaMesh fixture"
+        },
+        "kind": "plugin",
+        "installed": null,
+        "upgradeAvailable": false
+      },
+      "traceId": "86dab860-055c-4430-bfc1-a239bad52967"
+    }
+  },
+  {
+    "sequence": 35,
+    "event": "Network.requestWillBeSent",
+    "requestId": "66256.124",
+    "url": "http://127.0.0.1:49228/hanamesh/library/install",
+    "method": "POST",
+    "postData": "{\"itemId\":\"fixture.install-target.plugin\",\"packageName\":\"@hanamesh-fixture/install-target-plugin\"}",
+    "headers": {
+      "x-hanamesh-client": "workspace-v1"
+    }
+  },
+  {
+    "sequence": 37,
+    "event": "Network.responseReceived",
+    "requestId": "66256.124",
+    "url": "http://127.0.0.1:49228/hanamesh/library/install",
+    "status": 202,
+    "body": {
+      "operationId": "f61b8566-1497-4fee-9d02-212fee392b8a",
+      "status": "started",
+      "traceId": "62ff1855-586a-41c9-ba1d-9cb46038fc86"
+    }
+  },
+  {
+    "sequence": 40,
+    "event": "Network.requestWillBeSent",
+    "requestId": "66256.125",
+    "url": "http://127.0.0.1:49228/hanamesh/library/events?after=0",
+    "method": "GET",
+    "headers": {
+      "x-hanamesh-client": "workspace-v1"
+    }
+  },
+  {
+    "sequence": 43,
+    "event": "Network.responseReceived",
+    "requestId": "66256.125",
+    "url": "http://127.0.0.1:49228/hanamesh/library/events?after=0",
+    "status": 200,
+    "body": {
+      "events": [
+        {
+          "sequence": 1,
+          "at": 1791457034794,
+          "type": "library.install-started",
+          "operationId": "f61b8566-1497-4fee-9d02-212fee392b8a"
+        },
+        {
+          "sequence": 2,
+          "at": 1791457034795,
+          "type": "library.install-started",
+          "itemId": "fixture.install-target.plugin",
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "kind": "plugin"
+        },
+        {
+          "sequence": 3,
+          "at": 1791457035208,
+          "type": "library.install-failed",
+          "itemId": "fixture.install-target.plugin",
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "kind": "plugin",
+          "code": "REGISTRY_LOOKUP_FAILED"
+        },
+        {
+          "sequence": 4,
+          "at": 1791457035208,
+          "type": "library.install-failed",
+          "operationId": "f61b8566-1497-4fee-9d02-212fee392b8a",
+          "code": "REGISTRY_LOOKUP_FAILED"
+        }
+      ],
+      "sequence": 4,
+      "operations": [],
+      "traceId": "2eb34676-e5b6-4dcf-ace1-59fa4885cbaa"
+    }
+  },
+  {
+    "sequence": 46,
+    "event": "Network.requestWillBeSent",
+    "requestId": "66256.126",
+    "url": "http://127.0.0.1:49228/hanamesh/library?category=",
+    "method": "GET",
+    "headers": {
+      "x-hanamesh-client": "workspace-v1"
+    }
+  },
+  {
+    "sequence": 49,
+    "event": "Network.responseReceived",
+    "requestId": "66256.126",
+    "url": "http://127.0.0.1:49228/hanamesh/library?category=",
+    "status": 200,
+    "body": {
+      "source": {
+        "kind": "fixture",
+        "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/catalog-fixture.json"
+      },
+      "items": [
+        {
+          "id": "fixture.install-target.plugin",
+          "name": "@hanamesh-fixture/install-target-plugin",
+          "displayName": "测试目录 · 安装目标插件",
+          "summary": "Install-target contract fixture (test catalog, not a real product).",
+          "latestVersion": "1.2.3",
+          "categories": [
+            "utility"
+          ],
+          "package": {
+            "registry": "npm",
+            "name": "@hanamesh-fixture/install-target-plugin"
+          },
+          "publisher": {
+            "name": "HanaMesh fixture"
+          },
+          "kind": "plugin",
+          "application": false,
+          "installed": null,
+          "upgradeAvailable": false
+        },
+        {
+          "id": "fixture.install-target.app",
+          "name": "@hanamesh-fixture/install-target-app",
+          "displayName": "测试目录 · 安装目标应用",
+          "summary": "Install-target contract fixture application (test catalog).",
+          "latestVersion": "0.4.0",
+          "categories": [
+            "hanamesh-app"
+          ],
+          "package": {
+            "registry": "npm",
+            "name": "@hanamesh-fixture/install-target-app"
+          },
+          "publisher": {
+            "name": "HanaMesh fixture"
+          },
+          "kind": "application",
+          "application": true,
+          "installed": null,
+          "upgradeAvailable": false
+        },
+        {
+          "id": "fixture.install-target.repository-only",
+          "name": "install-target-repository-only",
+          "displayName": "测试目录 · 仅源码",
+          "summary": "Repository-only listing; the market cannot install it.",
+          "categories": [
+            "utility"
+          ],
+          "repository": {
+            "url": "https://example.com/repository"
+          },
+          "publisher": {
+            "name": "HanaMesh fixture"
+          },
+          "kind": "listing",
+          "application": false,
+          "installed": null,
+          "upgradeAvailable": false
+        },
+        {
+          "id": "fixture.public.dsh-notify",
+          "name": "dsh-notify",
+          "displayName": "测试目录 · dsh-notify（公开真实包）",
+          "summary": "测试目录条目；确认后实际安装公开 dsh-notify。",
+          "latestVersion": "0.1.7",
+          "categories": [
+            "utility"
+          ],
+          "package": {
+            "registry": "npm",
+            "name": "dsh-notify"
+          },
+          "publisher": {
+            "name": "测试供给 · dsh-notify"
+          },
+          "license": "MIT",
+          "kind": "plugin",
+          "application": false,
+          "installed": null,
+          "upgradeAvailable": false
+        }
+      ],
+      "categories": [
+        "hanamesh-app",
+        "utility"
+      ],
+      "installed": [],
+      "plugins": [
+        {
+          "packageName": "@hanamesh/dsh-app-host",
+          "version": "0.2.0-rc.9",
+          "kind": "plugin",
+          "bundle": true,
+          "active": true,
+          "state": "installed"
+        }
+      ],
+      "restartRequired": false,
+      "page": {
+        "total": 4
+      },
+      "traceId": "d2787d7a-0eca-4b10-a10b-e3ba8aad724e"
+    }
+  },
+  {
+    "sequence": 52,
+    "event": "Network.requestWillBeSent",
+    "requestId": "66256.127",
+    "url": "http://127.0.0.1:49228/hanamesh/library/target?packageName=dsh-notify",
+    "method": "GET",
+    "headers": {
+      "x-hanamesh-client": "workspace-v1"
+    }
+  },
+  {
+    "sequence": 55,
+    "event": "Network.responseReceived",
+    "requestId": "66256.127",
+    "url": "http://127.0.0.1:49228/hanamesh/library/target?packageName=dsh-notify",
+    "status": 200,
+    "body": {
+      "contractVersion": "1",
+      "source": {
+        "kind": "fixture",
+        "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/catalog-fixture.json"
+      },
+      "item": {
+        "id": "fixture.public.dsh-notify",
+        "name": "dsh-notify",
+        "displayName": "测试目录 · dsh-notify（公开真实包）",
+        "summary": "测试目录条目；确认后实际安装公开 dsh-notify。",
+        "latestVersion": "0.1.7",
+        "categories": [
+          "utility"
+        ],
+        "package": {
+          "registry": "npm",
+          "name": "dsh-notify"
+        },
+        "publisher": {
+          "name": "测试供给 · dsh-notify"
+        },
+        "license": "MIT",
+        "kind": "plugin",
+        "installed": null,
+        "upgradeAvailable": false
+      },
+      "traceId": "8bb2a84e-0c8b-4a94-b1c6-b83116085987"
+    }
+  },
+  {
+    "sequence": 58,
+    "event": "Network.requestWillBeSent",
+    "requestId": "66256.128",
+    "url": "http://127.0.0.1:49228/hanamesh/library/install",
+    "method": "POST",
+    "postData": "{\"itemId\":\"fixture.public.dsh-notify\",\"packageName\":\"dsh-notify\"}",
+    "headers": {
+      "x-hanamesh-client": "workspace-v1"
+    }
+  },
+  {
+    "sequence": 61,
+    "event": "Network.responseReceived",
+    "requestId": "66256.128",
+    "url": "http://127.0.0.1:49228/hanamesh/library/install",
+    "status": 202,
+    "body": {
+      "operationId": "1ae74301-fb35-4727-b152-ae573f6e8be5",
+      "status": "started",
+      "traceId": "514bd36c-0cab-4c8b-b4b8-88935ddd57b1"
+    }
+  },
+  {
+    "sequence": 64,
+    "event": "Network.requestWillBeSent",
+    "requestId": "66256.129",
+    "url": "http://127.0.0.1:49228/hanamesh/library/target?itemId=fixture.public.dsh-notify",
+    "method": "GET",
+    "headers": {
+      "x-hanamesh-client": "workspace-v1"
+    }
+  },
+  {
+    "sequence": 67,
+    "event": "Network.responseReceived",
+    "requestId": "66256.129",
+    "url": "http://127.0.0.1:49228/hanamesh/library/target?itemId=fixture.public.dsh-notify",
+    "status": 200,
+    "body": {
+      "contractVersion": "1",
+      "source": {
+        "kind": "fixture",
+        "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/catalog-fixture.json"
+      },
+      "item": {
+        "id": "fixture.public.dsh-notify",
+        "name": "dsh-notify",
+        "displayName": "测试目录 · dsh-notify（公开真实包）",
+        "summary": "测试目录条目；确认后实际安装公开 dsh-notify。",
+        "latestVersion": "0.1.7",
+        "categories": [
+          "utility"
+        ],
+        "package": {
+          "registry": "npm",
+          "name": "dsh-notify"
+        },
+        "publisher": {
+          "name": "测试供给 · dsh-notify"
+        },
+        "license": "MIT",
+        "kind": "plugin",
+        "installed": null,
+        "upgradeAvailable": false
+      },
+      "traceId": "cd1f15f0-8f22-4d70-96b2-a9e56ed19ce9"
+    }
+  },
+  {
+    "sequence": 70,
+    "event": "Network.requestWillBeSent",
+    "requestId": "66256.130",
+    "url": "http://127.0.0.1:49228/hanamesh/library/events?after=0",
+    "method": "GET",
+    "headers": {
+      "x-hanamesh-client": "workspace-v1"
+    }
+  },
+  {
+    "sequence": 73,
+    "event": "Network.responseReceived",
+    "requestId": "66256.130",
+    "url": "http://127.0.0.1:49228/hanamesh/library/events?after=0",
+    "status": 200,
+    "body": {
+      "events": [
+        {
+          "sequence": 1,
+          "at": 1791457034794,
+          "type": "library.install-started",
+          "operationId": "f61b8566-1497-4fee-9d02-212fee392b8a"
+        },
+        {
+          "sequence": 2,
+          "at": 1791457034795,
+          "type": "library.install-started",
+          "itemId": "fixture.install-target.plugin",
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "kind": "plugin"
+        },
+        {
+          "sequence": 3,
+          "at": 1791457035208,
+          "type": "library.install-failed",
+          "itemId": "fixture.install-target.plugin",
+          "packageName": "@hanamesh-fixture/install-target-plugin",
+          "kind": "plugin",
+          "code": "REGISTRY_LOOKUP_FAILED"
+        },
+        {
+          "sequence": 4,
+          "at": 1791457035208,
+          "type": "library.install-failed",
+          "operationId": "f61b8566-1497-4fee-9d02-212fee392b8a",
+          "code": "REGISTRY_LOOKUP_FAILED"
+        },
+        {
+          "sequence": 5,
+          "at": 1791457081367,
+          "type": "library.install-started",
+          "operationId": "1ae74301-fb35-4727-b152-ae573f6e8be5"
+        },
+        {
+          "sequence": 6,
+          "at": 1791457081368,
+          "type": "library.install-started",
+          "itemId": "fixture.public.dsh-notify",
+          "packageName": "dsh-notify",
+          "kind": "plugin"
+        }
+      ],
+      "sequence": 6,
+      "operations": [
+        "1ae74301-fb35-4727-b152-ae573f6e8be5"
+      ],
+      "traceId": "deaf670b-6a1d-4233-980a-95dcd9934c43"
+    }
+  },
+  {
+    "sequence": 77,
+    "event": "Network.requestWillBeSent",
+    "requestId": "66256.131",
+    "url": "http://127.0.0.1:49228/hanamesh/library/events?after=6",
+    "method": "GET",
+    "headers": {
+      "x-hanamesh-client": "workspace-v1"
+    }
+  },
+  {
+    "sequence": 80,
+    "event": "Network.responseReceived",
+    "requestId": "66256.131",
+    "url": "http://127.0.0.1:49228/hanamesh/library/events?after=6",
+    "status": 200,
+    "body": {
+      "events": [],
+      "sequence": 6,
+      "operations": [
+        "1ae74301-fb35-4727-b152-ae573f6e8be5"
+      ],
+      "traceId": "e870753a-2864-4508-8ecf-6291c665ed39"
+    }
+  },
+  {
+    "sequence": 83,
+    "event": "Network.requestWillBeSent",
+    "requestId": "66256.132",
+    "url": "http://127.0.0.1:49228/hanamesh/library/events?after=6",
+    "method": "GET",
+    "headers": {
+      "x-hanamesh-client": "workspace-v1"
+    }
+  },
+  {
+    "sequence": 86,
+    "event": "Network.responseReceived",
+    "requestId": "66256.132",
+    "url": "http://127.0.0.1:49228/hanamesh/library/events?after=6",
+    "status": 200,
+    "body": {
+      "events": [],
+      "sequence": 6,
+      "operations": [
+        "1ae74301-fb35-4727-b152-ae573f6e8be5"
+      ],
+      "traceId": "ff3c6107-da3e-4bd4-8f33-c1a5bb0f521e"
+    }
+  },
+  {
+    "sequence": 89,
+    "event": "Network.requestWillBeSent",
+    "requestId": "66256.133",
+    "url": "http://127.0.0.1:49228/hanamesh/library/events?after=6",
+    "method": "GET",
+    "headers": {
+      "x-hanamesh-client": "workspace-v1"
+    }
+  },
+  {
+    "sequence": 92,
+    "event": "Network.responseReceived",
+    "requestId": "66256.133",
+    "url": "http://127.0.0.1:49228/hanamesh/library/events?after=6",
+    "status": 200,
+    "body": {
+      "events": [
+        {
+          "sequence": 7,
+          "at": 1791457084866,
+          "type": "library.install-failed",
+          "itemId": "fixture.public.dsh-notify",
+          "packageName": "dsh-notify",
+          "kind": "plugin",
+          "code": "DSH_PLUGIN_FAILED"
+        },
+        {
+          "sequence": 8,
+          "at": 1791457084866,
+          "type": "library.install-failed",
+          "operationId": "1ae74301-fb35-4727-b152-ae573f6e8be5",
+          "code": "DSH_PLUGIN_FAILED"
+        }
+      ],
+      "sequence": 8,
+      "operations": [],
+      "traceId": "6acac541-0192-48b7-abf2-6ef65d6c8d9a"
+    }
+  },
+  {
+    "sequence": 95,
+    "event": "Network.requestWillBeSent",
+    "requestId": "66256.134",
+    "url": "http://127.0.0.1:49228/hanamesh/library?category=",
+    "method": "GET",
+    "headers": {
+      "x-hanamesh-client": "workspace-v1"
+    }
+  },
+  {
+    "sequence": 98,
+    "event": "Network.responseReceived",
+    "requestId": "66256.134",
+    "url": "http://127.0.0.1:49228/hanamesh/library?category=",
+    "status": 200,
+    "body": {
+      "source": {
+        "kind": "fixture",
+        "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/catalog-fixture.json"
+      },
+      "items": [
+        {
+          "id": "fixture.install-target.plugin",
+          "name": "@hanamesh-fixture/install-target-plugin",
+          "displayName": "测试目录 · 安装目标插件",
+          "summary": "Install-target contract fixture (test catalog, not a real product).",
+          "latestVersion": "1.2.3",
+          "categories": [
+            "utility"
+          ],
+          "package": {
+            "registry": "npm",
+            "name": "@hanamesh-fixture/install-target-plugin"
+          },
+          "publisher": {
+            "name": "HanaMesh fixture"
+          },
+          "kind": "plugin",
+          "application": false,
+          "installed": null,
+          "upgradeAvailable": false
+        },
+        {
+          "id": "fixture.install-target.app",
+          "name": "@hanamesh-fixture/install-target-app",
+          "displayName": "测试目录 · 安装目标应用",
+          "summary": "Install-target contract fixture application (test catalog).",
+          "latestVersion": "0.4.0",
+          "categories": [
+            "hanamesh-app"
+          ],
+          "package": {
+            "registry": "npm",
+            "name": "@hanamesh-fixture/install-target-app"
+          },
+          "publisher": {
+            "name": "HanaMesh fixture"
+          },
+          "kind": "application",
+          "application": true,
+          "installed": null,
+          "upgradeAvailable": false
+        },
+        {
+          "id": "fixture.install-target.repository-only",
+          "name": "install-target-repository-only",
+          "displayName": "测试目录 · 仅源码",
+          "summary": "Repository-only listing; the market cannot install it.",
+          "categories": [
+            "utility"
+          ],
+          "repository": {
+            "url": "https://example.com/repository"
+          },
+          "publisher": {
+            "name": "HanaMesh fixture"
+          },
+          "kind": "listing",
+          "application": false,
+          "installed": null,
+          "upgradeAvailable": false
+        },
+        {
+          "id": "fixture.public.dsh-notify",
+          "name": "dsh-notify",
+          "displayName": "测试目录 · dsh-notify（公开真实包）",
+          "summary": "测试目录条目；确认后实际安装公开 dsh-notify。",
+          "latestVersion": "0.1.7",
+          "categories": [
+            "utility"
+          ],
+          "package": {
+            "registry": "npm",
+            "name": "dsh-notify"
+          },
+          "publisher": {
+            "name": "测试供给 · dsh-notify"
+          },
+          "license": "MIT",
+          "kind": "plugin",
+          "application": false,
+          "installed": null,
+          "upgradeAvailable": false
+        }
+      ],
+      "categories": [
+        "hanamesh-app",
+        "utility"
+      ],
+      "installed": [],
+      "plugins": [
+        {
+          "packageName": "@hanamesh/dsh-app-host",
+          "version": "0.2.0-rc.9",
+          "kind": "plugin",
+          "bundle": true,
+          "active": true,
+          "state": "installed"
+        }
+      ],
+      "restartRequired": false,
+      "page": {
+        "total": 4
+      },
+      "traceId": "d1458d9c-bd49-4cf6-997d-0ec17730dac2"
+    }
+  }
+]
