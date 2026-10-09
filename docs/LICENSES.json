@@ -1,7 +1,7 @@
 {
   "package": {
     "name": "@hanamesh/dsh-app-host",
-    "version": "0.2.0-rc.10",
+    "version": "0.3.0",
     "license": "SEE LICENSE IN LICENSE",
     "source": "git+https://github.com/yzsnstotz/hanamesh-plugin-app-host.git",
     "purpose": "Application ownership, view leases, Router forwarding, and application library for official DSH"

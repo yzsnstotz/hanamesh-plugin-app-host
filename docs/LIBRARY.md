@@ -45,3 +45,9 @@ rc.10：add 之后的读回、定义校验或 provision 失败按基线补偿（
 - 市场页默认 `category=`（全部）；筛选：全部 / 应用（`hanamesh-app`）/ 插件（客户端视图：本页非应用的 npm 条目）/ 目录页里出现过的类别（累积自 `categories`）。路由 `/hanamesh/library` 的缺省 `category=hanamesh-app` 不变（向后兼容）。
 - 卡片：`kind · 发布者 · latestVersion · 类别`；已装行显示状态与版本；「升级到 x.y.z」出现在 `upgradeAvailable` 时；插件「卸载」走 `plugins/uninstall`。页面底部「已安装」列出应用与插件（含 bundle 未启用为 profile 层的提示）。
 - 「需重启 DSH」横幅：任一装卸操作完成后，或列表 `restartRequired` 为真时显示；壳内为 `hanamesh://restart` 链接，官方 DSH 直开为文字提示。
+
+### 0.3.0 · catalog major compatibility
+
+Catalog `manifestVersion` / `schemaVersion` accept valid SemVer with major 1, including additive minor/patch inputs; different majors and malformed versions remain refused. Schema field checks and HTTPS/same-origin controls remain enforced. Known optional additions (attribution notice / item updatedAt) are preserved; arbitrary unknown fields remain invalid. Install-target `contractVersion: "1"`, storage schema numbers and installed-package exact readback are distinct fields and retain their original grammar. This does not claim that a 0.x package caret includes every minor.
+
+Both SOURCE fixture sets and suites ship as `@hanamesh/dsh-app-host/catalog/suite` (`runCatalogProviderSuite`, `runCatalogConsumerSuite`) with schema exports under `catalog/schema/`. The default consumer suite drives this package's actual catalog loader against labelled transport fixtures; it is not a live market or product acceptance gate. Version grammar follows [SemVer 2.0.0](https://semver.org/).

@@ -1,6 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { AppHostError, requireCondition } from '../errors.js';
 
+// Catalog schema versions are SemVer; install-target protocol '1' is a separate grammar.
+const catalogVersion=value=>typeof value==='string'&&/^1\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$(?![\s\S])/u.test(value);
+
 const MAX_BYTES=2*1024*1024;
 const plain=value=>typeof value==='string'&&value.length>0&&!/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/u.test(value);
 const own=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).every(key=>keys.includes(key));
@@ -14,13 +17,13 @@ export function validateManifestUrl(value){
 
 export function validateCatalogManifest(value){
   requireCondition(own(value,['manifestVersion','providerId','name','description','homepage','attribution','transport','query'])&&
-    value.manifestVersion==='1.0.0'&&/^[a-z0-9]+(?:[.-][a-z0-9]+)+$/.test(value.providerId)&&plain(value.name)&&
+    catalogVersion(value.manifestVersion)&&/^[a-z0-9]+(?:[.-][a-z0-9]+)+$/.test(value.providerId)&&plain(value.name)&&
     own(value.attribution,['name','url','notice'])&&plain(value.attribution.name)&&
     own(value.transport,['kind','endpoint','method'])&&value.transport.kind==='https-json'&&value.transport.method==='GET'&&
     own(value.query,['supported','defaultLimit','maxLimit','sorts'])&&Array.isArray(value.query.supported)&&Array.isArray(value.query.sorts)&&
     Number.isInteger(value.query.defaultLimit)&&value.query.defaultLimit>=1&&value.query.defaultLimit<=200&&
     Number.isInteger(value.query.maxLimit)&&value.query.maxLimit>=value.query.defaultLimit&&value.query.maxLimit<=200,
-    'INVALID_CATALOG_MANIFEST','Catalog source manifest does not match schema 1.0.0.');
+    'INVALID_CATALOG_MANIFEST','Catalog source manifest does not match catalog schema major 1.');
   validateManifestUrl(value.attribution.url);
   const endpoint=validateManifestUrl(value.transport.endpoint);
   requireCondition(endpoint.pathname.endsWith('/v1/plugins'),'INVALID_CATALOG_MANIFEST','Catalog endpoint must end in /v1/plugins.');
@@ -33,13 +36,13 @@ function validateItem(item){
     plain(item.id)&&item.id.length<=160&&plain(item.name)&&plain(item.displayName)&&plain(item.summary)&&
     (item.categories===undefined||(Array.isArray(item.categories)&&new Set(item.categories).size===item.categories.length&&item.categories.every(x=>/^[a-z0-9][a-z0-9._:-]{0,63}$/.test(x))))&&
     (item.package===undefined||(own(item.package,['registry','name'])&&item.package.registry==='npm'&&/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(item.package.name))),
-    'INVALID_CATALOG_PAGE','Catalog item does not match schema 1.0.0.');
+    'INVALID_CATALOG_PAGE','Catalog item does not match catalog schema major 1.');
 }
 
 export function validateProviderPage(value){
-  requireCondition(own(value,['schemaVersion','generatedAt','revision','items','page'])&&value.schemaVersion==='1.0.0'&&
+  requireCondition(own(value,['schemaVersion','generatedAt','revision','items','page'])&&catalogVersion(value.schemaVersion)&&
     Array.isArray(value.items)&&value.items.length<=200&&own(value.page,['nextCursor','total']),
-    'INVALID_CATALOG_PAGE','Catalog provider page does not match schema 1.0.0.');
+    'INVALID_CATALOG_PAGE','Catalog provider page does not match catalog schema major 1.');
   for(const item of value.items)validateItem(item);
   return structuredClone(value);
 }
