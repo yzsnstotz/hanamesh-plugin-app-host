@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {dirname,join} from 'node:path';
+const root=process.cwd();
+const suite=await import('@hanamesh/devkit/contract');
+const provider=JSON.parse(await readFile(new URL(import.meta.resolve('@hanamesh/devkit/contract/fixtures/provider.json'))));
+const consumer=JSON.parse(await readFile(new URL(import.meta.resolve('@hanamesh/devkit/contract/fixtures/consumer.json'))));
+const entry=new URL(import.meta.resolve('@hanamesh/devkit'));const packageRoot=dirname(dirname(entry.pathname));
+const pkg=JSON.parse(await readFile(join(packageRoot,'package.json')));
+assert.equal(pkg.name,'@hanamesh/devkit');assert.equal(pkg.version,provider.package.version);
+console.log(JSON.stringify({provider:suite.checkProvider({packageRoot,descriptor:provider}),consumer:suite.checkConsumer({consumerRoot:root,requirement:consumer})}));

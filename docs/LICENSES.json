@@ -1,7 +1,7 @@
 {
   "package": {
     "name": "@hanamesh/dsh-app-host",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "license": "SEE LICENSE IN LICENSE",
     "source": "git+https://github.com/yzsnstotz/hanamesh-plugin-app-host.git",
     "purpose": "Application ownership, view leases, Router forwarding, and application library for official DSH"
@@ -182,22 +182,22 @@
       ]
     },
     "@hanamesh/devkit": {
-      "version": "0.1.0-rc.2",
+      "version": "0.2.0",
       "license": "SEE LICENSE IN LICENSE",
-      "source": "vendor/hanamesh-devkit-0.1.0-rc.2.tgz",
-      "sha256": "ae815e589c3e5a573e407da5c982bb0fc8df15b57683ebbfaccd828d9dd588e0",
+      "source": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit",
+      "sha256": "de15f0913dd6de5ba9ce96b8d92ea862ec44489eb698628de963cbbead68bc25",
       "purpose": "Development-only centralized tool execution; optional peer, never imported by runtime",
       "usedAs": [
         "peerDependencies",
         "devDependencies"
       ],
       "specs": {
-        "peerDependencies": "0.1.0-rc.2",
-        "devDependencies": "file:vendor/hanamesh-devkit-0.1.0-rc.2.tgz"
+        "peerDependencies": "^0.2.0",
+        "devDependencies": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit"
       },
-      "sourceCommit": "067a41e7138ca6a9d8f180991711f1b27aefba5a",
+      "sourceCommit": "8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89",
       "licenseNotice": "# HanaMesh distribution notice\n\nThis package contains HanaMesh-owned code. The project owner confirmed that its\nown code may be distributed (D-2026-10-05-02) and directed correction of outdated\nprivate / UNLICENSED package metadata (D-2026-10-05-16, 2026-10-05).\n\nThis notice records that distribution authorization. It does not assign an SPDX\nlicense identifier, adopt MIT or another standard license, or grant additional\nrelicensing rights. Rights not covered by the owner's recorded distribution\nauthorization remain reserved. See LICENSE_RECORD.md for the package name,\nversion, source, purpose and third-party boundaries.\n\nThird-party components retain their existing licenses. No third-party component\nis relicensed by this notice. This metadata change is not an npm publication or\na change to repository visibility.\n",
-      "distributionRecord": "# Devkit license and distribution record\n\n| Name | Version | License / authorization | Source | Purpose |\n| --- | --- | --- | --- | --- |\n| @hanamesh/devkit | 0.1.0-rc.2 | SEE LICENSE IN LICENSE; HanaMesh-owned distribution authorized in D-2026-10-05-02 and D-2026-10-05-16; no new standard license or relicensing grant | yzsnstotz/hanamesh-server-shared, packages/devkit; baseline b2b5c9bb7faa990e3eb9f99007abd6427d62e88b / rc.1 | Development preflight, mutation execution, package verification and toolchain checks |\n\nThe original rc.1 manifest contained private=true and license=UNLICENSED, with no\nstandalone LICENSE text. Those obsolete metadata fields are superseded for rc.2\nby private=false and this explicit distribution notice. The old tarball and\nrecords remain unchanged. This package has no dependency or peerDependency and\nships no third-party runtime or compiler. It uses Node standard-library APIs;\nNode itself is supplied by the consumer and is not bundled here.\n\nAuthority: the project owner's 2026-10-05 instruction to correct lib-provision\nand devkit vendor metadata under D-2026-10-05-02, recorded in D-2026-10-05-16.\nThe notice does not extend that instruction into a new general license.\n"
+      "distributionRecord": "# Devkit license and distribution record\n\n| Name | Version | License / authorization | Source | Purpose |\n| --- | --- | --- | --- | --- |\n| @hanamesh/devkit | 0.2.0 | SEE LICENSE IN LICENSE; HanaMesh-owned distribution authorized in D-2026-10-05-02 and D-2026-10-05-16; no new standard license or relicensing grant | yzsnstotz/hanamesh-server-shared, packages/devkit; baseline b2b5c9bb7faa990e3eb9f99007abd6427d62e88b / rc.1 | Development preflight, mutation execution, package verification and toolchain checks |\n\nThe original rc.1 manifest contained private=true and license=UNLICENSED, with no\nstandalone LICENSE text. Those obsolete metadata fields are superseded for rc.2\nby private=false and this explicit distribution notice. The old tarball and\nrecords remain unchanged. 0.2.0 adds Git tag-range installation and the\n`contract/` supply schema, fixtures and suite under the same authorization;\nit still adds no dependency. This package has no dependency or peerDependency and\nships no third-party runtime or compiler. It uses Node standard-library APIs;\nNode itself is supplied by the consumer and is not bundled here.\n\nAuthority: the project owner's 2026-10-05 instruction to correct lib-provision\nand devkit vendor metadata under D-2026-10-05-02, recorded in D-2026-10-05-16.\nThe notice does not extend that instruction into a new general license.\n"
     }
   }
 }

@@ -1,6 +1,6 @@
 # HanaMesh app-host · 0.2.0-rc.2 本地候选
 
-> METADATA-DEVKIT-VENDOR-APPHOST-01（2026-10-06）：既有开发工具 `@hanamesh/devkit` 更新为精确 optional peer `0.1.0-rc.2` 与同版 file vendor，SHA256 `ae815e589c3e5a573e407da5c982bb0fc8df15b57683ebbfaccd828d9dd588e0`。devkit 不进入运行时依赖或随包代码；canonical 分发授权原文记录于 `docs/LICENSES.json`，不新增 MIT 或再许可。AppHost 根许可分区和内联 provision rc3 保持不变。
+> 历史 METADATA-DEVKIT-VENDOR-APPHOST-01（2026-10-06，现已由下方0.4.0正常源供给替代）：既有开发工具 `@hanamesh/devkit` 更新为精确 optional peer `0.1.0-rc.2` 与同版 file vendor，SHA256 `ae815e589c3e5a573e407da5c982bb0fc8df15b57683ebbfaccd828d9dd588e0`。devkit 不进入运行时依赖或随包代码；canonical 分发授权原文记录于 `docs/LICENSES.json`，不新增 MIT 或再许可。AppHost 根许可分区和内联 provision rc3 保持不变。
 
 > NPM-APPHOST-01（2026-10-05）：本地候选 `0.2.0-rc.10` 对齐官方 `@deepseek-ai/dsh@0.2.0-rc.2`、Cordis `4.0.4`、Schemastery `3.18.4` 与 storage-domain `0.2.0-rc.2`。`@hanamesh/lib-provision@0.1.0-rc.3` 仅以已核 SHA-256 的 vendor tgz 在构建期内联，公共 registry E404，因此不声明为运行时 peer。owner D-2026-10-05-02 已确认该自有代码可分发；内联代码的自有分发授权原文随 canonical rc3 包复制，不推断新增 MIT 或再许可授权。包级许可分区见 [`LICENSE`](LICENSE) 与 [`docs/LICENSES.json`](docs/LICENSES.json)。本地官方 DSH 装配不等于公开 npm 安装门或产品验收；当前卡证据见 BlueMap `NPM-APPHOST-01/REPORT.md`。
 
@@ -71,7 +71,7 @@ NPM-APPHOST-01 的本地开发环境是 **macOS arm64 / Node 24.13.1 / npm 11.8.
 
 ```bash
 export npm_config_cache=$(mktemp -d)
-npm ci
+pnpm install --frozen-lockfile --store-dir ~/.cache/hanamesh-deps/pnpm-store
 npm run check:toolchain
 npm run build
 npm test
@@ -124,3 +124,9 @@ AppHost rc7 提供 `market.openInstallTarget({itemId?,packageName?})` 及同名�
 安装目标合约（rc8，`hanamesh.install-target` v1，只加不改）：schema `schemas/install-target.schema.json`（出口 `./install-target/schema.json`），提供方/消费方 fixture 与一致性套件随包（`./install-target/suite`、`./install-target/fixtures/*`）。调用方可选声明 `contractVersion: '1'`；不声明保持 rc7 语义，其他值明确拒绝 `CONTRACT_VERSION_UNSUPPORTED`。见 [INSTALL_TARGET.md](docs/INSTALL_TARGET.md#合约版本与一致性套件)。
 
 rc9 installation-target contract: the library accepts exact 127.0.0.1/localhost aliases at the same configured port; Origin must match the request Host. Cross-alias/foreign Origin, unknown Host/port, iframe, CSRF, authentication and version refusals remain explicit. See [INSTALL_TARGET](docs/INSTALL_TARGET.md).
+
+## 0.4.0 · Devkit normal Git supply
+
+Development installs use the already pinned pnpm 10.33.0 and `pnpm-lock.yaml`. `@hanamesh/devkit` is an optional development peer `^0.2.0`, installed from `git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit`. The package identity is Devkit, never the shared root alias; both old Devkit vendor archives are removed. Run `pnpm run check:devkit-supply` for the installed source package's provider/consumer conformance, exported tools and CLI checks. The four mature tool engines and runtime payload are unchanged. No runtime Devkit dependency or bundled tool code is added.
+
+The upstream Git subdirectory route supports pnpm 10.33.0; npm 11.8.0 cannot install that development dependency. AppHost 0.4.x source Git consumption therefore uses pnpm, with its normal dependency build approval for this package's existing build/prepack lifecycle. A normal npm tarball runtime install remains supported and ignores development dependencies. The previously verified AppHost 0.3.0 source/tag and `^0.3.0` npm route remain byte-identical and outside the 0.4.0 range. Future 0.x minor ranges remain distinct. lib-provision is retained at its mature inlined version pending the separate supply decision.

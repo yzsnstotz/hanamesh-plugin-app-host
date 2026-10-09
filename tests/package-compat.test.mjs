@@ -22,7 +22,7 @@ test('NPM-APPHOST-01: published metadata resolves against official DSH rc.2 with
   assert.equal(pkg.dependencies['@hanamesh/lib-provision'], undefined);
 });
 
-test('NPM-APPHOST-01: actual packed manifest allows only the exact optional development devkit peer/vendor spec', async () => {
+test('NPM-APPHOST-01: actual packed manifest allows only the optional development devkit peer/source range', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'hm-apphost-pack-'));
   try {
     const raw = execFileSync('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', dir], {
@@ -60,12 +60,12 @@ test('NPM-APPHOST-01: actual packed manifest allows only the exact optional deve
     assert.equal(manifest.hanamesh?.deliveryStatus, undefined);
     for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies', 'devDependencies']) {
       for (const [name, spec] of Object.entries(manifest[field] ?? {})) {
-        if(field==='devDependencies'&&name==='@hanamesh/devkit')assert.equal(spec,'file:vendor/hanamesh-devkit-0.1.0-rc.2.tgz');
+        if(field==='devDependencies'&&name==='@hanamesh/devkit')assert.equal(spec,'git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit');
         else assert.doesNotMatch(spec, /^(?:file:|link:)/, `${field}.${name}`);
       }
     }
     assert.ok(Object.keys(manifest.peerDependencies ?? {}).every(name => !name.startsWith('@hanamesh/') || name==='@hanamesh/devkit'));
-    assert.equal(manifest.peerDependencies['@hanamesh/devkit'],'0.1.0-rc.2');
+    assert.equal(manifest.peerDependencies['@hanamesh/devkit'],'^0.2.0');
     assert.deepEqual(manifest.peerDependenciesMeta['@hanamesh/devkit'],{optional:true});
     assert.equal(manifest.dependencies['@hanamesh/devkit'],undefined);
     assert.ok(files.some(file => file.path === 'dist/provision/LICENSE'));
