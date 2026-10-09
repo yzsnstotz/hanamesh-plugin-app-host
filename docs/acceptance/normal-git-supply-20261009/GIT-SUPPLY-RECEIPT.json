@@ -1,0 +1,19 @@
+{
+  "devkitReleaseVersion": "0.4.0",
+  "mainTagCommit": "4965b8cd93556adf08f60b56333e4575aedaded1",
+  "devkitGitInstalledMembers": 99,
+  "samePackMembers": 99,
+  "devkitReleaseSha256": "4fb7b4dd0b94eaa2c1386efe84ac47af2f74b46979fe07cac3811de382872f7e",
+  "sourceDependencyRealPackageCount": {
+    "devkit": 1,
+    "lib-provision": 1
+  },
+  "countingNote": "normal PNPM peer links resolve to the same package, not a second copy",
+  "provisionCandidateRange": "^0.2.0-rc.1 -> 0.2.0/b216ec7",
+  "formalReference": "^0.2.0 -> same 0.2.0/b216ec7",
+  "frozenSourceLockSame": true,
+  "strictSourcePair": "FAIL ERR_PNPM_PEER_DEP_ISSUES; lib optional Devkit peer exact rc2 vs installed 0.2.0",
+  "mainScope": "Devkit only; mature inlined lib retained",
+  "provisionScope": "untagged/unmerged 0.5.0-rc.1 candidate",
+  "provisionCandidateSha256": "d4a209485d05411b7b5e3e2b67f1350355c5589991bad93e57c6f432bc4c6b41"
+}

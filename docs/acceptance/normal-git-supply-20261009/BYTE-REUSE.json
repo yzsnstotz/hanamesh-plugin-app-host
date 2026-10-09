@@ -1,0 +1,24 @@
+{
+  "installedDevkit": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-MAJOR-COMPAT-01/devkit-consumption/source/node_modules/.pnpm/@hanamesh+devkit@git+https+++git@github.com+yzsnstotz+hanamesh-server-shared.git+8f9bcc_475cb15388da91190edc44b32ea237ac/node_modules/@hanamesh/devkit",
+  "matureEngineAndCliSameFiles": [
+    "LICENSE",
+    "src/check-toolchain.mjs",
+    "bin/devkit.mjs",
+    "src/index.mjs",
+    "src/mutations.mjs",
+    "src/preflight.mjs",
+    "src/verify-pack.mjs"
+  ],
+  "changedEngineOrCli": [],
+  "sourceRuntimeDiff": "",
+  "packChangedMembers": [
+    "package/README.md",
+    "package/package.json",
+    "package/docs/LICENSES.json",
+    "package/docs/PROVENANCE.json"
+  ],
+  "packUnchangedMembers": 95,
+  "packSHA256": "7ae56606f54659e8594fa7429da8da2ae4fdd69e506c66b27a87990dcf11818c",
+  "packBytes": 193744,
+  "packFiles": 99
+}

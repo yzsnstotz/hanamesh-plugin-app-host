@@ -63,11 +63,11 @@
 - **K5：** Electron 宿主必须显式给绝对且可执行的 `nodeBinary`；guardian/launcher 使用同一 Node，只继承 `DSH_HOME/HOME/LANG/TMPDIR/PATH` 白名单。未配置时 fail-closed 为 `NODE_RUNTIME_REQUIRED`。
 - **Router：** 合并授权、撤销、文件投射 ledger 与 `sets`，来源为 DSH credentials/LLM 目录和 coding-oauth gateway；不搬 key 探测、录入或 OAuth 端口。
 - **市场（原应用库）：** 自带侧栏入口与覆盖页；目录源同一时刻只启用一项；插件与应用同一入口、同一 `dsh plugin add/remove` 路径；已装列表含插件；区分已注册、待重启、可升级与缺 runtime。
-- **锁定 runtime 供给：** build 脚本直接读取 `vendor/hanamesh-lib-provision-0.1.0-rc.3.tgz`，校验 SHA-256 后内联到 `dist/provision/`。包清单没有该私有包的 dependency、peer 或 devDependency；来源与许可边界见 `docs/PROVENANCE.json`。
+- **Runtime 供给（0.5.0-rc.1 候选）：** `@hanamesh/lib-provision` 从其私有 Git 源 tag 范围正常安装，DSH 入口调用公开 `provision`、`remove`、`ledger`。构建只复制本源 `src/`，不提取 vendor 或内联其他包；来源与许可边界见 `docs/PROVENANCE.json`。
 
 ## 运行
 
-NPM-APPHOST-01 的本地开发环境是 **macOS arm64 / Node 24.13.1 / npm 11.8.0 / 官方 DSH 0.2.0-rc.2**。 本轮私有工具迁移候选为 `0.2.0-rc.4`，集中工具另固定 `pnpm 10.33.0`。干净安装使用锁文件，运行依赖为 `zod 4.5.4`；私有 `@hanamesh/lib-provision` 不在运行时依赖或 peer 中，其代码已获自有代码分发确认并按独立许可分区内联。
+NPM-APPHOST-01 的本地开发环境是 **macOS arm64 / Node 24.13.1 / npm 11.8.0 / 官方 DSH 0.2.0-rc.2**。 本轮私有工具迁移候选为 `0.2.0-rc.4`，集中工具另固定 `pnpm 10.33.0`。该段为历史候选环境；当前候选 0.5.0-rc.1 使用 pnpm 锁文件，运行依赖为 `zod 4.5.4` 和正常 Git 源 `@hanamesh/lib-provision`。
 
 ```bash
 export npm_config_cache=$(mktemp -d)
@@ -125,8 +125,8 @@ AppHost rc7 提供 `market.openInstallTarget({itemId?,packageName?})` 及同名�
 
 rc9 installation-target contract: the library accepts exact 127.0.0.1/localhost aliases at the same configured port; Origin must match the request Host. Cross-alias/foreign Origin, unknown Host/port, iframe, CSRF, authentication and version refusals remain explicit. See [INSTALL_TARGET](docs/INSTALL_TARGET.md).
 
-## 0.4.0 · Devkit normal Git supply
+## 0.4.0 · Devkit normal Git supply / 0.5.0-rc.1 provision candidate
 
 Development installs use the already pinned pnpm 10.33.0 and `pnpm-lock.yaml`. `@hanamesh/devkit` is an optional development peer `^0.2.0`, installed from `git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit`. The package identity is Devkit, never the shared root alias; both old Devkit vendor archives are removed. Run `pnpm run check:devkit-supply` for the installed source package's provider/consumer conformance, exported tools and CLI checks. The four mature tool engines and runtime payload are unchanged. No runtime Devkit dependency or bundled tool code is added.
 
-The upstream Git subdirectory route supports pnpm 10.33.0; npm 11.8.0 cannot install that development dependency. AppHost 0.4.x source Git consumption therefore uses pnpm, with its normal dependency build approval for this package's existing build/prepack lifecycle. A normal npm tarball runtime install remains supported and ignores development dependencies. The previously verified AppHost 0.3.0 source/tag and `^0.3.0` npm route remain byte-identical and outside the 0.4.0 range. Future 0.x minor ranges remain distinct. lib-provision is retained at its mature inlined version pending the separate supply decision.
+The upstream Git subdirectory route supports pnpm 10.33.0; npm 11.8.0 cannot install that development dependency. AppHost 0.4.x source Git consumption therefore uses pnpm, with its normal dependency build approval for this package's existing build/prepack lifecycle. A normal npm tarball runtime install remains supported and ignores development dependencies. The previously verified AppHost 0.3.0 source/tag and `^0.3.0` npm route remain byte-identical and outside the 0.4.0 range. Future 0.x minor ranges remain distinct. The independent 0.4.0 release retains the mature inlined lib-provision payload. The separate, untagged 0.5.0-rc.1 task candidate installs lib-provision from `git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.0` and removes it from `dist/` and `vendor/`. That candidate remains PARTIAL while the strict source peer conflict described below is unresolved. pnpm installs must approve its normal Git prepare lifecycle in `pnpm-workspace.yaml` with `onlyBuiltDependencies: ["@hanamesh/lib-provision"]` (alongside the existing `koffi` lifecycle). Run `pnpm run check:provision-supply` for the actual installed provider fixture, public APIs (including ledger), CLI and major rejection. Its own optional Devkit peer is still exact rc.2 upstream; the resulting source development peer warning is recorded in the task REPORT and must not be hidden by an override.

@@ -1,9 +1,9 @@
 {
   "currentCandidate": {
-    "version": "0.4.0",
+    "version": "0.5.0-rc.1",
     "dshTarget": "0.2.0-rc.2",
-    "vendorSha256VerifiedAtBuild": true,
-    "libProvisionDistribution": "HanaMesh-owned distribution authorization record copied verbatim from canonical provision rc3; see dist/provision/LICENSE and docs/LICENSES.json; no new MIT or relicensing grant",
+    "vendorSha256VerifiedAtBuild": false,
+    "libProvisionDistribution": "External normal Git source dependency; its own LICENSE and notices apply, no inlined copy or new relicensing grant",
     "publicNpmGate": "NOT_RUN"
   },
   "module": "app-host",
@@ -50,16 +50,6 @@
   "auxiliaryAgents": 0,
   "tokenUsage": "not independently metered",
   "upstreamFilesModified": 0,
-  "bundledArtifacts": {
-    "@hanamesh/lib-provision": {
-      "version": "0.1.0-rc.3",
-      "source": "vendor/hanamesh-lib-provision-0.1.0-rc.3.tgz",
-      "sha256": "b7d149dcbf51c30fd0226fb170afdf268501057b0c7149903c02c17abe93b2c7",
-      "mode": "build-time inline into dist/provision; no package dependency or peer declaration",
-      "sourceCommit": "e8707089409ffd3483fc4c964d6032c370dae634",
-      "license": "SEE LICENSE IN LICENSE"
-    }
-  },
   "sessionLogWrites": 0,
   "historicalCandidateLicense": "UNLICENSED; no upstream-license inheritance or open-source grant asserted",
   "developmentArtifacts": {
@@ -72,15 +62,20 @@
       "mode": "optional development peer plus pnpm normal Git source range; absent from runtime dependencies and packed code",
       "license": "SEE LICENSE IN LICENSE",
       "distributionNotice": "Canonical LICENSE and LICENSE_RECORD.md copied verbatim to docs/LICENSES.json; no new MIT or relicensing grant",
-      "configuration": {
-        "path": "devkit.config.mjs",
-        "sha256": "3a5221c210b5a4fa367ea902a7acbd95d9b3dcd9af55e561f80cb921ff807add"
-      },
-      "integrity": "sha512-eonr0qJSG3QwOCLLQVbQkeCU0pL1VE5UJcKMEfZZe1NnW5VXtjA5zsfyarurGmthglzpwEkNB+AX0Jqv4XQWZA==",
       "lockfile": {
-        "path": "package-lock.json",
-        "sha256": "af8da8705393433c97ec3e952df8b6c882b1839c01e1b8efe80178bdbbd5eb94"
+        "path": "pnpm-lock.yaml",
+        "resolution": "normal Git tag range; installed commit recorded in lock"
       }
+    }
+  },
+  "externalArtifacts": {
+    "@hanamesh/lib-provision": {
+      "version": "0.2.0",
+      "source": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.0",
+      "sha256": "25b6362ca912e902e792b21c3e4a8e945418db8386e822c546c1f9d3132c1a00",
+      "mode": "external runtime source dependency; no inlined copy",
+      "sourceCommit": "b216ec755f1f465b97580ede530057d59a551351",
+      "license": "SEE LICENSE IN LICENSE"
     }
   }
 }

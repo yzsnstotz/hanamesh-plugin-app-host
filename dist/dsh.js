@@ -165,7 +165,7 @@ export async function apply(ctx, config) {
       let dshBin=locations.dshBin;
       if(!dshBin)try{dshBin=createRequire(join(locations.profileDir,'package.json')).resolve('@deepseek-ai/dsh/lib/bin.js');}catch{dshBin=undefined;}
       if(dshBin){
-        provisionApi=await import('./provision/index.js');
+        provisionApi=await import('@hanamesh/lib-provision');
         installer=createLibraryInstaller({profileDir:locations.profileDir,profileName:locations.profileName,dataRoot,nodeBinary:locations.nodeBinary,
           dshBin,registry:libraryConfig.registry,allowPrerelease:libraryConfig.allowPrerelease,provision:provisionApi.provision,remove:provisionApi.remove,ledger:provisionApi.ledger,
           emit:event=>library?.emit(event)});

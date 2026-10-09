@@ -1,0 +1,10 @@
+✔ NPM-APPHOST-01: published metadata resolves against official DSH rc.2 with external provision source dependency (1.546167ms)
+✔ NPM-APPHOST-01: actual packed manifest allows only the optional development devkit peer/source range (361.78125ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 515.07275

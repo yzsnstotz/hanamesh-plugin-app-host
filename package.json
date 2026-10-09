@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/dsh-app-host",
-  "version": "0.4.0",
+  "version": "0.5.0-rc.1",
   "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.0-rc.2",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
@@ -75,7 +75,8 @@
     "check:toolchain": "node scripts/check-toolchain.mjs",
     "preflight": "node scripts/preflight.mjs",
     "verify:pack": "node scripts/verify-package.mjs",
-    "check:devkit-supply": "node scripts/check-devkit-consumption.mjs"
+    "check:devkit-supply": "node scripts/check-devkit-consumption.mjs",
+    "check:provision-supply": "node scripts/check-provision-consumption.mjs"
   },
   "dsh": {
     "bundle": {
@@ -94,7 +95,8 @@
     }
   },
   "dependencies": {
-    "zod": "4.5.4"
+    "zod": "4.5.4",
+    "@hanamesh/lib-provision": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.0"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "4.0.4",
