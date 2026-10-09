@@ -1,7 +1,7 @@
 {
   "package": {
     "name": "@hanamesh/dsh-app-host",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "license": "SEE LICENSE IN LICENSE",
     "source": "git+https://github.com/yzsnstotz/hanamesh-plugin-app-host.git",
     "purpose": "Application ownership, view leases, Router forwarding, and application library for official DSH"
@@ -189,13 +189,11 @@
       "license": "SEE LICENSE IN LICENSE",
       "source": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit",
       "sha256": "de15f0913dd6de5ba9ce96b8d92ea862ec44489eb698628de963cbbead68bc25",
-      "purpose": "Development-only centralized tool execution; optional peer, never imported by runtime",
+      "purpose": "Development-only centralized tool execution; never imported by runtime; no public peer",
       "usedAs": [
-        "peerDependencies",
         "devDependencies"
       ],
       "specs": {
-        "peerDependencies": "^0.2.0",
         "devDependencies": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit"
       },
       "sourceCommit": "8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89",
