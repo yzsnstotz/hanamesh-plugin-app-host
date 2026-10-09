@@ -1,6 +1,6 @@
 {
   "currentCandidate": {
-    "version": "0.3.0",
+    "version": "0.4.0",
     "dshTarget": "0.2.0-rc.2",
     "vendorSha256VerifiedAtBuild": true,
     "libProvisionDistribution": "HanaMesh-owned distribution authorization record copied verbatim from canonical provision rc3; see dist/provision/LICENSE and docs/LICENSES.json; no new MIT or relicensing grant",
@@ -64,12 +64,12 @@
   "historicalCandidateLicense": "UNLICENSED; no upstream-license inheritance or open-source grant asserted",
   "developmentArtifacts": {
     "@hanamesh/devkit": {
-      "version": "0.1.0-rc.2",
-      "source": "vendor/hanamesh-devkit-0.1.0-rc.2.tgz",
-      "sha256": "ae815e589c3e5a573e407da5c982bb0fc8df15b57683ebbfaccd828d9dd588e0",
-      "sourceCommit": "067a41e7138ca6a9d8f180991711f1b27aefba5a",
+      "version": "0.2.0",
+      "source": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit",
+      "sha256": "de15f0913dd6de5ba9ce96b8d92ea862ec44489eb698628de963cbbead68bc25",
+      "sourceCommit": "8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89",
       "independentVerifyCommit": "69be0faea0b66ae49adf5988ebd1fab093a26290",
-      "mode": "optional development peer plus file vendor; absent from runtime dependencies and packed code",
+      "mode": "optional development peer plus pnpm normal Git source range; absent from runtime dependencies and packed code",
       "license": "SEE LICENSE IN LICENSE",
       "distributionNotice": "Canonical LICENSE and LICENSE_RECORD.md copied verbatim to docs/LICENSES.json; no new MIT or relicensing grant",
       "configuration": {

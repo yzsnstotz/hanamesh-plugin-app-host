@@ -9,19 +9,19 @@ import {javascript, typescript} from './scripts/package-probes.mjs';
 const root=import.meta.dirname;
 const pkg=JSON.parse(await readFile(join(root,'package.json'),'utf8'));
 const pins=JSON.parse(await readFile(join(root,'toolchain.json'),'utf8'));
-const devkitSha='ae815e589c3e5a573e407da5c982bb0fc8df15b57683ebbfaccd828d9dd588e0';
+const devkitSpec='git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit';
 const digest=value=>createHash('sha256').update(value).digest('hex');
 const cardRun=process.env.HANAMESH_APPHOST_RUN_DIR;
 const evidenceDir=resolve(cardRun??join(root,'artifacts'),'mutations');
 
 async function validateDevelopmentPolicy(){
-  assert.equal(pkg.peerDependencies['@hanamesh/devkit'],'0.1.0-rc.2');
+  assert.equal(pkg.peerDependencies['@hanamesh/devkit'],'^0.2.0');
   assert.deepEqual(pkg.peerDependenciesMeta['@hanamesh/devkit'],{optional:true});
-  assert.equal(pkg.devDependencies['@hanamesh/devkit'],'file:vendor/hanamesh-devkit-0.1.0-rc.2.tgz');
+  assert.equal(pkg.devDependencies['@hanamesh/devkit'],devkitSpec);
   assert.equal(pkg.dependencies['@hanamesh/devkit'],undefined);
-  assert.equal(digest(await readFile(join(root,'vendor/hanamesh-devkit-0.1.0-rc.2.tgz'))),devkitSha);
   const installed=JSON.parse(await readFile(new URL('../package.json',import.meta.resolve('@hanamesh/devkit')),'utf8'));
-  assert.equal(installed.version,'0.1.0-rc.2');
+  assert.equal(installed.name,'@hanamesh/devkit');
+  const {satisfiesCaret}=await import('@hanamesh/devkit/contract');assert(satisfiesCaret(installed.version,'^0.2.0'));
 }
 
 // Per-case name filters and failure reasons are AppHost policy. Execution/copy/cleanup is devkit-owned.
@@ -45,7 +45,7 @@ export async function runAppHostMutations(runner=runMutations){
   return results;
 }
 
-function packOptions(tarball){
+export function packOptions(tarball){
   return {root,tarball:resolve(tarball??join(root,`hanamesh-dsh-app-host-${pkg.version}.tgz`)),
     required:['dist/catalog/suite.js','dist/catalog/suite.d.ts','dist/catalog/fixtures/provider.json','dist/catalog/fixtures/consumer.json','package.json','dist/index.js','dist/index.d.ts','dist/client.js','dist/client.d.ts','dist/client-ui.js','dist/client-ui.d.ts','docs/INSTALL_TARGET.md','dist/dsh.js','dist/provision/LICENSE','schemas/install-target.schema.json','dist/install-target/suite.js','dist/install-target/suite.d.ts','dist/install-target/run.js','dist/install-target/harness.js','dist/install-target/fixtures/catalog.json','dist/install-target/fixtures/provider-cases.json','dist/install-target/fixtures/consumer-cases.json','dist/install-target/fixtures/reference-consumer.js'],
     forbidden:/node_modules\/|vendor\/|tests?\/|scripts\/|artifacts\/|devkit\.config\.mjs|toolchain\.json/u,
@@ -56,7 +56,7 @@ function packOptions(tarball){
       assert.deepEqual(packed.dependencies,pkg.dependencies);
       assert.deepEqual(packed.exports,pkg.exports);
       assert.equal(packed.dependencies['@hanamesh/devkit'],undefined);
-      assert.equal(packed.peerDependencies['@hanamesh/devkit'],'0.1.0-rc.2');
+      assert.equal(packed.peerDependencies['@hanamesh/devkit'],'^0.2.0');
       assert.deepEqual(packed.peerDependenciesMeta['@hanamesh/devkit'],{optional:true});
       for(const path of ['client-ui.js','client-ui.d.ts','library/routes.js','library/service.js','install-target/suite.js','install-target/harness.js','install-target/fixtures/provider-cases.json','install-target/fixtures/consumer-cases.json'])assert.deepEqual(read('dist/'+path),await readFile(join(root,'src',path)),'packed install-target bytes: '+path);
     }};

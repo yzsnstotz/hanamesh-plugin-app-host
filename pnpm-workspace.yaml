@@ -1,0 +1,3 @@
+# Preserve the existing official DSH native dependency's normal install lifecycle.
+onlyBuiltDependencies:
+  - koffi

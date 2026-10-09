@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/dsh-app-host",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.0-rc.2",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
@@ -74,7 +74,8 @@
     "check:consistency": "node scripts/check-consistency.mjs",
     "check:toolchain": "node scripts/check-toolchain.mjs",
     "preflight": "node scripts/preflight.mjs",
-    "verify:pack": "node scripts/verify-package.mjs"
+    "verify:pack": "node scripts/verify-package.mjs",
+    "check:devkit-supply": "node scripts/check-devkit-consumption.mjs"
   },
   "dsh": {
     "bundle": {
@@ -105,7 +106,7 @@
     "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-locale": "0.2.0-rc.2",
     "react": "18.3.1",
-    "@hanamesh/devkit": "0.1.0-rc.2"
+    "@hanamesh/devkit": "^0.2.0"
   },
   "hanamesh": {
     "module": "app-host",
@@ -134,11 +135,12 @@
     "@deepseek-ai/dsh-storage-json": "0.2.0-rc.2",
     "@deepseek-ai/schemastery": "3.18.4",
     "typescript": "5.8.3",
-    "@hanamesh/devkit": "file:vendor/hanamesh-devkit-0.1.0-rc.2.tgz"
+    "@hanamesh/devkit": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit"
   },
   "peerDependenciesMeta": {
     "@hanamesh/devkit": {
       "optional": true
     }
-  }
+  },
+  "packageManager": "pnpm@10.33.0"
 }
