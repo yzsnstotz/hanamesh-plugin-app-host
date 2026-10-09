@@ -1,0 +1,1 @@
+{"result":"PASS","libVersion":"0.2.1-rc.2","peerDependencies":{},"publicPort":["provision","remove","ledger"],"providerFixture":true,"consumerRequirement":true,"devkitContractImport":true,"oldAPI_CLI_Runtime_Types":"same payload bytes; NOT_RERUN"}

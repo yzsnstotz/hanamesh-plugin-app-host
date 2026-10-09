@@ -1,0 +1,18 @@
+[
+  {
+    "path": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-MAJOR-COMPAT-01/devkit-consumption/peer-repair-021rc2",
+    "private": true,
+    "dependencies": {
+      "@hanamesh/devkit": {
+        "from": "@hanamesh/devkit",
+        "version": "0.2.0",
+        "path": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-MAJOR-COMPAT-01/devkit-consumption/peer-repair-021rc2/node_modules/.pnpm/@hanamesh+devkit@git+https+++git@github.com+yzsnstotz+hanamesh-server-shared.git+8f9bcc_475cb15388da91190edc44b32ea237ac/node_modules/@hanamesh/devkit"
+      },
+      "@hanamesh/lib-provision": {
+        "from": "@hanamesh/lib-provision",
+        "version": "0.2.1-rc.2",
+        "path": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-MAJOR-COMPAT-01/devkit-consumption/peer-repair-021rc2/node_modules/.pnpm/@hanamesh+lib-provision@git+https+++git@github.com+yzsnstotz+hanamesh-lib-provision.git_3d14a9851cb1eca03b7c95bf1faf0a8a/node_modules/@hanamesh/lib-provision"
+      }
+    }
+  }
+]

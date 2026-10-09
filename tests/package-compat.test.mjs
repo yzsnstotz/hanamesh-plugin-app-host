@@ -19,7 +19,7 @@ test('NPM-APPHOST-01: published metadata resolves against official DSH rc.2 with
   assert.equal(pkg.peerDependencies['@deepseek-ai/schemastery'], '3.18.4');
   assert.equal(pkg.peerDependencies.react, '18.3.1');
   assert.equal(pkg.peerDependencies['@hanamesh/lib-provision'], undefined);
-  assert.match(pkg.dependencies['@hanamesh/lib-provision'],/^git\+https:\/\/github\.com\/yzsnstotz\/hanamesh-lib-provision\.git#semver:\^0\.2\.0(?:-rc\.1)?$/);
+  assert.match(pkg.dependencies['@hanamesh/lib-provision'],/^git\+https:\/\/github\.com\/yzsnstotz\/hanamesh-lib-provision\.git#semver:\^0\.2\.\d+(?:-rc\.\d+)?$/);
 });
 
 test('NPM-APPHOST-01: actual packed manifest allows only the optional development devkit peer/source range', async () => {
@@ -38,7 +38,7 @@ test('NPM-APPHOST-01: actual packed manifest allows only the optional developmen
     const licenses = JSON.parse(packedFile('docs/LICENSES.json'));
     assert.equal(licenses.package.version, manifest.version);
     assert.equal(licenses.package.license, manifest.license);
-    assert.equal(licenses.components['@hanamesh/lib-provision'].version,'0.2.0');
+    assert.equal(licenses.components['@hanamesh/lib-provision'].version,JSON.parse(await readFile(new URL(import.meta.resolve('@hanamesh/lib-provision/package.json')),'utf8')).version);
     assert.equal(licenses.components['@hanamesh/lib-provision'].license,'SEE LICENSE IN LICENSE');
     assert.equal(licenses.components['@hanamesh/lib-provision'].source,manifest.dependencies['@hanamesh/lib-provision']);
     assert.ok(files.every(file=>!file.path.startsWith('dist/provision/')));

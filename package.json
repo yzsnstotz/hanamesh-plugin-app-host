@@ -96,7 +96,7 @@
   },
   "dependencies": {
     "zod": "4.5.4",
-    "@hanamesh/lib-provision": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.0"
+    "@hanamesh/lib-provision": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1-rc.2"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "4.0.4",

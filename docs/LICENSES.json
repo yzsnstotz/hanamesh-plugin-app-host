@@ -9,13 +9,13 @@
   "scope": "AppHost own code and declared external dependencies/peers; external components retain their own licenses and are not bundled or relicensed.",
   "components": {
     "@hanamesh/lib-provision": {
-      "version": "0.2.0",
+      "version": "0.2.1-rc.2",
       "license": "SEE LICENSE IN LICENSE",
-      "source": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.0",
+      "source": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1-rc.2",
       "purpose": "External runtime ownership/provision/ledger API from canonical source tag; no inlined copy",
-      "sha256": "25b6362ca912e902e792b21c3e4a8e945418db8386e822c546c1f9d3132c1a00",
+      "sha256": "5ac3554ea22feb2e91115bf3298131df04c7c1e37812f92508c6890881a09383",
       "specs": {
-        "dependencies": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.0"
+        "dependencies": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1-rc.2"
       }
     },
     "zod": {

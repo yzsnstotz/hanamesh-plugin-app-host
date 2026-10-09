@@ -1,0 +1,36 @@
+{
+  "result": "PASS",
+  "spec": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1-rc.2",
+  "candidateTag": "v0.2.1-rc.2",
+  "tagObject": "35d4b27cd4abb6a056b5b8cf5973d112ac1d6dab",
+  "candidateCommit": "a8e8032f0df0d6de1391da7d350171802c103e58",
+  "candidateVersion": "0.2.1-rc.2",
+  "candidateSha256": "5ac3554ea22feb2e91115bf3298131df04c7c1e37812f92508c6890881a09383",
+  "installedMatchesCandidate": "45/45 combo and actual AppHost",
+  "normalPackageCount": {
+    "devkit": 1,
+    "lib-provision": 1
+  },
+  "strictFreshCombo": true,
+  "provisionAllowlist": false,
+  "strictActualAppHost": true,
+  "frozenComboLockSame": true,
+  "frozenAppHostLockSame": true,
+  "unchangedMemberCount": 38,
+  "changedMembers": [
+    "LICENSE",
+    "contract/fixtures/consumer.json",
+    "package.json",
+    "contract/fixtures/provider.json",
+    "contract/CHANGELOG.md",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "libBinSameMembers": 35,
+  "sourceCheckerAndSchemaBytesSame": true,
+  "appHostSrcDistSchemas": "unchanged vs1f333215",
+  "business_API_CLI_Runtime_Types": "old byte-proven gates reused, NOT_RERUN",
+  "appHostCandidateVersion": "0.5.0-rc.1",
+  "appHostCandidateMainTag": "not merged/not tagged",
+  "supplierFullGate": "not asserted; owning promotion separate"
+}

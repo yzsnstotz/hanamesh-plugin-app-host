@@ -21,8 +21,8 @@ importers:
         specifier: 0.2.0-rc.2
         version: 0.2.0-rc.2(@deepseek-ai/cordis@4.0.4)
       '@hanamesh/lib-provision':
-        specifier: git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.0
-        version: git+https://git@github.com:yzsnstotz/hanamesh-lib-provision.git#b216ec755f1f465b97580ede530057d59a551351(@hanamesh/devkit@git+https://git@github.com:yzsnstotz/hanamesh-server-shared.git#8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89&path:/packages/devkit)
+        specifier: git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1-rc.2
+        version: git+https://git@github.com:yzsnstotz/hanamesh-lib-provision.git#a8e8032f0df0d6de1391da7d350171802c103e58
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -336,16 +336,11 @@ packages:
     engines: {node: '>=22'}
     hasBin: true
 
-  '@hanamesh/lib-provision@git+https://git@github.com:yzsnstotz/hanamesh-lib-provision.git#b216ec755f1f465b97580ede530057d59a551351':
-    resolution: {commit: b216ec755f1f465b97580ede530057d59a551351, repo: git@github.com:yzsnstotz/hanamesh-lib-provision.git, type: git}
-    version: 0.2.0
+  '@hanamesh/lib-provision@git+https://git@github.com:yzsnstotz/hanamesh-lib-provision.git#a8e8032f0df0d6de1391da7d350171802c103e58':
+    resolution: {commit: a8e8032f0df0d6de1391da7d350171802c103e58, repo: git@github.com:yzsnstotz/hanamesh-lib-provision.git, type: git}
+    version: 0.2.1-rc.2
     engines: {node: '>=24.13.1 <25'}
     hasBin: true
-    peerDependencies:
-      '@hanamesh/devkit': 0.1.0-rc.2
-    peerDependenciesMeta:
-      '@hanamesh/devkit':
-        optional: true
 
   '@koromix/koffi-darwin-arm64@3.1.1':
     resolution: {integrity: sha512-+Dl0zQDh1Wb55AWOn9hp7K30qgkODvrvN+ZNkFOh81Q0oFX/rpJQtocgjAuYk2zFAcajSeVDumkcHMPwnKSXzA==}
@@ -777,9 +772,7 @@ snapshots:
 
   '@hanamesh/devkit@git+https://git@github.com:yzsnstotz/hanamesh-server-shared.git#8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89&path:/packages/devkit': {}
 
-  '@hanamesh/lib-provision@git+https://git@github.com:yzsnstotz/hanamesh-lib-provision.git#b216ec755f1f465b97580ede530057d59a551351(@hanamesh/devkit@git+https://git@github.com:yzsnstotz/hanamesh-server-shared.git#8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89&path:/packages/devkit)':
-    optionalDependencies:
-      '@hanamesh/devkit': git+https://git@github.com:yzsnstotz/hanamesh-server-shared.git#8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89&path:/packages/devkit
+  '@hanamesh/lib-provision@git+https://git@github.com:yzsnstotz/hanamesh-lib-provision.git#a8e8032f0df0d6de1391da7d350171802c103e58': {}
 
   '@koromix/koffi-darwin-arm64@3.1.1':
     optional: true
