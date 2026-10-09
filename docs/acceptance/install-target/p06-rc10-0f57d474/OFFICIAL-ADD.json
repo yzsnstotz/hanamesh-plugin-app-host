@@ -1,0 +1,29 @@
+{
+  "cardId": "P06-APPHOST-INSTALL-TARGET-01",
+  "version": "0.2.0-rc.10",
+  "startedUTC": "2026-10-09T01:26:43.128617+00:00",
+  "finishedUTC": "2026-10-09T01:26:50.360266+00:00",
+  "argv": [
+    "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node",
+    "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/bin.js",
+    "plugin",
+    "--profile",
+    "web",
+    "add",
+    "--save-exact",
+    "@hanamesh/dsh-app-host@file:/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/release/out/hanamesh-dsh-app-host-0.2.0-rc.10.tgz"
+  ],
+  "cwd": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/0f57d474-9dd7-4716-a38f-9bba133256d7",
+  "subprocessEnv": {
+    "HOME": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/0f57d474-9dd7-4716-a38f-9bba133256d7/home",
+    "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/0f57d474-9dd7-4716-a38f-9bba133256d7/dsh-home",
+    "LANG": "C.UTF-8",
+    "PATH": "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin:/usr/bin:/bin"
+  },
+  "exitCode": 0,
+  "stdoutSha256": "c9201ec7776f6b9b68f143acec2966c31c6b9eda8462353533abd580559c37c0",
+  "stderrSha256": "0f56bfa116953d98c8768102da5ed9e9381b5851aa7578c6c7ff3a21cf0a37ef",
+  "profile": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/0f57d474-9dd7-4716-a38f-9bba133256d7/dsh-home/profiles/web",
+  "serviceStarted": false,
+  "GUI": false
+}

@@ -1,0 +1,6 @@
+{
+  "kind": "local evidence collector failure; not product failure",
+  "failure": "AssertionError matching storeDir with YAML-line regex",
+  "cause": ".modules.yaml is JSON in this normal installation",
+  "correction": "read current metadata with json.loads; no profile modification or reinstall"
+}

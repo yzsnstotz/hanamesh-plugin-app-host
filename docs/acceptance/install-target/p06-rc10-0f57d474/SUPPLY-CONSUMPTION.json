@@ -1,0 +1,150 @@
+{
+  "cardId": "P06-APPHOST-INSTALL-TARGET-01",
+  "runRoot": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/0f57d474-9dd7-4716-a38f-9bba133256d7",
+  "atUTC": "2026-10-09T01:28:37.316815+00:00",
+  "result": "NORMAL_ISOLATED_OFFICIAL_CLI_SUPPLY_PASS; PRODUCT_PARTIAL_NOT_TO_TEST",
+  "package": {
+    "name": "@hanamesh/dsh-app-host",
+    "version": "0.2.0-rc.10",
+    "sourceCommit": "6e78a75efbc1e9fbed29a32897a5ee108b0f613a",
+    "tagObject": "6bf61e7251f92ef3267f148bbb7f7ad2616914e7",
+    "tarball": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/release/out/hanamesh-dsh-app-host-0.2.0-rc.10.tgz",
+    "bytes": 189467,
+    "sha256": "443a257ef8a4e80c386861bd4e67fe8a7b399cdb192dabe027d013e182797db1",
+    "files": 95,
+    "byteEqualFiles": 95
+  },
+  "profile": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/0f57d474-9dd7-4716-a38f-9bba133256d7/dsh-home/profiles/web",
+  "resolvedInstalledPackage": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/0f57d474-9dd7-4716-a38f-9bba133256d7/dsh-home/profiles/web/node_modules/@hanamesh/dsh-app-host",
+  "businessDependencies": {
+    "@hanamesh/dsh-app-host": "file:/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/release/out/hanamesh-dsh-app-host-0.2.0-rc.10.tgz"
+  },
+  "bundles": [
+    "@deepseek-ai/dsh-base",
+    "@deepseek-ai/dsh-web-app",
+    "@hanamesh/dsh-app-host"
+  ],
+  "officialDsh": "0.2.0-rc.2",
+  "commands": [
+    {
+      "argv": [
+        "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node",
+        "--version"
+      ],
+      "cwd": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/0f57d474-9dd7-4716-a38f-9bba133256d7/dsh-home/profiles/web",
+      "envVariableNames": [
+        "HOME",
+        "DSH_HOME",
+        "LANG",
+        "PATH"
+      ],
+      "exitCode": 0,
+      "stdout": "v24.13.1",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/pnpm",
+        "--version"
+      ],
+      "cwd": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/0f57d474-9dd7-4716-a38f-9bba133256d7/dsh-home/profiles/web",
+      "envVariableNames": [
+        "HOME",
+        "DSH_HOME",
+        "LANG",
+        "PATH"
+      ],
+      "exitCode": 0,
+      "stdout": "10.33.0",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/pnpm",
+        "store",
+        "path"
+      ],
+      "cwd": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/0f57d474-9dd7-4716-a38f-9bba133256d7/dsh-home/profiles/web",
+      "envVariableNames": [
+        "HOME",
+        "DSH_HOME",
+        "LANG",
+        "PATH"
+      ],
+      "exitCode": 0,
+      "stdout": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/0f57d474-9dd7-4716-a38f-9bba133256d7/home/Library/pnpm/store/v10",
+      "stderr": ""
+    }
+  ],
+  "metadataStoreDir": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/0f57d474-9dd7-4716-a38f-9bba133256d7/home/Library/pnpm/store/v10",
+  "sameEnvCwdStoreEqual": true,
+  "storeInsideIsolatedHome": true,
+  "referencedSuites": [
+    {
+      "sourceFile": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/check/reports/provider.jsonl",
+      "sha256": "eae40497e983521315c28447de0641883b60cd32748d0cea73cbe540d40ed421",
+      "suite": "provider",
+      "consumer": null,
+      "package": "@hanamesh/dsh-app-host@0.2.0-rc.10",
+      "total": 111,
+      "pass": 111,
+      "fail": 0,
+      "skipped": 0,
+      "kind": "SOURCE/FIXTURE; reference only; not rerun"
+    },
+    {
+      "sourceFile": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/check/reports/consumer-v1.jsonl",
+      "sha256": "0fa0357e6e7a05737e9bb16377f428d1f86c49f114af69d4bc44add4b14d8c5e",
+      "suite": "consumer",
+      "consumer": "reference-consumer-v1",
+      "package": null,
+      "total": 30,
+      "pass": 30,
+      "fail": 0,
+      "skipped": 0,
+      "kind": "SOURCE/FIXTURE; reference only; not rerun"
+    },
+    {
+      "sourceFile": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/check/reports/consumer-v1.jsonl",
+      "sha256": "0fa0357e6e7a05737e9bb16377f428d1f86c49f114af69d4bc44add4b14d8c5e",
+      "suite": "chain",
+      "consumer": "reference-consumer-v1",
+      "package": null,
+      "total": 15,
+      "pass": 15,
+      "fail": 0,
+      "skipped": 0,
+      "kind": "SOURCE/FIXTURE; reference only; not rerun"
+    },
+    {
+      "sourceFile": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/check/reports/consumer-unversioned.jsonl",
+      "sha256": "0026d71c559fb9e530eac5dcab1b82b9cf06cb799f6a668ae885c0ff502e8f74",
+      "suite": "consumer",
+      "consumer": "reference-consumer-unversioned",
+      "package": null,
+      "total": 30,
+      "pass": 26,
+      "fail": 0,
+      "skipped": 4,
+      "kind": "SOURCE/FIXTURE; reference only; not rerun"
+    },
+    {
+      "sourceFile": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/check/reports/consumer-unversioned.jsonl",
+      "sha256": "0026d71c559fb9e530eac5dcab1b82b9cf06cb799f6a668ae885c0ff502e8f74",
+      "suite": "chain",
+      "consumer": "reference-consumer-unversioned",
+      "package": null,
+      "total": 13,
+      "pass": 13,
+      "fail": 0,
+      "skipped": 0,
+      "kind": "SOURCE/FIXTURE; reference only; not rerun"
+    }
+  ],
+  "suiteRerun": false,
+  "GUI": false,
+  "webDaemonStarted": false,
+  "tokenOrCookieRead": false,
+  "oldPidProbed": false,
+  "oldProfilesModified": false
+}

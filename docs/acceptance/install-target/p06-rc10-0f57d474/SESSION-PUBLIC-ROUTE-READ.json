@@ -1,0 +1,82 @@
+{
+  "scope": "fresh read only of pinned official DSH0.2.0-rc.2 CLI and connection lib JS public source",
+  "searched": [
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/bin.js",
+      "sha256": "1a03dee18683483ff6a1b27b2a1e650230da6bcca9a0f55f7d81b3308c3f307f"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/dump-config-BEDI-dNY.js",
+      "sha256": "fa34d3397b9ac9423f3b98a9f4798b9205f684e1eaf368352e0a93c09831d28f"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/dump-config-crgOY3tW.js",
+      "sha256": "4183d3918048badf0a5194fb3c86fbb37b7bf8ccbf638c14bd2ff2b1c545721a"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/dump-config-schema-DhhNOaro.js",
+      "sha256": "85c7eef6eee4532570133d3b90487996e912216b96825e33c1bb659036a269f1"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/plugin-BGnVfe_D.js",
+      "sha256": "300438e9e181847cff2e01b8bc404806da532c0801a505a2dc94a94c14c72836"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/profile-boot-BZ2ZjNWi.js",
+      "sha256": "c394b2aa2ce08a3b1fcc8c544257c7d689dd4d0b1cfaf8602687e65eeaba5aa1"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/profile-boot.js",
+      "sha256": "c53d4e2caf21428e263b525e657dafaf63fd183f7ef016aabda56af7998b6c4f"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-client-connection/lib/client.js",
+      "sha256": "0fbb93fa2382bb66919767f69c909585c6255486f9536f9232231edaeac8c4e6"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-client-connection/lib/index.js",
+      "sha256": "3950f524aed44e28240140a254cd928ea40eba8e2d04cc8fd04f92a687f5c91d"
+    }
+  ],
+  "hits": [
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/plugin-BGnVfe_D.js",
+      "line": 16,
+      "text": "if (command !== \"allow-version\" && command !== \"revoke-version\" && command !== \"version-exemptions\") return void 0;"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/plugin-BGnVfe_D.js",
+      "line": 48,
+      "text": "process.stdout.write(`dsh: ${command === \"allow-version\" ? \"allowed\" : \"revoked\"} ${request.packageVersion} for DSH ${request.runtimeVersion}\\n`);"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-client-connection/lib/index.js",
+      "line": 356,
+      "text": "if (!Number.isSafeInteger(this.maxAgeMilliseconds) || !Number.isSafeInteger(Date.now() + this.maxAgeMilliseconds)) throw new Error(\"client-connection: cookieMaxAgeDays exceeds the safe timestamp range\");"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-client-connection/lib/index.js",
+      "line": 802,
+      "text": "cookieMaxAgeDays: z.natural().min(1).default(30),"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-client-connection/lib/index.js",
+      "line": 815,
+      "text": "const cookieMaxAgeDays = config?.cookieMaxAgeDays ?? 30;"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-client-connection/lib/index.js",
+      "line": 819,
+      "text": "const connection = new HostConnectionService(ctx, trustedHosts, await BrowserAuth.create(ctx.root, ctx.credentials, cookieMaxAgeDays));"
+    }
+  ],
+  "finding": "No public browser logout/session revoke action found in these inspected surfaces. revoke-version refers to plugin version exemptions. Connection default cookieMaxAgeDays30 is not a legitimate test action.",
+  "marketVisible401": "NOT_RUN",
+  "notPerformed": [
+    "cookie deletion",
+    "clock changes",
+    "expiry configuration",
+    "private calls",
+    "browser navigation"
+  ]
+}

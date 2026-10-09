@@ -1,0 +1,125 @@
+{
+  "kind": "READ_ONLY_SUPPLY_AND_SOURCE_RECEIPTS_NOT_NEW_SUITE_EXECUTION",
+  "sourceReport": "/Users/yzliu/work/Docs/Projects/hanamesh/bluemap/cards/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/REPORT.md",
+  "privateRelease": {
+    "card": "CONTRACT-APPHOST-INSTALL-ROLLBACK-01",
+    "writer": "c10f20c4-f0c8-4f7d-a03d-e452456e6514",
+    "repo": "yzsnstotz/hanamesh-plugin-app-host (private)",
+    "baseline": {
+      "origin/main": "9632c64ba8d0685174a45cc2ecb6caf87aa140f3",
+      "v0.2.0-rc.9^{}": "9632c64ba8d0685174a45cc2ecb6caf87aa140f3"
+    },
+    "rc10FreeBeforeTag": true,
+    "branch": "claude/contract-apphost-install-rollback-01",
+    "commits": {
+      "implementation": "be771b0",
+      "evidence": "6e78a75efbc1e9fbed29a32897a5ee108b0f613a"
+    },
+    "remoteReadback": {
+      "origin/main": "6e78a75efbc1e9fbed29a32897a5ee108b0f613a",
+      "origin/branch": "6e78a75efbc1e9fbed29a32897a5ee108b0f613a",
+      "tagObject v0.2.0-rc.10": "6bf61e7251f92ef3267f148bbb7f7ad2616914e7",
+      "tagPeeled": "6e78a75efbc1e9fbed29a32897a5ee108b0f613a",
+      "v0.2.0-rc.9^{} unchanged": "9632c64ba8d0685174a45cc2ecb6caf87aa140f3"
+    },
+    "push": "normal fast-forward, no force",
+    "worktreeClean": true,
+    "public": "none (no npm publish, GitHub release or deploy)"
+  },
+  "tagPack": {
+    "package": "@hanamesh/dsh-app-host@0.2.0-rc.10",
+    "artifact": "release/out/hanamesh-dsh-app-host-0.2.0-rc.10.tgz",
+    "sha256": "443a257ef8a4e80c386861bd4e67fe8a7b399cdb192dabe027d013e182797db1",
+    "bytes": 189467,
+    "entries": 95,
+    "builtFrom": "clean git archive be771b0, npm ci + npm pack, Node 24.13.1",
+    "tagExportCompare": "clean git archive 6e78a75 (tag v0.2.0-rc.10) packed again: cmp=0, same sha256; export directory deleted afterwards"
+  },
+  "referencedSuites": [
+    {
+      "sourceFile": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/check/reports/provider.jsonl",
+      "sha256": "eae40497e983521315c28447de0641883b60cd32748d0cea73cbe540d40ed421",
+      "suite": "provider",
+      "consumer": null,
+      "package": "@hanamesh/dsh-app-host@0.2.0-rc.10",
+      "total": 111,
+      "pass": 111,
+      "fail": 0,
+      "skipped": 0,
+      "kind": "SOURCE/FIXTURE; reference only; not rerun"
+    },
+    {
+      "sourceFile": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/check/reports/consumer-v1.jsonl",
+      "sha256": "0fa0357e6e7a05737e9bb16377f428d1f86c49f114af69d4bc44add4b14d8c5e",
+      "suite": "consumer",
+      "consumer": "reference-consumer-v1",
+      "package": null,
+      "total": 30,
+      "pass": 30,
+      "fail": 0,
+      "skipped": 0,
+      "kind": "SOURCE/FIXTURE; reference only; not rerun"
+    },
+    {
+      "sourceFile": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/check/reports/consumer-v1.jsonl",
+      "sha256": "0fa0357e6e7a05737e9bb16377f428d1f86c49f114af69d4bc44add4b14d8c5e",
+      "suite": "chain",
+      "consumer": "reference-consumer-v1",
+      "package": null,
+      "total": 15,
+      "pass": 15,
+      "fail": 0,
+      "skipped": 0,
+      "kind": "SOURCE/FIXTURE; reference only; not rerun"
+    },
+    {
+      "sourceFile": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/check/reports/consumer-unversioned.jsonl",
+      "sha256": "0026d71c559fb9e530eac5dcab1b82b9cf06cb799f6a668ae885c0ff502e8f74",
+      "suite": "consumer",
+      "consumer": "reference-consumer-unversioned",
+      "package": null,
+      "total": 30,
+      "pass": 26,
+      "fail": 0,
+      "skipped": 4,
+      "kind": "SOURCE/FIXTURE; reference only; not rerun"
+    },
+    {
+      "sourceFile": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/check/reports/consumer-unversioned.jsonl",
+      "sha256": "0026d71c559fb9e530eac5dcab1b82b9cf06cb799f6a668ae885c0ff502e8f74",
+      "suite": "chain",
+      "consumer": "reference-consumer-unversioned",
+      "package": null,
+      "total": 13,
+      "pass": 13,
+      "fail": 0,
+      "skipped": 0,
+      "kind": "SOURCE/FIXTURE; reference only; not rerun"
+    }
+  ],
+  "sourceReportWordingConflict": "Source REPORT says candidate/not formal despite private main/tag/pack already pushed. Exact release readback plus PM GATE_PASS define private supply; source REPORT not edited.",
+  "normalConsumptionProfile": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/0f57d474-9dd7-4716-a38f-9bba133256d7/dsh-home/profiles/web",
+  "semanticInputs": {
+    "event": "library.install-failed",
+    "originalCodePreserved": true,
+    "recoveryStatus": [
+      "not-needed",
+      "restored",
+      "failed"
+    ],
+    "missingRecovery": "unknown; never treat as restored",
+    "sourceFiles": [
+      "src/library/install.js",
+      "src/library/recovery.js",
+      "src/library/service.js:24,52",
+      "src/client-ui.js:101-106,186-189",
+      "schemas/install-target.schema.json:x-hanamesh-contract.installRecovery"
+    ],
+    "limits": [
+      "One writer within this host; external profile writers detected, cannot be prevented across multiple CLI commands.",
+      "Runtime checks are ledger-based; promote-to-ledger crash recovery outside this flow.",
+      "No platform asset gives unsupported, not a thrown failure.",
+      "SOURCE fixtures replace official CLI/provision; not REAL_UI rollback."
+    ]
+  }
+}

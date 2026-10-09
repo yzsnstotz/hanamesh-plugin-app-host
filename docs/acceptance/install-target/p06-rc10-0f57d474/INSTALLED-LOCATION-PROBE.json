@@ -1,0 +1,36 @@
+{
+  "kind": "SOURCE helper with actual installed module and recorded official CLI argv; no web process started",
+  "module": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/0f57d474-9dd7-4716-a38f-9bba133256d7/dsh-home/profiles/web/node_modules/@hanamesh/dsh-app-host/dist/library/locate.js",
+  "moduleSha256": "35dd3e090992e0eb7960027e64c14726ff351a888e1505a3f907c7f0812eb9b9",
+  "sourceArgv": [
+    "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node",
+    "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/bin.js",
+    "plugin",
+    "--profile",
+    "web",
+    "add",
+    "--save-exact",
+    "@hanamesh/dsh-app-host@file:/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/release/out/hanamesh-dsh-app-host-0.2.0-rc.10.tgz"
+  ],
+  "exitCode": 0,
+  "locations": {
+    "profileDir": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/0f57d474-9dd7-4716-a38f-9bba133256d7/dsh-home/profiles/web",
+    "profileName": "web",
+    "dshBin": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/bin.js",
+    "nodeBinary": "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node",
+    "sources": [
+      {
+        "manifestUrl": "https://market.hanamesh.com/catalog-source.json",
+        "enabled": true
+      }
+    ],
+    "inferred": [
+      "profileDir",
+      "profileName",
+      "dshBin",
+      "nodeBinary",
+      "sources"
+    ]
+  },
+  "allPathsInNewProfileOrKnownToolchain": true
+}
