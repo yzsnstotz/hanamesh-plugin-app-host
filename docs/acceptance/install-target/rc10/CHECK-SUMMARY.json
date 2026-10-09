@@ -1,0 +1,17 @@
+{
+  "card": "CONTRACT-APPHOST-INSTALL-ROLLBACK-01",
+  "implementation": "be771b0",
+  "evidence": "SOURCE",
+  "npmRunCheck": {"exit": 0, "tests": 186, "pass": 183, "fail": 0, "skipped": 3, "mutationsDetected": "30/30", "types": "pass", "preflight": "pass"},
+  "package": {"name": "@hanamesh/dsh-app-host", "version": "0.2.0-rc.10", "entries": 95, "bytes": 189467, "sha256": "443a257ef8a4e80c386861bd4e67fe8a7b399cdb192dabe027d013e182797db1"},
+  "verifyPackage": "exit 0",
+  "packagedSuites": {
+    "provider": {"total": 111, "pass": 111, "fail": 0, "skipped": 0},
+    "consumerV1": {"total": 30, "pass": 30, "fail": 0, "skipped": 0},
+    "chainV1": {"total": 15, "pass": 15, "fail": 0, "skipped": 0},
+    "consumerUnversioned": {"total": 30, "pass": 26, "fail": 0, "skipped": 4},
+    "chainUnversioned": {"total": 13, "pass": 13, "fail": 0, "skipped": 0}
+  },
+  "lockfileProbe": "diagnostic only: plain pnpm 10.33.0 in an isolated directory left package.json and pnpm-lock.yaml byte-identical after add->remove and after upgrade->re-add of the original exact version",
+  "notRun": ["real DSH profile install/rollback", "REAL_UI product gate", "GUI", "real failure injection"]
+}
