@@ -1,6 +1,6 @@
 {
   "currentCandidate": {
-    "version": "0.5.0",
+    "version": "0.5.1",
     "dshTarget": "0.2.0-rc.2",
     "vendorSha256VerifiedAtBuild": false,
     "libProvisionDistribution": "External normal Git source dependency; its own LICENSE and notices apply, no inlined copy or new relicensing grant",
@@ -59,7 +59,7 @@
       "sha256": "de15f0913dd6de5ba9ce96b8d92ea862ec44489eb698628de963cbbead68bc25",
       "sourceCommit": "8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89",
       "independentVerifyCommit": "69be0faea0b66ae49adf5988ebd1fab093a26290",
-      "mode": "optional development peer plus pnpm normal Git source range; absent from runtime dependencies and packed code",
+      "mode": "development-only pnpm normal Git source range; no public peer, runtime dependency or packed code",
       "license": "SEE LICENSE IN LICENSE",
       "distributionNotice": "Canonical LICENSE and LICENSE_RECORD.md copied verbatim to docs/LICENSES.json; no new MIT or relicensing grant",
       "lockfile": {

@@ -1,0 +1,36 @@
+{
+  "steps": [
+    {
+      "step": "source-install",
+      "exitCode": 0
+    },
+    {
+      "step": "source-frozen",
+      "exitCode": 0
+    },
+    {
+      "step": "devkit-public",
+      "exitCode": 0
+    },
+    {
+      "step": "provision-public",
+      "exitCode": 0
+    },
+    {
+      "step": "metadata",
+      "exitCode": 0
+    },
+    {
+      "step": "preflight",
+      "exitCode": 0
+    },
+    {
+      "step": "normal-pack",
+      "exitCode": 0
+    }
+  ],
+  "frozenLockUnchanged": true,
+  "lockSHA256": "6cb82c8c8d44ad3db83780698b88cdc35e64d4bf7b26370af6d06d93f4a7ab7f",
+  "businessGates": "NOT_RERUN; unchanged source byte proof follows",
+  "productCI": "NOT_RUN"
+}

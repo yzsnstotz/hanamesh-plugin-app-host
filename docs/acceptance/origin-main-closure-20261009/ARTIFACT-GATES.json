@@ -1,0 +1,40 @@
+[
+  {
+    "consumer": "npm-artifact",
+    "steps": [
+      {
+        "step": "install",
+        "exitCode": 0
+      },
+      {
+        "step": "frozen",
+        "exitCode": 0
+      },
+      {
+        "step": "public",
+        "exitCode": 0
+      }
+    ],
+    "frozenLockUnchanged": true,
+    "lockSHA256": "b15ce323bdf44cb41e0bb65885833e26d4efdd3dd4b118d4eaa7bfd4b51077ce"
+  },
+  {
+    "consumer": "pnpm-artifact",
+    "steps": [
+      {
+        "step": "install",
+        "exitCode": 0
+      },
+      {
+        "step": "frozen",
+        "exitCode": 0
+      },
+      {
+        "step": "public",
+        "exitCode": 0
+      }
+    ],
+    "frozenLockUnchanged": true,
+    "lockSHA256": "6b70e2702766eb424d55c47ab0c621a12b3e24dd1f1a56ba233f05a312163891"
+  }
+]

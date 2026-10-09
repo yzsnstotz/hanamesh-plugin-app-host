@@ -1,0 +1,157 @@
+{
+  "atUtc": "2026-10-09T08:28:49.623079+00:00",
+  "originMain": "a939a991a7f488a8178bd4299bffcfe8b2e1bd38",
+  "packagePaths": [
+    "package.json"
+  ],
+  "manifests": {
+    "package.json": {
+      "name": "@hanamesh/dsh-app-host",
+      "version": "0.5.0",
+      "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.0-rc.2",
+      "type": "module",
+      "license": "SEE LICENSE IN LICENSE",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/yzsnstotz/hanamesh-plugin-app-host.git"
+      },
+      "engines": {
+        "node": ">=24.13.1 <25"
+      },
+      "main": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "default": "./dist/index.js"
+        },
+        "./dsh": {
+          "types": "./dist/dsh.d.ts",
+          "default": "./dist/dsh.js"
+        },
+        "./package.json": "./package.json",
+        "./client": {
+          "types": "./dist/client.d.ts",
+          "node": "./dist/client.js",
+          "default": "./dist/client-ui.js"
+        },
+        "./client-ui": {
+          "types": "./dist/client-ui.d.ts",
+          "default": "./dist/client-ui.js"
+        },
+        "./install-target/suite": {
+          "types": "./dist/install-target/suite.d.ts",
+          "default": "./dist/install-target/suite.js"
+        },
+        "./install-target/schema.json": "./schemas/install-target.schema.json",
+        "./install-target/fixtures/*": "./dist/install-target/fixtures/*",
+        "./catalog/suite": {
+          "types": "./dist/catalog/suite.d.ts",
+          "default": "./dist/catalog/suite.js"
+        },
+        "./catalog/fixtures/*": "./dist/catalog/fixtures/*",
+        "./catalog/schema/manifest.json": "./schemas/catalog-source.schema.json",
+        "./catalog/schema/page.json": "./schemas/catalog-provider-page.schema.json"
+      },
+      "files": [
+        "dist",
+        "consistency.json",
+        "README.md",
+        "LICENSE",
+        "docs/CONTRACT.md",
+        "docs/DSH_INTEGRATION.md",
+        "docs/APP_PACKAGE.md",
+        "docs/LIBRARY.md",
+        "docs/SECURITY.md",
+        "docs/PROVENANCE.json",
+        "docs/LICENSES.json",
+        "schemas",
+        "profile",
+        "docs/INSTALL_TARGET.md"
+      ],
+      "scripts": {
+        "build": "node scripts/build.mjs",
+        "test": "node --test --test-reporter=tap --test-concurrency=1 tests/*.test.mjs",
+        "test:mutation": "node scripts/mutations.mjs",
+        "test:types": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext tests/consumer.mts",
+        "check": "npm run check:toolchain && npm run build && npm run check:consistency && npm test && npm run test:mutation && npm run test:types && npm run preflight",
+        "prepack": "npm run build",
+        "demo": "node examples/demo.mjs",
+        "preflight:dsh": "node scripts/preflight-dsh.mjs",
+        "check:consistency": "node scripts/check-consistency.mjs",
+        "check:toolchain": "node scripts/check-toolchain.mjs",
+        "preflight": "node scripts/preflight.mjs",
+        "verify:pack": "node scripts/verify-package.mjs",
+        "check:devkit-supply": "node scripts/check-devkit-consumption.mjs",
+        "check:provision-supply": "node scripts/check-provision-consumption.mjs"
+      },
+      "dsh": {
+        "bundle": {
+          "patch": "./profile/cordis.patch.yml"
+        },
+        "client": {
+          "inject": [
+            "@deepseek-ai/dsh-client-ui-slots",
+            "@deepseek-ai/dsh-client-ui-settings",
+            "@deepseek-ai/dsh-client-locale"
+          ],
+          "platform": "web",
+          "external": [
+            "react"
+          ]
+        }
+      },
+      "dependencies": {
+        "zod": "4.5.4",
+        "@hanamesh/lib-provision": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1"
+      },
+      "peerDependencies": {
+        "@deepseek-ai/cordis": "4.0.4",
+        "@deepseek-ai/dsh-storage-domain": "0.2.0-rc.2",
+        "@deepseek-ai/schemastery": "3.18.4",
+        "@deepseek-ai/dsh-host-webserver": "0.2.0-rc.2",
+        "@deepseek-ai/dsh-client-connection": "0.2.0-rc.2",
+        "@deepseek-ai/dsh-client-ui-slots": "0.2.0-rc.2",
+        "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
+        "@deepseek-ai/dsh-client-locale": "0.2.0-rc.2",
+        "react": "18.3.1",
+        "@hanamesh/devkit": "^0.2.0"
+      },
+      "hanamesh": {
+        "module": "app-host",
+        "contractVersion": 1,
+        "dshTarget": "0.2.0-rc.2",
+        "upstreamFilesModified": 0,
+        "installTarget": {
+          "contract": "hanamesh.install-target",
+          "contractVersion": "1",
+          "supported": [
+            "1"
+          ],
+          "schema": "./schemas/install-target.schema.json"
+        }
+      },
+      "devDependencies": {
+        "@deepseek-ai/cordis": "4.0.4",
+        "@deepseek-ai/dsh-host-webserver": "0.2.0-rc.2",
+        "@deepseek-ai/dsh-scope": "0.2.0-rc.2",
+        "@deepseek-ai/dsh-session": "0.2.0-rc.2",
+        "@deepseek-ai/dsh-session-persistence": "0.2.0-rc.2",
+        "@deepseek-ai/dsh-session-persistence-jsonl": "0.2.0-rc.2",
+        "@deepseek-ai/dsh-session-projection": "0.2.0-rc.2",
+        "@deepseek-ai/dsh-storage": "0.2.0-rc.2",
+        "@deepseek-ai/dsh-storage-domain": "0.2.0-rc.2",
+        "@deepseek-ai/dsh-storage-json": "0.2.0-rc.2",
+        "@deepseek-ai/schemastery": "3.18.4",
+        "typescript": "5.8.3",
+        "@hanamesh/devkit": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit"
+      },
+      "peerDependenciesMeta": {
+        "@hanamesh/devkit": {
+          "optional": true
+        }
+      },
+      "packageManager": "pnpm@10.33.0"
+    }
+  }
+}

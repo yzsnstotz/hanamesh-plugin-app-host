@@ -1,0 +1,12 @@
+{
+  "npm-artifact": {
+    "sameFiles": 63,
+    "totalFiles": 63,
+    "packageVersion": "0.5.1"
+  },
+  "pnpm-artifact": {
+    "sameFiles": 63,
+    "totalFiles": 63,
+    "packageVersion": "0.5.1"
+  }
+}

@@ -15,8 +15,8 @@ const cardRun=process.env.HANAMESH_APPHOST_RUN_DIR;
 const evidenceDir=resolve(cardRun??join(root,'artifacts'),'mutations');
 
 async function validateDevelopmentPolicy(){
-  assert.equal(pkg.peerDependencies['@hanamesh/devkit'],'^0.2.0');
-  assert.deepEqual(pkg.peerDependenciesMeta['@hanamesh/devkit'],{optional:true});
+  assert.equal(pkg.peerDependencies['@hanamesh/devkit'],undefined);
+  assert.equal(pkg.peerDependenciesMeta?.['@hanamesh/devkit'],undefined);
   assert.equal(pkg.devDependencies['@hanamesh/devkit'],devkitSpec);
   assert.equal(pkg.dependencies['@hanamesh/devkit'],undefined);
   const installed=JSON.parse(await readFile(new URL('../package.json',import.meta.resolve('@hanamesh/devkit')),'utf8'));
@@ -56,8 +56,8 @@ export function packOptions(tarball){
       assert.deepEqual(packed.dependencies,pkg.dependencies);
       assert.deepEqual(packed.exports,pkg.exports);
       assert.equal(packed.dependencies['@hanamesh/devkit'],undefined);
-      assert.equal(packed.peerDependencies['@hanamesh/devkit'],'^0.2.0');
-      assert.deepEqual(packed.peerDependenciesMeta['@hanamesh/devkit'],{optional:true});
+      assert.equal(packed.peerDependencies['@hanamesh/devkit'],undefined);
+      assert.equal(packed.peerDependenciesMeta?.['@hanamesh/devkit'],undefined);
       for(const path of ['client-ui.js','client-ui.d.ts','library/routes.js','library/service.js','install-target/suite.js','install-target/harness.js','install-target/fixtures/provider-cases.json','install-target/fixtures/consumer-cases.json'])assert.deepEqual(read('dist/'+path),await readFile(join(root,'src',path)),'packed install-target bytes: '+path);
     }};
 }
@@ -76,7 +76,7 @@ export async function verifyAppHostPack(tarball){
     if(prior.offline===undefined)delete process.env.npm_config_offline;else process.env.npm_config_offline=prior.offline;
     if(prior.peers===undefined)delete process.env.npm_config_auto_install_peers;else process.env.npm_config_auto_install_peers=prior.peers;
   }
-  const peers=Object.fromEntries(Object.entries(pkg.peerDependencies).filter(([name])=>name!=='@hanamesh/devkit'));
+  const peers={...pkg.peerDependencies};
   await verifyPack({...options,consumer:{packageJson:{private:true,type:'module',dependencies:{...peers,
     '@hanamesh/dsh-app-host':`file:${options.tarball}`}},
     javascript:"import assert from 'node:assert/strict';import{createRequire}from'node:module';import{apply}from'@hanamesh/dsh-app-host/dsh';assert.equal(typeof apply,'function');const require=createRequire(import.meta.url);assert.throws(()=>require.resolve('@hanamesh/devkit'),{code:'MODULE_NOT_FOUND'});",

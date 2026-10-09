@@ -16,9 +16,9 @@ import {runProviderSuite,runConsumerSuite,runChainSuite} from '@hanamesh/dsh-app
 import pkg from '@hanamesh/dsh-app-host/package.json' with {type:'json'};
 for(const api of [AppHost,AtomicFileStore,WorkspaceAppClient,runCatalogProviderSuite,runCatalogConsumerSuite,runProviderSuite,runConsumerSuite,runChainSuite])assert.equal(typeof api,'function');
 assert.equal(pkg.version,${JSON.stringify(pkg.version)});assert.equal(pkg.dependencies['@hanamesh/devkit'],undefined);
-assert.equal(pkg.peerDependencies['@hanamesh/devkit'],'^0.2.0');
+assert.equal(pkg.peerDependencies['@hanamesh/devkit'],undefined);
 assert.throws(()=>createRequire(import.meta.url).resolve('@hanamesh/devkit'),{code:'MODULE_NOT_FOUND'});
 console.log(JSON.stringify({result:'PASS',packageVersion:pkg.version,runtimeDevkit:false,normalPackageExports:true,oldBusinessSuites:'NOT_RERUN; unchanged bytes'}));
 `}});
-const peers=Object.fromEntries(Object.entries(pkg.peerDependencies).filter(([name])=>name!=='@hanamesh/devkit'));
+const peers={...pkg.peerDependencies};
 await verifyPack({...options,consumer:{packageJson:{private:true,type:'module',dependencies:{...peers,'@hanamesh/dsh-app-host':`file:${options.tarball}`}},javascript:"import assert from 'node:assert/strict';import {apply} from '@hanamesh/dsh-app-host/dsh';assert.equal(typeof apply,'function');",typescript}});

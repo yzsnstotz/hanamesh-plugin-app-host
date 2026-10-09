@@ -1,0 +1,52 @@
+{
+  "baselineMain": "a939a991a7f488a8178bd4299bffcfe8b2e1bd38",
+  "privateDeclarations": [
+    {
+      "field": "dependencies",
+      "name": "@hanamesh/lib-provision",
+      "spec": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1"
+    },
+    {
+      "field": "devDependencies",
+      "name": "@hanamesh/devkit",
+      "spec": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit"
+    }
+  ],
+  "packagePaths": [
+    "package.json"
+  ],
+  "runtimePrivateImports": [
+    {
+      "path": "src/dsh.js",
+      "package": "@hanamesh/lib-provision"
+    }
+  ],
+  "supplierPublicManifests": {
+    "devkit": {
+      "name": "@hanamesh/devkit",
+      "version": "0.2.0",
+      "dependencies": {},
+      "peers": {}
+    },
+    "lib-provision": {
+      "name": "@hanamesh/lib-provision",
+      "version": "0.2.1",
+      "dependencies": {},
+      "peers": {}
+    }
+  },
+  "IdentityDirectOrTransitive": false,
+  "sourceDistSchemaChanges": 0,
+  "lockfileChanged": false,
+  "normalPackFiles": 63,
+  "samePriorPackFiles": 59,
+  "differentMembers": [
+    "docs/LICENSES.json",
+    "package.json",
+    "docs/PROVENANCE.json",
+    "README.md"
+  ],
+  "packageSHA256": "5846b707a02a363875753a707762e1ef455c56782e37938e5f98f9b8419c493d",
+  "businessGates": "unchanged src/dist/schema/suite/fixtures/types byte proof; previous gates reused, NOT_RERUN",
+  "unchangedLegalFields": "Lib runtime range, Devkit dev Git subdirectory range and all official peers/dev fields unchanged"
+}
