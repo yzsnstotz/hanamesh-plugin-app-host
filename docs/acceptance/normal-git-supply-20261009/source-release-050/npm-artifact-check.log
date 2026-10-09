@@ -1,0 +1,1 @@
+{"result":"PASS","appHostVersion":"0.5.0","provisionVersion":"0.2.1","provisionSpec":"git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1","runtimeDevkit":false,"publicAppHostSuiteExports":true,"publicFixtures":true,"sourceSupplyNarrowPort":true,"businessSuites":"byte-proven previous gates reused, NOT_RERUN"}

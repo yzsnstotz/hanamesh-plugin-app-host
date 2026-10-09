@@ -15,7 +15,7 @@ import {runCatalogProviderSuite,runCatalogConsumerSuite} from '@hanamesh/dsh-app
 import {runProviderSuite,runConsumerSuite,runChainSuite} from '@hanamesh/dsh-app-host/install-target/suite';
 import pkg from '@hanamesh/dsh-app-host/package.json' with {type:'json'};
 for(const api of [AppHost,AtomicFileStore,WorkspaceAppClient,runCatalogProviderSuite,runCatalogConsumerSuite,runProviderSuite,runConsumerSuite,runChainSuite])assert.equal(typeof api,'function');
-assert.equal(pkg.version,'0.4.0');assert.equal(pkg.dependencies['@hanamesh/devkit'],undefined);
+assert.equal(pkg.version,${JSON.stringify(pkg.version)});assert.equal(pkg.dependencies['@hanamesh/devkit'],undefined);
 assert.equal(pkg.peerDependencies['@hanamesh/devkit'],'^0.2.0');
 assert.throws(()=>createRequire(import.meta.url).resolve('@hanamesh/devkit'),{code:'MODULE_NOT_FOUND'});
 console.log(JSON.stringify({result:'PASS',packageVersion:pkg.version,runtimeDevkit:false,normalPackageExports:true,oldBusinessSuites:'NOT_RERUN; unchanged bytes'}));

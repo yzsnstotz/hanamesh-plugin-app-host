@@ -256,3 +256,20 @@ test('the library entry never pulls a DSH-only peer into a plain consumer import
   assert.deepEqual(offenders,[],'the library entry graph must stay free of DSH-only peers');
   assert.ok(seen.size>5);
 });
+
+test('AH-PG01: real Cordis loads the external provision package and preserves authenticated installer input rejection', async t => {
+  const h=await boot(t,{withPlugin:false});
+  // SOURCE harness only: the DSH command seat is deliberately never executed here.
+  // This exercises the actual public provision import and installer binding, not DSH installation.
+  h.fiber=h.ctx.plugin(appHost,{dataRoot:join(h.root,'app-data'),applications:[],
+    nodeBinary:process.execPath,library:{profileDir:join(h.root,'profile'),profileName:'contract-source',
+      dshBin:join(h.root,'unexecuted-dsh-command-seat.js'),sources:[]}});
+  await until(()=>h.ctx.get('hanameshApps')!==undefined);
+  assert.equal((await h.get('/hanamesh/library/installedPlugins',{authorization:undefined})).status,401);
+  const list=await h.get('/hanamesh/library/installedPlugins');
+  assert.equal(list.status,200,JSON.stringify(list.json));
+  assert.deepEqual(list.json.apps,[]);
+  const rejected=await h.post('/hanamesh/library/provision',{});
+  assert.equal(rejected.status,400,JSON.stringify(rejected.json));
+  assert.equal(rejected.json.error.code,'INVALID_INPUT');
+});

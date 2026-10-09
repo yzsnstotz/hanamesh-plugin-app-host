@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DSH_TARGET } from '../src/dsh.js';
 
-test('NPM-APPHOST-01: published metadata resolves against official DSH rc.2 without private provision peer', async () => {
+test('NPM-APPHOST-01: published metadata resolves against official DSH rc.2 with external provision source dependency', async () => {
   const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
   assert.equal(DSH_TARGET, '0.2.0-rc.2');
   assert.equal(pkg.hanamesh.dshTarget, DSH_TARGET);
@@ -19,7 +19,7 @@ test('NPM-APPHOST-01: published metadata resolves against official DSH rc.2 with
   assert.equal(pkg.peerDependencies['@deepseek-ai/schemastery'], '3.18.4');
   assert.equal(pkg.peerDependencies.react, '18.3.1');
   assert.equal(pkg.peerDependencies['@hanamesh/lib-provision'], undefined);
-  assert.equal(pkg.dependencies['@hanamesh/lib-provision'], undefined);
+  assert.match(pkg.dependencies['@hanamesh/lib-provision'],/^git\+https:\/\/github\.com\/yzsnstotz\/hanamesh-lib-provision\.git#semver:\^0\.2\.\d+(?:-rc\.\d+)?$/);
 });
 
 test('NPM-APPHOST-01: actual packed manifest allows only the optional development devkit peer/source range', async () => {
@@ -34,20 +34,14 @@ test('NPM-APPHOST-01: actual packed manifest allows only the optional developmen
     const manifest = JSON.parse(execFileSync('tar', ['-xOf', join(dir, filename), 'package/package.json'], { encoding: 'utf8' }));
     const packedFile = path => execFileSync('tar', ['-xOf', join(dir, filename), `package/${path}`], { encoding: 'utf8' });
     assert.equal(manifest.license, 'SEE LICENSE IN LICENSE');
-    assert.match(packedFile('LICENSE'), /dist\/provision\/.*(?:outside|excluded|not covered).*MIT/is);
-    assert.match(packedFile('dist/provision/LICENSE'), /@hanamesh\/lib-provision 0\.1\.0-rc\.3/);
-    assert.match(packedFile('dist/provision/LICENSE'), /distribution authorization record/);
-    assert.match(packedFile('dist/provision/LICENSE'), /does not\s+assign MIT or another new license, or grant additional relicensing rights/is);
+    assert.match(packedFile('LICENSE'), /external.*lib-provision.*not relicensed or bundled/is);
     const licenses = JSON.parse(packedFile('docs/LICENSES.json'));
     assert.equal(licenses.package.version, manifest.version);
     assert.equal(licenses.package.license, manifest.license);
-    assert.equal(licenses.components['@hanamesh/lib-provision'].version, '0.1.0-rc.3');
-    assert.equal(licenses.components['@hanamesh/lib-provision'].license, 'SEE LICENSE IN LICENSE');
-    assert.equal(licenses.components['@hanamesh/lib-provision'].source, 'vendor/hanamesh-lib-provision-0.1.0-rc.3.tgz');
-    assert.match(licenses.components['@hanamesh/lib-provision'].purpose, /runtime/i);
-    const vendor = new URL('../vendor/hanamesh-lib-provision-0.1.0-rc.3.tgz', import.meta.url).pathname;
-    for (const name of ['LICENSE', 'THIRD_PARTY_NOTICES.md'])
-      assert.equal(packedFile(`dist/provision/${name}`), execFileSync('tar', ['-xOf', vendor, `package/${name}`], { encoding: 'utf8' }), name);
+    assert.equal(licenses.components['@hanamesh/lib-provision'].version,JSON.parse(await readFile(new URL(import.meta.resolve('@hanamesh/lib-provision/package.json')),'utf8')).version);
+    assert.equal(licenses.components['@hanamesh/lib-provision'].license,'SEE LICENSE IN LICENSE');
+    assert.equal(licenses.components['@hanamesh/lib-provision'].source,manifest.dependencies['@hanamesh/lib-provision']);
+    assert.ok(files.every(file=>!file.path.startsWith('dist/provision/')));
 
     for (const field of ['dependencies', 'peerDependencies', 'devDependencies']) {
       for (const [name, version] of Object.entries(manifest[field] ?? {})) {
@@ -68,7 +62,6 @@ test('NPM-APPHOST-01: actual packed manifest allows only the optional developmen
     assert.equal(manifest.peerDependencies['@hanamesh/devkit'],'^0.2.0');
     assert.deepEqual(manifest.peerDependenciesMeta['@hanamesh/devkit'],{optional:true});
     assert.equal(manifest.dependencies['@hanamesh/devkit'],undefined);
-    assert.ok(files.some(file => file.path === 'dist/provision/LICENSE'));
     assert.ok(files.every(file => !file.path.startsWith('vendor/')));
   } finally {
     await rm(dir, { recursive: true, force: true });

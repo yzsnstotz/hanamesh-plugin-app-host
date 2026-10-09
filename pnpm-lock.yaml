@@ -20,6 +20,9 @@ importers:
       '@deepseek-ai/dsh-client-ui-slots':
         specifier: 0.2.0-rc.2
         version: 0.2.0-rc.2(@deepseek-ai/cordis@4.0.4)
+      '@hanamesh/lib-provision':
+        specifier: git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1
+        version: git+https://git@github.com:yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -331,6 +334,12 @@ packages:
     resolution: {commit: 8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89, path: /packages/devkit, repo: git@github.com:yzsnstotz/hanamesh-server-shared.git, type: git}
     version: 0.2.0
     engines: {node: '>=22'}
+    hasBin: true
+
+  '@hanamesh/lib-provision@git+https://git@github.com:yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a':
+    resolution: {commit: 575d63fb70e08c47e980dbf25f07921a7ba5aa2a, repo: git@github.com:yzsnstotz/hanamesh-lib-provision.git, type: git}
+    version: 0.2.1
+    engines: {node: '>=24.13.1 <25'}
     hasBin: true
 
   '@koromix/koffi-darwin-arm64@3.1.1':
@@ -762,6 +771,8 @@ snapshots:
       '@standard-schema/spec': 1.1.0
 
   '@hanamesh/devkit@git+https://git@github.com:yzsnstotz/hanamesh-server-shared.git#8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89&path:/packages/devkit': {}
+
+  '@hanamesh/lib-provision@git+https://git@github.com:yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a': {}
 
   '@koromix/koffi-darwin-arm64@3.1.1':
     optional: true

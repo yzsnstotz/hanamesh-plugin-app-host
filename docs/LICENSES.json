@@ -1,19 +1,22 @@
 {
   "package": {
     "name": "@hanamesh/dsh-app-host",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "license": "SEE LICENSE IN LICENSE",
     "source": "git+https://github.com/yzsnstotz/hanamesh-plugin-app-host.git",
     "purpose": "Application ownership, view leases, Router forwarding, and application library for official DSH"
   },
-  "scope": "Direct dependencies and build-time inlined module. External packages retain their own licenses; the root MIT terms do not cover dist/provision/**.",
+  "scope": "AppHost own code and declared external dependencies/peers; external components retain their own licenses and are not bundled or relicensed.",
   "components": {
     "@hanamesh/lib-provision": {
-      "version": "0.1.0-rc.3",
+      "version": "0.2.1",
       "license": "SEE LICENSE IN LICENSE",
-      "source": "vendor/hanamesh-lib-provision-0.1.0-rc.3.tgz",
-      "purpose": "Inlined runtime download, extraction, atomic promotion, and ledger logic in dist/provision/**",
-      "sha256": "b7d149dcbf51c30fd0226fb170afdf268501057b0c7149903c02c17abe93b2c7"
+      "source": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1",
+      "purpose": "External runtime ownership/provision/ledger API from canonical source tag; no inlined copy",
+      "sha256": "4217b9fe1be98f6e82437539d1c4c43166ed1f5c292efff100733e0cb09530e9",
+      "specs": {
+        "dependencies": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1"
+      }
     },
     "zod": {
       "version": "4.5.4",

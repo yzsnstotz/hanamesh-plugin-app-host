@@ -1,0 +1,5 @@
+{
+  "rawCombinedOutput": "Progress: resolved 0, reused 1, downloaded 0, added 0\nProgress: resolved 1, reused 1, downloaded 0, added 0\nProgress: resolved 1, reused 2, downloaded 0, added 0\nPackages: +2\n++\nProgress: resolved 2, reused 2, downloaded 0, added 2, done\n\u2009ERR_PNPM_PEER_DEP_ISSUES\u2009 Unmet peer dependencies\n\n.\n\u2514\u2500\u252c @hanamesh/lib-provision 0.2.0\n  \u2514\u2500\u2500 \u2715 unmet peer @hanamesh/devkit@0.1.0-rc.2: found 0.2.0\nhint: To disable failing on peer dependency issues, add the following to pnpm-workspace.yaml in your project root:\n\n  strictPeerDependencies: false\n\n\n",
+  "exitCode": 1,
+  "command": "pnpm install --strict-peer-dependencies --store-dir shared"
+}
