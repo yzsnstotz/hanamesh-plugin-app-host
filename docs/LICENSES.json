@@ -1,7 +1,7 @@
 {
   "package": {
     "name": "@hanamesh/dsh-app-host",
-    "version": "0.5.0-rc.1",
+    "version": "0.5.0",
     "license": "SEE LICENSE IN LICENSE",
     "source": "git+https://github.com/yzsnstotz/hanamesh-plugin-app-host.git",
     "purpose": "Application ownership, view leases, Router forwarding, and application library for official DSH"
@@ -9,13 +9,13 @@
   "scope": "AppHost own code and declared external dependencies/peers; external components retain their own licenses and are not bundled or relicensed.",
   "components": {
     "@hanamesh/lib-provision": {
-      "version": "0.2.1-rc.2",
+      "version": "0.2.1",
       "license": "SEE LICENSE IN LICENSE",
-      "source": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1-rc.2",
+      "source": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1",
       "purpose": "External runtime ownership/provision/ledger API from canonical source tag; no inlined copy",
-      "sha256": "5ac3554ea22feb2e91115bf3298131df04c7c1e37812f92508c6890881a09383",
+      "sha256": "4217b9fe1be98f6e82437539d1c4c43166ed1f5c292efff100733e0cb09530e9",
       "specs": {
-        "dependencies": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1-rc.2"
+        "dependencies": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1"
       }
     },
     "zod": {

@@ -1,0 +1,20 @@
+{
+  "version": "0.5.0",
+  "sha256": "32e826983a99ac8dbdfe45ad3d7dcb81d58588980ed0fb25bfbdf048c62373e0",
+  "files": 63,
+  "samePriorCandidateFiles": 59,
+  "changedPriorCandidateFiles": [
+    "docs/LICENSES.json",
+    "package.json",
+    "docs/PROVENANCE.json",
+    "README.md"
+  ],
+  "ownRuntimeSchemaSuiteFixtureTypesSame": true,
+  "formalProvision": "0.2.1/575d63fb70e08c47e980dbf25f07921a7ba5aa2a",
+  "formalProvisionSHA256": "4217b9fe1be98f6e82437539d1c4c43166ed1f5c292efff100733e0cb09530e9",
+  "formalInstalledMatches": "45/45",
+  "formalVsRC2SameRuntimeBin": 35,
+  "formalVsRC2SameCheckerSchema": true,
+  "strictPeerGate": "RC2 peer-repair actual PASS reused; no repeat formal strict combo",
+  "oldAppHostArtifact": "history only, not replacement for new32e826normalpack"
+}

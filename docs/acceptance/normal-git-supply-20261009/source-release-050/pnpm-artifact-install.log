@@ -1,0 +1,21 @@
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 12, reused 11, downloaded 1, added 0
+Progress: resolved 31, reused 30, downloaded 1, added 0
+Progress: resolved 31, reused 31, downloaded 1, added 0
+Packages: +35
++++++++++++++++++++++++++++++++++++
+Progress: resolved 35, reused 34, downloaded 1, added 35, done
+
+dependencies:
++ @deepseek-ai/cordis 4.0.4
++ @deepseek-ai/dsh-client-connection 0.2.0-rc.2
++ @deepseek-ai/dsh-client-locale 0.2.0-rc.2
++ @deepseek-ai/dsh-client-ui-settings 0.2.0-rc.2
++ @deepseek-ai/dsh-client-ui-slots 0.2.0-rc.2
++ @deepseek-ai/dsh-host-webserver 0.2.0-rc.2
++ @deepseek-ai/dsh-storage-domain 0.2.0-rc.2
++ @deepseek-ai/schemastery 3.18.4
++ @hanamesh/dsh-app-host 0.5.0
++ react 18.3.1 (19.3.0 is available)
+
+Done in 9s using pnpm v10.33.0

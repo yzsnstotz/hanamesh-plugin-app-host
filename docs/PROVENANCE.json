@@ -1,6 +1,6 @@
 {
   "currentCandidate": {
-    "version": "0.5.0-rc.1",
+    "version": "0.5.0",
     "dshTarget": "0.2.0-rc.2",
     "vendorSha256VerifiedAtBuild": false,
     "libProvisionDistribution": "External normal Git source dependency; its own LICENSE and notices apply, no inlined copy or new relicensing grant",
@@ -70,11 +70,11 @@
   },
   "externalArtifacts": {
     "@hanamesh/lib-provision": {
-      "version": "0.2.1-rc.2",
-      "source": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1-rc.2",
-      "sha256": "5ac3554ea22feb2e91115bf3298131df04c7c1e37812f92508c6890881a09383",
+      "version": "0.2.1",
+      "source": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1",
+      "sha256": "4217b9fe1be98f6e82437539d1c4c43166ed1f5c292efff100733e0cb09530e9",
       "mode": "external runtime source dependency; no inlined copy",
-      "sourceCommit": "a8e8032f0df0d6de1391da7d350171802c103e58",
+      "sourceCommit": "575d63fb70e08c47e980dbf25f07921a7ba5aa2a",
       "license": "SEE LICENSE IN LICENSE"
     }
   }
