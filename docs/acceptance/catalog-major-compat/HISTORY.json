@@ -1,0 +1,9 @@
+{
+  "freshMain": "6e78a75efbc1e9fbed29a32897a5ee108b0f613a",
+  "rc10": "6e78a75efbc1e9fbed29a32897a5ee108b0f613a",
+  "rollbackBranch": "6e78a75efbc1e9fbed29a32897a5ee108b0f613a",
+  "passedEvent": "GATE_PASS 2026-10-09T01:22:51.939719+00:00 CONTRACT-APPHOST-INSTALL-ROLLBACK-01",
+  "comparison": "",
+  "p06Excluded": "PARTIAL; current branch cd69378 contains only consumption receipts, not in the CARD passed branch table",
+  "graph": "* 6e78a75 docs(app-host): record rc10 install-recovery contract evidence\n* be771b0 feat(app-host): compensate failed market installs and report recovery (rc10)\n* 9632c64 docs(app-host): record rc9 packed loopback contract evidence\n* 10491d3 fix(app-host): support exact same-port loopback library aliases\n* d8121a7 docs(app-host): record install-target contract rc8 evidence and pack digest\n* 52fe63a feat(app-host): sign install-target contract v1 with shipped schema, fixtures and suite\n* 30ff855 feat(app-host): confirm catalog install targets through the client market\n* 1697ac8 test(app-host): document existing HTTP startup and runtime configuration\n* 263de1f test(app-host): record clone preflight and own build cleanup\n* fd243fc test(app-host): prove strict provision request contract and carrier gap"
+}

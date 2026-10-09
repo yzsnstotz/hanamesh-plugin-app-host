@@ -1,0 +1,27 @@
+{
+  "card": "CONTRACT-APPHOST-MAJOR-COMPAT-01",
+  "evidence": "SOURCE",
+  "packageVersion": "0.3.0",
+  "schemaRelease": "1.1.0",
+  "baseline": "6e78a75efbc1e9fbed29a32897a5ee108b0f613a",
+  "tests": {
+    "total": 189,
+    "pass": 186,
+    "fail": 0,
+    "skipped": 3
+  },
+  "affectedCatalogTests": {
+    "total": 6,
+    "pass": 6,
+    "fail": 0
+  },
+  "mutations": {
+    "total": 32,
+    "killed": 32
+  },
+  "types": "PASS",
+  "preflight": "PASS",
+  "packVerification": "PASS; independent actual pack install, owned child, DSH peer type consumer",
+  "productGates": "NOT_RUN / NOT_TO_TEST / NOT_ACCEPTED",
+  "dependencyRemoval": "PARTIAL: Devkit normal source subpackage route and provision rc3 tag missing; mature inputs retained"
+}
