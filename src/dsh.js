@@ -167,7 +167,7 @@ export async function apply(ctx, config) {
       if(dshBin){
         provisionApi=await import('./provision/index.js');
         installer=createLibraryInstaller({profileDir:locations.profileDir,profileName:locations.profileName,dataRoot,nodeBinary:locations.nodeBinary,
-          dshBin,registry:libraryConfig.registry,allowPrerelease:libraryConfig.allowPrerelease,provision:provisionApi.provision,remove:provisionApi.remove,
+          dshBin,registry:libraryConfig.registry,allowPrerelease:libraryConfig.allowPrerelease,provision:provisionApi.provision,remove:provisionApi.remove,ledger:provisionApi.ledger,
           emit:event=>library?.emit(event)});
       }
     }

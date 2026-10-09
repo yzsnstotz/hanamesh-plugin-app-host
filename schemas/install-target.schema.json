@@ -30,7 +30,15 @@
     "clientEntry": "openInstallTarget",
     "versionField": "contractVersion",
     "unversioned": "An input without contractVersion keeps the v1 semantics shipped in 0.2.0-rc.7.",
-    "mismatch": "Any contractVersion other than a supported value is refused with CONTRACT_VERSION_UNSUPPORTED (HTTP 400, details.supported) before other field checks; nothing is resolved or installed."
+    "mismatch": "Any contractVersion other than a supported value is refused with CONTRACT_VERSION_UNSUPPORTED (HTTP 400, details.supported) before other field checks; nothing is resolved or installed.",
+    "installRecovery": {
+      "since": "0.2.0-rc.10",
+      "scope": "Result of a failed install started by POST /hanamesh/library/install (and plugins/install): the library.install-failed event of GET /hanamesh/library/events carries the original error code and a recovery object.",
+      "transaction": "baseline (profile spec, bundle selection, lockfile, resolved module; runtime ledger before provision) → official dsh plugin add --save-exact → profile readback → application definition → runtime provision. One profile writer at a time in this host; dsh plugin locks per command.",
+      "compensation": "New install: dsh plugin remove (or dsh plugin install when only residue remains); runtime items newly claimed by this operation are removed by lib-provision ownership, unowned files and dataRoot are never deleted. Upgrade: dsh plugin add of the original spec (--save-exact when exact); a replaced runtime item is provisioned again from the restored definition. Concurrent writes by other profile writers are never undone. No automatic retry; no manual profile/store/metadata edit.",
+      "readback": "restored and not-needed are reported only when every check row equals the baseline. Anything else is failed with residue rows, the recovery error (if the compensation itself failed) and originals: the pre-operation package.json/pnpm-lock.yaml/runtime ledger kept under <dataRoot>/library-recovery/<operationId>/.",
+      "presentation": "A failed install is never presented as installed. failed is never presented as restored or rolled back. An event without recovery (provider before rc.10) is not presented as restored."
+    }
   },
   "$ref": "#/$defs/target",
   "$defs": {
@@ -138,6 +146,153 @@
         "schema": { "type": "string" }
       },
       "required": ["contract", "contractVersion", "supported"]
+    },
+    "recovery": {
+      "description": "library.install-failed recovery result (added in 0.2.0-rc.10).",
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "not-needed",
+            "restored",
+            "failed"
+          ]
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "new-install",
+            "upgrade",
+            "unknown"
+          ]
+        },
+        "stage": {
+          "type": "string",
+          "enum": [
+            "baseline",
+            "before-add",
+            "add",
+            "readback",
+            "definition",
+            "provision"
+          ]
+        },
+        "previousVersion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "ok": {
+                "type": "boolean"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "item",
+              "ok"
+            ]
+          }
+        },
+        "residue": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "item",
+              "reason"
+            ]
+          }
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "code"
+          ]
+        },
+        "originals": {
+          "type": "object",
+          "properties": {
+            "dir": {
+              "type": "string"
+            },
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "error": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "required": [
+        "status",
+        "mode",
+        "stage",
+        "previousVersion",
+        "actions",
+        "checks",
+        "residue"
+      ]
+    },
+    "installFailed": {
+      "description": "library.install-failed event of GET /hanamesh/library/events for an install operation. code is always the original failure; recovery added in 0.2.0-rc.10.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "library.install-failed"
+        },
+        "operationId": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "recovery": {
+          "$ref": "#/$defs/recovery"
+        }
+      },
+      "required": [
+        "type",
+        "code"
+      ]
     }
   }
 }

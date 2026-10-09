@@ -22,6 +22,14 @@ export function createReferenceConsumer(options={}){
       const url=new URL(workspaceUrl);url.hash=contract.fragmentPrefix.slice(1)+new URLSearchParams(fields);
       return{ok:true,url:url.href};
     },
+    /** rc.10: present a library.install-failed event; only a schema-valid restored/not-needed recovery counts as restored. */
+    presentInstallFailure(event){
+      const recovery=event?.recovery,known=recovery&&!validate(schema,recovery,'#/$defs/recovery').length;
+      if(!known)return{installed:false,restored:false,code:event?.code,text:`安装失败：${event?.code}；恢复结果未知`};
+      const restored=recovery.status==='restored'||recovery.status==='not-needed',residue=recovery.residue.map(row=>row.item);
+      return{installed:false,restored,code:event.code,residue,...(restored&&recovery.mode==='upgrade'?{version:recovery.previousVersion}:{}),
+        text:restored?`安装失败：${event.code}；已恢复${recovery.mode==='upgrade'?'到原版本 '+recovery.previousVersion:'到安装前状态'}`:`安装失败：${event.code}；恢复失败，未恢复：${residue.join('、')}`};
+    },
     handshake(declaration){
       const compatible=declaration&&!validate(schema,declaration,'#/$defs/providerDeclaration').length&&declaration.contract===contract.name&&declaration.supported.includes(contractVersion);
       return compatible?{ok:true}:{ok:false,code:'CONTRACT_VERSION_UNSUPPORTED'};

@@ -21,7 +21,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   async function installed(){return config.profileDir?await scanInstalled({profileDir:config.profileDir,host,ledgerReader,dataRoot}):[];}
   async function installedPlugins(){return config.profileDir?await scanInstalledPlugins({profileDir:config.profileDir,bootDependencies}):[];}
   async function persist(next){next.revision=state.revision+1;await domain.global.set(next);state=next;}
-  async function operation(type,task){const operationId=randomUUID();emit({type:`library.${type}-started`,operationId});const work=Promise.resolve().then(task).then(result=>{emit({type:`library.${type}-done`,operationId,result});return result;},error=>{emit({type:`library.${type}-failed`,operationId,code:error.code??'LIBRARY_OPERATION_FAILED'});throw error;}).finally(()=>running.delete(operationId));running.set(operationId,work);work.catch(()=>{});return{operationId,status:'started'};}
+  async function operation(type,task){const operationId=randomUUID();emit({type:`library.${type}-started`,operationId});const work=Promise.resolve().then(()=>task(operationId)).then(result=>{emit({type:`library.${type}-done`,operationId,result});return result;},error=>{emit({type:`library.${type}-failed`,operationId,code:error.code??'LIBRARY_OPERATION_FAILED',...(error.recovery?{recovery:error.recovery}:{})});throw error;}).finally(()=>running.delete(operationId));running.set(operationId,work);work.catch(()=>{});return{operationId,status:'started'};}
   const requireInstaller=(message)=>requireCondition(installer,'LIBRARY_INSTALL_UNAVAILABLE',message,{},503);
   async function resolveTarget(input){
     requireCondition(input&&typeof input==='object'&&!Array.isArray(input),'INVALID_INPUT','Only itemId and packageName are accepted.');
@@ -49,7 +49,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   }
   function installItem(item){
     const key=item.package.name;if(installing.has(key))return installing.get(key);
-    const started=operation('install',async()=>{try{return await installer.install(item);}finally{installing.delete(key);}});
+    const started=operation('install',async operationId=>{try{return await installer.install(item,{operationId});}finally{installing.delete(key);}});
     installing.set(key,started);return started;
   }
   async function findByPackage(packageName){

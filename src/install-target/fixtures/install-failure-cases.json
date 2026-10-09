@@ -1,0 +1,58 @@
+{
+  "contract": "hanamesh.install-target",
+  "contractVersion": "1",
+  "since": "0.2.0-rc.10",
+  "evidence": "SOURCE",
+  "label": "SOURCE fixture: the official dsh plugin command and lib-provision are stand-ins on a temporary profile; these results never stand for a real installation or a REAL_UI product gate.",
+  "application": {
+    "itemId": "fixture.install-target.app",
+    "packageName": "@hanamesh-fixture/install-target-app",
+    "appId": "fixture-app",
+    "previous": "0.3.0",
+    "latest": "0.4.0"
+  },
+  "plugin": {
+    "itemId": "fixture.install-target.plugin",
+    "packageName": "@hanamesh-fixture/install-target-plugin",
+    "latest": "1.2.3"
+  },
+  "cases": [
+    { "id": "RB01", "mode": "new-install", "stage": "before-add", "note": "registry lookup fails before the profile is touched", "registryMissing": true,
+      "expect": { "code": "REGISTRY_LOOKUP_FAILED", "status": "not-needed", "actions": [] } },
+    { "id": "RB02", "mode": "new-install", "stage": "add", "note": "official CLI fails before writing", "inject": [["add", "before"]],
+      "expect": { "code": "DSH_PLUGIN_FAILED", "status": "not-needed", "actions": [] } },
+    { "id": "RB03", "mode": "new-install", "stage": "add", "note": "official CLI fails after writing package/lock/module", "inject": [["add", "after"]],
+      "expect": { "code": "DSH_PLUGIN_FAILED", "status": "restored", "actions": ["dsh plugin remove $package"] } },
+    { "id": "RB04", "mode": "new-install", "stage": "definition", "note": "add succeeded, application definition is invalid", "invalidDefinition": true,
+      "expect": { "code": "INVALID_DEFINITION", "status": "restored", "actions": ["dsh plugin remove $package"] } },
+    { "id": "RB05", "mode": "new-install", "stage": "provision", "note": "provision fails before promote (runtime untouched)", "inject": [["provision", "before"]],
+      "expect": { "code": "E_DOWNLOAD", "status": "restored", "actions": ["dsh plugin remove $package"] } },
+    { "id": "RB06", "mode": "new-install", "stage": "provision", "note": "provision fails after promoting a newly claimed runtime item", "inject": [["provision", "after"]],
+      "expect": { "code": "E_VERIFY", "status": "restored", "actions": ["dsh plugin remove $package", "provision remove runtime"] } },
+    { "id": "RB07", "mode": "upgrade", "stage": "before-add", "note": "upgrade: registry lookup fails before the profile is touched", "registryMissing": true,
+      "expect": { "code": "REGISTRY_LOOKUP_FAILED", "status": "not-needed", "actions": [] } },
+    { "id": "RB08", "mode": "upgrade", "stage": "add", "note": "upgrade: official CLI fails after writing the new version", "inject": [["add", "after"]],
+      "expect": { "code": "DSH_PLUGIN_FAILED", "status": "restored", "actions": ["dsh plugin add --save-exact $package@$previous"] } },
+    { "id": "RB09", "mode": "upgrade", "stage": "definition", "note": "upgrade: new definition is invalid; original exact version comes back", "invalidDefinition": true,
+      "expect": { "code": "INVALID_DEFINITION", "status": "restored", "actions": ["dsh plugin add --save-exact $package@$previous"] } },
+    { "id": "RB10", "mode": "upgrade", "stage": "provision", "note": "upgrade: new runtime promoted then failed; original runtime is provisioned again from the restored definition", "inject": [["provision", "after"]],
+      "expect": { "code": "E_VERIFY", "status": "restored", "actions": ["dsh plugin add --save-exact $package@$previous", "provision runtime"] } },
+    { "id": "RB11", "mode": "new-install", "stage": "definition", "note": "compensation itself fails: the original error is kept and the residue is reported", "invalidDefinition": true, "inject": [["remove", "before"]],
+      "expect": { "code": "INVALID_DEFINITION", "status": "failed", "recoveryError": "DSH_PLUGIN_FAILED", "actions": ["dsh plugin remove $package"], "residue": ["dependency", "module", "lockfile"] } },
+    { "id": "RB12", "mode": "upgrade", "stage": "provision", "note": "upgrade compensation fails: original version cannot be added back", "inject": [["provision", "after"], ["add", "before", 1]],
+      "expect": { "code": "E_VERIFY", "status": "failed", "recoveryError": "DSH_PLUGIN_FAILED", "actions": ["dsh plugin add --save-exact $package@$previous"], "residue": ["dependency", "module", "lockfile", "runtime:runtime"] } },
+    { "id": "RB13", "mode": "new-install", "stage": "definition", "note": "a concurrent profile writer is never undone; the lockfile cannot be proven restored", "invalidDefinition": true, "concurrent": true,
+      "expect": { "code": "INVALID_DEFINITION", "status": "failed", "actions": ["dsh plugin remove $package"], "residue": ["lockfile"] } },
+    { "id": "RB14", "mode": "new-install", "stage": "provision", "note": "unowned files in a newly claimed runtime are kept and reported, not deleted", "inject": [["provision", "unowned"], ["provision", "after"]],
+      "expect": { "code": "E_VERIFY", "status": "failed", "actions": ["dsh plugin remove $package", "provision remove runtime"], "residue": ["runtime:runtime"] } },
+    { "id": "RB15", "mode": "new-install", "stage": "add", "kind": "plugin", "note": "plugin bundle: CLI fails after selecting the bundle; selection and lock come back", "inject": [["add", "after"]],
+      "expect": { "code": "DSH_PLUGIN_FAILED", "status": "restored", "actions": ["dsh plugin remove $package"] } }
+  ],
+  "presentation": [
+    { "id": "RP01", "note": "restored new install is a failure that left nothing behind", "recovery": { "status": "restored", "mode": "new-install", "stage": "definition", "previousVersion": null, "actions": ["dsh plugin remove @hanamesh-fixture/install-target-app"], "checks": [], "residue": [] }, "expect": { "installed": false, "restored": true } },
+    { "id": "RP02", "note": "restored upgrade names the original version", "recovery": { "status": "restored", "mode": "upgrade", "stage": "provision", "previousVersion": "0.3.0", "actions": [], "checks": [], "residue": [] }, "expect": { "installed": false, "restored": true, "version": "0.3.0" } },
+    { "id": "RP03", "note": "nothing was changed before the failure", "recovery": { "status": "not-needed", "mode": "new-install", "stage": "before-add", "previousVersion": null, "actions": [], "checks": [], "residue": [] }, "expect": { "installed": false, "restored": true } },
+    { "id": "RP04", "note": "compensation failed: never shown as success or as rolled back", "recovery": { "status": "failed", "mode": "upgrade", "stage": "provision", "previousVersion": "0.3.0", "actions": [], "checks": [], "residue": [{ "item": "module", "reason": "NOT_RESTORED" }], "error": { "code": "DSH_PLUGIN_FAILED" }, "originals": { "dir": "/data/library-recovery/op", "files": ["package.json"] } }, "expect": { "installed": false, "restored": false, "residue": ["module"] } },
+    { "id": "RP05", "note": "an rc.9 provider sends no recovery: unknown, not restored", "recovery": null, "expect": { "installed": false, "restored": false } }
+  ]
+}

@@ -19,6 +19,8 @@
 
 安装先向 registry 的 `latest` 端点复核精确稳定版本，再用显式 Node 执行 DSH 自己的 `bin.js plugin --profile <name> add --save-exact <package>@<version>`。成功后读取包内 `app.json`；如果描述符声明 runtime，则调用随包内联的锁定 `@hanamesh/lib-provision@0.1.0-rc.3`。生产默认拒绝 prerelease；隔离 Verdaccio 验收可显式设 `allowPrerelease: true`。
 
+rc.10：add 之后的读回、定义校验或 provision 失败按基线补偿（新装 `dsh plugin remove`、升级 `dsh plugin add` 原规格，runtime 按 ownership 回收或按原定义重供），逐项读回后在 `library.install-failed` 的 `recovery` 里报告 `not-needed`/`restored`/`failed`；详见 `INSTALL_TARGET.md`「安装失败后的恢复」。
+
 安装/卸载完成只返回 `restart-required`，绝不静默重启 DSH。卸载只删除包与 lib-provision 账本认领的 runtime 文件，保留 `<dataRoot>` 下应用数据；彻底删除需用户手动处理对应数据目录。
 
 ## 状态与路由

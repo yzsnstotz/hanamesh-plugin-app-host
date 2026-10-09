@@ -16,6 +16,7 @@ test('ITC01: provider suite passes on this package, including version match, mis
   for(const alias of ['127.0.0.1','localhost'])for(let i=1;i<=21;i++)assert(passed(report,'LB'+String(i).padStart(2,'0')+'/'+alias));
   assert(passed(report,'PC03'));
   assert(passed(report,'PF01/fragment')&&passed(report,'PV01/client'),'unversioned v1 input keeps working');
+  for(const id of ['RD01','RS01','RS02','RU01','RU02',...Array.from({length:15},(_,i)=>'RB'+String(i+1).padStart(2,'0'))])assert(passed(report,id),'install recovery '+id);
 });
 test('ITC02: versioned and unversioned reference consumers pass the consumer and chain suites',async()=>{
   for(const consumer of [createReferenceConsumer(),createReferenceConsumer({contractVersion:undefined})]){
@@ -47,4 +48,16 @@ test('ITC05: a consumer that silently rewrites localhost to 127 is refused by th
   const honest=createReferenceConsumer();
   const redirected={...honest,navigate(workspace,target){const result=honest.navigate(workspace,target);if(result.ok){const url=new URL(result.url);url.hostname='127.0.0.1';return{ok:true,url:url.href};}return result;}};
   assert(failed(await runConsumerSuite(redirected)).includes('CN01/localhost'));
+});
+
+test('ITC06: install-failure presentation — the consumer suite catches a caller that shows a failed recovery as restored or a failure as installed',async()=>{
+  const honest=createReferenceConsumer();
+  const optimistic={...honest,name:'optimistic',presentInstallFailure:event=>({installed:false,restored:Boolean(event.recovery),residue:[]})};
+  const installedAnyway={...honest,name:'installed-anyway',presentInstallFailure:event=>({...honest.presentInstallFailure(event),installed:true})};
+  assert(failed(await runConsumerSuite(optimistic)).includes('RP04'),'failed recovery shown as restored');
+  assert(failed(await runChainSuite(optimistic)).includes('CX-RB11'),'real failed event shown as restored');
+  assert(failed(await runConsumerSuite(installedAnyway)).includes('RP01'),'failure shown as installed');
+  const {navigate,handshake,contractVersion,name}=honest;
+  const legacy=await runConsumerSuite({navigate,handshake,contractVersion,name});
+  assert.deepEqual(failed(legacy),[]);assert(legacy.results.filter(row=>row.semantic==='recovery-presentation').every(row=>row.outcome==='skipped'));
 });

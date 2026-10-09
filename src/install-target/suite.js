@@ -4,13 +4,16 @@
  * test catalog; consumer cases check what a caller hands to the market; the chain feeds consumer output into the
  * real provider. Fixture data is a test catalog and is labelled as such in the market UI.
  */
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { join, dirname } from 'node:path';
 import { createServer, request } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { createLibraryService, INSTALL_TARGET_CONTRACT_VERSION } from '../library/service.js';
 import { createLibraryHttpHandler } from '../library/routes.js';
+import { createLibraryInstaller } from '../library/install.js';
 import { loadClient, settle } from './harness.js';
+import { createSourceProfile, applicationVersion } from './fixtures/source-profile.js';
 
 const json=async url=>JSON.parse(await readFile(url,'utf8'));
 const SCHEMA_URL=new URL('../../schemas/install-target.schema.json',import.meta.url);
@@ -19,8 +22,8 @@ const ROUTE='/hanamesh/library/target';
 
 /** Schema, provider declaration and both fixture sets as shipped. */
 export async function loadContract(){
-  const [schema,pkg,provider,consumer]=await Promise.all([json(SCHEMA_URL),json(new URL('../../package.json',import.meta.url)),json(new URL('provider-cases.json',FIXTURES)),json(new URL('consumer-cases.json',FIXTURES))]);
-  return{schema,contract:schema['x-hanamesh-contract'],declaration:pkg.hanamesh?.installTarget,packageVersion:pkg.version,provider,consumer,catalogPath:fileURLToPath(new URL(provider.catalog,FIXTURES))};
+  const [schema,pkg,provider,consumer,recovery]=await Promise.all([json(SCHEMA_URL),json(new URL('../../package.json',import.meta.url)),json(new URL('provider-cases.json',FIXTURES)),json(new URL('consumer-cases.json',FIXTURES)),json(new URL('install-failure-cases.json',FIXTURES))]);
+  return{schema,contract:schema['x-hanamesh-contract'],declaration:pkg.hanamesh?.installTarget,packageVersion:pkg.version,provider,consumer,recovery,catalogPath:fileURLToPath(new URL(provider.catalog,FIXTURES))};
 }
 
 /** Validates the JSON Schema keywords the contract uses; returns readable violations. */
@@ -30,7 +33,7 @@ export function validate(schema,value,ref='#/$defs/target'){
   const check=(node,value,path)=>{
     if(node.$ref){check(resolve(node.$ref),value,path);}
     const type=Array.isArray(value)?'array':value===null?'null':typeof value;
-    if(node.type&&node.type!==type){errors.push(`${path}: expected ${node.type}`);return;}
+    if(node.type&&!(Array.isArray(node.type)?node.type:[node.type]).includes(type)){errors.push(`${path}: expected ${node.type}`);return;}
     if('const' in node&&value!==node.const)errors.push(`${path}: must equal ${JSON.stringify(node.const)}`);
     if(node.enum&&!node.enum.includes(value))errors.push(`${path}: not one of ${JSON.stringify(node.enum)}`);
     if(type==='string'){
@@ -59,10 +62,13 @@ function recorder(suite){
 const expectEqual=(actual,expected,what)=>{if(JSON.stringify(actual)!==JSON.stringify(expected))throw new Error(`${what}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);};
 
 /** Starts the real provider routes on a random loopback port with the bundled test catalog and a counting installer. */
-export async function startProvider({catalogPath}){
-  let state={schema:1,revision:0,sources:[]};const installs=[];const token=randomUUID();
-  const service=await createLibraryService({domain:{global:{get:async()=>state,set:async next=>{state=next;}},close:async()=>{}},host:{list:()=>({apps:[]}),instanceList:()=>[]},
-    config:{fixture:catalogPath},installer:{install:async item=>{installs.push(item.package.name);return{kind:'plugin',status:'restart-required'};}}}).init();
+export async function startProvider({catalogPath},{profile,installer:real}={}){
+  let state={schema:1,revision:0,sources:[]};const installs=[],pending=[];const token=randomUUID();let service;
+  // rc.10: recovery cases install through the real installer on a SOURCE profile; every other case keeps the counting installer.
+  let made;const installer=profile?{install:(item,context)=>{installs.push(item.package.name);const work=(made??=real(event=>service.emit(event))).install(item,context);pending.push(work.catch(()=>{}));return work;}}
+    :{install:async item=>{installs.push(item.package.name);return{kind:'plugin',status:'restart-required'};}};
+  service=await createLibraryService({domain:{global:{get:async()=>state,set:async next=>{state=next;}},close:async()=>{}},host:{list:()=>({apps:[]}),instanceList:()=>[]},
+    config:{fixture:catalogPath,...(profile?{profileDir:profile.profileDir}:{})},...(profile?{dataRoot:profile.dataRoot,ledgerReader:profile.ledger}:{}),installer}).init();
   const server=createServer();await new Promise(r=>server.listen(0,'127.0.0.1',r));
   const origin='http://127.0.0.1:'+server.address().port;
   server.on('request',createLibraryHttpHandler(service,{parentOrigin:origin,
@@ -73,9 +79,88 @@ export async function startProvider({catalogPath}){
   /** Same-origin browser fetch as the workspace page would issue it. */
   const browserFetchFor=workspaceOrigin=>async(path,init={})=>{const method=init.method??'GET';if(method!=='GET')posts.push({path,headers:{...init.headers}});
     return await fetch(workspaceOrigin+path,{...init,headers:{...init.headers,'x-install-target-suite':token,...(method==='GET'?{}:{origin:workspaceOrigin})}});};
-  return{origin,origins,token,service,installs,posts,browserFetch:browserFetchFor(origin),browserFetchFor,
+  return{origin,origins,token,service,installs,posts,settled:async()=>{await Promise.all(pending);await settle();},browserFetch:browserFetchFor(origin),browserFetchFor,
     get:(query,headers={})=>fetch(origin+ROUTE+(query?'?'+query:''),{headers:{'x-install-target-suite':token,...headers}}),
     close:async()=>{await new Promise(r=>server.close(r));await service.close();}};
+}
+
+/** rc.10: a SOURCE profile holding the recovery fixture registry, with the case's injected failures and the real installer factory. */
+export async function sourceRecoveryProfile({recovery},item={}){
+  const {application:app,plugin}=recovery;
+  const registry={[app.packageName]:[{version:app.previous,app:applicationVersion({appId:app.appId,version:app.previous}).app},{version:app.latest,app:applicationVersion({appId:app.appId,version:app.latest,invalid:Boolean(item.invalidDefinition)}).app}],
+    [plugin.packageName]:[{version:plugin.latest,bundle:true}]};
+  const profile=await createSourceProfile({registry}),target=item.kind==='plugin'?plugin:app;
+  if(item.mode==='upgrade')await profile.seed(target.packageName,app.previous);
+  for(const [command,phase,skip] of item.inject??[])profile.fail(command,phase,skip);
+  if(item.concurrent)profile.concurrentAdd('@fixture/concurrent','1.0.0');
+  const installer=emit=>createLibraryInstaller({profileDir:profile.profileDir,profileName:profile.profileName,dataRoot:profile.dataRoot,nodeBinary:'/source-fixture/bin/node',dshBin:'/source-fixture/dsh/lib/bin.js',
+    fetchImpl:profile.fetchImpl(item.registryMissing?{}:{[app.packageName]:app.latest,[plugin.packageName]:plugin.latest}),spawn:profile.spawn,provision:profile.provision,remove:profile.remove,ledger:profile.ledger,emit});
+  return{profile,target,installer};
+}
+/** Independent readback of the SOURCE profile: exact package.json/lockfile text, resolved module version, runtime ledger without timestamps. */
+async function profileState({profile},name,appId){
+  const read=path=>readFile(path,'utf8').catch(error=>error.code==='ENOENT'?null:Promise.reject(error));
+  const module=await read(join(profile.profileDir,'node_modules',...name.split('/'),'package.json'));
+  const ledger=Object.fromEntries(Object.entries((await profile.ledger(join(profile.dataRoot,'runtimes',appId))).items).map(([id,{installedAt:_,...entry}])=>[id,entry]));
+  return{manifest:await read(join(profile.profileDir,'package.json')),lock:await read(join(profile.profileDir,'pnpm-lock.yaml')),module:module===null?null:JSON.parse(module).version,ledger};
+}
+/** Runs one install-failure case through the real service and installer on a fresh SOURCE profile; returns the failure event. */
+export async function runRecoveryCase(contract,item,{check=true}={}){
+  const {schema,recovery}=contract;const source=await sourceRecoveryProfile(contract,item);const {profile,target}=source;const appId=recovery.application.appId;
+  const host=await startProvider(contract,{profile,installer:source.installer});
+  try{
+    const sentinel=join(profile.dataRoot,'principal',appId,'local','data-v1','single','user.db');await mkdir(dirname(sentinel),{recursive:true});await writeFile(sentinel,'keep');
+    const before=await profileState(source,target.packageName,appId);
+    const started=await host.service.install({packageName:target.packageName});await host.settled();
+    const events=host.service.events().events.filter(event=>event.operationId===started.operationId),failed=events.find(event=>event.type==='library.install-failed');
+    if(!failed||events.some(event=>event.type==='library.install-done'))throw new Error('expected one failed operation, got '+JSON.stringify(events.map(event=>event.type)));
+    if(!check)return failed;
+    const errors=validate(schema,failed,'#/$defs/installFailed');if(errors.length)throw new Error(errors.join('; '));
+    const result=failed.recovery,fill=text=>text.replaceAll('$package',target.packageName).replaceAll('$previous',recovery.application.previous);
+    expectEqual([failed.code,result.status,result.mode,result.stage,result.previousVersion],[item.expect.code,item.expect.status,item.mode,item.stage,item.mode==='upgrade'?recovery.application.previous:null],'original error and recovery result');
+    expectEqual(result.actions,item.expect.actions.map(fill),'compensation actions');
+    expectEqual(result.error?.code??null,item.expect.recoveryError??null,'compensation error');
+    expectEqual([...new Set(result.residue.map(row=>row.item))].sort(),[...(item.expect.residue??[])].sort(),'residue');
+    expectEqual(profile.calls.filter(call=>call[0]==='add'&&call.at(-1)===`${target.packageName}@${target.latest}`).length,item.registryMissing?0:1,'add attempts (no automatic retry)');
+    expectEqual(await readFile(sentinel,'utf8'),'keep','application data under dataRoot');
+    const after=await profileState(source,target.packageName,appId);
+    if(result.status==='failed'){
+      const unowned=result.residue.some(row=>row.reason==='UNOWNED_FILES_KEPT');
+      if(JSON.stringify(after)===JSON.stringify(before)&&!item.concurrent&&!unowned)throw new Error('failed recovery reported for a profile equal to its baseline');
+      expectEqual(await readFile(join(result.originals.dir,'package.json'),'utf8'),before.manifest,'kept original package.json');
+      if(item.concurrent&&!JSON.parse(after.manifest).dependencies['@fixture/concurrent'])throw new Error('concurrent profile write was undone');
+      if(unowned)await readFile(join(profile.dataRoot,'runtimes',appId,'runtime','unowned.txt'));
+    }else expectEqual(after,before,'independent readback against the baseline');
+    return`SOURCE: ${result.status}; ${result.actions.length} compensation action(s); readback ${result.checks.filter(row=>row.ok).length}/${result.checks.length}`;
+  }finally{await host.close();await profile.cleanup();}
+}
+async function runRecoveryProvider(contract,record){
+  const {recovery,schema}=contract;
+  await record('RD01','recovery','schema declares the install-failed recovery result and the SOURCE fixture is labelled',async()=>{
+    expectEqual(contract.contract.installRecovery?.since,'0.2.0-rc.10','installRecovery.since');expectEqual(recovery.evidence,'SOURCE','fixture evidence label');
+    if(!schema.$defs.recovery||!schema.$defs.installFailed)throw new Error('recovery definitions missing');
+    for(const item of recovery.presentation)if(item.recovery){const errors=validate(schema,item.recovery,'#/$defs/recovery');if(errors.length)throw new Error(item.id+': '+errors.join('; '));}
+  });
+  for(const item of recovery.cases)await record(item.id,'recovery',`${item.mode} · ${item.stage}: ${item.note}`,()=>runRecoveryCase(contract,item));
+  for(const mode of ['new-install','upgrade'])await record(mode==='upgrade'?'RS02':'RS01','recovery',mode+' without failure: install-done only after the profile reads back the exact version',async()=>{
+    const source=await sourceRecoveryProfile(contract,{mode});const host=await startProvider(contract,{profile:source.profile,installer:source.installer});
+    try{const started=await host.service.install({packageName:source.target.packageName});await host.settled();
+      const done=host.service.events().events.find(event=>event.operationId===started.operationId&&event.type==='library.install-done');
+      if(!done)throw new Error('install did not complete');expectEqual(done.result.version,source.target.latest,'installed version');
+      const state=await profileState(source,source.target.packageName,recovery.application.appId);
+      expectEqual([JSON.parse(state.manifest).dependencies[source.target.packageName],state.module,state.ledger.runtime?.version],[source.target.latest,source.target.latest,source.target.latest],'readback');
+    }finally{await host.close();await source.profile.cleanup();}
+  });
+  for(const [id,caseId,expected,refused] of [['RU01','RB04','已恢复到安装前状态（已逐项读回）','恢复失败'],['RU02','RB11','恢复失败','已恢复到']])
+    await record(id,'recovery','market shows '+caseId+' as '+(id==='RU01'?'a failure that was restored':'a failure whose restoration failed, never as installed or rolled back'),async()=>{
+      const item=recovery.cases.find(row=>row.id===caseId),source=await sourceRecoveryProfile(contract,item);
+      const host=await startProvider(contract,{profile:source.profile,installer:source.installer});const client=await loadClient({fetch:host.browserFetch});
+      try{await client.module.openInstallTarget({packageName:source.target.packageName});await client.idle();await client.click('确认安装');await host.settled();await client.tick(1000);
+        const text=client.text();
+        if(!text.includes('安装失败：'+item.expect.code)||!text.includes(expected))throw new Error('market text: '+text.slice(text.indexOf('安装失败')>=0?text.indexOf('安装失败'):0).slice(0,300));
+        if(text.includes(refused)||text.includes('安装完成'))throw new Error('market misreports the recovery result');
+      }finally{client.unmount();await host.close();await source.profile.cleanup();}
+    });
 }
 
 /** Provider conformance: this package as the market that receives install targets. */
@@ -160,6 +245,7 @@ export async function runProviderSuite(){
       expectEqual(host.installs.at(-1),'@hanamesh-fixture/install-target-plugin','localhost installer target');
     });
   }finally{client?.unmount();await host.close();}
+  await runRecoveryProvider(contract,record);
   return summary({contract:contract.contract.name,contractVersion:contract.contract.version,package:'@hanamesh/dsh-app-host@'+contract.packageVersion,loopback:{parentOrigin:host.origin,origins:host.origins,sameInstanceSamePort:true}});
 }
 
@@ -195,6 +281,13 @@ export async function runConsumerSuite(consumer){
     if(result?.ok!==false)throw new Error('accepted an incompatible provider declaration');
     expectEqual(result.code,'CONTRACT_VERSION_UNSUPPORTED','refusal code');
   });
+  for(const item of contract.recovery.presentation)await record(item.id,'recovery-presentation',item.note,async()=>{
+    if(typeof consumer.presentInstallFailure!=='function')return'skipped';
+    const shown=await consumer.presentInstallFailure({type:'library.install-failed',operationId:'fixture-operation',code:'FIXTURE_FAILURE',...(item.recovery?{recovery:item.recovery}:{})});
+    expectEqual([shown?.installed,shown?.restored],[item.expect.installed,item.expect.restored],'presentation');
+    if(item.expect.version)expectEqual(shown.version,item.expect.version,'restored version');
+    if(item.expect.residue)expectEqual(shown.residue,item.expect.residue,'residue shown');
+  });
   return summary({contract:contract.contract.name,contractVersion:contract.contract.version,consumer:consumer.name??'unnamed',declared:declared??null});
 }
 
@@ -225,6 +318,11 @@ export async function runChainSuite(consumer){
     });
     client.unmount();
     }
+    for(const caseId of ['RB04','RB10','RB11'])await record('CX-'+caseId,'recovery-presentation','real provider install-failed event for '+caseId+' → consumer presentation',async()=>{
+      if(typeof consumer.presentInstallFailure!=='function')return'skipped';
+      const item=contract.recovery.cases.find(row=>row.id===caseId),event=await runRecoveryCase(contract,item,{check:false});const shown=await consumer.presentInstallFailure(event);
+      expectEqual([shown?.installed,shown?.restored],[false,item.expect.status!=='failed'],'presentation of the real provider event');
+    });
   }finally{client?.unmount();await host.close();}
   return summary({contract:contract.contract.name,contractVersion:contract.contract.version,consumer:consumer.name??'unnamed',declared:consumer.contractVersion??null});
 }

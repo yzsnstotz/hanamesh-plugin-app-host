@@ -1,6 +1,6 @@
 # 客户端市场安装目标入口
 
-AppHost `0.2.0-rc.9`（安装目标入口自 rc7；合约声明与随包套件自 rc8）。目标输入、目录解析、确认、安装与结果全部归本模块；调用方只传目录标识，负责呈现原市场表面。
+AppHost `0.2.0-rc.10`（安装目标入口自 rc7；合约声明与随包套件自 rc8；安装失败恢复结果自 rc10）。目标输入、目录解析、确认、安装与结果全部归本模块；调用方只传目录标识，负责呈现原市场表面。
 
 ## Desktop 正常导航入口
 
@@ -39,6 +39,8 @@ Promise 在目录解析后返回 `{status,itemId?,packageName?}`：
 
 **变更说明（rc9，只加同实例别名）：** library 路由允许同一端口的两个精确回环 Host，各自必须使用本 origin 的正常 DSH 认证。目标字段、版本 1、目录解析、明确确认、取消、安装事务与失败回滚不改；不新增依赖、配置或权限。schema 的 `loopback` 节与双方 fixture/suite 覆盖两别名及跨 Origin/未知 Host/port/iframe/CSRF/auth/版本拒绝。范围限 library HTTP 与安装目标导航；应用网关、app/router 控制路由及其他插件不变。现有 127 消费方保持，localhost 消费方保持自己的 URL/auth 参数；Desktop/Vibe 无需本轮改动。
 
+**变更说明（rc10，只加安装失败的恢复结果）：** `GET /hanamesh/library/events` 里安装操作的 `library.install-failed` 事件新增 `recovery` 对象（schema `$defs/recovery`、`$defs/installFailed`，`x-hanamesh-contract.installRecovery` 节）；`code` 仍是原失败码。目标字段、版本 1、目录解析、确认、取消、版本固定、同源/auth/非 iframe、按包 operation 去重都不变；不新增依赖、peer、vendor 或配置。影响：消费方（P06 市场门、Desktop 收尾）按 rc10 读取恢复结果；不读 `recovery` 的消费方保持原行为，但不得把没有 `recovery` 的失败当作「已恢复」。Desktop 无需本轮改动。
+
 **握手：**
 - 不带 `contractVersion`：保持 rc7 的 v1 语义。
 - `contractVersion:'1'`：接受，其余语义不变。
@@ -68,6 +70,32 @@ node node_modules/@hanamesh/dsh-app-host/dist/install-target/run.js consumer --u
 ```
 
 消费方对象 `{name, contractVersion?, navigate(workspaceUrl, target) → {ok:true,url}|{ok:false,code}, handshake?(declaration) → {ok,code?}}`；导出也可以是返回该对象的无参工厂。每个套件输出一行 JSON 报告，有失败时退出码 1。
+
+## 安装失败后的恢复（rc10）
+
+一次安装（应用或插件、新装或升级）按以下顺序进行，同一宿主内同一时间只有一个 profile 写者（安装、补偿、卸载、provision 串行；`dsh plugin` 自己按每条命令加 profile 写锁）：
+
+1. **基线**：profile `package.json` 里本包的规格、`dsh.profile.bundles`、`pnpm-lock.yaml`、`node_modules` 实际解析的版本；provision 前再记 runtime 根的 lib-provision ledger。
+2. 官方 `dsh plugin add --save-exact <包>@<registry latest>`。
+3. **读回**：profile 规格与实际解析版本都等于固定版本才继续，否则 `INSTALL_READBACK_MISMATCH`。
+4. 应用：读 `app.json` 校验定义 → 随包 lib-provision 供给声明的 runtime。
+
+第 2–4 步任一步失败（含 CLI 失败）都先比对基线：
+
+| 情况 | 补偿 | 结果 |
+| --- | --- | --- |
+| 什么都没变（add 前失败、CLI 未写入） | 无 | `not-needed`，逐项读回相等 |
+| 新装 | `dsh plugin remove <包>`（只剩残留模块/锁时 `dsh plugin install`）；本次新认领的 runtime 项由 lib-provision 按 ownership 删除 | `restored`，读回等于安装前 |
+| 升级 | `dsh plugin add` 原规格（精确版本带 `--save-exact`）；被替换的 runtime 项按恢复后的原定义重新 provision | `restored`，读回等于原精确版本与原 runtime |
+| 补偿命令失败、读回不等、并发写者改过 profile、runtime 留有未认领文件 | 不重试，不手改 profile/store/metadata | `failed`：`error`（补偿自身的错误码）、`residue`（每个不等项的 expected/actual/reason）、`originals`（安装前 `package.json`/`pnpm-lock.yaml`/runtime ledger 保存在 `<dataRoot>/library-recovery/<operationId>/`） |
+
+`checks` 逐项列出 dependency、module、bundle、lockfile、bundles 与 `runtime:<item>` 的 expected/actual/ok。别的写者在此期间改动的其他依赖永不撤销，lockfile 因此无法证明已恢复时报 `CONCURRENT_PROFILE_WRITE`。未认领文件与 `<dataRoot>` 下的应用数据从不删除。失败不会自动重试。
+
+市场显示：`安装失败：<原码>（原因）` 后接 `已恢复到安装前状态（已逐项读回）` / `已恢复到原版本 x（已逐项读回）` / `安装前状态未被改动（已逐项读回）`；`failed` 显示 `恢复失败：<码>，未恢复：<项>，安装前原件：<目录>。未安装成功，也未回到安装前状态，需要人工处理`，不会显示为成功或「已回滚」。
+
+**已知边界（不是隐藏限制）：** 官方 DSH 没有公开「跨多条 `dsh plugin` 命令持有 profile 写锁」或「外部回滚整个 add」的端口，所以宿主外的并发写者只能被检出并如实报告，不能被阻止。runtime 读回以 lib-provision ledger 为准；promote 与 ledger 之间的进程崩溃由 lib-provision `verify` 负责，不在本流程内调用。provision 对无当前平台资产的项返回 `unsupported` 而不抛错，沿用 rc9，不视为失败。
+
+**随包验证（SOURCE）：** `./install-target/fixtures/install-failure-cases.json` 与 `./install-target/fixtures/source-profile.js`。提供方套件 RB01–RB15 覆盖新装/升级 × add 前/CLI/add 后校验/provision 失败及补偿自身失败、并发写者、未认领文件，RS01/RS02 成功读回，RU01/RU02 用本包真实客户端显示；消费方套件 RP01–RP05 检查消费方的失败呈现（可选方法 `presentInstallFailure(event) → {installed,restored,version?,residue?}`，没有该方法的消费方记 skipped），链路套件 CX-RB04/RB10/RB11 把真实提供方事件交给消费方。官方 CLI 与 lib-provision 在套件里是临时 profile 上的具名替身，结果只代表 SOURCE，不代表真实安装或 REAL_UI 产品门。
 
 ## 开发小界面
 

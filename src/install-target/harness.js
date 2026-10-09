@@ -5,7 +5,9 @@ export const settle=async()=>{for(let i=0;i<40;i++)await Promise.resolve();};
 
 /** Timers only advance when asked, so market polling never runs on its own during a suite. */
 function frozenClock(){let now=1_700_000_000_000,sequence=0;const timers=new Map();
-  return{Date:{now:()=>now},setTimeout(fn,ms){const id=++sequence;timers.set(id,{fn,at:now+ms});return id;},clearTimeout(id){timers.delete(id);}};}
+  return{Date:{now:()=>now},setTimeout(fn,ms){const id=++sequence;timers.set(id,{fn,at:now+ms});return id;},clearTimeout(id){timers.delete(id);},
+    /** rc.10: advance the frozen clock and run the timers now due (e.g. one market event poll). */
+    advance(ms){now+=ms;for(const [id,timer] of [...timers])if(timer.at<=now){timers.delete(id);timer.fn();}}};}
 
 export async function loadClient({fetch:transport}){
   // Real HTTP replies arrive on later macrotasks; track them so a step completes only when the market is idle.
@@ -35,6 +37,7 @@ export async function loadClient({fetch:transport}){
     button:label=>find(tree,node=>node.type==='button'&&node.children.includes(label)),
     async click(label){const button=find(tree,node=>node.type==='button'&&node.children.includes(label));if(!button)throw new Error('No visible button '+label);button.props.onClick();await idle();},
     idle,
+    async tick(ms){clock.advance(ms);await idle();},
     async navigate(hash){scope.location.hash=hash;listeners.get('hashchange')?.();await idle();},
     unmount(){dead=true;for(const dispose of disposers)dispose?.();for(const hook of hooks)hook?.cleanup?.();}};
 }

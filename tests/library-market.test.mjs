@@ -27,10 +27,18 @@ async function profileFixture(t,{dependencies,bundles=['@deepseek-ai/dsh-base','
   for(const[name,pkg]of Object.entries(packages)){const dir=join(profile,'node_modules',...name.split('/'));await mkdir(dir,{recursive:true});await writeFile(join(dir,'package.json'),JSON.stringify({name,...pkg}));if(pkg.hanamesh?.app)await writeFile(join(dir,'app.json'),JSON.stringify(appDefinition));}
   return{root,profile,dataRoot:join(root,'data')};
 }
+/** rc.10 readback: what a successful `dsh plugin add --save-exact name@version` leaves in the profile (spec + resolved module). */
+async function recordAdd(profileDir,args){
+  const at=args.indexOf('add');if(at<0)return;const spec=args.at(-1),split=spec.lastIndexOf('@'),name=spec.slice(0,split),version=spec.slice(split+1);
+  const manifestPath=join(profileDir,'package.json'),manifest=JSON.parse(await readFile(manifestPath,'utf8'));manifest.dependencies={...manifest.dependencies,[name]:version};await writeFile(manifestPath,JSON.stringify(manifest));
+  const dir=join(profileDir,'node_modules',...name.split('/'));await mkdir(dir,{recursive:true});
+  const pkgPath=join(dir,'package.json');let pkg={name};try{pkg=JSON.parse(await readFile(pkgPath,'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;}
+  await writeFile(pkgPath,JSON.stringify({...pkg,version}));
+}
 function installerDouble(profile,{calls=[],events=[],latest='1.0.0'}={}){
   return{calls,events,installer:createLibraryInstaller({profileDir:profile.profile,profileName:'web',dataRoot:profile.dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/lib/bin.js',
     fetchImpl:async url=>{calls.push({fetch:String(url)});return new Response(JSON.stringify({version:latest}),{headers:{'content-type':'application/json'}});},
-    spawn:async(command,args,options)=>{calls.push({command,args,options});return{code:0,stdout:'',stderr:''};},
+    spawn:async(command,args,options)=>{calls.push({command,args,options});await recordAdd(profile.profile,args);return{code:0,stdout:'',stderr:''};},
     provision:async()=>{throw new Error('a plugin never provisions a runtime');},remove:async()=>{throw new Error('a plugin has no owned runtime');},emit:event=>events.push(event)})};
 }
 const plugin={id:'27a67a57',name:'dsh-plugin-tether',displayName:'dsh-tether',summary:'s',latestVersion:'0.1.17',categories:['remote'],package:{registry:'npm',name:'dsh-plugin-tether'},publisher:{name:'zexadev'}};
@@ -162,7 +170,7 @@ test('AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall /
   assert.equal(pluginUninstall.status,400);assert.equal(pluginUninstall.json.error.code,'INVALID_INPUT');
   const list=await http(origin+'/hanamesh/library/installedPlugins',{headers:{origin}});
   assert.equal(list.status,200,JSON.stringify(list.json));assert.deepEqual(Object.keys(list.json).sort(),['apps','plugins','restartRequired','traceId']);
-  assert.deepEqual(list.json.plugins.map(row=>[row.packageName,row.state]),[['dsh-plugin-tether','installed']]);
+  assert.deepEqual(list.json.plugins.map(row=>[row.packageName,row.state]),[['@hanamesh/utility-plugin','installed-not-loaded'],['dsh-plugin-tether','installed']]);
   const wrongMethod=await http(origin+'/hanamesh/library/installedPlugins',{method:'POST',headers,body:'{}'});assert.equal(wrongMethod.status,405);assert.equal(wrongMethod.json.error.code,'METHOD_NOT_ALLOWED');
   const extraParams=await http(origin+'/hanamesh/library/installedPlugins?x=1',{headers:{origin}});assert.equal(extraParams.status,400);assert.equal(extraParams.json.error.code,'UNKNOWN_FIELDS');
   const accepted=await http(origin+'/hanamesh/library/plugins/install',{method:'POST',headers,body:JSON.stringify({packageName:'@hanamesh/utility-plugin'})});
