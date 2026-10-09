@@ -1,0 +1,14 @@
+✔ CAT-V01: valid same-major catalog minor/patch/prerelease/build inputs preserve the original shape and optional additions (11.650833ms)
+✔ CAT-V02: different major or malformed version is refused, and same major never skips shape/trust checks (0.33925ms)
+✔ CAT-V03: shipped provider/consumer fixtures exercise the actual implementation (4.907916ms)
+✔ AH-L09: catalog items may carry schema-allowed updatedAt (0.877833ms)
+✔ AH-L01: fixture catalog validates all entries and exposes only installable HanaMesh applications (2.233083ms)
+✔ AH-L02: catalog URLs are standard-port HTTPS and redirects remain same-origin (9.992583ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 52.209375

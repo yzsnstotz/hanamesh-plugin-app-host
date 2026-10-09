@@ -1,0 +1,107 @@
+{
+  "evidence": "SOURCE",
+  "manifest": {
+    "manifestVersion": "1.0.0",
+    "providerId": "com.hanamesh.market",
+    "name": "SOURCE catalog",
+    "attribution": {
+      "name": "SOURCE",
+      "url": "https://hanamesh.com"
+    },
+    "transport": {
+      "kind": "https-json",
+      "endpoint": "https://catalog.hanamesh.com/v1/plugins",
+      "method": "GET"
+    },
+    "query": {
+      "supported": [
+        "q",
+        "cursor",
+        "limit"
+      ],
+      "defaultLimit": 50,
+      "maxLimit": 50,
+      "sorts": []
+    }
+  },
+  "page": {
+    "schemaVersion": "1.0.0",
+    "revision": "fixture-2026-09-19",
+    "items": [
+      {
+        "id": "com.hanamesh.vibe-trading",
+        "name": "@hanamesh/app-vibe-trading",
+        "displayName": "Vibe Trading",
+        "summary": "HanaMesh Vibe \u4ea4\u6613\u5e94\u7528\u3002",
+        "latestVersion": "0.1.0",
+        "categories": [
+          "hanamesh-app",
+          "finance"
+        ],
+        "package": {
+          "registry": "npm",
+          "name": "@hanamesh/app-vibe-trading"
+        },
+        "publisher": {
+          "name": "HanaMesh"
+        }
+      },
+      {
+        "id": "com.example.repository-only",
+        "name": "repository-only",
+        "displayName": "Repository only",
+        "summary": "\u53ea\u6709\u6e90\u7801\u4ed3\u5e93\uff0c\u4e0d\u80fd\u7531\u5e94\u7528\u5e93\u5b89\u88c5\u3002",
+        "categories": [
+          "hanamesh-app"
+        ],
+        "repository": {
+          "url": "https://example.com/repository"
+        },
+        "publisher": {
+          "name": "Example"
+        }
+      },
+      {
+        "id": "com.hanamesh.utility-plugin",
+        "name": "@hanamesh/utility-plugin",
+        "displayName": "Utility plugin",
+        "summary": "\u666e\u901a DSH \u63d2\u4ef6\uff0c\u4e0d\u662f HanaMesh \u5e94\u7528\u3002",
+        "latestVersion": "1.0.0",
+        "categories": [
+          "utility"
+        ],
+        "package": {
+          "registry": "npm",
+          "name": "@hanamesh/utility-plugin"
+        },
+        "publisher": {
+          "name": "HanaMesh"
+        }
+      }
+    ],
+    "page": {
+      "total": 3
+    }
+  },
+  "accepted": [
+    "1.0.0",
+    "1.1.0",
+    "1.23.4",
+    "1.2.0-rc.1+build.001"
+  ],
+  "refused": [
+    "0.9.0",
+    "2.0.0",
+    "1",
+    "01.0.0",
+    "1.01.0",
+    "1.0.01",
+    "1.0.0-01",
+    "1.0.0-",
+    "1.0.0+",
+    "v1.0.0",
+    1,
+    null,
+    "1.0.0\n"
+  ]
+}

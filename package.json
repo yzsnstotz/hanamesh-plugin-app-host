@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/dsh-app-host",
-  "version": "0.2.0-rc.10",
+  "version": "0.3.0",
   "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.0-rc.2",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
@@ -37,7 +37,14 @@
       "default": "./dist/install-target/suite.js"
     },
     "./install-target/schema.json": "./schemas/install-target.schema.json",
-    "./install-target/fixtures/*": "./dist/install-target/fixtures/*"
+    "./install-target/fixtures/*": "./dist/install-target/fixtures/*",
+    "./catalog/suite": {
+      "types": "./dist/catalog/suite.d.ts",
+      "default": "./dist/catalog/suite.js"
+    },
+    "./catalog/fixtures/*": "./dist/catalog/fixtures/*",
+    "./catalog/schema/manifest.json": "./schemas/catalog-source.schema.json",
+    "./catalog/schema/page.json": "./schemas/catalog-provider-page.schema.json"
   },
   "files": [
     "dist",

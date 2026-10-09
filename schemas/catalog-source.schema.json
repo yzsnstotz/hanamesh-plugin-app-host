@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:dsh-community-market:schema:catalog-source:1.0.0",
+  "$id": "urn:dsh-community-market:schema:catalog-source:1.1.0",
   "title": "DSH Community Market catalog source manifest",
   "description": "A provider-neutral declaration for one user-selectable HTTPS JSON catalog endpoint. A user registers its manifest URL; selection and all other user-owned state stay local. The smallest recommended profile supports q, category, cursor, and limit and uses 50 as an example page size, not a global cap.",
   "type": "object",
@@ -15,7 +15,9 @@
   ],
   "properties": {
     "manifestVersion": {
-      "const": "1.0.0"
+      "type": "string",
+      "pattern": "^1\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$(?![\\s\\S])",
+      "description": "Valid SemVer with major 1. Minor and patch additions preserve the validated shape; other majors are refused."
     },
     "providerId": {
       "type": "string",

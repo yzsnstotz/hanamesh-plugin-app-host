@@ -29,3 +29,6 @@ const binding:DshStorageBinding=domainBinding({global:{get:()=>null,set:async()=
 const authentication=browserAuthentication({requestRejection:()=>undefined});
 const dshEntry:(ctx:unknown,config:DshPluginConfig)=>Promise<void>=apply;
 void [dshConfig,binding,authentication,dshEntry]; // Type-only exercise, not evidence of real DSH integration.
+
+import {runCatalogProviderSuite,runCatalogConsumerSuite,type CatalogSuiteReport} from '../src/catalog/suite.js';
+const catalogReports:Promise<CatalogSuiteReport>[]=[runCatalogProviderSuite(),runCatalogConsumerSuite()];void catalogReports;

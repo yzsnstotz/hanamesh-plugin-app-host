@@ -1,4 +1,8 @@
 export const javascript = `
+import {runCatalogProviderSuite,runCatalogConsumerSuite} from '@hanamesh/dsh-app-host/catalog/suite';
+import assertCatalog from 'node:assert/strict';
+for(const report of [await runCatalogProviderSuite(),await runCatalogConsumerSuite()]){assertCatalog.equal(report.fail,0,JSON.stringify(report));console.log(JSON.stringify(report));}
+
 import {writeFile as writeProbeFile} from 'node:fs/promises';
 import {join as joinProbePath} from 'node:path';
 await writeProbeFile(joinProbePath(import.meta.dirname,'app.mjs'), \`import {createServer} from 'node:http';import{writeFile}from'node:fs/promises';import{join}from'node:path';const[port,data]=process.argv.slice(2);await writeFile(join(data,'independent-app.txt'),'actual app write');createServer((req,res)=>res.end('PACKAGE_SMOKE_IDENTITY')).listen(Number(port),'127.0.0.1');\`);
@@ -24,6 +28,9 @@ for(const report of installTargetReports)assertInstallTarget.equal(report.fail,0
 console.log(JSON.stringify({check:'INSTALL_TARGET_CONTRACT',status:'PASS',reports:installTargetReports.map(({suite,consumer,total,pass,fail,skipped})=>({suite,consumer,total,pass,fail,skipped}))}));
 `;
 export const typescript = `
+import {runCatalogProviderSuite,runCatalogConsumerSuite,type CatalogSuiteReport} from '@hanamesh/dsh-app-host/catalog/suite';
+const catalogReports:Promise<CatalogSuiteReport>[]=[runCatalogProviderSuite(),runCatalogConsumerSuite()];void catalogReports;
+
 import {openInstallTarget,INSTALL_TARGET_HASH,createMarketSeat} from '@hanamesh/dsh-app-host/client-ui';
 await openInstallTarget({packageName:'example-plugin'});
 await createMarketSeat().openInstallTarget({itemId:'catalog-id'});

@@ -1,6 +1,6 @@
 {
   "currentCandidate": {
-    "version": "0.2.0-rc.10",
+    "version": "0.3.0",
     "dshTarget": "0.2.0-rc.2",
     "vendorSha256VerifiedAtBuild": true,
     "libProvisionDistribution": "HanaMesh-owned distribution authorization record copied verbatim from canonical provision rc3; see dist/provision/LICENSE and docs/LICENSES.json; no new MIT or relicensing grant",
