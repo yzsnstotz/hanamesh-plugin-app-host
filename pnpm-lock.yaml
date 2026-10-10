@@ -65,7 +65,7 @@ importers:
         version: 3.18.4
       '@hanamesh/devkit':
         specifier: git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit
-        version: git+https://git@github.com:yzsnstotz/hanamesh-server-shared.git#8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89&path:/packages/devkit
+        version: git+https://git@github.com:yzsnstotz/hanamesh-server-shared.git#e6ccf710369a77c5fbf9ce4810b182727e4f2aa8&path:/packages/devkit
       typescript:
         specifier: 5.8.3
         version: 5.8.3
@@ -330,9 +330,9 @@ packages:
   '@deepseek-ai/schemastery@3.18.4':
     resolution: {integrity: sha512-SSXO6tYuyrIqKVbmOnIq0s+riUywYzouFMcnBluHF9n4KMo2G8HvEzhCYj6pj2617/glOjbJuVInJ9hfONsjkg==}
 
-  '@hanamesh/devkit@git+https://git@github.com:yzsnstotz/hanamesh-server-shared.git#8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89&path:/packages/devkit':
-    resolution: {commit: 8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89, path: /packages/devkit, repo: git@github.com:yzsnstotz/hanamesh-server-shared.git, type: git}
-    version: 0.2.0
+  '@hanamesh/devkit@git+https://git@github.com:yzsnstotz/hanamesh-server-shared.git#e6ccf710369a77c5fbf9ce4810b182727e4f2aa8&path:/packages/devkit':
+    resolution: {commit: e6ccf710369a77c5fbf9ce4810b182727e4f2aa8, path: /packages/devkit, repo: git@github.com:yzsnstotz/hanamesh-server-shared.git, type: git}
+    version: 0.2.3
     engines: {node: '>=22'}
     hasBin: true
 
@@ -770,7 +770,7 @@ snapshots:
       '@deepseek-ai/cosmokit': 1.8.5
       '@standard-schema/spec': 1.1.0
 
-  '@hanamesh/devkit@git+https://git@github.com:yzsnstotz/hanamesh-server-shared.git#8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89&path:/packages/devkit': {}
+  '@hanamesh/devkit@git+https://git@github.com:yzsnstotz/hanamesh-server-shared.git#e6ccf710369a77c5fbf9ce4810b182727e4f2aa8&path:/packages/devkit': {}
 
   '@hanamesh/lib-provision@git+https://git@github.com:yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a': {}
 
