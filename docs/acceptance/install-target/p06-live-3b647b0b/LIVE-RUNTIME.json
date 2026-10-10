@@ -1,0 +1,32 @@
+{
+  "checkedAt": "2026-10-10T00:48:05.028428+00:00",
+  "pid": 18789,
+  "ppid": 1,
+  "port": 58235,
+  "cleanUrl": "http://127.0.0.1:58235/",
+  "profile": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/dsh-home/profiles/web",
+  "listen": "COMMAND   PID  USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME\nnode    18789 yzliu   14u  IPv4 0xd5cc367c944041cc      0t0  TCP 127.0.0.1:58235 (LISTEN)",
+  "ps": "18789     1 00:51   0.1 /Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node /Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/bin.js web --host 127.0.0.1 --port 0 --no-open --trusted-host localhost",
+  "runtimeVersion": "0.2.0-rc.10",
+  "http": [
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:58235/",
+      "credentialsSent": false,
+      "status": 401,
+      "scope": "engineering unauthenticated read only, NOT REAL_UI"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:58235/hanamesh/library/target?itemId=fixture.public.dsh-notify",
+      "credentialsSent": false,
+      "status": 401,
+      "scope": "engineering unauthenticated read only, NOT REAL_UI"
+    }
+  ],
+  "gui": "NOT_RUN; same native cua.getState twice timed out 30s, kernel reset; no browser acquired/navigation/auth/confirmation",
+  "localhost": "NOT_RETRIED; prior platform rejection preserved",
+  "launchAttempts": 1,
+  "rawLogMode": "0o600",
+  "tokenRead": false
+}

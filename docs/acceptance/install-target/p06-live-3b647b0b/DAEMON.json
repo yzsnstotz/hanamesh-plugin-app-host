@@ -1,0 +1,27 @@
+{
+  "pid": 18789,
+  "argv": [
+    "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node",
+    "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/bin.js",
+    "web",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "0",
+    "--no-open",
+    "--trusted-host",
+    "localhost"
+  ],
+  "cwd": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef",
+  "completeEnvironment": {
+    "HOME": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/home",
+    "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/dsh-home",
+    "LANG": "C.UTF-8",
+    "PATH": "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin:/usr/bin:/bin"
+  },
+  "profile": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/dsh-home/profiles/web",
+  "startupLog": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/private/web.log",
+  "startupLogMode": "0600",
+  "attempts": 1,
+  "purpose": "normal independent rc10 supply; localhost not retried"
+}

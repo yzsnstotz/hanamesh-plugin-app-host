@@ -1,0 +1,19 @@
+{
+  "sourceCard": "CONTRACT-APPHOST-INSTALL-ROLLBACK-01",
+  "version": "0.2.0-rc.10",
+  "tagObject": "6bf61e7251f92ef3267f148bbb7f7ad2616914e7",
+  "peeledCommit": "6e78a75efbc1e9fbed29a32897a5ee108b0f613a",
+  "freshRemoteMain": "91009dffab61ec0372327d462ca7d82b26acef61",
+  "packSha256": "443a257ef8a4e80c386861bd4e67fe8a7b399cdb192dabe027d013e182797db1",
+  "installedFilesEqual": "95/95",
+  "referenceOnly": true,
+  "suiteRerun": false,
+  "signedSourceResults": {
+    "provider": "111/111",
+    "consumerV1": "30/30",
+    "chainV1": "15/15",
+    "consumerUnversioned": "26 pass, 4 handshake n/a skip",
+    "chainUnversioned": "13/13"
+  },
+  "limits": "SOURCE contract bytes reused; no REAL_UI failure/rollback claim"
+}

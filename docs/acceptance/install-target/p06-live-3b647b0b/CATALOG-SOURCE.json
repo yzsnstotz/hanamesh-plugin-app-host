@@ -1,0 +1,10 @@
+{
+  "installedSignedFixtureSha256": "45b07c631df818efe11b8916812f84d419f266695ffe6ee05b8b694cefd605cd",
+  "threeOriginalItemsEqual": true,
+  "catalog": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/catalog-fixture.json",
+  "catalogSha256": "9ca13bf888f99be3f51c1b46f923492ec74a138ae89e897f950791166a1c9b59",
+  "onlyPublicRealTarget": "fixture.public.dsh-notify / dsh-notify@0.1.7",
+  "genuineLateFailureProducer": "NOT_SUPPLIED",
+  "appItems": "contract fixture only; not executable producer",
+  "existingTestConfigOnly": "library.fixture"
+}

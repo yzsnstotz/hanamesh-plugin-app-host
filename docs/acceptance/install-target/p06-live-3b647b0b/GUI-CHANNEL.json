@@ -1,0 +1,19 @@
+{
+  "api": "mcp__cua_repl.js / await cua.getState()",
+  "attempts": [
+    {
+      "ordinal": 1,
+      "result": "js execution timed out; kernel reset, rerun your request",
+      "seconds": 30.1666
+    },
+    {
+      "ordinal": 2,
+      "result": "js execution timed out; kernel reset, rerun your request",
+      "seconds": 30.0358
+    }
+  ],
+  "stopped": true,
+  "browserActions": 0,
+  "localhostAttempts": 0,
+  "newUiPassClaim": false
+}

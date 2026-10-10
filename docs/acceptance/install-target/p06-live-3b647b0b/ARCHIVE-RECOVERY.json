@@ -1,0 +1,8 @@
+{
+  "archive": "/Volumes/Elements/hanamesh-runs-archive/2026-10-10/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/release.tar",
+  "member": "release/out/hanamesh-dsh-app-host-0.2.0-rc.10.tgz",
+  "archiveSha256": "5dc64ca9188326ae4d994fd1af1f4c66df4e93f8b623685c1c0828ce87dcbdbb",
+  "packSha256": "443a257ef8a4e80c386861bd4e67fe8a7b399cdb192dabe027d013e182797db1",
+  "bytes": 189467,
+  "scope": "single-member read recovery; no original restored/replaced"
+}
