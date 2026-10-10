@@ -1,0 +1,13 @@
+{
+  "catalogPath": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/catalog-fixture.json",
+  "currentSha256": "9ca13bf888f99be3f51c1b46f923492ec74a138ae89e897f950791166a1c9b59",
+  "matchesPreviousSourceReceipt": true,
+  "existingSourceReceipt": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/evidence/CATALOG-SOURCE.json",
+  "scope": "this supplied catalog only",
+  "onlyGenuineTarget": "fixture.public.dsh-notify / dsh-notify@0.1.7",
+  "lateFailureProducer": "NOT_SUPPLIED",
+  "executableApplicationProducer": "NOT_SUPPLIED",
+  "concurrentPendingGate": "NOT_RUN - native browser channel failed; genuine uninstalled dsh-notify exists",
+  "uiInstallRequests": 0,
+  "injectedFailures": 0
+}

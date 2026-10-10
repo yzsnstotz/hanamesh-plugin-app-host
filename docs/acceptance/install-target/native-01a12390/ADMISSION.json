@@ -1,0 +1,9 @@
+{
+  "origin": "hanamesh-plugin-app-host",
+  "by": "01a12390-72ec-7f22-9595-0d01a3caee7f",
+  "at": "2026-10-10T02:09:05.310243+00:00",
+  "base": "91009dffab61ec0372327d462ca7d82b26acef61",
+  "branch": "codex/p06-apphost-native-01a12390",
+  "noNewDependency": true,
+  "scope": "native rc10 UI continuation; protected runtime no restart/reinstall; ownrun only"
+}

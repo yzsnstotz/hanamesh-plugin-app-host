@@ -1,0 +1,69 @@
+{
+  "checkedAt": "2026-10-10T02:13:11.442538+00:00",
+  "reference": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/evidence/SUPPLY-BYTES-STORE.json",
+  "receiptSha256": "352f5246eabe91106898bf5cd057263d3c97236fb2e10656348dc1c36fdb62cc",
+  "receiptEqualCount": 95,
+  "receiptAllFilesEqual": true,
+  "currentInstalledVersion": "0.2.0-rc.10",
+  "currentProfileDependencies": {
+    "@hanamesh/dsh-app-host": "file:/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/supply/hanamesh-dsh-app-host-0.2.0-rc.10.tgz"
+  },
+  "dependencyPinsEqual": true,
+  "currentStoreDir": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/home/Library/pnpm/store/v10",
+  "storeMatchesSignedReceipt": true,
+  "publicTargetAlreadyInstalled": false,
+  "suiteOr95FileGateRerun": false,
+  "cliInstallRerun": false,
+  "newRuntimeCreated": false,
+  "signedPackInputs": [
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/supply/hanamesh-dsh-app-host-0.2.0-rc.10.tgz",
+      "exists": true,
+      "bytes": 189467,
+      "sha256": "443a257ef8a4e80c386861bd4e67fe8a7b399cdb192dabe027d013e182797db1",
+      "signedShaMatches": true
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/CONTRACT-APPHOST-INSTALL-ROLLBACK-01/release/out/hanamesh-dsh-app-host-0.2.0-rc.10.tgz",
+      "exists": false
+    }
+  ],
+  "protectedRuntime": [
+    {
+      "pid": 18789,
+      "psExit": 0,
+      "ps": "18789     1 /Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node /Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/bin.js web --host 127.0.0.1 --port 0 --no-open --trusted-host localhost",
+      "lsofExit": 0,
+      "listen": "COMMAND   PID  USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME\nnode    18789 yzliu   14u  IPv4 0xd5cc367c944041cc      0t0  TCP 127.0.0.1:58235 (LISTEN)"
+    },
+    {
+      "pid": 43282,
+      "psExit": 0,
+      "ps": "43282     1 /Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node /Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh/lib/bin.js web --host 127.0.0.1 --port 0 --no-open --trusted-host localhost",
+      "lsofExit": 0,
+      "listen": "COMMAND   PID  USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME\nnode    43282 yzliu   14u  IPv4 0xdd7e2ee7a03b30ab      0t0  TCP 127.0.0.1:63684 (LISTEN)"
+    }
+  ],
+  "readScriptErrors": [
+    "YAML assumptions failed twice; .modules.yaml contains JSON",
+    "historical release/out path absent; no reconstruction/copy attempted"
+  ],
+  "protectedFiles": [
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/dsh-home/profiles/web/package.json",
+      "sha256": "c837b412dfd2d0793d26cdad683e6a5ac862e788938c14f74f84863c068b481c"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/dsh-home/profiles/web/pnpm-lock.yaml",
+      "sha256": "731565915c01a9721cda4508bcc2fcd633a61970ccae9056a439b2632905d596"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/dsh-home/profiles/web/node_modules/.modules.yaml",
+      "sha256": "e189824b97ce9c0c205c1cf3cc9021f74e7b6fa9c815fe0378530c395091e199"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/catalog-fixture.json",
+      "sha256": "9ca13bf888f99be3f51c1b46f923492ec74a138ae89e897f950791166a1c9b59"
+    }
+  ]
+}

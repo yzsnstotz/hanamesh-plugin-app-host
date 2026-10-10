@@ -1,0 +1,33 @@
+{
+  "api": "await cua.getState()",
+  "elapsedSeconds": 25.2435,
+  "appsInventoryReturned": true,
+  "chrome": {
+    "id": "1",
+    "type": "extension",
+    "tabs": []
+  },
+  "error": "Unable to load browser request-header policy. Retry the browser command.",
+  "navigationCount": 0,
+  "previousTimeoutsRetained": 2,
+  "kernelResetRetained": true,
+  "notUiPass": true,
+  "targetBinding": {
+    "api": "cua.getBrowser({id:'1'})",
+    "result": "Chrome extension browser binding/documentation returned",
+    "elapsedSeconds": 2.8609
+  },
+  "nextCall": {
+    "code": "chromeBrowser.nameSession then cua.createBrowserTab('1','http://127.0.0.1:58235/')",
+    "result": "Unable to load browser request-header policy. Retry the browser command.",
+    "elapsedSeconds": 20.0759,
+    "pageReturned": false,
+    "screenshotReturned": false,
+    "failureWithinCombinedCall": "unknown; no navigation claimed"
+  },
+  "stopped": true,
+  "guiLock": "ACQUIRED -> RELEASED",
+  "noToolSwitch": true,
+  "localhostAttempts": 0,
+  "authenticationWeakening": false
+}

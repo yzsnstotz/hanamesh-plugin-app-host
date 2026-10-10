@@ -1,0 +1,10 @@
+{
+  "remote": "c4adb2dfc7d59b7c871e0db059e2fb3b433274ce\trefs/heads/codex/p06-apphost-live-3b647b0b\n91009dffab61ec0372327d462ca7d82b26acef61\trefs/heads/main\n6bf61e7251f92ef3267f148bbb7f7ad2616914e7\trefs/tags/v0.2.0-rc.10\n6e78a75efbc1e9fbed29a32897a5ee108b0f613a\trefs/tags/v0.2.0-rc.10^{}\n",
+  "baseCommit": "91009dffab61ec0372327d462ca7d82b26acef61",
+  "taskBranch": "codex/p06-apphost-native-01a12390",
+  "sourcePackageVersion": "0.5.1",
+  "runtimeInput": "CARD pinned signed rc10; not rebuilt from current normal main",
+  "businessChanges": 0,
+  "dependencyChanges": 0,
+  "historicalPrimaryChanged": false
+}

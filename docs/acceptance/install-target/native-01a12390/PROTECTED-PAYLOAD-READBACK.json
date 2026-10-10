@@ -1,0 +1,85 @@
+{
+  "checkedAt": "2026-10-10T02:14:11.426340+00:00",
+  "oldPayloadFiles": 15,
+  "allSealedFilesStillEqual": true,
+  "checks": [
+    {
+      "source": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/transport/REPORT.md",
+      "sha256": "2a64de8c8b767d9e4edcdd55293353967ca736672d67306f670adbf55e7059f6",
+      "matchesSealedManifest": true
+    },
+    {
+      "source": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/transport/BLOCKED.md",
+      "sha256": "e7f00fc89603c48a0637087d457ca25d3f45aea5e70931fc6a820d2d535c50b5",
+      "matchesSealedManifest": true
+    },
+    {
+      "source": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/transport/CLEANUP.json",
+      "sha256": "11c6ee1c0d04b1b1a618f1ab33768ef814c2789d5f539b91249f2b5298978521",
+      "matchesSealedManifest": true
+    },
+    {
+      "source": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/transport/evidence/live-rc10-3b647b0b/GIT-DELIVERY.json",
+      "sha256": "cdcf1b5fa83c62642f888fc12552f0746677fe59eb98a27d2bc1676385b0e8cf",
+      "matchesSealedManifest": true
+    },
+    {
+      "source": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/transport/evidence/live-rc10-3b647b0b/GUI-CHANNEL.json",
+      "sha256": "16d1219a1f47a37c6c3e0e011de35b0e8aa9d2e688174e1aec77ab3592df2e96",
+      "matchesSealedManifest": true
+    },
+    {
+      "source": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/transport/evidence/live-rc10-3b647b0b/RC10-SOURCE-REFERENCE.json",
+      "sha256": "908b8183ae9d40f5ad5751f0b48aec4c09a68604beba99fdf144f5c0d0637cad",
+      "matchesSealedManifest": true
+    },
+    {
+      "source": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/transport/evidence/live-rc10-3b647b0b/LIVE-RUNTIME.json",
+      "sha256": "9ae4a829013f4576d2e61b3cee8da557fd08882e657f60912df55224f75f06db",
+      "matchesSealedManifest": true
+    },
+    {
+      "source": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/transport/evidence/live-rc10-3b647b0b/SESSION-PUBLIC-ROUTE-READ.json",
+      "sha256": "a9250b7acdbad2f65cedc7efd53163fc3bdd36d122ae169e1fe5a7ab541b887e",
+      "matchesSealedManifest": true
+    },
+    {
+      "source": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/transport/evidence/live-rc10-3b647b0b/ARCHIVE-RECOVERY.json",
+      "sha256": "4bf0538b2252be92a9a86c399eb1f9e069473bc092fbca7afee46941d0cbab5f",
+      "matchesSealedManifest": true
+    },
+    {
+      "source": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/transport/evidence/live-rc10-3b647b0b/OFFICIAL-ADD.json",
+      "sha256": "b60659a4555a40ebc8e5c8c5b3da4db9ae5fbcd1b4044756a22881fbda076e7d",
+      "matchesSealedManifest": true
+    },
+    {
+      "source": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/transport/evidence/live-rc10-3b647b0b/SUPPLY-BYTES-STORE.json",
+      "sha256": "352f5246eabe91106898bf5cd057263d3c97236fb2e10656348dc1c36fdb62cc",
+      "matchesSealedManifest": true
+    },
+    {
+      "source": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/transport/evidence/live-rc10-3b647b0b/OFFICIAL-ADD-COMMAND.json",
+      "sha256": "4b714254093dc76e0193e28da71b8a7eb9e46123c38c9158773f7ff802cf791e",
+      "matchesSealedManifest": true
+    },
+    {
+      "source": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/transport/evidence/live-rc10-3b647b0b/TOOLCHAIN.json",
+      "sha256": "768b018dbeb6551ddea588754414597422c7b0698722c6c2dc71060e67c075d2",
+      "matchesSealedManifest": true
+    },
+    {
+      "source": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/transport/evidence/live-rc10-3b647b0b/CATALOG-SOURCE.json",
+      "sha256": "0add579dd54abff9d44c501369e26996c401d29ab944c7ca76704bac36d16cf9",
+      "matchesSealedManifest": true
+    },
+    {
+      "source": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/3b647b0b-4fbb-4140-9070-896b7bfb12ef/transport/evidence/live-rc10-3b647b0b/DAEMON.json",
+      "sha256": "23b9a6d3d941ba7738d8a2f1c6d2de1adc56d4d506b544d04a1c4ac3d0a83182",
+      "matchesSealedManifest": true
+    }
+  ],
+  "copiedFiles": 0,
+  "transportAttempts": 0,
+  "devkitPayloadRereadOrTransported": false
+}

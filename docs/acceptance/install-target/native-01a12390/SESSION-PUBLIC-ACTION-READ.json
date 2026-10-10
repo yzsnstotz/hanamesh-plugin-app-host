@@ -1,0 +1,617 @@
+{
+  "checkedAt": "2026-10-10T02:12:17.738268+00:00",
+  "scope": "pinned official published JS in lib/dist only; no secret/profile read; source evidence not UI",
+  "packages": [
+    {
+      "package": "dsh-client-connection",
+      "version": "0.2.0-rc.2",
+      "files": [
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-client-connection/lib/client.js",
+          "sha256": "0fbb93fa2382bb66919767f69c909585c6255486f9536f9232231edaeac8c4e6",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-client-connection/lib/index.js",
+          "sha256": "3950f524aed44e28240140a254cd928ea40eba8e2d04cc8fd04f92a687f5c91d",
+          "hits": [
+            {
+              "line": 356,
+              "snippet": "|| !Number.isSafeInteger(Date.now() + this.maxAgeMilliseconds)) throw new Error(\"client-connection: cookieMaxAgeDays exceeds the safe timestamp range\");\n\t}\n\t/**\n\t* Initialize browser authentication and create its durable signing secret\n\t* when this Harness home has none.\n\t* @"
+            },
+            {
+              "line": 802,
+              "snippet": "\trecovery: ConnectionRecoveryConfigSchema.default({}),\n\ttrustedHosts: z.array(String).default([]),\n\tcookieMaxAgeDays: z.natural().min(1).default(30),\n\tmaxRequestBodyBytes: z.natural().min(1).default(DEFAULT_MAX_REQUEST_BODY_BYTES)\n});\n/**\n* Provides carrier-neutral RPC and Fe"
+            },
+            {
+              "line": 815,
+              "snippet": "resolveConnectionConfig(config?.recovery);\n\tconst trustedHosts = config?.trustedHosts ?? [];\n\tconst cookieMaxAgeDays = config?.cookieMaxAgeDays ?? 30;\n\tconst maxRequestBodyBytes = config?.maxRequestBodyBytes ?? 314572800;\n\tfor (const entry of trustedHosts) assertTrustedAuthor"
+            },
+            {
+              "line": 815,
+              "snippet": "fig?.recovery);\n\tconst trustedHosts = config?.trustedHosts ?? [];\n\tconst cookieMaxAgeDays = config?.cookieMaxAgeDays ?? 30;\n\tconst maxRequestBodyBytes = config?.maxRequestBodyBytes ?? 314572800;\n\tfor (const entry of trustedHosts) assertTrustedAuthority(entry);\n\tassertImageBod"
+            },
+            {
+              "line": 819,
+              "snippet": " = new HostConnectionService(ctx, trustedHosts, await BrowserAuth.create(ctx.root, ctx.credentials, cookieMaxAgeDays));\n\tctx.inject([\"webServer\"], (webCtx) => {\n\t\tassertImageBodyCapacity(webCtx, maxRequestBodyBytes);\n\t\twebCtx.on(\"webserver/index-inject\", (table) => {\n\t\t\ttable"
+            }
+          ],
+          "totalHits": 5
+        }
+      ]
+    },
+    {
+      "package": "dsh-web-app",
+      "version": "0.2.0-rc.2",
+      "files": [
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-app/lib/startup.js",
+          "sha256": "95a47053483fbe8ec86711369b8791bccb592c303fcc89300458a4bd07c6c252",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-app/lib/index.js",
+          "sha256": "50c7ce5b93e8a7ac0117e066699cd31b553a5a135d38b7051d6a8364ac691af4",
+          "hits": [],
+          "totalHits": 0
+        }
+      ]
+    },
+    {
+      "package": "dsh-web-frontend",
+      "version": "0.2.0-rc.2",
+      "files": [
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/index-5SrrfWpU.js",
+          "sha256": "af3ff948cf3f132edbddebea93e2f9f02233b390a94bd4c9842182300be811bb",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/vendor-CCJJTK99.js",
+          "sha256": "38f95ea3ff85b49dc4d8f237db208bbaedd2cb8c31611215c246dde41786ff21",
+          "hits": [
+            {
+              "line": 152,
+              "snippet": "donly$|function |function\\\\\\\\t|function$|foreach |foreach\\\\\\\\t|foreach$|coproc |coproc\\\\\\\\t|coproc$|logout |logout\\\\\\\\t|logout$|export |export\\\\\\\\t|export$|select |select\\\\\\\\t|select$|repeat |repeat\\\\\\\\t|repeat$|pushd |pushd\\\\\\\\t|pushd$|until |until\\\\\\\\t|until$|whil"
+            },
+            {
+              "line": 152,
+              "snippet": "unction |function\\\\\\\\t|function$|foreach |foreach\\\\\\\\t|foreach$|coproc |coproc\\\\\\\\t|coproc$|logout |logout\\\\\\\\t|logout$|export |export\\\\\\\\t|export$|select |select\\\\\\\\t|select$|repeat |repeat\\\\\\\\t|repeat$|pushd |pushd\\\\\\\\t|pushd$|until |until\\\\\\\\t|until$|while |while"
+            },
+            {
+              "line": 152,
+              "snippet": "ction\\\\\\\\t|function$|foreach |foreach\\\\\\\\t|foreach$|coproc |coproc\\\\\\\\t|coproc$|logout |logout\\\\\\\\t|logout$|export |export\\\\\\\\t|export$|select |select\\\\\\\\t|select$|repeat |repeat\\\\\\\\t|repeat$|pushd |pushd\\\\\\\\t|pushd$|until |until\\\\\\\\t|until$|while |while\\\\\\\\t|while$"
+            },
+            {
+              "line": 152,
+              "snippet": "donly$|function |function\\\\\\\\t|function$|foreach |foreach\\\\\\\\t|foreach$|coproc |coproc\\\\\\\\t|coproc$|logout |logout\\\\\\\\t|logout$|export |export\\\\\\\\t|export$|select |select\\\\\\\\t|select$|repeat |repeat\\\\\\\\t|repeat$|pushd |pushd\\\\\\\\t|pushd$|until |until\\\\\\\\t|until$|whil"
+            },
+            {
+              "line": 152,
+              "snippet": "unction |function\\\\\\\\t|function$|foreach |foreach\\\\\\\\t|foreach$|coproc |coproc\\\\\\\\t|coproc$|logout |logout\\\\\\\\t|logout$|export |export\\\\\\\\t|export$|select |select\\\\\\\\t|select$|repeat |repeat\\\\\\\\t|repeat$|pushd |pushd\\\\\\\\t|pushd$|until |until\\\\\\\\t|until$|while |while"
+            },
+            {
+              "line": 152,
+              "snippet": "ction\\\\\\\\t|function$|foreach |foreach\\\\\\\\t|foreach$|coproc |coproc\\\\\\\\t|coproc$|logout |logout\\\\\\\\t|logout$|export |export\\\\\\\\t|export$|select |select\\\\\\\\t|select$|repeat |repeat\\\\\\\\t|repeat$|pushd |pushd\\\\\\\\t|pushd$|until |until\\\\\\\\t|until$|while |while\\\\\\\\t|while$"
+            },
+            {
+              "line": 152,
+              "snippet": "t\\\\\\\\W|nocorrect\\\\\\\\$|function\\\\\\\\W|function\\\\\\\\$|foreach\\\\\\\\W|foreach\\\\\\\\$|repeat\\\\\\\\W|repeat\\\\\\\\$|logout\\\\\\\\W|logout\\\\\\\\$|coproc\\\\\\\\W|coproc\\\\\\\\$|select\\\\\\\\W|select\\\\\\\\$|while\\\\\\\\W|while\\\\\\\\$|pushd\\\\\\\\W|pushd\\\\\\\\$|until\\\\\\\\W|until\\\\\\\\$|case\\\\\\\\W|case\\\\\\\\$|done\\\\\\\\"
+            },
+            {
+              "line": 152,
+              "snippet": "rect\\\\\\\\$|function\\\\\\\\W|function\\\\\\\\$|foreach\\\\\\\\W|foreach\\\\\\\\$|repeat\\\\\\\\W|repeat\\\\\\\\$|logout\\\\\\\\W|logout\\\\\\\\$|coproc\\\\\\\\W|coproc\\\\\\\\$|select\\\\\\\\W|select\\\\\\\\$|while\\\\\\\\W|while\\\\\\\\$|pushd\\\\\\\\W|pushd\\\\\\\\$|until\\\\\\\\W|until\\\\\\\\$|case\\\\\\\\W|case\\\\\\\\$|done\\\\\\\\W|done\\\\\\\\$|"
+            },
+            {
+              "line": 152,
+              "snippet": "donly$|function |function\\\\\\\\t|function$|foreach |foreach\\\\\\\\t|foreach$|coproc |coproc\\\\\\\\t|coproc$|logout |logout\\\\\\\\t|logout$|export |export\\\\\\\\t|export$|select |select\\\\\\\\t|select$|repeat |repeat\\\\\\\\t|repeat$|pushd |pushd\\\\\\\\t|pushd$|until |until\\\\\\\\t|until$|whil"
+            },
+            {
+              "line": 152,
+              "snippet": "unction |function\\\\\\\\t|function$|foreach |foreach\\\\\\\\t|foreach$|coproc |coproc\\\\\\\\t|coproc$|logout |logout\\\\\\\\t|logout$|export |export\\\\\\\\t|export$|select |select\\\\\\\\t|select$|repeat |repeat\\\\\\\\t|repeat$|pushd |pushd\\\\\\\\t|pushd$|until |until\\\\\\\\t|until$|while |while"
+            },
+            {
+              "line": 152,
+              "snippet": "ction\\\\\\\\t|function$|foreach |foreach\\\\\\\\t|foreach$|coproc |coproc\\\\\\\\t|coproc$|logout |logout\\\\\\\\t|logout$|export |export\\\\\\\\t|export$|select |select\\\\\\\\t|select$|repeat |repeat\\\\\\\\t|repeat$|pushd |pushd\\\\\\\\t|pushd$|until |until\\\\\\\\t|until$|while |while\\\\\\\\t|while$"
+            }
+          ],
+          "totalHits": 11
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/clojure-P80f7IUj.js",
+          "sha256": "e70b326f33d37ddb29dd71abcc72321f1b0d900888ef05db9d7821fdf60eab22",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/python-B6aJPvgy.js",
+          "sha256": "1c6725168b498ade965cf0d8723c600fc9bf0de74988b6191106b304b571aaae",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/css-CLj8gQPS.js",
+          "sha256": "69ee0204c2c40a92b8368049da700f0d08d40f5274809cfb624fd09e73eb32ee",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/go-C27-OAKa.js",
+          "sha256": "a6c3f73f1abb778ef3f5e489db1942542dc88ddac5b111ff55813fa1655dd23c",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/rust-B1yitclQ.js",
+          "sha256": "c02d27696b07c37fa2cac9de826a967a30401a33959cd891ebbf11d5bf245ce3",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/ini-BEwlwnbL.js",
+          "sha256": "d72bde3de42bb1ef3268bd65afedecf54747c208ac24335f7c6b4456924091c1",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/lua-BaeVxFsk.js",
+          "sha256": "b218901041a92a152f51a7f3f74f26120e931e258abb1c73bcee551721015f67",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/verilog-BQ8w6xss.js",
+          "sha256": "75c957de3e188057fb783ea4af23f1922a52390395c3a882a3fc46a5ea524047",
+          "hits": [
+            {
+              "line": 1,
+              "snippet": "\"}]},\"instantiation_patterns\":{\"patterns\":[{\"include\":\"#keywords\"},{\"begin\":\"^\\\\\\\\s*(?!always|and|assign|output|input|inout|wire|module)([A-Za-z][0-9A-Z_a-z]*)\\\\\\\\s+([A-Za-z][0-9A-Z_a-z]*)(?<!begin|if)\\\\\\\\s*(?=\\\\\\\\(|$)\",\"beginCaptures\":{\"1\":{\"name\":\"entity.name.tag.mo"
+            }
+          ],
+          "totalHits": 1
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/html-fwsONPVS.js",
+          "sha256": "98fab9ca36666a6cd0163a9c54349d9d05b891912056028d6fd1cf0f012c3cdf",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/cmake-D1j8_8rp.js",
+          "sha256": "f87d0ba1478aa4f5eb35b22e1276f0b330f30030b2c2e33cc7400a7b14f96eb2",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/log-2UxHyX5q.js",
+          "sha256": "7b2292970ede37be20c120a51d12bcbff43e82278aef1626816d71c344a07e27",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/nix-CwoSXNpI.js",
+          "sha256": "1af30178686ebb1c86d28d0511450379ac22d55fe0c0a72d5fa323915128afce",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/scss-D5BDwBP9.js",
+          "sha256": "d873165bb797f0547966aa681ade9af96c06ec17c2b0c12708303d9ace461753",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/graphql-DujV8YkJ.js",
+          "sha256": "a535b6adbb63621e5434d6f6b4166500ca54f9b40d107f7ec3c7e18ba7a94e4b",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/diff-D97Zzqfu.js",
+          "sha256": "710e6506726fe0befb51b8e40fc9aa12cf7fa733ec8f24019359276c4ea653dc",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/powershell-Dpen1YoG.js",
+          "sha256": "c360ba2b7bd49d15499a080752d866530fd20934c82309b4feb5d8e5f1f55400",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/bibtex-CHM0blh-.js",
+          "sha256": "4af4d61dd9d7297f65b361204af72d53e91fa70a4ede5e85bcaf40b4a63cd4a2",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/latex-B4C7GdlO.js",
+          "sha256": "42981a8c224a81529576e74b07520f069c30c122ff83d9fbb68cb8946168e202",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/erlang-DsQrWhSR.js",
+          "sha256": "87ef69877dda1297912b0a7a12ee0f3f00de0f675bb6214b0f1adf58629b75fa",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/kotlin-BdnUsdx6.js",
+          "sha256": "99d81f485d9366a1f3f8c84b0fc5cee69b0d28d6c8f7f1e8dac29e554e80d24f",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/javascript-DI5JR1nB.js",
+          "sha256": "b0952ac6a3182b0c45b005da5d76a764890d6da3df2fe61affe471a59744a169",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/php-LEPfNACG.js",
+          "sha256": "e9918a195f96a5c13c225637065a64e3a776b184e311df1593cc83547bca6f05",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/vue-Dq2x6432.js",
+          "sha256": "72053ae8f0d1a32f971ec40c4b5ff730277422ccd0a92e6b635263c1e923369c",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/sql-CRqJ_cUM.js",
+          "sha256": "60e00dca0f03a580d3717adbb9c730772e750909dc8c78408051091278eda6c0",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/r-Dspwwk_N.js",
+          "sha256": "2a6a1bc92ace9d72d1232a794f79884bb8ebda1d62a96a94a54fc35945084b14",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/bat-BkioyH1T.js",
+          "sha256": "dcd21493b88786df4ed4628a9ae3d95f8b05a3f2547eb14c71a519849bd97074",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/cpp-DIPi6g--.js",
+          "sha256": "e8e90a01d5632251be2784ecea9b061cf05f962db1c8684a8bae6480eba88823",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/csv-fuZLfV_i.js",
+          "sha256": "dc5872798e0825621bc48f5907e872a0fb34bd3bb2c7a5fd3c6841670675f830",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/fsharp-CXgrBDvD.js",
+          "sha256": "7cda55ae2e03fd929e8d18dbde6c9dfbe48d91f02e4c65bbb88e21ef3e38653a",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/dart-bE4Kk8sk.js",
+          "sha256": "8d6d70a18e68e8c4ef0aecf78ed03f9768342b9953dd0e9f8963b070152b1ab5",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/ruby-R292Iif0.js",
+          "sha256": "ff0d955ba771790d77836d16df4048ab2fc07e121cd78a02bf834609d501a76d",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/markdown-Cvjx9yec.js",
+          "sha256": "d9a83df9f57287a1f3594d5231480ea90a14adf7a8550c7a57930c3cf5b3f47d",
+          "hits": [
+            {
+              "line": 1,
+              "snippet": "\\\\\\\\G)(\\\\\\\\s*)(`{3,}|~{3,})\\\\\\\\s*(?i:(shell|sh|bash|zsh|bashrc|bash_profile|bash_login|profile|bash_logout|.textmate_init|\\\\\\\\{\\\\\\\\.bash.+?})((\\\\\\\\s+|[,:?{])[^`]*)?$)\",\"beginCaptures\":{\"3\":{\"name\":\"punctuation.definition.markdown\"},\"4\":{\"name\":\"fenced_code.block.lan"
+            }
+          ],
+          "totalHits": 1
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/system-verilog-CnnmHF94.js",
+          "sha256": "af1326c44237f613391eabb4d4408d8bd0af7e11be44a7c0809fa7ba50ca7fc1",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/java-CylS5w8V.js",
+          "sha256": "934a0e63cf4cefb991100f15c42fdc60aaee3c7036a7ba6cb10ce5a6322a7ae9",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/vb-D17OF-Vu.js",
+          "sha256": "620746076a77ea58336f0f75e1de5633f1e7e727997b859eb8aeba2e1e087733",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/xml-sdJ4AIDG.js",
+          "sha256": "d41d94621a62727ad56943d2d7e04e820c2642c3a9c246eb10e7d6e6e89d1fed",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/asciidoc-Ve4PFQV2.js",
+          "sha256": "04799e170b2ee5657d243fdfa45b40bdc22d3e4c113b87c581ad6889125d4458",
+          "hits": [
+            {
+              "line": 1,
+              "snippet": "?>^\\\\\\\\[(source)[#,]\\\\\\\\p{blank}*(?i:(shell|sh|bash|zsh|bashrc|bash_profile|bash_login|profile|bash_logout|.textmate_init|\\\\\\\\{\\\\\\\\.bash.+?}))([#,][^]]+)*]$))\",\"end\":\"((?<=--|\\\\\\\\.\\\\\\\\.\\\\\\\\.\\\\\\\\.)|^\\\\\\\\p{blank}*)$\",\"name\":\"markup.code.shell.asciidoc\",\"patterns\":[{\"c"
+            },
+            {
+              "line": 1,
+              "snippet": ":\"^\\\\\\\\[(source)[#,]\\\\\\\\p{blank}*(?i:(shell|sh|bash|zsh|bashrc|bash_profile|bash_login|profile|bash_logout|.textmate_init|\\\\\\\\{\\\\\\\\.bash.+?}))([#,]([^],]+))*]$\"},{\"include\":\"#inlines\"},{\"include\":\"#block-title\"},{\"begin\":\"(^|\\\\\\\\G)(-{4,})\\\\\\\\s*$\",\"end\":\"(^|\\\\\\\\G)(\\\\"
+            },
+            {
+              "line": 1,
+              "snippet": ",{\"begin\":\"(^|\\\\\\\\G)(`{3,})\\\\\\\\s*(?i:(shell|sh|bash|zsh|bashrc|bash_profile|bash_login|profile|bash_logout|.textmate_init|\\\\\\\\{\\\\\\\\.bash.+?})((\\\\\\\\s+|[,:?{])[^`]*)?$)\",\"end\":\"(^|\\\\\\\\G)(\\\\\\\\2)\\\\\\\\s*$\",\"name\":\"markup.code.shell.asciidoc\",\"patterns\":[{\"include\":\"#block"
+            }
+          ],
+          "totalHits": 3
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/toml-vGWfd6FD.js",
+          "sha256": "aeb916b96e9eb064aa87c8f765abfded0ab0d53aefa3aa9b90cc1af4d1ad75d2",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/dotenv-Da5cRb03.js",
+          "sha256": "c7dc2e241e78b22b2a8015afb7c759b019616267ace3ab7660b3a8aa2fe207d7",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/html-derivative-DOyKdj44.js",
+          "sha256": "fa06bb6afb8b726edde9412e7aee065c560fe4afd21fcac4ac9992b783dd8ddb",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/mdx-Cmh6b_Ma.js",
+          "sha256": "8b88c45af52bcc95513e479bfce5b068d91f60a811acf8bb614bbb071d0e1151",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/http-DcV90OkR.js",
+          "sha256": "18da94c1645eab94e76b8310ad8436a8f74e224d3e7415bc0d9ef54eaf74a0c1",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/perl-DsWkoyyU.js",
+          "sha256": "170909d86f068983ff341d2effa52fdf73e870231a2527550c8b3b996faa3c82",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/groovy-gcz8RCvz.js",
+          "sha256": "25aafe383369a4f78a33abdb518404d8836773f3dfb0f199e7d5104acea74832",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/swift-D82vCrfD.js",
+          "sha256": "db1c1476b58bc8b4ed86fe585ad9191fcb55b7ad851144e7d60af1836f49c26a",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/fish-BvzEVeQv.js",
+          "sha256": "f7881c9158118435c2f1a6d3859ecd84ad7539c845584fd110ab844c69e7972b",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/svelte-DNMY6jOf.js",
+          "sha256": "11a52e5801d62411603c7ea3ee2735fb9fed853679a9a694e578c69214c3fef5",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/hcl-BWvSN4gD.js",
+          "sha256": "2f141d770bcd86b2e056b76b6a65b74c534454f371490d3bdff2dec63ceb9fd8",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/yaml-Buea-lGh.js",
+          "sha256": "8aad9cddbe3602b06b194e66d021aa63d715df01cf94e8ffcac810e48f0529e3",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/elixir-CvYZzuDY.js",
+          "sha256": "be08af7448a3bc9de8e6d71e8fc351a09a5d5ba77784a8c4012199a9e3f5f5fe",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/csharp-DSvCPggb.js",
+          "sha256": "8443ef70cc6fec2de601c15c548ab1890e9bbc71a21ba9c216de77481c3cb6d6",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/scala-C151Ov-r.js",
+          "sha256": "9ff142f2d4ab345bd5058e81274204cc9ebfe88702e34fe1c9a9810b9bc3ee65",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/rst-BbocfKWr.js",
+          "sha256": "e8bb098f90b54ffaa5b08ca790d689f868cbe5319dfbd87245b92771a839ff0a",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/c-BIGW1oBm.js",
+          "sha256": "9c06263922b97a0e5890b832e23d44f3c0da54430ac6f971aa0ede8f4c2b8b66",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/make-CHLpvVh8.js",
+          "sha256": "9ef9765da0e58e256d97f4f2da8197a72ad4d84e8217b7160728d646c7e5e236",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/haskell-Df6bDoY_.js",
+          "sha256": "731f9a3ba301c738fbbb6278b596171b0195cb69bd42febdf6edc6da10f87faf",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/less-B1dDrJ26.js",
+          "sha256": "50c4bace8838379b74e0a22dab369c3cb81b57ba1b5b17ea5af8668f8290e8bf",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/proto-C7zT0LnQ.js",
+          "sha256": "fc5a20a7755c13ecedd65173c09d76e4694d4db44771318d89872607e2559659",
+          "hits": [],
+          "totalHits": 0
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/langs/julia-BpJ6DjL_.js",
+          "sha256": "8659134e27cae158c9f9487d40e040a3be6f8cc13f6be5bc83997e7ca2d55e9d",
+          "hits": [],
+          "totalHits": 0
+        }
+      ]
+    },
+    {
+      "package": "dsh-client-ui-settings-account",
+      "version": "0.2.0-rc.2",
+      "files": [
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-client-ui-settings-account/lib/client.js",
+          "sha256": "81b0b302cc2ad65f75350e68d25f0ea946cc084702cac47dc195e72924c3772d",
+          "hits": [
+            {
+              "line": 1316,
+              "snippet": ": t(\"platformRetry\"),\n\t\t\t\tonClose: closePage\n\t\t\t});\n\t\t}\n\t\t//#endregion\n\t\t//#region lib/types/client/SignOutDialog.js\n\t\t/** Account sign-out confirmation with the current task impact. */\n\t\t/** @param props - task impact at opening, localized copy, and account actions."
+            },
+            {
+              "line": 1317,
+              "snippet": "se: closePage\n\t\t\t});\n\t\t}\n\t\t//#endregion\n\t\t//#region lib/types/client/SignOutDialog.js\n\t\t/** Account sign-out confirmation with the current task impact. */\n\t\t/** @param props - task impact at opening, localized copy, and account actions. @returns sign-out confirmation."
+            },
+            {
+              "line": 1318,
+              "snippet": "pact. */\n\t\t/** @param props - task impact at opening, localized copy, and account actions. @returns sign-out confirmation. */\n\t\tfunction SignOutDialog({ running, signOut, close, t }) {\n\t\t\tconst [busy, setBusy] = (0, react.useState)(false);\n\t\t\tconst [failed, setFailed]"
+            },
+            {
+              "line": 1319,
+              "snippet": "pact at opening, localized copy, and account actions. @returns sign-out confirmation. */\n\t\tfunction SignOutDialog({ running, signOut, close, t }) {\n\t\t\tconst [busy, setBusy] = (0, react.useState)(false);\n\t\t\tconst [failed, setFailed] = (0, react.useState)(false);\n\t\t\tco"
+            },
+            {
+              "line": 1319,
+              "snippet": "d copy, and account actions. @returns sign-out confirmation. */\n\t\tfunction SignOutDialog({ running, signOut, close, t }) {\n\t\t\tconst [busy, setBusy] = (0, react.useState)(false);\n\t\t\tconst [failed, setFailed] = (0, react.useState)(false);\n\t\t\tconst dismiss = () => {\n\t\t\t"
+            },
+            {
+              "line": 1329,
+              "snippet": "\t\t};\n\t\t\tconst confirm = async () => {\n\t\t\t\tsetBusy(true);\n\t\t\t\tsetFailed(false);\n\t\t\t\ttry {\n\t\t\t\t\tawait signOut();\n\t\t\t\t\tclose();\n\t\t\t\t} catch {\n\t\t\t\t\tsetFailed(true);\n\t\t\t\t} finally {\n\t\t\t\t\tsetBusy(false);\n\t\t\t\t}\n\t\t\t};\n\t\t\treturn (0, react_jsx_runtime.jsxs)(_deepseek_ai_dsh_cl"
+            },
+            {
+              "line": 1340,
+              "snippet": "s)(_deepseek_ai_dsh_client_ui_primitives.Modal, {\n\t\t\t\topen: true,\n\t\t\t\theadless: true,\n\t\t\t\ttitle: t(\"signOut\"),\n\t\t\t\tonClose: dismiss,\n\t\t\t\tclassName: SignInDialog_module_css_default.dialog,\n\t\t\t\tchildren: [(0, react_jsx_runtime.jsxs)(\"div\", {\n\t\t\t\t\tclassName: SignInDialo"
+            },
+            {
+              "line": 1350,
+              "snippet": "runtime.jsx)(\"h2\", {\n\t\t\t\t\t\t\t\tclassName: SignInDialog_module_css_default.title,\n\t\t\t\t\t\t\t\tchildren: t(\"signOut\")\n\t\t\t\t\t\t\t}), (0, react_jsx_runtime.jsx)(\"button\", {\n\t\t\t\t\t\t\t\ttype: \"button\",\n\t\t\t\t\t\t\t\tclassName: SignInDialog_module_css_default.close,\n\t\t\t\t\t\t\t\t\"aria-label\": t(\""
+            },
+            {
+              "line": 1362,
+              "snippet": "className: SignInDialog_module_css_default.description,\n\t\t\t\t\t\t\tchildren: t(running === \"unknown\" ? \"signOutUnknownDescription\" : running ? \"signOutRunningDescription\" : \"signOutDescription\")\n\t\t\t\t\t\t}),\n\t\t\t\t\t\tfailed && (0, react_jsx_runtime.jsx)(\"p\", {\n\t\t\t\t\t\t\tclassName"
+            },
+            {
+              "line": 1362,
+              "snippet": "lt.description,\n\t\t\t\t\t\t\tchildren: t(running === \"unknown\" ? \"signOutUnknownDescription\" : running ? \"signOutRunningDescription\" : \"signOutDescription\")\n\t\t\t\t\t\t}),\n\t\t\t\t\t\tfailed && (0, react_jsx_runtime.jsx)(\"p\", {\n\t\t\t\t\t\t\tclassName: SignInDialog_module_css_default.descri"
+            },
+            {
+              "line": 1362,
+              "snippet": "n: t(running === \"unknown\" ? \"signOutUnknownDescription\" : running ? \"signOutRunningDescription\" : \"signOutDescription\")\n\t\t\t\t\t\t}),\n\t\t\t\t\t\tfailed && (0, react_jsx_runtime.jsx)(\"p\", {\n\t\t\t\t\t\t\tclassName: SignInDialog_module_css_default.description,\n\t\t\t\t\t\t\trole: \"alert\",\n\t"
+            },
+            {
+              "line": 1385,
+              "snippet": "yButton,\n\t\t\t\t\t\tdisabled: busy,\n\t\t\t\t\t\tonClick: () => {\n\t\t\t\t\t\t\tconfirm();\n\t\t\t\t\t\t},\n\t\t\t\t\t\tchildren: t(\"signOut\")\n\t\t\t\t\t})]\n\t\t\t\t})]\n\t\t\t});\n\t\t}\n\t\t//#endregion\n\t\t//#region lib/types/client/LogoutIcon.js\n\t\t/** Figma IcDsLogOutOutline16 glyph, stored inline for theme-aware re"
+            },
+            {
+              "line": 1391,
+              "snippet": "\t\t\t\t\tchildren: t(\"signOut\")\n\t\t\t\t\t})]\n\t\t\t\t})]\n\t\t\t});\n\t\t}\n\t\t//#endregion\n\t\t//#region lib/types/client/LogoutIcon.js\n\t\t/** Figma IcDsLogOutOutline16 glyph, stored inline for theme-aware rendering. */\n\t\t/** @returns the account menu logout glyph. */\n\t\tfunction LogoutIco"
+            },
+            {
+              "line": 1392,
+              "snippet": "\t\t\t})]\n\t\t\t\t})]\n\t\t\t});\n\t\t}\n\t\t//#endregion\n\t\t//#region lib/types/client/LogoutIcon.js\n\t\t/** Figma IcDsLogOutOutline16 glyph, stored inline for theme-aware rendering. */\n\t\t/** @returns the account menu logout glyph. */\n\t\tfunction LogoutIcon() {\n\t\t\treturn (0, react_jsx_"
+            },
+            {
+              "line": 1393,
+              "snippet": "sLogOutOutline16 glyph, stored inline for theme-aware rendering. */\n\t\t/** @returns the account menu logout glyph. */\n\t\tfunction LogoutIcon() {\n\t\t\treturn (0, react_jsx_runtime.jsx)(\"span\", {\n\t\t\t\tstyle: {\n\t\t\t\t\twidth: 16,\n\t\t\t\t\theight: 16,\n\t\t\t\t\tposition: \"relative\"\n\t\t\t\t"
+            }
+          ],
+          "totalHits": 45
+        },
+        {
+          "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-client-ui-settings-account/lib/index.js",
+          "sha256": "3ccd8233d9e2e136c8b664d14090d50fa70995713d2c29bb5d2d27d3fffd4de3",
+          "hits": [],
+          "totalHits": 0
+        }
+      ]
+    }
+  ],
+  "browserVisibleAction": "UNKNOWN - browser channel unavailable",
+  "cookieConfigChanged": false,
+  "privateApiCalls": 0,
+  "newFinding": {
+    "publicAccountSignOutFound": true,
+    "uiSource": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-client-ui-settings-account/lib/client.js",
+    "uiLines": [
+      4428,
+      4431
+    ],
+    "controllerSource": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-api-account-controller/lib/index.js",
+    "controllerLines": [
+      276,
+      277
+    ],
+    "providerSource": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-deepseek-account-platform/lib/index.js",
+    "providerLines": [
+      877,
+      897
+    ],
+    "meaning": "DeepSeek model-account grant deletion/revocation and signed-out event; not established as BrowserAuth cookie/session invalidation",
+    "sourceOnly": true,
+    "actionRun": false,
+    "browserSessionRevokeActionFound": false
+  },
+  "accountOwnerFiles": [
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-api-account-controller/lib/index.js",
+      "sha256": "d4b3f1d5972021d0d7983746dc6db50fafc1469c70e87f97aa57e4ef2815677b"
+    },
+    {
+      "path": "/Users/yzliu/.cache/hanamesh-runs/P06-APPHOST-INSTALL-TARGET-01/independent-20261008T090117Z/toolchain/node_modules/@deepseek-ai/dsh-deepseek-account-platform/lib/index.js",
+      "sha256": "2d252813428a523617f2eff195fef95fecc56be67fe2405cfcd7caf33d85e9ff"
+    }
+  ]
+}
