@@ -81,7 +81,12 @@ test('H09: attach close, stopAll and dispose never signal the external process',
   }finally{process.kill=originalKill;}
 });
 test('H10: expired leases converge without any unload request',async t=>{
-  const {host}=await setup(t,{ttl:400,sweep:50});const a=await host.open(input('a'));
+  // Starting a real process may take longer than 400 ms under load. Lease time starts
+  // advancing only after ready, so this gate measures expiry rather than startup cancellation.
+  let now=Date.now();
+  const {host}=await setup(t,{ttl:400,sweep:50,clock:()=>now});const a=await host.open(input('a'));
+  assert(pidAlive(a.instance.pid));assert.equal(host.list().views[0].status,'active');
+  now=a.lease.expiresAt;
   await until(()=>host.instance(a.instance.id).status==='stopped');assert(!pidAlive(a.instance.pid));
   assert.equal(host.list().views[0].status,'expired');
   await assert.rejects(host.heartbeat(leaseInput(a)),{code:'LEASE_EXPIRED'});
