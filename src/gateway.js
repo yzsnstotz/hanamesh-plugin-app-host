@@ -65,6 +65,7 @@ export class FixedGateway {
     this.allowAppAuthorization = allowAppAuthorization; this.maxUploadBytes = maxUploadBytes;
     requireCondition(typeof onForward === 'function','INVALID_GATEWAY','onForward must be a function.');
     this.onForward = onForward;
+    this.children = new Map(); this.scopeKey = null; this.closed = false; this.authorizations = new Map();
     this.tickets = new Map(); this.grants = new Map(); this.sockets = new Set(); this.upstreams = new Set();
     this.cookiePrefix = `hm_app_${token().slice(0,12)}_`;
   }
@@ -85,6 +86,87 @@ export class FixedGateway {
     const ticket = token(); this.tickets.set(ticket,{ viewKey, expiresAt:Date.now()+60_000 });
     return `${this.origin}/__hanamesh_bootstrap/${ticket}`;
   }
+  async issueAsync(viewKey) {
+    if (this.parentOrigin !== DESKTOP_ORIGIN) return this.issue(viewKey);
+    requireCondition(!this.closed && this.isLeaseActive(viewKey),'LEASE_EXPIRED','Inactive view.');
+    this.revokeInactive();
+    let child = this.children.get(viewKey);
+    if (!child) {
+      requireCondition(this.children.size < 512,'TOO_MANY_TICKETS','Too many views.');
+      child = new FixedGateway({upstream:this.upstream,parentOrigin:this.parentOrigin,frameAncestors:this.ancestors.split(' ').slice(1),
+        isLeaseActive:key => key === viewKey && this.isLeaseActive(key),cookieAllowlist:[...this.cookieAllowlist],
+        allowAppAuthorization:this.allowAppAuthorization,maxUploadBytes:this.maxUploadBytes,onForward:this.onForward});
+      child.scopeKey = viewKey;
+      await child.start();
+      if (this.closed || !this.isLeaseActive(viewKey)) { await child.close(); throw new AppHostError('LEASE_EXPIRED','Inactive view.'); }
+      this.children.set(viewKey,child);
+      child.expiryTimer = setInterval(() => { if (!child.isLeaseActive(viewKey)) void child.close(); },50);
+      child.expiryTimer.unref();
+    }
+    return child.issue(viewKey);
+  }
+  authorizeChallenge(viewKey, gatewayOrigin, challenge) {
+    const child = this.children.get(viewKey), item = child?.tickets.get(challenge);
+    requireCondition(child && !child.closed && child.origin === gatewayOrigin && item && item.viewKey === viewKey &&
+      item.loaded && !item.authorized && item.expiresAt > Date.now() && child.isLeaseActive(viewKey),
+      'GATEWAY_CHALLENGE_DENIED','Invalid or inactive challenge.',{},403);
+    const authorization = token(); item.authorized = true;
+    child.authorizations.set(authorization,{challenge,viewKey,expiresAt:item.expiresAt});
+    return {authorization};
+  }
+  revokeInactive() {
+    for (const [key,child] of this.children) if (!this.isLeaseActive(key) || child.closed) {
+      this.children.delete(key); void child.close();
+    }
+  }
+  #desktopBootstrap(req,res) {
+    const challenge = req.url.slice('/__hanamesh_bootstrap/'.length), item = this.tickets.get(challenge);
+    if (!this.scopeKey || req.method !== 'GET' || req.headers['sec-fetch-dest'] !== 'iframe' ||
+      !item || item.loaded || item.expiresAt <= Date.now() || !this.isLeaseActive(item.viewKey)) return fail(res,403,'GATEWAY_BOOTSTRAP_DENIED');
+    item.loaded = true;
+    const nonce = token();
+    const body = `<!doctype html><meta charset="utf-8"><title>应用连接中</title><p>应用连接中…</p><script nonce="${nonce}">
+      const challenge=${JSON.stringify(challenge)}, gatewayOrigin=${JSON.stringify(this.origin)};
+      let proved=false, redeemed=false;
+      addEventListener('message',async event=>{
+        const exact=event.origin==='dsh-app://app'&&event.source===parent;
+        console.info('HM_BOOTSTRAP_PROOF',JSON.stringify({origin:event.origin,parent:event.source===parent,accepted:exact}));
+        if(!exact||event.data?.challenge!==challenge)return;
+        if(event.data.type==='hm-bootstrap-parent'&&!proved){proved=true;parent.postMessage({type:'hm-bootstrap-proof',challenge},'dsh-app://app');}
+        if(event.data.type==='hm-bootstrap-authorize'&&proved&&!redeemed&&typeof event.data.authorization==='string'){
+          redeemed=true;
+          const response=await fetch('/__hanamesh_exchange',{method:'POST',credentials:'omit',headers:{'content-type':'application/json'},
+            body:JSON.stringify({challenge,authorization:event.data.authorization})});
+          if(response.ok)location.replace('/');else document.querySelector('p').textContent='应用授权失败';
+        }
+      });
+      parent.postMessage({type:'hm-bootstrap-ready',challenge},'dsh-app://app');
+    </script>`;
+    res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store','referrer-policy':'origin',
+      'content-security-policy':`default-src 'none'; script-src 'nonce-${nonce}'; connect-src 'self'; frame-ancestors ${this.ancestors}`});
+    res.end(body);
+  }
+  async #exchange(req,res) {
+    if (!this.scopeKey || req.method !== 'POST' || req.headers.origin !== this.origin || req.headers['sec-fetch-site'] !== 'same-origin' ||
+      req.headers['content-type'] !== 'application/json') return fail(res,403,'GATEWAY_EXCHANGE_DENIED');
+    let body='';
+    for await (const chunk of req) { body+=chunk; if(body.length>1024)return fail(res,413,'BODY_TOO_LARGE'); }
+    let input; try { input=JSON.parse(body); } catch { return fail(res,400,'INVALID_JSON'); }
+    const grant=this.authorizations.get(input.authorization);
+    if(!grant || Object.keys(input).some(k=>!['challenge','authorization'].includes(k)) || grant.challenge!==input.challenge ||
+      grant.expiresAt<=Date.now() || !this.isLeaseActive(grant.viewKey))return fail(res,403,'GATEWAY_EXCHANGE_DENIED');
+    this.authorizations.delete(input.authorization);this.tickets.delete(grant.challenge);
+    this.grants.clear();this.grants.set(token(),{viewKey:grant.viewKey});
+    res.writeHead(204,{'cache-control':'no-store'});res.end();
+  }
+  #desktopAuthorized(req) {
+    if (!this.scopeKey || this.closed || !this.isLeaseActive(this.scopeKey) ||
+      ![...this.grants.values()].some(g=>g.viewKey === this.scopeKey)) return false;
+    if (req.headers.upgrade?.toLowerCase() === 'websocket') return req.headers.origin === this.origin;
+    let referer;try {referer=documentOrigin(req.headers.referer);}catch{}
+    return req.headers['sec-fetch-site'] === 'same-origin' &&
+      (req.headers.origin ? req.headers.origin === this.origin : referer === this.origin);
+  }
   #requestShape(req) {
     if (req.headers.host !== new URL(this.origin).host) return false;
     if (!req.url?.startsWith('/') || req.url.startsWith('//') || req.url.includes('\\') || req.url.length > 8_192) return false;
@@ -95,6 +177,7 @@ export class FixedGateway {
   }
   #authorized(req) {
     if (!this.#requestShape(req)) return false;
+    if (this.parentOrigin === DESKTOP_ORIGIN) return this.#desktopAuthorized(req);
     // Cookie capability + live lease. Origin/loopback alone never authenticate.
     for (const [name,value] of cookies(req.headers.cookie)) {
       if (!name.startsWith(this.cookiePrefix)) continue;
@@ -145,6 +228,7 @@ export class FixedGateway {
     return headers;
   }
   #bootstrap(req,res) {
+    if (this.parentOrigin === DESKTOP_ORIGIN) return this.#desktopBootstrap(req,res);
     const ticket = req.url.slice('/__hanamesh_bootstrap/'.length);
     const item = this.tickets.get(ticket);
     let referer;
@@ -176,6 +260,9 @@ export class FixedGateway {
   #forwarded() { try { this.onForward(); } catch {} }
   #handle(req,res) {
     if (!this.#requestShape(req)) return fail(res,403,'GATEWAY_REQUEST_DENIED');
+    if (this.parentOrigin === DESKTOP_ORIGIN && req.url === '/__hanamesh_exchange') {
+      void this.#exchange(req,res).catch(()=>{if(!res.headersSent)fail(res,400,'GATEWAY_EXCHANGE_DENIED');else res.destroy();});return;
+    }
     if (req.url.startsWith('/__hanamesh_bootstrap/')) return this.#bootstrap(req,res);
     if (!this.#authorized(req)) return fail(res,403,'GATEWAY_AUTH_REQUIRED');
     if (!['GET','HEAD','POST','PUT','PATCH','DELETE','OPTIONS'].includes(req.method)) return fail(res,405,'METHOD_NOT_ALLOWED');
@@ -217,8 +304,12 @@ export class FixedGateway {
     upstream.once('response',() => { clearTimeout(timer); upstream.destroy(); socket.end('HTTP/1.1 502 Bad Gateway\r\nConnection: close\r\n\r\n'); });
     upstream.once('error',() => { clearTimeout(timer); socket.destroy(); }); upstream.end();
   }
-  async close() {
-    this.tickets.clear(); this.grants.clear();
+  close() { return this.closeTask ??= this.#close(); }
+  async #close() {
+    this.closed = true; clearInterval(this.expiryTimer);
+    this.tickets.clear(); this.grants.clear(); this.authorizations.clear();
+    const children=[...this.children.values()];this.children.clear();
+    await Promise.all(children.map(child=>child.close()));
     for (const request of this.upstreams) request.destroy();
     for (const socket of this.sockets) socket.destroy();
     if (this.server?.listening) await bounded(new Promise((resolve,reject) => this.server.close(error => error ? reject(error) : resolve())),2_000,'Gateway shutdown');

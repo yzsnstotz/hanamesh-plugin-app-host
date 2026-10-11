@@ -44,7 +44,7 @@ export const inject = ['webServer', 'storageDomain', 'connection'];
 export const BROWSER_PRINCIPAL = 'dsh-browser';
 /** Every route the HTTP handler answers; registered individually so nothing else is shadowed. */
 export const ROUTES = Object.freeze(['/hanamesh/apps', '/apps/open', '/apps/resume', '/apps/recover',
-  '/apps/close', '/apps/heartbeat', '/apps/stop', '/apps/events']);
+  '/apps/close', '/apps/heartbeat', '/apps/stop', '/apps/events', '/apps/bootstrap-authorize']);
 
 export const Config = z.object({
   /** Absolute canonical directory that owns every instance data root (secureDirectory refuses symlinks). */

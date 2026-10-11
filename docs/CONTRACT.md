@@ -201,3 +201,13 @@ Market seat 的「打开」保留原 receipt/heartbeat/close owner；应用 ifra
 
 
 J1S2-AH-02 / Q-35 / HM-9：官方 peer 和开发测试依赖精确对齐上游 dsh-v0.2.1-alpha.2，Cordis 4.0.5-alpha.1、Schemastery 3.18.5-alpha.1。lib-provision 0.2.1 的实际 Git 源提交不变，以 bundleDependencies 随包分发并保留原始 LICENSE，不内联、不再许可。该供应变更不改变来源、认证、一次性租约、generation、持久身份或进程归属契约。
+
+
+## J1S2-AH-02 / D-26 A Desktop bootstrap candidate
+
+Only exact `dsh-app://app` uses a controlled bootstrap page. Workspace checks the exact returned gateway origin and its own iframe Window; bootstrap checks `event.origin === "dsh-app://app"` and `event.source === parent`. The workspace then POSTs `/apps/bootstrap-authorize` with `{viewId, leaseToken, gatewayOrigin, challenge}` through the existing authenticated connection. The server checks the principal, complete lease identity, owning instance, generation and active lease before returning `{authorization}`. Errors include `UNAUTHENTICATED`, `LEASE_NOT_OWNED`, `LEASE_EXPIRED`, `GATEWAY_CHALLENGE_DENIED`. Example mock response: `{authorization: "test-only-not-a-real-grant"}`; mocks do not prove native source identity.
+
+The authorization is sent only to that bootstrap Window at its exact origin, exchanged once in a same-origin POST body, and never put in URLs or logs. Each Desktop lease key owns a separate loopback gateway origin; the grant cannot authorize a different view. With cookies absent, HTTP needs same-origin Fetch Metadata plus exact Origin (when present) or exact gateway Referer, and a live grant bound to that lease. WS needs the exact per-view gateway Origin and the same live lease-bound grant. Closing/recovering/expiring a lease revokes its gateway and sockets; a different live view cannot keep it authorized. No application script or HTML is injected; application response bytes remain unchanged, only XFO and the named frame-ancestors are adjusted. Ordinary HTTP workspace bootstrap/authentication gates are unchanged. This is a candidate, not owner ACCEPTED.
+
+
+**Q-47 BLOCKED / security RED:** The above Desktop data path is an experimental draft. A controlled port-reuse negative proves that a revoked view's old browser origin can be identical to a new view's origin and inherit its live grant (expected 403, actual 200). Per-view random ports are not a durable view identity. The native reciprocal handshake is proven, but full U2/security delivery is not established; do not merge/promote this draft. `tests/desktop-port-reuse.test.mjs` intentionally records this failing invariant. PM must decide a data-path identity mechanism within D-26 or obtain approval for any new trust boundary; this worker does not widen hostname, cookie, browser policy or application SDK/HTML boundaries.

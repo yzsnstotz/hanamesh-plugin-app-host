@@ -26,17 +26,10 @@ test('AH-D01: Desktop workspace exact origin works in SDK; application targets s
   assert.throws(()=>new FixedGateway({upstream:'dsh-app://app',parentOrigin:'dsh-app://app',isLeaseActive:()=>true}),{code:'INVALID_ORIGIN'});
 });
 
-test('AH-D02: Desktop gateway serves unchanged app document after exact parent bootstrap and revokes old lease', async t=>{
-  const {origin}=await external(t);let active=true;
-  const g=new FixedGateway({upstream:origin,parentOrigin:'dsh-app://app',isLeaseActive:()=>active});await g.start();t.after(()=>g.close());
-  const url=g.issue('view');
-  assert.equal((await http(url,{headers:{'sec-fetch-dest':'iframe',referer:'dsh-app://shell/'}})).status,403);
-  const grant=await http(url,{headers:{'sec-fetch-dest':'iframe',referer:'dsh-app://app/'}});assert.equal(grant.status,303);
-  const cookie=grant.headers['set-cookie'][0].split(';')[0];
-  const result=await http(g.origin+'/',{headers:{cookie,'sec-fetch-dest':'iframe'}});
-  assert.equal(result.status,200);assert.deepEqual(result.body,(await http(origin+'/')).body);
-  assert.match(result.headers['content-security-policy'],/frame-ancestors dsh-app:\/\/app/);
-  active=false;assert.equal((await http(g.origin+'/',{headers:{cookie}})).status,403);
+test('AH-D02: Desktop Referer alone cannot issue a grant or serve app data',async t=>{
+ const {origin}=await external(t);const g=new FixedGateway({upstream:origin,parentOrigin:'dsh-app://app',isLeaseActive:()=>true});await g.start();t.after(()=>g.close());
+ const url=await g.issueAsync('view');assert.equal((await http(url,{headers:{'sec-fetch-dest':'iframe',referer:'dsh-app://app/'}})).status,200);
+ assert.equal((await http(new URL(url).origin+'/',{headers:{'sec-fetch-site':'same-origin',referer:new URL(url).origin+'/'}})).status,403);
 });
 
 test('AH-D03: app, market and router accept authenticated Desktop forwarding on exact transport only', async t=>{

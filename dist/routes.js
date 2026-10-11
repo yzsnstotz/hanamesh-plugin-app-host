@@ -33,7 +33,7 @@ export function createHttpHandler(host,{parentOrigin,transportOrigin,authenticat
       requireCondition(req.headers.host===new URL(origins.transport).host,'HOST_DENIED','Unrecognized request host.',{},403);
       requireCondition(req.url?.startsWith('/')&&!req.url.startsWith('//')&&!req.url.includes('\\'),'BAD_TARGET','Invalid request target.');
       const url=new URL(req.url,origins.transport),path=url.pathname;
-      const known=['/hanamesh/apps','/apps/open','/apps/resume','/apps/recover','/apps/close','/apps/heartbeat','/apps/stop','/apps/events'];
+      const known=['/hanamesh/apps','/apps/open','/apps/resume','/apps/recover','/apps/close','/apps/heartbeat','/apps/stop','/apps/events','/apps/bootstrap-authorize'];
       requireCondition(known.includes(path),'NOT_FOUND','Unknown app-host route.',{},404);
       const readOnly=['/hanamesh/apps','/apps/events'].includes(path);
       requireCondition(req.method===(readOnly?'GET':'POST'),'METHOD_NOT_ALLOWED','State changes require POST.',{},405);
@@ -50,6 +50,7 @@ export function createHttpHandler(host,{parentOrigin,transportOrigin,authenticat
       let result;
       switch(path){
         case '/hanamesh/apps':requireCondition(!url.search,'UNKNOWN_FIELDS','No list parameters are accepted.');result=host.list(subject.principalId);break;
+        case '/apps/bootstrap-authorize':result=await host.authorizeBootstrap(input,subject.principalId);break;
         case '/apps/open':result=await host.beginOpen(input,subject.principalId);break;
         case '/apps/resume':result=await host.resume(input,subject.principalId,{waitForReady:false});break;
         case '/apps/recover':result=await host.recoverView(input,subject.principalId);break;

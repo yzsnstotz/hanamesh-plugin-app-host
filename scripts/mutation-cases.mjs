@@ -1,5 +1,11 @@
 // AppHost mutation targets, name filters and invariant-specific failure reasons.
 export const cases=[
+{id:"M38-bootstrap-origin-unchecked",file:"src/gateway.js",from:"event.origin==='dsh-app://app'&&",to:"",test:"tests/desktop-window-proof.test.mjs",pattern:"^D26 bootstrap:",reason:/Expected values to be strictly equal|Missing expected exception/},
+{id:"M39-bootstrap-window-unchecked",file:"src/gateway.js",from:"&&event.source===parent",to:"",test:"tests/desktop-window-proof.test.mjs",pattern:"^D26 bootstrap:",reason:/Expected values to be strictly equal|Missing expected exception/},
+{id:"M40-workspace-window-unchecked",file:"src/client-ui.js",from:"const exact=event.origin===url.origin&&event.source===frame.current?.contentWindow;",to:"const exact=event.origin===url.origin;",test:"tests/desktop-window-proof.test.mjs",pattern:"^D26 workspace:",reason:/Expected values to be strictly equal|Missing expected exception/},
+{id:"M41-exchange-replay",file:"src/gateway.js",from:"this.authorizations.delete(input.authorization);",to:"/* MUTATION: grant reusable */",test:"tests/desktop-handshake.test.mjs",pattern:"^D26: single-use",reason:/Expected values to be strictly equal|Missing expected exception/},
+{id:"M42-data-origin-unchecked",file:"src/gateway.js",from:"(req.headers.origin ? req.headers.origin === this.origin : referer === this.origin)",to:"true",test:"tests/desktop-handshake.test.mjs",pattern:"^D26: single-use",reason:/Expected values to be strictly equal|Missing expected exception/},
+{id:"M43-challenge-gateway-origin-unchecked",file:"src/gateway.js",from:"child.origin === gatewayOrigin &&",to:"",test:"tests/desktop-handshake.test.mjs",pattern:"^D26: single-use",reason:/Expected values to be strictly equal|Missing expected exception/},
   {id:'M37-desktop-node-identity-unchecked',file:'src/library/locate.js',from:'actual.node===metadata.node&&actual.electron===undefined',to:'true /* MUTATION: skips actual standalone identity */',test:'tests/desktop-layout.test.mjs',pattern:'^AH-D06:',reason:/unproven payload version/},
 
   {id:'M35-desktop-origin-widened',file:'src/workspace-origin.js',from:"if (value === DESKTOP_ORIGIN) return true;",to:"if (String(value).startsWith('dsh-app://')) return true;",test:'tests/desktop-origin.test.mjs',pattern:'^AH-D01:',reason:/Missing expected exception/},

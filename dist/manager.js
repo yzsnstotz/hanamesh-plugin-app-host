@@ -168,6 +168,7 @@ export class AppHost {
     try { await this.store.save(next); }
     catch (error) { if (error.code === 'COMMIT_UNCERTAIN') this.#poisoned = true; throw error; }
     this.#state = next;
+    for (const control of this.#controls.values()) control.gateway?.revokeInactive();
     for (const event of next.events) if (event.sequence > oldSequence) this.#notify(event);
   }
   #findLease(state,principalId,viewId) { return state.leases.find(l => l.principalId === principalId && l.viewId === viewId); }
@@ -307,7 +308,7 @@ export class AppHost {
     return prepared;
   }
   async #openResult(prepared, input, principalId, requireReady) {
-    return await this.#queue.run(() => {
+    return await this.#queue.run(async () => {
       this.#assertOpen();
       const lease = this.#findLease(this.#state,principalId,input.viewId);
       this.#checkToken(lease,prepared.token);
@@ -317,8 +318,21 @@ export class AppHost {
       if (requireReady) requireCondition(instance.status === 'ready','INSTANCE_NOT_READY','Instance is not ready.');
       return { instance:publicInstance(instance),lease:publicLease(lease),leaseToken:prepared.token,
         uiUrl:instance.status !== 'ready' ? null : (prepared.control.gateway ?
-          prepared.control.gateway.issue(leaseKey(principalId,input.viewId,lease.generation)) : instance.endpoint),
+          await prepared.control.gateway.issueAsync(leaseKey(principalId,input.viewId,lease.generation)) : instance.endpoint),
         originalSessionId:lease.originalSessionId };
+    });
+  }
+  async authorizeBootstrap(input, principalId='host') {
+    return await this.#queue.run(() => {
+      this.#assertOpen();
+      requireCondition(input && Object.keys(input).every(k=>['viewId','leaseToken','gatewayOrigin','challenge'].includes(k)) &&
+        typeof input.gatewayOrigin === 'string' && typeof input.challenge === 'string' && /^[a-f0-9]{64}$/.test(input.challenge),
+        'INVALID_REQUEST','Expected a bound bootstrap challenge.');
+      const lease=this.#findLease(this.#state,principalId,input.viewId);this.#checkToken(lease,input.leaseToken);
+      requireCondition(active(lease,this.clock()),'LEASE_EXPIRED','Inactive view.',{},403);
+      const control=this.#controls.get(lease.instanceId);
+      requireCondition(control?.gateway,'INSTANCE_NOT_READY','Gateway is not ready.');
+      return control.gateway.authorizeChallenge(leaseKey(principalId,input.viewId,lease.generation),input.gatewayOrigin,input.challenge);
     });
   }
   async beginOpen(input,principalId='host') {

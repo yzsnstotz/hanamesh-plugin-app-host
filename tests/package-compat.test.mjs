@@ -27,7 +27,7 @@ test('NPM-APPHOST-01: actual packed manifest keeps devkit only as a development 
   try {
     const raw = execFileSync('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', dir], {
       cwd: new URL('..', import.meta.url),
-      env: { ...process.env, npm_config_cache: join(dir, 'npm-cache') },
+      env: { ...process.env, npm_config_cache: process.env.npm_config_cache ?? '/Users/yzliu/.cache/npm' },
       encoding: 'utf8',
     });
     const [{ filename, files }] = JSON.parse(raw);
