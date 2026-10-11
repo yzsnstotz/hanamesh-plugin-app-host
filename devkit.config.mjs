@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
 import {runMutations, verifyPack} from '@hanamesh/devkit';
 import {cases} from './scripts/mutation-cases.mjs';
-import {javascript, typescript} from './scripts/package-probes.mjs';
+import {typescript} from './scripts/package-probes.mjs';
 const root=import.meta.dirname;
 const pkg=JSON.parse(await readFile(join(root,'package.json'),'utf8'));
 const pins=JSON.parse(await readFile(join(root,'toolchain.json'),'utf8'));
@@ -54,6 +54,7 @@ export function packOptions(tarball){
       const packed=JSON.parse(read('package.json'));
       assert.equal(packed.version,pkg.version);
       assert.deepEqual(packed.dependencies,pkg.dependencies);
+      assert.deepEqual(packed.peerDependencies,pkg.peerDependencies);
       assert.deepEqual(packed.exports,pkg.exports);
       assert.equal(packed.dependencies['@hanamesh/devkit'],undefined);
       assert.equal(packed.peerDependencies['@hanamesh/devkit'],undefined);
@@ -62,16 +63,33 @@ export function packOptions(tarball){
     }};
 }
 
+export function assertHostPeerInstallRejected(error){
+  assert.equal(error.status,1,'host-peer consumer must fail installation');
+  assert.equal(error.signal,null,'host-peer consumer must not be interrupted');
+  assert.match(error.message,/^Command failed: pnpm install --prefer-offline --strict-peer-dependencies --frozen-lockfile=false(?:\n|$)/u);
+  const output=[error.stdout,error.stderr].map(value=>value?.toString()??'').join('\n');
+  assert.deepEqual(output.match(/ERR_PNPM_[A-Z_]+/gu),['ERR_PNPM_PEER_DEP_ISSUES'],'only strict peer rejection is expected');
+  assert.doesNotMatch(output,/unmet peer \S+@/iu,'incompatible peers are not missing host peers');
+  const missing=[...output.matchAll(/missing peer (\S+)/gu)].map(match=>match[1]).sort();
+  assert.deepEqual(missing,Object.entries(pkg.peerDependencies).map(([name,version])=>`${name}@${version}`).sort(),
+    'missing host peers must exactly match declared names and versions');
+  return missing;
+}
+
 export async function verifyAppHostPack(tarball){
   const options=packOptions(tarball);
   options.temporaryRoot=await realpath(tmpdir());
-  // Keep the original offline/no-host-peer smoke separate from the strict host-peer type consumer.
+  // Devkit rejects missing host peers during strict installation, before any JS probe can run.
   const prior={offline:process.env.npm_config_offline,peers:process.env.npm_config_auto_install_peers};
   try{
     process.env.npm_config_offline='true';
     process.env.npm_config_auto_install_peers='false';
-    await verifyPack({...options,consumer:{packageJson:{private:true,type:'module',
-      dependencies:{'@hanamesh/dsh-app-host':`file:${options.tarball}`}},javascript}});
+    await assert.rejects(()=>verifyPack({...options,consumer:{packageJson:{private:true,type:'module',
+      dependencies:{'@hanamesh/dsh-app-host':`file:${options.tarball}`}},javascript:''}}),error=>{
+      const missing=assertHostPeerInstallRejected(error);
+      console.log(JSON.stringify({check:'HOST_PEERS_REQUIRED',status:'PASS',missing}));
+      return true;
+    });
   }finally{
     if(prior.offline===undefined)delete process.env.npm_config_offline;else process.env.npm_config_offline=prior.offline;
     if(prior.peers===undefined)delete process.env.npm_config_auto_install_peers;else process.env.npm_config_auto_install_peers=prior.peers;

@@ -82,7 +82,7 @@ npm run demo -- --smoke
 
 开发工具只通过 `@hanamesh/devkit@0.1.0-rc.1` 的公开 API 执行；精确可选 peer + `file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz` 固定开发安装，SHA-256 为 `3cf0b621ca2950fbe21c114d5b31ac1a55f97a67eb0a2dada77fb2d3bf2cb6ff`。运行依赖、业务 `src/`、公开 exports 均保持原字节；后续 provision 分发记录更新见下文；devkit 不进入 runtime。模块自身保留 pins、DSH 检查、原 22 个变异 target/name filter/失败原因，以及原纯包消费者的断言。
 
-`npm run check` 包含工具链、build、一致性声明、显式 TAP 全量 test、22 个断言变异、原类型消费与开发 preflight。`npm pack --pack-destination <目录>` 后运行 `npm run verify:pack -- <tgz绝对路径>`：devkit 在独立目录离线安装纯包并验证真实自有进程，另在只装固定宿主 peer 的独立目录验证公开严格 TS；两者均不安装 devkit。离线 JS 消费之前，pnpm store 须已有本包唯一 runtime dependency `zod@4.5.4`（在线准备环境后再离线核证），不跳过离线失败。`npm run preflight:dsh` 继续要求原四个 DSH pins；单纯 `npm ci` 没有官方 DSH 本体时仍以 exit 2 拒绝。真正 DSH 加载/UI 门另外执行，组件检查不代替它。
+`npm run check` 包含工具链、build、一致性声明、显式 TAP 全量 test、22 个断言变异、原类型消费与开发 preflight。`pnpm pack --pack-destination <目录>` 后运行 `pnpm run verify:pack <tgz绝对路径>`：第一段在独立目录尝试不带宿主 peers 的离线严格安装，断言 `ERR_PNPM_PEER_DEP_ISSUES` 且缺失名称与版本正好匹配声明的 9 个宿主 peers；devkit 0.2.3 在安装阶段拒绝，因此不再运行原来的无 peers `./dsh` 加载探针。第二段在另一个独立目录带完整宿主 peers 严格安装、frozen-lock 重装并确认锁摘要不变，再验证 DSH 入口与公开严格 TS；两段均不安装 devkit。离线检查前须准备运行依赖 `zod` 与正常 Git 源 `@hanamesh/lib-provision`，其他安装错误不算预期拒绝。`npm run preflight:dsh` 继续要求原四个 DSH pins；单纯 `npm ci` 没有官方 DSH 本体时仍以 exit 2 拒绝。真正 DSH 加载/UI 门另外执行，组件检查不代替它。
 
 `devkit.config.mjs` 与 `scripts/*-cases/policy/probes` 是本模块策略，不是通用执行器。`HANAMESH_APPHOST_RUN_DIR` 可把变异证据放入卡的隔离 run；未设置时写入 `artifacts/mutations`。工具链与开发 preflight 也可经 `hanamesh-devkit check-toolchain` / `hanamesh-devkit preflight` 调用；变异与封包使用本模块 npm 入口以保留全部专用断言。
 
