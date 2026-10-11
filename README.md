@@ -1,4 +1,4 @@
-# HanaMesh app-host · 0.5.2 本地候选
+# HanaMesh app-host · 0.5.5 本地候选
 
 > J1S2-AH-02 / Q-35 / HM-9：候选依赖精确对齐官方 dsh-v0.2.1-alpha.2（Cordis 4.0.5-alpha.1、Schemastery 3.18.5-alpha.1）。lib-provision 0.2.1 固定源提交 `575d63fb70e08c47e980dbf25f07921a7ba5aa2a`，通过 `bundleDependencies` 随包分发、源仓不变，原始 LICENSE 保留于 tarball 的 `node_modules/@hanamesh/lib-provision/LICENSE`。不关闭上游 pnpm 的 Git 子依赖策略，不内联、不再许可、不发布 registry。AppHost 自己从经验证的 Desktop 启动布局推断 profile、独立 Node 与 `dsh-app://app` 父来源；真实 UI 与 ACCEPTED 按本卡独立证据判断。
 

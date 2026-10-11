@@ -301,7 +301,10 @@ export class FixedGateway {
     if (Number(req.headers['content-length']) > this.maxUploadBytes) return fail(res,413,'UPLOAD_TOO_LARGE');
     const upstream = request(this.upstream + req.url,{ method:req.method,headers:this.#headers(req) }, response => {
       if (response.statusCode !== 401 && response.statusCode !== 403) this.#forwarded();
-      res.writeHead(response.statusCode, embeddingHeaders(response.rawHeaders,this.ancestors));
+      // A nested app frame has both the workspace and its own registered data origin as ancestors.
+      // Only the data response admits that exact live view origin; control/bootstrap stays separate.
+      const ancestors = this.dataOrigin ? `${this.ancestors} ${this.dataOrigin}` : this.ancestors;
+      res.writeHead(response.statusCode, embeddingHeaders(response.rawHeaders,ancestors));
       response.pipe(res, { end:false });
       response.once('error', () => res.destroy());
       response.once('end', () => { if (Object.keys(response.trailers).length) res.addTrailers(response.trailers); res.end(); });

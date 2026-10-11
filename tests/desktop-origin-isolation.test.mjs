@@ -6,3 +6,17 @@ test('D27 control/data exact origins separated; no app bytes on control and no a
 test('D27 initial navigation requires complete live redeemed binding and is consumed once',async t=>{const{g,active}=await setup(t),a=await authorize(g,'a');for(const h of [{},{...navigation(a.control),referer:'http://other.localhost/'},{...navigation(a.control),'sec-fetch-mode':'cors'},application(a.data),{...navigation(a.control),origin:'null'}])assert.equal((await http(a.data+'/',{headers:h})).status,403);assert.equal((await http(a.data+'/',{headers:navigation(a.control)})).status,200);assert.equal((await http(a.data+'/',{headers:navigation(a.control)})).status,403);assert.equal((await http(a.data+'/resource',{headers:application(a.data)})).status,200);active.delete('a');assert.equal((await http(a.data+'/resource',{headers:application(a.data)})).status,403);});
 test('D27 unknown Host aliases, wrong ports and cross-view origins are rejected without upstream forwarding',async t=>{const{g,hits}=await setup(t),a=await authorize(g,'a'),b=await authorize(g,'b');await http(a.data+'/',{headers:navigation(a.control)});const baseline=hits();for(const host of ['127.0.0.1:'+a.url.port,'localhost:'+a.url.port,'arbitrary.localhost:'+a.url.port,new URL(a.data).hostname+'.evil:'+a.url.port,new URL(a.data).hostname+':1'])assert.equal((await http(a.data+'/asset',{headers:{...application(a.data),host}})).status,403);for(const origin of ['null',b.control,b.data,'dsh-app://app'])assert.equal((await http(a.data+'/asset',{headers:{...application(a.data),origin}})).status,403);assert.equal(hits(),baseline);});
 test('D27 forced port reuse never reassigns old complete data origin to a new live view',async t=>{const{g,active}=await setup(t),a=await authorize(g,'a');await http(a.data+'/',{headers:navigation(a.control)});const port=Number(a.url.port);active.delete('a');await g.children.get('a').close();g.revokeInactive();const original=Server.prototype.listen;Server.prototype.listen=function(...args){if(args[0]===0)args[0]=port;return original.apply(this,args)};let b;try{b=await authorize(g,'b')}finally{Server.prototype.listen=original}assert.equal(Number(b.url.port),port);assert.notEqual(a.control,b.control);assert.notEqual(a.data,b.data);await http(b.data+'/',{headers:navigation(b.control)});assert.equal((await http(a.data+'/old-worker',{headers:application(a.data)})).status,403);assert.equal((await http(b.data+'/new-view',{headers:application(b.data)})).status,200);});
+test('D27 nested application frames allow only the current exact data origin and workspace ancestor',async t=>{
+ const{g}=await setup(t),a=await authorize(g,'a'),b=await authorize(g,'b');
+ await http(a.data+'/',{headers:navigation(a.control)});
+ const response=await http(a.data+'/retained-frame',{headers:application(a.data)});
+ assert.equal(response.status,200);
+ assert.deepEqual(response.body,Buffer.from('ORDINARY_BYTES:/retained-frame'));
+ assert.equal(response.headers['content-security-policy'],`frame-ancestors dsh-app://app ${a.data}`,
+  'nested frame requires its exact registered data origin; another view and control remain excluded');
+ assert(!response.headers['content-security-policy'].includes(b.data));
+ assert(!response.headers['content-security-policy'].includes(a.control));
+ const bootstrap=await g.issueAsync('b');
+ const control=await http(bootstrap,{headers:{'sec-fetch-dest':'iframe'}});
+ assert(!control.headers['content-security-policy'].includes(a.data));
+});
