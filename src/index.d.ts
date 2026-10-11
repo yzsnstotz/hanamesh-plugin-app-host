@@ -97,7 +97,7 @@ export class FixedGateway {
   constructor(options:{upstream:string;parentOrigin:string;isLeaseActive:(viewKey:string)=>boolean;cookieAllowlist?:string[];allowAppAuthorization?:boolean;maxUploadBytes?:number;frameAncestors?:string[];
     /** rc.27: called once per forwarded request the upstream answered with anything but 401/403 (and per accepted WebSocket upgrade). */
     onForward?:()=>void});
-  origin:string; start():Promise<string>; issue(viewKey:string):string; issueAsync(viewKey:string):Promise<string>; authorizeChallenge(viewKey:string,gatewayOrigin:string,challenge:string):{authorization:string}; revokeInactive():void; close():Promise<void>;
+  origin:string; dataOrigin?:string; start():Promise<string>; issue(viewKey:string):string; issueAsync(viewKey:string):Promise<string>; authorizeChallenge(viewKey:string,gatewayOrigin:string,challenge:string):{authorization:string}; revokeInactive():void; close():Promise<void>;
 }
 export function rewriteCsp(value:string,parentOrigin:string):string;
 export function embeddingHeaders(rawHeaders:string[],parentOrigin:string):string[];

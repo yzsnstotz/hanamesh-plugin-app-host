@@ -21,11 +21,14 @@ test('D26: single-use challenge authorization, scope isolation, expiry and cooki
  const exchange=extra=>http(child+'/__hanamesh_exchange',{method:'POST',headers:{origin:child,'sec-fetch-site':'same-origin','content-type':'application/json',...extra},body:JSON.stringify({challenge,authorization})});
  assert.equal((await exchange({origin:'null'})).status,403);assert.equal((await exchange({origin:'dsh-app://app'})).status,403);
  assert.equal((await exchange({})).status,204);assert.equal((await exchange({})).status,403);
- const headers={'sec-fetch-site':'same-origin',referer:child+'/'};
- const forwarded=await http(child+'/',{headers});assert.equal(forwarded.status,200);assert.deepEqual(forwarded.body,(await http(origin+'/')).body);
- for(const h of [{},{'sec-fetch-site':'cross-site',referer:child+'/'},{'sec-fetch-site':'same-origin'},{'sec-fetch-site':'same-origin',referer:new URL(other).origin+'/'},{origin:'null',...headers},{origin:'dsh-app://app','sec-fetch-site':'cross-site'}])assert.equal((await http(child+'/',{headers:h})).status,403);
+ const data=g.children.get('a').dataOrigin;
+ const nav={'sec-fetch-site':'cross-site','sec-fetch-mode':'navigate','sec-fetch-dest':'iframe',referer:child+'/'};
+ assert.equal((await http(data+'/',{headers:nav})).status,200);
+ const headers={'sec-fetch-site':'same-origin',referer:data+'/'};
+ const forwarded=await http(data+'/',{headers});assert.equal(forwarded.status,200);assert.deepEqual(forwarded.body,(await http(origin+'/')).body);
+ for(const h of [{},{'sec-fetch-site':'cross-site',referer:child+'/'},{'sec-fetch-site':'same-origin'},{'sec-fetch-site':'same-origin',referer:new URL(other).origin+'/'},{origin:'null',...headers},{origin:'dsh-app://app','sec-fetch-site':'cross-site'}])assert.equal((await http(data+'/',{headers:h})).status,403);
  assert.equal((await http(new URL(other).origin+'/',{headers:{'sec-fetch-site':'same-origin',referer:new URL(other).origin+'/'}})).status,403);
- active.delete('a');assert.equal((await http(child+'/',{headers})).status,403);g.revokeInactive();
+ active.delete('a');assert.equal((await http(data+'/',{headers})).status,403);g.revokeInactive();
 });
 import {setup,input,leaseInput} from './helpers.mjs';
 import {createHttpHandler} from '../src/routes.js';
@@ -53,10 +56,12 @@ test('D26: cookie-less WS exact scoped Origin, denied wrong origins and immediat
  const {origin}=await external(t);const active=new Set(['a','b']);const g=new FixedGateway({upstream:origin,parentOrigin:'dsh-app://app',isLeaseActive:k=>active.has(k)});await g.start();t.after(()=>g.close());
  const url=await g.issueAsync('a'),u=new URL(url),challenge=u.pathname.split('/').at(-1);await g.issueAsync('b');await http(url,{headers:{'sec-fetch-dest':'iframe'}});
  const {authorization}=g.authorizeChallenge('a',u.origin,challenge);assert.equal((await http(u.origin+'/__hanamesh_exchange',{method:'POST',headers:{origin:u.origin,'sec-fetch-site':'same-origin','content-type':'application/json'},body:JSON.stringify({challenge,authorization})})).status,204);
- const ws=origin=>new Promise((resolve,reject)=>{const socket=connect(Number(u.port),u.hostname);let buf='';const timer=setTimeout(()=>{socket.destroy();reject(Error('WS observation deadline'));},2000);
-  socket.once('connect',()=>socket.write(`GET /socket HTTP/1.1\r\nHost: ${u.host}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: ${randomBytes(16).toString('base64')}\r\nSec-WebSocket-Version: 13\r\nOrigin: ${origin}\r\n\r\n`));socket.on('data',chunk=>{buf+=chunk;if(buf.includes('\r\n\r\n')){clearTimeout(timer);resolve({socket,status:buf.split('\r\n')[0]});}});socket.once('error',reject);});
+ const data=g.children.get('a').dataOrigin,du=new URL(data);
+ assert.equal((await http(data+'/',{headers:{'sec-fetch-site':'cross-site','sec-fetch-mode':'navigate','sec-fetch-dest':'iframe',referer:u.origin+'/'}})).status,200);
+ const ws=origin=>new Promise((resolve,reject)=>{const socket=connect(Number(du.port),'127.0.0.1');let buf='';const timer=setTimeout(()=>{socket.destroy();reject(Error('WS observation deadline'));},2000);
+  socket.once('connect',()=>socket.write(`GET /socket HTTP/1.1\r\nHost: ${du.host}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: ${randomBytes(16).toString('base64')}\r\nSec-WebSocket-Version: 13\r\nOrigin: ${origin}\r\n\r\n`));socket.on('data',chunk=>{buf+=chunk;if(buf.includes('\r\n\r\n')){clearTimeout(timer);resolve({socket,status:buf.split('\r\n')[0]});}});socket.once('error',reject);});
  for(const origin of ['null','dsh-app://app',g.origin,'http://127.0.0.1:1']){const result=await ws(origin);assert.match(result.status,/403/);result.socket.destroy();}
- const result=await ws(u.origin);assert.match(result.status,/101/);
+ const result=await ws(data);assert.match(result.status,/101/);
  const closed=new Promise(r=>result.socket.once('close',r));active.delete('a');g.revokeInactive();await closed;assert(active.has('b'));
 });
 test('D26: expired challenge and generation recovery revoke pending exchange while another view is live',async t=>{

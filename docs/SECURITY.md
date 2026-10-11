@@ -62,3 +62,10 @@ The authorization is sent only to that bootstrap Window at its exact origin, exc
 
 
 **Q-47 BLOCKED / security RED:** The above Desktop data path is an experimental draft. A controlled port-reuse negative proves that a revoked view's old browser origin can be identical to a new view's origin and inherit its live grant (expected 403, actual 200). Per-view random ports are not a durable view identity. The native reciprocal handshake is proven, but full U2/security delivery is not established; do not merge/promote this draft. `tests/desktop-port-reuse.test.mjs` intentionally records this failing invariant. PM must decide a data-path identity mechanism within D-26 or obtain approval for any new trust boundary; this worker does not widen hostname, cookie, browser policy or application SDK/HTML boundaries.
+
+
+## D27 Desktop 来源隔离（Q98 源码检查点，尚非完整验收）
+
+固定 Desktop 下每个完整活 view 绑定独立192-bit随机 localhost 名，control/data 使用不同精确 Host，共用仅127.0.0.1的监听端口；端口复用不会复用完整origin。process生命周期内登记名不回收，随机碰撞拒绝。control仅服务受控bootstrap/单次exchange，不转发应用；data拒绝控制路径。公开connection认证及精确dsh-app://app与Window/source双向握手仍先于授权；兑换后的data首次导航仅一次且核对精确control Referer、iframe/navigate/cross-site及完整活view。后续data请求/WS只核对精确data来源、活lease及generation，撤销立即拒绝并关闭旧通路。localhost名非凭据，授权仍不进URL/日志；应用正文不改，HTTP工作区原门不变。
+
+Q98新增来源/端口复用定位测试不代替最终包、第三方cookie禁用、并存profile/客户端、强杀/恢复及完整真实U2；当前保持PARTIAL，不能解锁workspace或宣称ACCEPTED。

@@ -42,6 +42,8 @@ export function embeddingHeaders(rawHeaders, ancestors) {
   return output;
 }
 const token = () => randomBytes(32).toString('hex');
+// Keep retired names reserved for the process lifetime; 192-bit labels fit DNS's 63-byte limit.
+const desktopNames = new Set();
 function cookies(header) {
   const map = new Map();
   for (const part of (header ?? '').split(';')) {
@@ -65,7 +67,7 @@ export class FixedGateway {
     this.allowAppAuthorization = allowAppAuthorization; this.maxUploadBytes = maxUploadBytes;
     requireCondition(typeof onForward === 'function','INVALID_GATEWAY','onForward must be a function.');
     this.onForward = onForward;
-    this.children = new Map(); this.scopeKey = null; this.closed = false; this.authorizations = new Map();
+    this.children = new Map(); this.pendingChildren = new Map(); this.scopeKey = null; this.closed = false; this.authorizations = new Map();
     this.tickets = new Map(); this.grants = new Map(); this.sockets = new Set(); this.upstreams = new Set();
     this.cookiePrefix = `hm_app_${token().slice(0,12)}_`;
   }
@@ -75,7 +77,14 @@ export class FixedGateway {
     this.server.on('upgrade', (req,socket,head) => this.#upgrade(req,socket,head));
     this.server.on('connect', (_req,socket) => socket.end('HTTP/1.1 405 Method Not Allowed\r\nConnection: close\r\n\r\n'));
     await new Promise((resolve,reject) => { this.server.once('error',reject); this.server.listen(0,'127.0.0.1',resolve); });
-    this.origin = `http://127.0.0.1:${this.server.address().port}`;
+    const port = this.server.address().port;
+    if (this.parentOrigin === DESKTOP_ORIGIN && this.scopeKey) {
+      const name = token().slice(0,48);
+      if (desktopNames.has(name)) { await this.close(); throw new AppHostError('GATEWAY_ORIGIN_REUSED','A retired origin name cannot be reassigned.'); }
+      desktopNames.add(name);
+      this.origin = `http://control-${name}.localhost:${port}`;
+      this.dataOrigin = `http://data-${name}.localhost:${port}`;
+    } else this.origin = `http://127.0.0.1:${port}`;
     return this.origin;
   }
   issue(viewKey) {
@@ -92,16 +101,25 @@ export class FixedGateway {
     this.revokeInactive();
     let child = this.children.get(viewKey);
     if (!child) {
-      requireCondition(this.children.size < 512,'TOO_MANY_TICKETS','Too many views.');
-      child = new FixedGateway({upstream:this.upstream,parentOrigin:this.parentOrigin,frameAncestors:this.ancestors.split(' ').slice(1),
-        isLeaseActive:key => key === viewKey && this.isLeaseActive(key),cookieAllowlist:[...this.cookieAllowlist],
-        allowAppAuthorization:this.allowAppAuthorization,maxUploadBytes:this.maxUploadBytes,onForward:this.onForward});
-      child.scopeKey = viewKey;
-      await child.start();
-      if (this.closed || !this.isLeaseActive(viewKey)) { await child.close(); throw new AppHostError('LEASE_EXPIRED','Inactive view.'); }
-      this.children.set(viewKey,child);
-      child.expiryTimer = setInterval(() => { if (!child.isLeaseActive(viewKey)) void child.close(); },50);
-      child.expiryTimer.unref();
+      let pending = this.pendingChildren.get(viewKey);
+      if (!pending) {
+        requireCondition(this.children.size + this.pendingChildren.size < 512,'TOO_MANY_TICKETS','Too many views.');
+        pending = (async () => {
+          const scoped = new FixedGateway({upstream:this.upstream,parentOrigin:this.parentOrigin,frameAncestors:this.ancestors.split(' ').slice(1),
+            isLeaseActive:key => key === viewKey && this.isLeaseActive(key),cookieAllowlist:[...this.cookieAllowlist],
+            allowAppAuthorization:this.allowAppAuthorization,maxUploadBytes:this.maxUploadBytes,onForward:this.onForward});
+          scoped.scopeKey = viewKey;
+          await scoped.start();
+          if (this.closed || !this.isLeaseActive(viewKey)) { await scoped.close(); throw new AppHostError('LEASE_EXPIRED','Inactive view.'); }
+          this.children.set(viewKey,scoped);
+          scoped.expiryTimer = setInterval(() => { if (!scoped.isLeaseActive(viewKey)) void scoped.close(); },50);
+          scoped.expiryTimer.unref();
+          return scoped;
+        })();
+        this.pendingChildren.set(viewKey,pending);
+      }
+      try { child = await pending; }
+      finally { if (this.pendingChildren.get(viewKey) === pending) this.pendingChildren.delete(viewKey); }
     }
     return child.issue(viewKey);
   }
@@ -137,7 +155,7 @@ export class FixedGateway {
           redeemed=true;
           const response=await fetch('/__hanamesh_exchange',{method:'POST',credentials:'omit',headers:{'content-type':'application/json'},
             body:JSON.stringify({challenge,authorization:event.data.authorization})});
-          if(response.ok)location.replace('/');else document.querySelector('p').textContent='应用授权失败';
+          if(response.ok)location.replace(${JSON.stringify(this.dataOrigin+'/')});else document.querySelector('p').textContent='应用授权失败';
         }
       });
       parent.postMessage({type:'hm-bootstrap-ready',challenge},'dsh-app://app');
@@ -156,22 +174,30 @@ export class FixedGateway {
     if(!grant || Object.keys(input).some(k=>!['challenge','authorization'].includes(k)) || grant.challenge!==input.challenge ||
       grant.expiresAt<=Date.now() || !this.isLeaseActive(grant.viewKey))return fail(res,403,'GATEWAY_EXCHANGE_DENIED');
     this.authorizations.delete(input.authorization);this.tickets.delete(grant.challenge);
-    this.grants.clear();this.grants.set(token(),{viewKey:grant.viewKey});
+    this.grants.clear();this.grants.set(token(),{viewKey:grant.viewKey,initialNavigation:true,navigated:false});
     res.writeHead(204,{'cache-control':'no-store'});res.end();
   }
   #desktopAuthorized(req) {
-    if (!this.scopeKey || this.closed || !this.isLeaseActive(this.scopeKey) ||
-      ![...this.grants.values()].some(g=>g.viewKey === this.scopeKey)) return false;
-    if (req.headers.upgrade?.toLowerCase() === 'websocket') return req.headers.origin === this.origin;
+    if (!this.scopeKey || this.closed || req.headers.host !== new URL(this.dataOrigin).host || !this.isLeaseActive(this.scopeKey)) return false;
+    const grant = [...this.grants.values()].find(g => g.viewKey === this.scopeKey);
+    if (!grant) return false;
     let referer;try {referer=documentOrigin(req.headers.referer);}catch{}
+    // One natural control-to-data navigation, tied to the redeemed complete live view binding.
+    if (grant.initialNavigation && req.method === 'GET' && req.url === '/' && !req.headers.origin &&
+      req.headers['sec-fetch-dest'] === 'iframe' && req.headers['sec-fetch-mode'] === 'navigate' &&
+      req.headers['sec-fetch-site'] === 'cross-site' && referer === this.origin) {
+      grant.initialNavigation = false; grant.navigated = true; return true;
+    }
+    if (!grant.navigated) return false;
+    if (req.headers.upgrade?.toLowerCase() === 'websocket') return req.headers.origin === this.dataOrigin;
     return req.headers['sec-fetch-site'] === 'same-origin' &&
-      (req.headers.origin ? req.headers.origin === this.origin : referer === this.origin);
+      (req.headers.origin ? req.headers.origin === this.dataOrigin : referer === this.dataOrigin);
   }
   #requestShape(req) {
-    if (req.headers.host !== new URL(this.origin).host) return false;
+    if (![this.origin,this.dataOrigin].filter(Boolean).some(origin => req.headers.host === new URL(origin).host)) return false;
     if (!req.url?.startsWith('/') || req.url.startsWith('//') || req.url.includes('\\') || req.url.length > 8_192) return false;
     try { if (/^[\/\\]{2}|[\x00-\x1f]/.test(decodeURIComponent(req.url))) return false; } catch { return false; }
-    if (req.headers.origin && ![this.parentOrigin,this.origin].includes(req.headers.origin)) return false;
+    if (req.headers.origin && ![this.parentOrigin,this.origin,this.dataOrigin].includes(req.headers.origin)) return false;
     if (req.headers['sec-fetch-dest'] === 'document') return false; // never top-level navigation
     return true;
   }
@@ -260,10 +286,16 @@ export class FixedGateway {
   #forwarded() { try { this.onForward(); } catch {} }
   #handle(req,res) {
     if (!this.#requestShape(req)) return fail(res,403,'GATEWAY_REQUEST_DENIED');
-    if (this.parentOrigin === DESKTOP_ORIGIN && req.url === '/__hanamesh_exchange') {
+    if (this.parentOrigin === DESKTOP_ORIGIN && req.headers.host === new URL(this.origin).host && req.url === '/__hanamesh_exchange') {
       void this.#exchange(req,res).catch(()=>{if(!res.headersSent)fail(res,400,'GATEWAY_EXCHANGE_DENIED');else res.destroy();});return;
     }
-    if (req.url.startsWith('/__hanamesh_bootstrap/')) return this.#bootstrap(req,res);
+    if (this.parentOrigin === DESKTOP_ORIGIN) {
+      if (req.headers.host === new URL(this.origin).host) {
+        if (req.url.startsWith('/__hanamesh_bootstrap/')) return this.#bootstrap(req,res);
+        return fail(res,403,'GATEWAY_CONTROL_ONLY');
+      }
+      if (req.url.startsWith('/__hanamesh_bootstrap/') || req.url === '/__hanamesh_exchange') return fail(res,403,'GATEWAY_DATA_ONLY');
+    } else if (req.url.startsWith('/__hanamesh_bootstrap/')) return this.#bootstrap(req,res);
     if (!this.#authorized(req)) return fail(res,403,'GATEWAY_AUTH_REQUIRED');
     if (!['GET','HEAD','POST','PUT','PATCH','DELETE','OPTIONS'].includes(req.method)) return fail(res,405,'METHOD_NOT_ALLOWED');
     if (Number(req.headers['content-length']) > this.maxUploadBytes) return fail(res,413,'UPLOAD_TOO_LARGE');
@@ -308,6 +340,7 @@ export class FixedGateway {
   async #close() {
     this.closed = true; clearInterval(this.expiryTimer);
     this.tickets.clear(); this.grants.clear(); this.authorizations.clear();
+    await Promise.allSettled([...this.pendingChildren.values()]);
     const children=[...this.children.values()];this.children.clear();
     await Promise.all(children.map(child=>child.close()));
     for (const request of this.upstreams) request.destroy();

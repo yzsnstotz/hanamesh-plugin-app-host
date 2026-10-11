@@ -1,11 +1,12 @@
-// Controlled HTTP negative, not a browser/REAL_UI result. Headers represent an old
+// Controlled HTTP negative, not a browser/REAL_UI result.
+// Virtual Host transport dials the fixed IPv4 listener; no native resolution/header override. Headers represent an old
 // same-origin document; they are never injected into native Desktop traffic.
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {Server,createServer,request} from 'node:http';
 import {FixedGateway} from '../src/gateway.js';
 import {writeFileSync} from 'node:fs';
-const http=(url,opts={})=>new Promise((resolve,reject)=>{const q=request(url,opts,r=>{const b=[];r.on('data',c=>b.push(c));r.once('end',()=>resolve({status:r.statusCode,body:Buffer.concat(b).toString()}));});q.once('error',reject);if(opts.body)q.write(opts.body);q.end();});
+const http=(url,opts={})=>new Promise((resolve,reject)=>{const q=request({hostname:'127.0.0.1',port:new URL(url).port,path:new URL(url).pathname+new URL(url).search,agent:false,...opts,headers:{host:new URL(url).host,...opts.headers}},r=>{const b=[];r.on('data',c=>b.push(c));r.once('end',()=>resolve({status:r.statusCode,body:Buffer.concat(b).toString()}));});q.once('error',reject);if(opts.body)q.write(opts.body);q.end();});
 test('D26 security RED: revoked view origin must not inherit another view grant after port reuse',async()=>{
 const upstream=createServer((_q,r)=>r.end('UNMODIFIED_ORDINARY_BODY'));await new Promise(r=>upstream.listen(0,'127.0.0.1',r));
 const live=new Set(['principal:view-A:instance:gen1','principal:view-B:instance:gen1']);

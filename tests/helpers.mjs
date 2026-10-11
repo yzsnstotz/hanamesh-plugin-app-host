@@ -44,7 +44,8 @@ export async function until(fn,{timeout=6_000,interval=30}={}){
 }
 export function http(url,{method='GET',headers={},body}={}){
   return new Promise((resolve,reject)=>{
-    const req=request(url,{method,headers},res=>{
+    const u=new URL(url);
+    const req=request(url,{method,headers,...(u.hostname.endsWith('.localhost')?{hostname:'127.0.0.1',port:u.port,agent:false,headers:{host:u.host,...headers}}:{})},res=>{
       const chunks=[];res.on('data',d=>chunks.push(d));res.once('end',()=>{
         const bytes=Buffer.concat(chunks);let json;try{json=JSON.parse(bytes.toString());}catch{}
         resolve({status:res.statusCode,headers:res.headers,rawHeaders:res.rawHeaders,body:bytes,json});
