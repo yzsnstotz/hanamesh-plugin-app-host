@@ -7,6 +7,7 @@ import { dirname, isAbsolute, join } from 'node:path';
 import { promisify } from 'node:util';
 import { AppHostError, bounded } from './errors.js';
 const exec = promisify(execFile);
+import { observeOwnedProbe, probeDiagnosticSink } from './owned-probe-diagnostic.js';
 export async function resolveNodeBinary(nodeBinary) {
   let selected = nodeBinary;
   if (selected === undefined || selected === null || selected === '') {
@@ -83,7 +84,15 @@ export async function ownsLoopbackPort(pid, port) {
     }
     if (!binary) throw new AppHostError('PORT_OWNERSHIP_UNAVAILABLE', 'lsof is required to verify socket ownership on macOS.');
     let stdout;
-    try { ({ stdout } = await exec(binary, ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN', '-FpgLn'], { timeout: 1_000 })); }
+    try {
+      const args = ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN', '-FpgLn'];
+      const pending = exec(binary, args, { timeout: 1_000 });
+      if (process.env.HANAMESH_APPHOST_RUN_DIR) {
+        try { observeOwnedProbe(pending.child, {port, args, source:'readiness/socket-ownership',
+          emit:probeDiagnosticSink(process.env.HANAMESH_APPHOST_RUN_DIR)}); } catch {}
+      }
+      ({ stdout } = await pending);
+    }
     catch (error) { if (error.code === 1) return false; throw error; }
     const blocks = stdout.split(/(?=^p\d+$)/m);
     return blocks.some(block => block.split('\n').includes(`g${pid}`) && block.includes(`n127.0.0.1:${port}`));
