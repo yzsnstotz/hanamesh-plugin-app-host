@@ -65,6 +65,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "node --test --test-reporter=tap --test-concurrency=1 tests/*.test.mjs",
+    "test:contract": "pnpm run build && node --test --test-reporter=tap --test-concurrency=1 tests/install-target-contract.test.mjs tests/catalog-major-compat.test.mjs",
     "test:mutation": "node scripts/mutations.mjs",
     "test:types": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext tests/consumer.mts",
     "check": "npm run check:toolchain && npm run build && npm run check:consistency && npm test && npm run test:mutation && npm run test:types && npm run preflight",

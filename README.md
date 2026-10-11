@@ -123,6 +123,8 @@ AppHost rc7 提供 `market.openInstallTarget({itemId?,packageName?})` 及同名�
 
 安装目标合约（rc8，`hanamesh.install-target` v1，只加不改）：schema `schemas/install-target.schema.json`（出口 `./install-target/schema.json`），提供方/消费方 fixture 与一致性套件随包（`./install-target/suite`、`./install-target/fixtures/*`）。调用方可选声明 `contractVersion: '1'`；不声明保持 rc7 语义，其他值明确拒绝 `CONTRACT_VERSION_UNSUPPORTED`。见 [INSTALL_TARGET.md](docs/INSTALL_TARGET.md#合约版本与一致性套件)。
 
+运行 `pnpm run test:contract` 会先 build，再串行执行 `tests/install-target-contract.test.mjs` 与 `tests/catalog-major-compat.test.mjs`，验证安装目标 v1 和目录 major 1 的提供方/消费方契约及拒绝语义。J1S2-AH-01 提议将基线 conformance 命令设为 `pnpm run test:contract`；基线采纳由 segflow 上层处理。本入口是本模块契约自测，真实 DSH / 客户端产品验收另行记录。崩溃一致性声明仍由 `pnpm run check:consistency` 检查。
+
 rc9 installation-target contract: the library accepts exact 127.0.0.1/localhost aliases at the same configured port; Origin must match the request Host. Cross-alias/foreign Origin, unknown Host/port, iframe, CSRF, authentication and version refusals remain explicit. See [INSTALL_TARGET](docs/INSTALL_TARGET.md).
 
 ## 0.4.0 · Devkit normal Git supply / 0.5.0 external provision supply

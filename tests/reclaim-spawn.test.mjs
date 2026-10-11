@@ -33,10 +33,12 @@ test('AH-L07: proven orphan reclamation gets its declared grace before the launc
 async function fakeGuardian(t,behavior){
   const dir=await temporary();t.after(()=>rm(dir,{recursive:true,force:true}));
   const script=join(dir,'guardian.mjs'),binary=join(dir,'假 guardian runner');
-  await writeFile(script,`const send=value=>process.send(value,()=>{});
+  await writeFile(script,`import {writeFileSync} from 'node:fs';
+const send=value=>process.send(value,()=>{});
 process.on('message',m=>{
  if(m.type==='stop'){send({type:'stopped'});setTimeout(()=>process.exit(0),5);return;}
  if(m.type==='launch'){
+  writeFileSync(${JSON.stringify(join(dir,'launch-at'))},String(Date.now()));
   ${behavior}
  }
 });
@@ -57,7 +59,10 @@ test('AH-L09: after ownership-ready a hung launcher handshake keeps its independ
   assert(Date.now()-start>=4900);assert(Date.now()-start<10000,'hung launcher must not wait indefinitely');
 });
 for(const afterOwnership of [false,true])for(const failure of ['error','exit'])test(`AH-L10: guardian ${failure} ${afterOwnership?'after':'before'} ownership-ready fails immediately`,async t=>{
-  const config=await fakeGuardian(t,(afterOwnership?"send({type:'ownership-ready'});":"")+(failure==='error'?"send({type:'error',code:'TEST_EARLY',message:'SYNTHETIC_EARLY_FAILURE'});":"process.exit(1);")),start=Date.now();
+  const config=await fakeGuardian(t,(afterOwnership?"send({type:'ownership-ready'});":"")+(failure==='error'?"send({type:'error',code:'TEST_EARLY',message:'SYNTHETIC_EARLY_FAILURE'});":"process.exit(1);"));
   await assert.rejects(spawnOwned(config),e=>e.code===(failure==='error'?'TEST_EARLY':'SPAWN_FAILED'));
-  assert(Date.now()-start<2000,'early failure must not wait for either timeout');
+  const rejectedAt=Date.now(),launchAt=Number(await readFile(join(config.dataDir,'launch-at'),'utf8'));
+  assert(Number.isSafeInteger(launchAt)&&launchAt>0&&launchAt<=rejectedAt,'fixture must record the launch message before failing');
+  // Measure error handling after launch, independently of OS process startup latency.
+  assert(rejectedAt-launchAt<2000,'early failure must not wait for either timeout');
 });
