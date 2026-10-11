@@ -198,3 +198,6 @@ Market seat 的「打开」保留原 receipt/heartbeat/close owner；应用 ifra
 `HttpOptions.transportOrigin` 是宿主回环 HTTP 来源，与 Desktop 工作区来源分开。上游 `forwardWebRequest` 删除 Origin、附加宿主认证 cookie；仅在已配置 Desktop 父来源及准确回环 transport 的控制面允许缺失 Origin，仍必须经过 `connection.requestRejection`、逐请求授权、POST JSON 正文、workspace-v1 头和非 iframe 控制检查。普通 HTTP 写入仍必须有精确 Origin。
 
 独立 Node 约束不变：从已核布局 argv[4] 的 primary-runtime/runtime.json 当前清单验证 desktopVersion、platform、arch、Node 24 版本，固定 dependencies/node/bin/node（Windows node.exe），再以空环境运行有界的 process.versions 核验实际版本且不含 electron，才采用。失败不回退到 Electron/PATH。库操作经本模块参数适配器调用已读上游 dsh-desktop-host/lib/cli.js 的 runDesktopCli(runtimeDir,supportDir)，由上游允许管理 reserved desktop profile。ASAR 内 CLI 不支持独立 Node 读取，安装显式不可用。没有 standalone Node 时 owned 返回 NODE_RUNTIME_REQUIRED。布局识别本身不证明当前 master ABI、安装或 U2 iframe 可用。
+
+
+J1S2-AH-02 / Q-35 / HM-9：官方 peer 和开发测试依赖精确对齐上游 dsh-v0.2.1-alpha.2，Cordis 4.0.5-alpha.1、Schemastery 3.18.5-alpha.1。lib-provision 0.2.1 的实际 Git 源提交不变，以 bundleDependencies 随包分发并保留原始 LICENSE，不内联、不再许可。该供应变更不改变来源、认证、一次性租约、generation、持久身份或进程归属契约。

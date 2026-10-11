@@ -47,13 +47,18 @@ export async function runAppHostMutations(runner=runMutations){
 
 export function packOptions(tarball){
   return {root,tarball:resolve(tarball??join(root,`hanamesh-dsh-app-host-${pkg.version}.tgz`)),
-    required:['dist/catalog/suite.js','dist/catalog/suite.d.ts','dist/catalog/fixtures/provider.json','dist/catalog/fixtures/consumer.json','package.json','dist/index.js','dist/index.d.ts','dist/client.js','dist/client.d.ts','dist/client-ui.js','dist/client-ui.d.ts','docs/INSTALL_TARGET.md','dist/dsh.js','schemas/install-target.schema.json','dist/install-target/suite.js','dist/install-target/suite.d.ts','dist/install-target/run.js','dist/install-target/harness.js','dist/install-target/fixtures/catalog.json','dist/install-target/fixtures/provider-cases.json','dist/install-target/fixtures/consumer-cases.json','dist/install-target/fixtures/reference-consumer.js'],
-    forbidden:/dist\/provision\/|node_modules\/|vendor\/|tests?\/|scripts\/|artifacts\/|devkit\.config\.mjs|toolchain\.json/u,
+    required:['dist/catalog/suite.js','dist/catalog/suite.d.ts','dist/catalog/fixtures/provider.json','dist/catalog/fixtures/consumer.json','package.json','dist/index.js','dist/index.d.ts','dist/client.js','dist/client.d.ts','dist/client-ui.js','dist/client-ui.d.ts','docs/INSTALL_TARGET.md','dist/dsh.js','schemas/install-target.schema.json','dist/install-target/suite.js','dist/install-target/suite.d.ts','dist/install-target/run.js','dist/install-target/harness.js','dist/install-target/fixtures/catalog.json','dist/install-target/fixtures/provider-cases.json','dist/install-target/fixtures/consumer-cases.json','dist/install-target/fixtures/reference-consumer.js','node_modules/@hanamesh/lib-provision/package.json','node_modules/@hanamesh/lib-provision/LICENSE'],
+    forbidden:/dist\/provision\/|node_modules\/(?!@hanamesh\/lib-provision\/)|vendor\/|tests?\/|scripts\/|artifacts\/|devkit\.config\.mjs|toolchain\.json/u,
     temporaryRoot:undefined,
     validate:async({read})=>{
       const packed=JSON.parse(read('package.json'));
       assert.equal(packed.version,pkg.version);
       assert.deepEqual(packed.dependencies,pkg.dependencies);
+      assert.deepEqual(packed.bundleDependencies,['@hanamesh/lib-provision']);
+      const provider=JSON.parse(read('node_modules/@hanamesh/lib-provision/package.json'));
+      assert.equal(provider.version,'0.2.1');
+      assert.deepEqual(provider.dependencies??{},{});
+      assert.deepEqual(read('node_modules/@hanamesh/lib-provision/LICENSE'),await readFile(new URL('LICENSE',import.meta.resolve('@hanamesh/lib-provision/package.json'))));
       assert.deepEqual(packed.peerDependencies,pkg.peerDependencies);
       assert.deepEqual(packed.exports,pkg.exports);
       assert.equal(packed.dependencies['@hanamesh/devkit'],undefined);
@@ -96,9 +101,8 @@ export async function verifyAppHostPack(tarball){
   }
   // Explicit consumer closure; these remain transitive host peers, not AppHost declarations.
   const peers={...pkg.peerDependencies,
-    '@deepseek-ai/dsh-storage':'0.2.0-rc.2',
-    '@deepseek-ai/dsh-invariants':'0.2.0-rc.2',
-    '@deepseek-ai/dsh-scope':'0.2.0-rc.2'};
+    '@deepseek-ai/dsh-storage':'0.2.1-alpha.2',
+    '@deepseek-ai/dsh-scope':'0.2.1-alpha.2'};
   await verifyPack({...options,consumer:{packageJson:{private:true,type:'module',dependencies:{...peers,
     '@hanamesh/dsh-app-host':`file:${options.tarball}`}},
     javascript:"import assert from 'node:assert/strict';import{createRequire}from'node:module';import{apply}from'@hanamesh/dsh-app-host/dsh';assert.equal(typeof apply,'function');const require=createRequire(import.meta.url);assert.throws(()=>require.resolve('@hanamesh/devkit'),{code:'MODULE_NOT_FOUND'});",
