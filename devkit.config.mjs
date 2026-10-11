@@ -94,7 +94,11 @@ export async function verifyAppHostPack(tarball){
     if(prior.offline===undefined)delete process.env.npm_config_offline;else process.env.npm_config_offline=prior.offline;
     if(prior.peers===undefined)delete process.env.npm_config_auto_install_peers;else process.env.npm_config_auto_install_peers=prior.peers;
   }
-  const peers={...pkg.peerDependencies};
+  // Explicit consumer closure; these remain transitive host peers, not AppHost declarations.
+  const peers={...pkg.peerDependencies,
+    '@deepseek-ai/dsh-storage':'0.2.0-rc.2',
+    '@deepseek-ai/dsh-invariants':'0.2.0-rc.2',
+    '@deepseek-ai/dsh-scope':'0.2.0-rc.2'};
   await verifyPack({...options,consumer:{packageJson:{private:true,type:'module',dependencies:{...peers,
     '@hanamesh/dsh-app-host':`file:${options.tarball}`}},
     javascript:"import assert from 'node:assert/strict';import{createRequire}from'node:module';import{apply}from'@hanamesh/dsh-app-host/dsh';assert.equal(typeof apply,'function');const require=createRequire(import.meta.url);assert.throws(()=>require.resolve('@hanamesh/devkit'),{code:'MODULE_NOT_FOUND'});",
