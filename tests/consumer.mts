@@ -24,7 +24,8 @@ ready.instance.pid;
 await client.open({appId:'example',deploymentId:'local',viewId:'view',command:'/bin/sh'});
 // @ts-expect-error Recovery must explicitly confirm invalidation.
 await client.recoverView({viewId:'view',instanceId:'x',confirm:false});
-const dshConfig:DshPluginConfig={dataRoot:'/tmp/example-data',applications:[definition]};
+const dshConfig:DshPluginConfig={dataRoot:'/tmp/example-data',parentOrigin:'dsh-app://app',frameAncestors:[],applications:[definition]};
+createHttpHandler(host,{parentOrigin:'dsh-app://app',transportOrigin:'http://127.0.0.1:40000',authenticate:(_req:unknown)=>({principalId:'test'}),authorize:()=>true});
 const binding:DshStorageBinding=domainBinding({global:{get:()=>null,set:async()=>{}},close:async()=>{}});
 const authentication=browserAuthentication({requestRejection:()=>undefined});
 const dshEntry:(ctx:unknown,config:DshPluginConfig)=>Promise<void>=apply;

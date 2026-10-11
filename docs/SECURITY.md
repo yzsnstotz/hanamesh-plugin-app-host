@@ -50,3 +50,5 @@ DSH/宿主 cookie、控制头与 Authorization 默认不传上游；应用 cooki
 实际 Chromium 启动于独立临时 profile，但回环导航返回 `net::ERR_BLOCKED_BY_ADMINISTRATOR`。未改管理员 policy、未关 CSP、未使用绕过标志。两个 REAL_BROWSER 测试显式 skip 并在产品矩阵标 PARTIAL，不算 PASS。
 
 测试 Chromium 的 `--no-sandbox` 仅为隔离容器内以 root 运行测试驱动所需，绝非生产应用/DSH 的启动配置；不应该移植到生产 profile。
+
+J1S2-AH-02：仅工作区父来源新增精确 `dsh-app://app`；应用目标不放宽。Desktop 控制面通过准确 HTTP transport + 上游 cookie 认证接受壳转发后的无 Origin 请求，普通 HTTP 写入 Origin 规则不变。网关 bootstrap 仍要求精确 Desktop Referer、iframe 导航、一次有效租约票据；不能以“Desktop 来源”替代能力授权。实际 Chromium 省略 Referer 时保持拒绝并记录 U2 阻塞，不为测试绕过策略。

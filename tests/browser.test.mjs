@@ -41,6 +41,7 @@ async function browserHost(t,{ttl=60_000,sweep=0}={}){
       res.writeHead(200,{'content-type':'text/html','set-cookie':'DSH_TEST_AUTH=test-owner; HttpOnly; SameSite=Strict; Path=/'});
       res.end('<!doctype html><html><head><title>HanaMesh app-host acceptance fixture</title></head><body><h1>App-host: isolated browser acceptance fixture</h1><p>This is a test application, not the HanaMesh workbench.</p></body></html>');return;
     }
+    if(req.url==='/workspace-origin.js'){res.writeHead(200,{'content-type':'text/javascript'});res.end(await readFile(new URL('../src/workspace-origin.js',import.meta.url)));return;}
     if(req.url==='/client.js'){res.writeHead(200,{'content-type':'text/javascript'});res.end(await readFile(new URL('../src/client.js',import.meta.url)));return;}
     await handler(req,res);
   });await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin=`http://127.0.0.1:${server.address().port}`;

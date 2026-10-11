@@ -3,7 +3,7 @@ import { join, resolve, dirname } from 'node:path';
 import { access, mkdir, writeFile, rm } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { AppHostError, requireCondition, SerialQueue, copy } from './errors.js';
-import { validateDefinition, identifier, fingerprint, expand, loopbackOrigin, packageName as validPackageName } from './descriptor.js';
+import { validateDefinition, identifier, fingerprint, expand, workspaceOrigin, packageName as validPackageName } from './descriptor.js';
 import { secureDirectory } from './store.js';
 import { freePort, spawnOwned, waitReady } from './runtime.js';
 import { FixedGateway, ancestorOrigin } from './gateway.js';
@@ -34,7 +34,7 @@ export class AppHost {
     requireCondition(Number.isSafeInteger(leaseTtlMs) && leaseTtlMs >= 100 && leaseTtlMs <= 3_600_000 &&
       Number.isSafeInteger(sweepIntervalMs) && sweepIntervalMs >= 0 && sweepIntervalMs <= 3_600_000,
       'INVALID_TIMEOUT','Invalid lease or sweep timing.');
-    this.store = store; this.dataRoot = dataRoot; this.parentOrigin = loopbackOrigin(parentOrigin); this.frameAncestors = frameAncestors.map(ancestorOrigin);
+    this.store = store; this.dataRoot = dataRoot; this.parentOrigin = workspaceOrigin(parentOrigin); this.frameAncestors = frameAncestors.map(ancestorOrigin);
     this.leaseTtlMs = leaseTtlMs; this.sweepIntervalMs = sweepIntervalMs; this.checkpoint = checkpoint; this.clock = clock;
     this.#nodeBinary = nodeBinary;
     requireCondition(typeof runtimeLedgerReader === 'function','INVALID_RUNTIME','runtimeLedgerReader must be a function.');

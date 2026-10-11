@@ -1,3 +1,4 @@
+import { isWorkspaceOrigin } from './workspace-origin.js';
 import { isAbsolute } from 'node:path';
 import { createHash } from 'node:crypto';
 import { requireCondition, copy } from './errors.js';
@@ -13,6 +14,11 @@ export function loopbackOrigin(value) {
     !url.username && !url.password && url.pathname === '/' && !url.search && !url.hash,
     'INVALID_ORIGIN', 'Only an explicit http://127.0.0.1:<port> origin is supported by this candidate.');
   return url.origin;
+}
+/** Workspace parent only; application upstream URLs still use loopbackOrigin. */
+export function workspaceOrigin(value) {
+  requireCondition(isWorkspaceOrigin(value), 'INVALID_ORIGIN', 'Expected an exact HTTP loopback or dsh-app://app workspace origin.');
+  return value;
 }
 /** npm package name (optionally scoped), at most 128 characters — the same shape the usage plugin accepts as `hanaRef`. */
 export const packageName = value => typeof value === 'string' && value.length <= 128 && /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(value);

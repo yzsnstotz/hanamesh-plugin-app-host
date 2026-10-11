@@ -6,7 +6,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, rm, readdir } from 'node:fs/promises';
+import { readFile, rm, readdir, mkdir, writeFile, symlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Context } from '@deepseek-ai/cordis';
 import Storage from '@deepseek-ai/dsh-storage';
@@ -272,4 +272,27 @@ test('AH-PG01: real Cordis loads the external provision package and preserves au
   const rejected=await h.post('/hanamesh/library/provision',{});
   assert.equal(rejected.status,400,JSON.stringify(rejected.json));
   assert.equal(rejected.json.error.code,'INVALID_INPUT');
+});
+
+
+test('AH-D05: real Cordis apply infers the Desktop parent and profile without supply configuration', async t => {
+  const root=await temporary();t.after(()=>rm(root,{recursive:true,force:true}));
+  const runtime=join(root,'runtime'),profile=join(root,'home/profiles/desktop');
+  const entry=join(runtime,'node_modules/@deepseek-ai/dsh-desktop-host/lib/index.js');
+  for(const [name,file] of [['dsh-desktop-host','index.js'],['dsh','bin.js']]){
+    const packageDir=join(runtime,'node_modules/@deepseek-ai',name);await mkdir(join(packageDir,'lib'),{recursive:true});
+    await writeFile(join(packageDir,'package.json'),JSON.stringify({name:'@deepseek-ai/'+name}));await writeFile(join(packageDir,'lib',file),'');
+  }
+  await mkdir(join(profile,'node_modules/@hanamesh'),{recursive:true});
+  await symlink(join(import.meta.dirname,'..'),join(profile,'node_modules/@hanamesh/dsh-app-host'));
+  await writeFile(join(profile,'package.json'),JSON.stringify({dependencies:{'@hanamesh/dsh-app-host':'0.5.1'}}));
+  const prior=process.argv;process.argv=[process.execPath,entry,runtime,profile];
+  let h;try{h=await boot(t,{applications:[]});}finally{process.argv=prior;}
+  assert.equal(h.ctx.get('hanameshApps').parentOrigin,'dsh-app://app');
+  assert.deepEqual(h.ctx.get('hanameshApps').frameAncestors,[]);
+  const result=await h.get('/hanamesh/library/installedPlugins',{origin:undefined});
+  assert.equal(result.status,200,JSON.stringify(result.json));assert.equal(result.json.plugins.length,1);
+  assert.equal(result.json.plugins[0].packageName,'@hanamesh/dsh-app-host');
+  assert.equal((await h.post('/hanamesh/library/sources',{sources:[]},{origin:undefined})).status,200);
+  assert.equal((await h.post('/hanamesh/library/sources',{sources:[]},{origin:'dsh-app://shell'})).status,403);
 });

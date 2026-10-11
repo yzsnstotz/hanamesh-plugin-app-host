@@ -1,7 +1,8 @@
 import { createServer, request } from 'node:http';
 import { randomBytes, createHash } from 'node:crypto';
 import { AppHostError, requireCondition, bounded } from './errors.js';
-import { loopbackOrigin } from './descriptor.js';
+import { documentOrigin, DESKTOP_ORIGIN } from './workspace-origin.js';
+import { loopbackOrigin, workspaceOrigin } from './descriptor.js';
 
 /**
  * `frame-ancestors` is matched against EVERY ancestor, not just the direct parent. Inside a
@@ -15,6 +16,7 @@ export function frameAncestorsValue(parentOrigin, frameAncestors = []) {
 }
 /** Only exact origins of a scheme a webview can actually host a top-level document on. */
 export function ancestorOrigin(value) {
+  if (value === DESKTOP_ORIGIN) return value;
   let url;
   try { url = new URL(value); } catch { requireCondition(false, 'INVALID_FRAME_ANCESTOR', 'Expected an explicit ancestor origin.'); }
   requireCondition(['http:', 'https:', 'tauri:', 'asset:', 'file:'].includes(url.protocol) && !url.username && !url.password &&
@@ -55,7 +57,7 @@ function fail(res, status, code) {
 /** Fixed upstream only. Bootstrap is our own response, not a rewritten app document. */
 export class FixedGateway {
   constructor({ upstream, parentOrigin, isLeaseActive, cookieAllowlist = [], allowAppAuthorization = false, maxUploadBytes = 32 * 1024 * 1024, frameAncestors = [], onForward = () => {} }) {
-    this.upstream = loopbackOrigin(upstream); this.parentOrigin = loopbackOrigin(parentOrigin);
+    this.upstream = loopbackOrigin(upstream); this.parentOrigin = workspaceOrigin(parentOrigin);
     requireCondition(Array.isArray(frameAncestors) && frameAncestors.length <= 8, 'INVALID_FRAME_ANCESTOR', 'frameAncestors must be a short list of origins.');
     this.ancestors = frameAncestorsValue(this.parentOrigin, frameAncestors.map(ancestorOrigin));
     requireCondition(typeof isLeaseActive === 'function','INVALID_GATEWAY','A live lease authorization check is required.');
@@ -122,7 +124,7 @@ export class FixedGateway {
     if (req.headers.upgrade?.toLowerCase() === 'websocket' && req.headers.origin === this.origin) return true;
     if (site !== 'same-site' || req.headers['sec-fetch-dest'] !== 'iframe') return false;
     let referer;
-    try { referer = new URL(req.headers.referer).origin; } catch { return false; }
+    try { referer = documentOrigin(req.headers.referer); } catch { return false; }
     return referer === this.parentOrigin;
   }
   #liveGrantExists() {
@@ -146,7 +148,7 @@ export class FixedGateway {
     const ticket = req.url.slice('/__hanamesh_bootstrap/'.length);
     const item = this.tickets.get(ticket);
     let referer;
-    try { referer = new URL(req.headers.referer).origin; } catch {}
+    try { referer = documentOrigin(req.headers.referer); } catch {}
     if (req.method !== 'GET' || req.headers['sec-fetch-dest'] !== 'iframe' || referer !== this.parentOrigin ||
       !item || item.expiresAt <= Date.now() || !this.isLeaseActive(item.viewKey)) return fail(res,403,'GATEWAY_BOOTSTRAP_DENIED');
     this.tickets.delete(ticket);

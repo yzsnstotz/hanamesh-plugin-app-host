@@ -47,7 +47,7 @@ export interface AppListing {
 }
 export interface EventPage { events:HostEvent[]; sequence:number; resetRequired:boolean; }
 export interface HostOptions {
-  store:SnapshotStore; dataRoot:string; parentOrigin:string; leaseTtlMs?:number; sweepIntervalMs?:number;
+  store:SnapshotStore; dataRoot:string; parentOrigin:string; frameAncestors?:string[]; leaseTtlMs?:number; sweepIntervalMs?:number;
   nodeBinary?:string; clock?:()=>number; checkpoint?:(point:string,details:Record<string,unknown>)=>Awaitable<void>; credentialResolver?:CredentialResolver|null;
   runtimeLedgerReader?:(root:string)=>Awaitable<{schema:1;items:Record<string,{version:string}>}>;
 }
@@ -88,7 +88,7 @@ export class DshDomainSnapshotStore implements SnapshotStore {
 }
 export interface AuthenticatedSubject { principalId:string; [key:string]:unknown; }
 export interface HttpOptions<Request=unknown> {
-  parentOrigin:string; authenticate(request:Request):Awaitable<AuthenticatedSubject|null>;
+  parentOrigin:string; transportOrigin?:string; authenticate(request:Request):Awaitable<AuthenticatedSubject|null>;
   authorize(subject:AuthenticatedSubject,path:string,input:unknown):Awaitable<boolean>;
 }
 export function createHttpHandler<Request=unknown,Response=unknown>(host:AppHost,options:HttpOptions<Request>):(request:Request,response:Response)=>Promise<void>;

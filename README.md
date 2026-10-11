@@ -136,3 +136,5 @@ The upstream Git subdirectory route supports pnpm 10.33.0; npm 11.8.0 cannot ins
 ## 0.5.1 · origin/main dependency closure
 
 Removed the unused public Devkit peer; all Devkit imports belong to development scripts. Its normal pnpm Git subdirectory range and the external lib-provision runtime dependency are unchanged. No runtime API, schema, fixture, protocol or business code changes. Normal npm tarball runtime consumption remains applicable; npm source Git cannot resolve the Devkit subdirectory route.
+
+J1S2-AH-02：AppHost 从上游 `dsh-desktop-host/lib/index.js` 的 runtime/profile argv、具名包清单及自己的 profile 安装链接识别 Desktop，无需 `hanamesh-supply` 位置配置。工作区来源为 `dsh-app://app`，HTTP 传输仍绑定本机显式回环端口；应用上游 URL 仍只允许 HTTP 回环。从上游 primary-runtime 的当前具名清单与固定 Node 路径核验实际版本及非 Electron 身份；库操作调用上游 runDesktopCli 的 reserved-profile 入口。缺失/不匹配 payload 保持不可用；ASAR 内的 CLI 不交给独立 Node，安装保持不可用。U2 真实 Desktop 证据与阻塞见本卡 REPORT。

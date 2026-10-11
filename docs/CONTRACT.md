@@ -188,3 +188,13 @@ Market seat 的「打开」保留原 receipt/heartbeat/close owner；应用 ifra
 `hanaRef` = 应用的 **npm 包名**（与 usage `validHana` 同形：`@scope/name` 或 `name`，≤128 字符），`sourcePlugin` = `@hanamesh/dsh-app-host`。包名来源按序：① 描述符可选字段 `packageName`（rc.27 新增，`validateDefinition` 校验形状；不带则完全向后兼容）；② 宿主启动时的已安装扫描（`<profile>/node_modules/<pkg>/app.json` → `id`）经 `host.bindPackageName(appId, packageName)` 绑定——应用包只注册纯 `app.json`，扫描先于应用包注册发生，所以绑定不要求 appId 已注册；③ 都没有 → 该应用不产生证据（debug 日志），启动照常。`list().apps[].packageName` 带出当前解析结果（无则 `null`）。
 
 新的宿主面：`host.bindPackageName(appId,name)`、`host.packageName(appId)`、`host.onActivity(listener)`（内存内活动通知 `{type:'instance.activity',instanceId,appId,deploymentId,principalId,at}`，不落 `eventsSince`）；`FixedGateway({ onForward })`；`createUsageEvidence({ host, seat:()=>ctx.hanameshUsage, logger })` 是把二者接到 record 座位的适配器（`dsh.js` 已装好；`close()` 随插件卸载）。
+
+## Desktop 来源与布局（J1S2-AH-02）
+
+工作区父来源允许精确 `http://127.0.0.1:<port>` 或精确 `dsh-app://app`。SDK 对 Desktop 使用完整 scheme URL，不使用 Node WHATWG URL 的 `null` origin。`dsh-app://shell`、端口、路径、userinfo、查询和 fragment 不作为工作区来源；应用 attach URL 和网关固定上游仍仅 HTTP 回环。
+
+上游 Desktop 的 `dsh-desktop-host/lib/index.js` 启动参数提供 runtimeDir/profileDir；须核对具名 entry 包、runtime 内 DSH 包、profile 清单与本 AppHost 包的 realpath 链接，才能推断 `library.profileDir`、`profileName=desktop`、`dshBin`、`parentOrigin=dsh-app://app`、`frameAncestors=[]`（工作区直接为顶层文档）。显式配置仍优先。未证明的布局继续既有 CLI 推断，绝不从 cwd、个人目录或端口猜身份。
+
+`HttpOptions.transportOrigin` 是宿主回环 HTTP 来源，与 Desktop 工作区来源分开。上游 `forwardWebRequest` 删除 Origin、附加宿主认证 cookie；仅在已配置 Desktop 父来源及准确回环 transport 的控制面允许缺失 Origin，仍必须经过 `connection.requestRejection`、逐请求授权、POST JSON 正文、workspace-v1 头和非 iframe 控制检查。普通 HTTP 写入仍必须有精确 Origin。
+
+独立 Node 约束不变：从已核布局 argv[4] 的 primary-runtime/runtime.json 当前清单验证 desktopVersion、platform、arch、Node 24 版本，固定 dependencies/node/bin/node（Windows node.exe），再以空环境运行有界的 process.versions 核验实际版本且不含 electron，才采用。失败不回退到 Electron/PATH。库操作经本模块参数适配器调用已读上游 dsh-desktop-host/lib/cli.js 的 runDesktopCli(runtimeDir,supportDir)，由上游允许管理 reserved desktop profile。ASAR 内 CLI 不支持独立 Node 读取，安装显式不可用。没有 standalone Node 时 owned 返回 NODE_RUNTIME_REQUIRED。布局识别本身不证明当前 master ABI、安装或 U2 iframe 可用。

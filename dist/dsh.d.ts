@@ -7,9 +7,9 @@ export const ROUTES: readonly string[];
 export const Config: unknown;
 export const appHostDomainSpec: { readonly name: 'hanamesh_app_host'; readonly version: 1; readonly layout: 'single' };
 export interface DshPluginConfig {
-  dataRoot?: string; parentOrigin?: string; nodeBinary?: string; router?:{codingOauth?:{mode?:'http'|'file'}};
+  dataRoot?: string; parentOrigin?: string; frameAncestors?: string[]; nodeBinary?: string; router?:{codingOauth?:{mode?:'http'|'file'}};
   /** `sources` undefined → the HanaMesh catalog source; explicit `[]` → none. `profileDir`/`profileName`/`dshBin` (and
-   *  `nodeBinary`) are inferred on plain DSH when undefined — see docs/CONTRACT.md 「应用库配置」; explicit values win. */
+   *  `nodeBinary`) are inferred from the proven Desktop layout or plain DSH when undefined — see docs/CONTRACT.md 「应用库配置」; explicit values win. */
   /** rc.28: the same keys serve the HanaMesh market (plugins + applications; routes `/hanamesh/library*`, see docs/CONTRACT.md「市场」). */
   library?:{fixture?:string;sources?:Array<{manifestUrl:string;enabled?:boolean}>;profileDir?:string;profileName?:string;dshBin?:string;registry?:string;allowPrerelease?:boolean};
   applications?: AppDefinition[]; leaseTtlMs?: number; sweepIntervalMs?: number;

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { AppHostError, requireCondition } from '../errors.js';
-import { loopbackOrigin } from '../descriptor.js';
+import { controlOrigins } from '../control-origin.js';
 
 export const ROUTER_ROUTES=Object.freeze(['/hanamesh/router/providers','/hanamesh/router/plan','/hanamesh/router/grant',
   '/hanamesh/router/revoke','/hanamesh/router/model','/hanamesh/router/mode','/hanamesh/router/gateway','/hanamesh/router/receipts']);
@@ -14,18 +14,18 @@ function send(res,status,value){res.writeHead(status,{'content-type':'applicatio
 const statusFor=code=>({APP_NOT_FOUND:404,ENTRY_UNKNOWN:404,ROUTER_PROVIDER_ABSENT:404,RISK_NOT_ACKNOWLEDGED:403,
   CONSUMER_MISMATCH:403,ENTRY_NOT_ROUTED:409,GATEWAY_OFF:409,GATEWAY_UNREACHABLE:503}[code]??400);
 
-export function createRouterHttpHandler(router,{parentOrigin,authenticate,authorize}){
-  parentOrigin=loopbackOrigin(parentOrigin);requireCondition(typeof authenticate==='function'&&typeof authorize==='function','AUTH_BINDING_REQUIRED','Router authentication is required.');
+export function createRouterHttpHandler(router,{parentOrigin,transportOrigin,authenticate,authorize}){
+  const origins=controlOrigins(parentOrigin,transportOrigin);parentOrigin=origins.parent;requireCondition(typeof authenticate==='function'&&typeof authorize==='function','AUTH_BINDING_REQUIRED','Router authentication is required.');
   return async(req,res)=>{const traceId=randomUUID();try{
-    requireCondition(req.headers.host===new URL(parentOrigin).host,'HOST_DENIED','Unrecognized request host.',{},403);
+    requireCondition(req.headers.host===new URL(origins.transport).host,'HOST_DENIED','Unrecognized request host.',{},403);
     requireCondition(req.url?.startsWith('/')&&!req.url.startsWith('//')&&!req.url.includes('\\'),'BAD_TARGET','Invalid request target.');
-    const url=new URL(req.url,parentOrigin),path=url.pathname;requireCondition(ROUTER_ROUTES.includes(path),'NOT_FOUND','Unknown router route.',{},404);
+    const url=new URL(req.url,origins.transport),path=url.pathname;requireCondition(ROUTER_ROUTES.includes(path),'NOT_FOUND','Unknown router route.',{},404);
     const readOnly=['/hanamesh/router/providers','/hanamesh/router/plan','/hanamesh/router/receipts'].includes(path);
     requireCondition(req.method===(readOnly?'GET':'POST'),'METHOD_NOT_ALLOWED','State changes require POST.',{},405);
-    requireCondition(!req.headers.origin||req.headers.origin===parentOrigin,'ORIGIN_DENIED','Unapproved browser origin.',{},403);
+    requireCondition(!req.headers.origin||origins.acceptsOrigin(req.headers.origin),'ORIGIN_DENIED','Unapproved browser origin.',{},403);
     requireCondition(req.headers['sec-fetch-dest']!=='iframe'&&req.headers['sec-fetch-site']!=='cross-site','FRAME_CONTROL_DENIED','An application frame cannot control the router.',{},403);
     requireCondition(req.headers['x-hanamesh-client']==='workspace-v1','CSRF_DENIED','Explicit workspace client header is required.',{},403);
-    if(!readOnly)requireCondition(req.headers.origin===parentOrigin,'CSRF_DENIED','Workspace origin is required.',{},403);
+    if(!readOnly)requireCondition(origins.acceptsOrigin(req.headers.origin),'CSRF_DENIED','Workspace origin is required.',{},403);
     const subject=await authenticate(req);requireCondition(subject&&typeof subject.principalId==='string','UNAUTHENTICATED','Host authentication is required.',{},401);
     const input=readOnly?Object.fromEntries(url.searchParams):await body(req);
     if(path==='/hanamesh/router/providers')requireCondition(Object.keys(input).length===0,'UNKNOWN_FIELDS','No provider parameters are accepted.');
