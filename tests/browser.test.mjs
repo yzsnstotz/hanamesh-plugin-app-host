@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { readFile,writeFile,access,rm,mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join,resolve } from 'node:path';
 import { createHttpHandler } from '../src/index.js';
 import { setup,definition,temporary,until,pidAlive,delay } from './helpers.mjs';
 async function chrome(t){
@@ -13,7 +13,7 @@ async function chrome(t){
   for(const candidate of candidates)try{await access(candidate);binary=candidate;break;}catch{}
   if(!binary){t.skip('REAL_BROWSER unavailable: isolated Chromium binary was not found.');return null;}
   const root=await temporary(),profile=join(root,'chromium-profile');
-  const processHandle=spawn(binary,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--no-first-run','--no-default-browser-check','--remote-debugging-address=127.0.0.1','--remote-debugging-port=0',`--user-data-dir=${profile}`,'about:blank'],{detached:true,stdio:['ignore','ignore','pipe']});
+  const processHandle=spawn(binary,['--headless=new','--use-mock-keychain','--password-store=basic','--no-sandbox','--disable-dev-shm-usage','--no-first-run','--no-default-browser-check','--remote-debugging-address=127.0.0.1','--remote-debugging-port=0',`--user-data-dir=${profile}`,'about:blank'],{detached:true,stdio:['ignore','ignore','pipe']});
   let stderr='';processHandle.stderr.on('data',b=>{stderr=(stderr+b).slice(-8000);});
   const kill=async signal=>{
     if(processHandle.exitCode!==null||processHandle.signalCode!==null)return;
@@ -34,8 +34,7 @@ async function chrome(t){
   };
   return{call,evaluate,kill,pid:processHandle.pid,version:await send('Browser.getVersion')};
 }
-async function browserHost(t,{ttl=60_000,sweep=0}={}){
-  const browser=await chrome(t);if(!browser)return null;
+async function browserHost(t,{browser,ttl=60_000,sweep=0}={}){
   let handler;const server=createServer(async(req,res)=>{
     if(req.url==='/'){
       res.writeHead(200,{'content-type':'text/html','set-cookie':'DSH_TEST_AUTH=test-owner; HttpOnly; SameSite=Strict; Path=/'});
@@ -69,23 +68,26 @@ async function browserHost(t,{ttl=60_000,sweep=0}={}){
   await until(async()=>(await browser.evaluate('document.body?.textContent',executionContextId))?.includes('HANAMESH_FIXTURE'));
   return{browser,host,origin,receipt,frameContext:executionContextId};
 }
-test('H13 REAL_BROWSER: named parent embeds unchanged app; direct top navigation and iframe control calls are denied',async t=>{
-  const state=await browserHost(t);if(!state)return;const {browser,host,origin,receipt,frameContext}=state;
-  for(const payload of [{command:'/bin/sh'},{command:'/bin/echo',args:['bad']},{env:{DSH_TOKEN:'bad'}},{url:'http://example.invalid'}]){
-    const result=await browser.evaluate(`fetch(${JSON.stringify(origin+'/apps/open')},{method:'POST',credentials:'include',headers:{'content-type':'application/json','x-hanamesh-client':'workspace-v1'},body:JSON.stringify(${JSON.stringify({appId:'example',deploymentId:'local',viewId:'evil',...payload})})}).then(r=>({status:r.status})).catch(e=>({blocked:e.name}))`,frameContext);
-    assert.equal(result.blocked,'TypeError');
-  }
-  assert.equal(host.list('browser-owner').views.length,1);
-  await mkdir(new URL('../docs/acceptance',import.meta.url),{recursive:true});
-  const shot=await browser.call('Page.captureScreenshot',{format:'png'});await writeFile(new URL('../docs/acceptance/browser-fixture.png',import.meta.url),Buffer.from(shot.data,'base64'));
-  await browser.call('Page.navigate',{url:new URL(receipt.uiUrl).origin});
-  await until(async()=>(await browser.evaluate('document.body?.textContent'))?.includes('GATEWAY_REQUEST_DENIED'));
-  console.log('REAL_BROWSER embedding/security:',JSON.stringify({browser:browser.version.product,namedParentEmbedded:true,iframeMaliciousCallsBlocked:4,directTopNavigationDenied:true}));
-});
-test('H10 REAL_BROWSER: SIGKILL browser process group, no unload, lease expiry stops actual owned application',async t=>{
-  const state=await browserHost(t,{ttl:1200,sweep:50});if(!state)return;const {browser,host,receipt}=state;
-  const appPid=host.instance(receipt.instance.id,'browser-owner').pid;assert(pidAlive(appPid));
-  await browser.kill('SIGKILL');await until(()=>host.instance(receipt.instance.id,'browser-owner').status==='stopped');
-  assert.equal(host.list('browser-owner').views[0].status,'expired');assert(!pidAlive(appPid));
-  console.log('REAL_BROWSER lease expiry:',JSON.stringify({browser:browser.version.product,signal:'SIGKILL',browserPid:browser.pid,appPid,noUnload:true,lease:'expired',runtime:'stopped'}));
+test('REAL_BROWSER: one isolated Chromium round covers embedding and actual SIGKILL lease expiry',async t=>{
+  const browser=await chrome(t);if(!browser)return;
+  await t.test('H13 REAL_BROWSER: named parent embeds unchanged app; direct top navigation and iframe control calls are denied',async t=>{
+    const state=await browserHost(t,{browser});if(!state)return;const {host,origin,receipt,frameContext}=state;
+    for(const payload of [{command:'/bin/sh'},{command:'/bin/echo',args:['bad']},{env:{DSH_TOKEN:'bad'}},{url:'http://example.invalid'}]){
+      const result=await browser.evaluate(`fetch(${JSON.stringify(origin+'/apps/open')},{method:'POST',credentials:'include',headers:{'content-type':'application/json','x-hanamesh-client':'workspace-v1'},body:JSON.stringify(${JSON.stringify({appId:'example',deploymentId:'local',viewId:'evil',...payload})})}).then(r=>({status:r.status})).catch(e=>({blocked:e.name}))`,frameContext);
+      assert.equal(result.blocked,'TypeError');
+    }
+    assert.equal(host.list('browser-owner').views.length,1);
+    const evidenceDir=resolve(import.meta.dirname,'../../evidence');await mkdir(evidenceDir,{recursive:true});
+    const shot=await browser.call('Page.captureScreenshot',{format:'png'});await writeFile(join(evidenceDir,'browser-fixture.png'),Buffer.from(shot.data,'base64'));
+    await browser.call('Page.navigate',{url:new URL(receipt.uiUrl).origin});
+    await until(async()=>(await browser.evaluate('document.body?.textContent'))?.includes('GATEWAY_REQUEST_DENIED'));
+    console.log('REAL_BROWSER embedding/security:',JSON.stringify({browser:browser.version.product,namedParentEmbedded:true,iframeMaliciousCallsBlocked:4,directTopNavigationDenied:true}));
+  });
+  await t.test('H10 REAL_BROWSER: SIGKILL browser process group, no unload, lease expiry stops actual owned application',async t=>{
+    const state=await browserHost(t,{browser,ttl:1200,sweep:50});if(!state)return;const {host,receipt}=state;
+    const appPid=host.instance(receipt.instance.id,'browser-owner').pid;assert(pidAlive(appPid));
+    await browser.kill('SIGKILL');await until(()=>host.instance(receipt.instance.id,'browser-owner').status==='stopped');
+    assert.equal(host.list('browser-owner').views[0].status,'expired');assert(!pidAlive(appPid));
+    console.log('REAL_BROWSER lease expiry:',JSON.stringify({browser:browser.version.product,signal:'SIGKILL',browserPid:browser.pid,appPid,noUnload:true,lease:'expired',runtime:'stopped'}));
+  });
 });

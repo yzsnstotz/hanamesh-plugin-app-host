@@ -1,0 +1,93 @@
+{
+  "evidence": "SOURCE/FIXTURE",
+  "contract": "C-WEB-CATALOG",
+  "version": 1,
+  "manifestUrl": "https://market.example/catalog-source.json?view=hanamesh",
+  "manifest": {
+    "manifestVersion": "1.0.0",
+    "providerId": "com.hanamesh.market",
+    "name": "HanaMesh",
+    "description": "HanaMesh 公开目录；收录不表示审核或推荐。",
+    "homepage": "https://market.example",
+    "attribution": {
+      "name": "HanaMesh",
+      "url": "https://market.example",
+      "notice": "保留公开来源回链。"
+    },
+    "transport": {
+      "kind": "https-json",
+      "endpoint": "https://market.example/v1/plugins?view=hanamesh",
+      "method": "GET"
+    },
+    "query": {
+      "supported": [
+        "q",
+        "category",
+        "cursor",
+        "limit"
+      ],
+      "defaultLimit": 50,
+      "maxLimit": 200,
+      "sorts": []
+    },
+    "limits": {
+      "maxBodyBytes": 2097152,
+      "maxSourceLinks": 500
+    }
+  },
+  "page": {
+    "schemaVersion": "hanamesh.catalog.v1",
+    "generatedAt": "2026-10-11T00:00:00.000Z",
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "itemId": "00000000-0000-4000-8000-000000000001",
+        "packageName": "@example/ordinary-app",
+        "name": "@example/ordinary-app",
+        "displayName": "Ordinary application",
+        "summary": "Example",
+        "catalogKind": "application",
+        "categories": [
+          "hanamesh-app"
+        ],
+        "package": {
+          "registry": "npm",
+          "name": "@example/ordinary-app"
+        },
+        "source": {
+          "sourceId": "awesome",
+          "sourceRef": "example/app",
+          "sourceLinks": [
+            {
+              "sourceId": "awesome",
+              "sourceRef": "example/app",
+              "sourceUrl": "https://awesome.example/app",
+              "firstSeenAt": "2026-10-11T00:00:00.000Z",
+              "lastSeenAt": "2026-10-11T00:00:00.000Z"
+            }
+          ]
+        }
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "itemId": "00000000-0000-4000-8000-000000000002",
+        "packageName": null,
+        "name": "Browse entry",
+        "displayName": "Browse entry",
+        "summary": "Example",
+        "catalogKind": "entry",
+        "source": {
+          "sourceId": "awesome",
+          "sourceRef": "example/entry",
+          "sourceLinks": []
+        }
+      }
+    ],
+    "page": {}
+  },
+  "empty": {
+    "schemaVersion": "hanamesh.catalog.v1",
+    "items": [],
+    "page": {}
+  }
+}
