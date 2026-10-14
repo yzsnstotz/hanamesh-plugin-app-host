@@ -1,5 +1,7 @@
 # HanaMesh app-host · 0.2.0-rc.2 本地候选
 
+> J1S3-AH-03 / D-180：新增 C-MARKET 的匿名回环探测与严格 HanaMesh 目录视图消费，安装受理/终态/精确读回分开呈现，事件丢失不自动重装；开发表单及合约验证面板默认隐藏，仅测试包装 `verification:true` 启用。沿既有 DSH 扩展点，不改变应用启动/进程/租约所有权。源码与包验证不等同真实 Desktop 或 owner 验收，协议与测试入口见 `docs/INSTALL_TARGET.md`。
+
 > 历史 METADATA-DEVKIT-VENDOR-APPHOST-01（2026-10-06，现已由下方0.4.0正常源供给替代）：既有开发工具 `@hanamesh/devkit` 更新为精确 optional peer `0.1.0-rc.2` 与同版 file vendor，SHA256 `ae815e589c3e5a573e407da5c982bb0fc8df15b57683ebbfaccd828d9dd588e0`。devkit 不进入运行时依赖或随包代码；canonical 分发授权原文记录于 `docs/LICENSES.json`，不新增 MIT 或再许可。AppHost 根许可分区和内联 provision rc3 保持不变。
 
 > NPM-APPHOST-01（2026-10-05）：本地候选 `0.2.0-rc.10` 对齐官方 `@deepseek-ai/dsh@0.2.0-rc.2`、Cordis `4.0.4`、Schemastery `3.18.4` 与 storage-domain `0.2.0-rc.2`。`@hanamesh/lib-provision@0.1.0-rc.3` 仅以已核 SHA-256 的 vendor tgz 在构建期内联，公共 registry E404，因此不声明为运行时 peer。owner D-2026-10-05-02 已确认该自有代码可分发；内联代码的自有分发授权原文随 canonical rc3 包复制，不推断新增 MIT 或再许可授权。包级许可分区见 [`LICENSE`](LICENSE) 与 [`docs/LICENSES.json`](docs/LICENSES.json)。本地官方 DSH 装配不等于公开 npm 安装门或产品验收。

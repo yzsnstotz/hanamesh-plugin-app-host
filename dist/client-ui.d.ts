@@ -8,7 +8,7 @@ export function LibrarySourcesSection():unknown;
 export function LibraryAction():unknown;
 /** The HanaMesh market page (applications + plugins; install / upgrade / uninstall / restart notice).
  *  `embedded` renders it inline for the Extension Management tab instead of as the shell overlay. */
-export function LibraryOverlay(props?:{embedded?:boolean,preferredSubsectionId?:string}):unknown;
+export function LibraryOverlay(props?:{embedded?:boolean,preferredSubsectionId?:string,verification?:boolean}):unknown;
 /** rc.32: the「只能其一」notice shown at the top of the market page when dshmarket holds the seat. */
 export function MarketConflictNotice():unknown;
 /** Identifiers only; metadata and confirmation are owned by the client's market. */
@@ -18,7 +18,7 @@ export interface InstallTargetReceipt {status:'confirmation-required'|'installin
 /** Show/resolve a target without installing. Resolves once confirmation is ready; rejects with a visible market error. */
 export function openInstallTarget(input:InstallTarget):Promise<InstallTargetReceipt>;
 /** rc.32: the client-side `market` service object read by the shell's Extension Management panel. */
-export function createMarketSeat():{render(options?:{preferredSubsectionId?:string}):unknown,setSettingsVisible(visible:boolean):void,openInstallTarget(input:InstallTarget):Promise<InstallTargetReceipt>};
+export function createMarketSeat():{render(options?:{preferredSubsectionId?:string,verification?:boolean}):unknown,setSettingsVisible(visible:boolean):void,openInstallTarget(input:InstallTarget):Promise<InstallTargetReceipt>};
 export const MARKET_SEAT:'market';
 export const MARKET_CONFLICT_TEXT:string;
 /** Test/inspection view of the module-level market state; not part of the DSH contract. */

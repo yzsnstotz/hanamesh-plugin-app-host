@@ -11,7 +11,7 @@ export interface DshPluginConfig {
   /** `sources` undefined → the HanaMesh catalog source; explicit `[]` → none. `profileDir`/`profileName`/`dshBin` (and
    *  `nodeBinary`) are inferred on plain DSH when undefined — see docs/CONTRACT.md 「应用库配置」; explicit values win. */
   /** rc.28: the same keys serve the HanaMesh market (plugins + applications; routes `/hanamesh/library*`, see docs/CONTRACT.md「市场」). */
-  library?:{fixture?:string;sources?:Array<{manifestUrl:string;enabled?:boolean}>;profileDir?:string;profileName?:string;dshBin?:string;registry?:string;allowPrerelease?:boolean};
+  library?:{fixture?:string;sources?:Array<{manifestUrl:string;enabled?:boolean}>;profileDir?:string;profileName?:string;dshBin?:string;registry?:string;allowPrerelease?:boolean;eventRetention?:number};
   applications?: AppDefinition[]; leaseTtlMs?: number; sweepIntervalMs?: number;
 }
 /** Adapt an open `ctx.storageDomain` handle (single layout, global snapshot) to the store binding. */

@@ -5,18 +5,23 @@ import { AppHostError, requireCondition } from '../errors.js';
 const catalogVersion=value=>typeof value==='string'&&/^1\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$(?![\s\S])/u.test(value);
 
 const MAX_BYTES=2*1024*1024;
+const HANAMESH_SCHEMA='hanamesh.catalog.v1';
+const MAX_SOURCE_LINKS=500;
 const plain=value=>typeof value==='string'&&value.length>0&&!/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/u.test(value);
 const own=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).every(key=>keys.includes(key));
 
 export function validateManifestUrl(value){
   let url;try{url=new URL(value);}catch{throw new AppHostError('INVALID_CATALOG_URL','Catalog manifest URL is invalid.');}
-  requireCondition(url.protocol==='https:'&&!url.port&&!url.username&&!url.password&&!url.search&&!url.hash,
-    'INVALID_CATALOG_URL','Catalog manifests require standard-port HTTPS without credentials, query, or fragment.');
+  const viewQuery=!url.search||(url.searchParams.size===1&&url.searchParams.get('view')==='hanamesh');
+  requireCondition(url.protocol==='https:'&&!url.port&&!url.username&&!url.password&&viewQuery&&!url.hash,
+    'INVALID_CATALOG_URL','Catalog manifests require standard-port HTTPS with only an optional view=hanamesh query.');
   return url;
 }
 
 export function validateCatalogManifest(value){
-  requireCondition(own(value,['manifestVersion','providerId','name','description','homepage','attribution','transport','query'])&&
+  let endpoint;try{endpoint=validateManifestUrl(value?.transport?.endpoint);}catch{throw new AppHostError('INVALID_CATALOG_MANIFEST','Catalog endpoint URL is invalid.');}
+  const hana=endpoint.searchParams.get('view')==='hanamesh';
+  requireCondition(own(value,['manifestVersion','providerId','name','description','homepage','attribution','transport','query',...(hana?['limits']:[])])&&
     catalogVersion(value.manifestVersion)&&/^[a-z0-9]+(?:[.-][a-z0-9]+)+$/.test(value.providerId)&&plain(value.name)&&
     own(value.attribution,['name','url','notice'])&&plain(value.attribution.name)&&
     own(value.transport,['kind','endpoint','method'])&&value.transport.kind==='https-json'&&value.transport.method==='GET'&&
@@ -24,10 +29,57 @@ export function validateCatalogManifest(value){
     Number.isInteger(value.query.defaultLimit)&&value.query.defaultLimit>=1&&value.query.defaultLimit<=200&&
     Number.isInteger(value.query.maxLimit)&&value.query.maxLimit>=value.query.defaultLimit&&value.query.maxLimit<=200,
     'INVALID_CATALOG_MANIFEST','Catalog source manifest does not match catalog schema major 1.');
-  validateManifestUrl(value.attribution.url);
-  const endpoint=validateManifestUrl(value.transport.endpoint);
+  if(hana){
+    requireCondition(displayUrl(value.attribution.url)&&
+      own(value.limits,['maxBodyBytes','maxSourceLinks'])&&
+      Number.isSafeInteger(value.limits.maxBodyBytes)&&value.limits.maxBodyBytes>0&&value.limits.maxBodyBytes<=MAX_BYTES&&
+      Number.isSafeInteger(value.limits.maxSourceLinks)&&value.limits.maxSourceLinks>=0&&value.limits.maxSourceLinks<=MAX_SOURCE_LINKS&&
+      value.query.supported.every(key=>['q','category','cursor','limit'].includes(key))&&value.query.sorts.length===0,
+      'INVALID_CATALOG_MANIFEST','HanaMesh manifest limits or query declaration is invalid.');
+  }else{
+    const attribution=validateManifestUrl(value.attribution.url);
+    requireCondition(!attribution.search,'INVALID_CATALOG_MANIFEST','Default catalog attribution must not contain a query.');
+  }
   requireCondition(endpoint.pathname.endsWith('/v1/plugins'),'INVALID_CATALOG_MANIFEST','Catalog endpoint must end in /v1/plugins.');
   return structuredClone(value);
+}
+
+const textWithin=(value,max,nonempty=false)=>typeof value==='string'&&value.length<=max&&(!nonempty||value.length>0)&&
+  !/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/u.test(value);
+const npmName=value=>textWithin(value,214,true)&&/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(value);
+function displayUrl(value){
+  if(!textWithin(value,2048,true))return false;
+  try{const url=new URL(value);return url.protocol==='https:'&&!url.username&&!url.password&&!url.port&&!url.hash;}catch{return false;}
+}
+function timestamp(value,utc=false){
+  if(typeof value!=='string')return false;
+  const match=/^(\d{4})-(\d{2})-(\d{2})T([01]\d|2[0-3]):([0-5]\d):([0-5]\d)(?:\.\d+)?(Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.exec(value);
+  if(!match||(utc&&match[7]!=='Z')||!Number.isFinite(Date.parse(value)))return false;
+  const date=new Date(`${match[1]}-${match[2]}-${match[3]}T00:00:00Z`);
+  return Number.isFinite(date.getTime())&&date.toISOString().slice(0,10)===value.slice(0,10);
+}
+function validateHanaItem(item,maxSourceLinks){
+  const optionalText={description:5000,latestVersion:64,license:80};
+  const source=item?.source;
+  requireCondition(own(item,['id','itemId','packageName','name','displayName','summary','catalogKind','source','description','homepage','latestVersion','license','categories','keywords','repository','package','publisher','updatedAt'])&&
+    plain(item.id)&&item.id===item.itemId&&
+    textWithin(item.name,160,true)&&textWithin(item.displayName,120,true)&&textWithin(item.summary,1000)&&
+    ['application','plugin','entry'].includes(item.catalogKind)&&
+    (item.packageName===null?item.package===undefined:
+      npmName(item.packageName)&&own(item.package,['registry','name'])&&item.package.registry==='npm'&&item.package.name===item.packageName)&&
+    Object.entries(optionalText).every(([key,max])=>item[key]===undefined||textWithin(item[key],max))&&
+    (item.homepage===undefined||displayUrl(item.homepage))&&
+    (item.updatedAt===undefined||timestamp(item.updatedAt))&&
+    (item.categories===undefined||(Array.isArray(item.categories)&&item.categories.length<=32&&item.categories.every(value=>textWithin(value,64,true)&&/^[a-z0-9][a-z0-9._:-]{0,63}$/.test(value))))&&
+    (item.keywords===undefined||(Array.isArray(item.keywords)&&item.keywords.length<=64&&item.keywords.every(value=>textWithin(value,64))))&&
+    (item.repository===undefined||(own(item.repository,['url','subdirectory'])&&displayUrl(item.repository.url)&&new URL(item.repository.url).hostname==='github.com'&&
+      (item.repository.subdirectory===undefined||(textWithin(item.repository.subdirectory,240,true)&&!/^\/|^[a-z]:/i.test(item.repository.subdirectory)&&!item.repository.subdirectory.includes('\\')&&!item.repository.subdirectory.split('/').includes('..')))))&&
+    (item.publisher===undefined||(own(item.publisher,['name','url'])&&textWithin(item.publisher.name,120,true)&&(item.publisher.url===undefined||displayUrl(item.publisher.url))))&&
+    own(source,['sourceId','sourceRef','sourceLinks'])&&textWithin(source.sourceId,120,true)&&textWithin(source.sourceRef,512,true)&&
+    Array.isArray(source.sourceLinks)&&source.sourceLinks.length<=maxSourceLinks&&source.sourceLinks.every(link=>
+      own(link,['sourceId','sourceRef','sourceUrl','firstSeenAt','lastSeenAt'])&&textWithin(link.sourceId,120,true)&&textWithin(link.sourceRef,512,true)&&
+      displayUrl(link.sourceUrl)&&timestamp(link.firstSeenAt)&&timestamp(link.lastSeenAt)),
+    'INVALID_CATALOG_PAGE','HanaMesh catalog item does not match its public schema.');
 }
 
 function validateItem(item){
@@ -39,7 +91,15 @@ function validateItem(item){
     'INVALID_CATALOG_PAGE','Catalog item does not match catalog schema major 1.');
 }
 
-export function validateProviderPage(value){
+export function validateProviderPage(value,{maxItems=200,maxSourceLinks=MAX_SOURCE_LINKS}={}){
+  if(value?.schemaVersion===HANAMESH_SCHEMA){
+    requireCondition(own(value,['schemaVersion','generatedAt','items','page'])&&
+      (value.generatedAt===undefined||timestamp(value.generatedAt,true))&&Array.isArray(value.items)&&value.items.length<=maxItems&&own(value.page,['nextCursor','total'])&&
+      (Object.keys(value.page).length===0||(Object.keys(value.page).length===2&&typeof value.page.nextCursor==='string'&&value.page.nextCursor.length>0&&Number.isSafeInteger(value.page.total)&&value.page.total>=0)),
+      'INVALID_CATALOG_PAGE','HanaMesh catalog page does not match its public schema.');
+    for(const item of value.items)validateHanaItem(item,maxSourceLinks);
+    return structuredClone(value);
+  }
   requireCondition(own(value,['schemaVersion','generatedAt','revision','items','page'])&&catalogVersion(value.schemaVersion)&&
     Array.isArray(value.items)&&value.items.length<=200&&own(value.page,['nextCursor','total']),
     'INVALID_CATALOG_PAGE','Catalog provider page does not match catalog schema major 1.');
@@ -66,16 +126,26 @@ export function compareVersions(a,b){
 /** `latestVersion` of the catalog entry is strictly newer than the installed version. */
 export function upgradeAvailable(latestVersion,installedVersion){return compareVersions(latestVersion,installedVersion)>0;}
 
-async function responseJson(response,label){
-  requireCondition(response.ok,'CATALOG_HTTP_ERROR',`${label} returned HTTP ${response.status}.`,{status:response.status},502);
+async function responseJson(response,label,maxBytes=MAX_BYTES,providerErrors=false){
+  if(!providerErrors)requireCondition(response.ok,'CATALOG_HTTP_ERROR',`${label} returned HTTP ${response.status}.`,{status:response.status},502);
   const contentType=response.headers.get('content-type')?.split(';')[0].trim().toLowerCase()??'';
   requireCondition(/^application\/(?:json|.+\+json)$/.test(contentType)&&!response.headers.get('content-encoding'),
     'CATALOG_RESPONSE_DENIED',`${label} must be unencoded JSON.`,{},502);
   const declared=Number(response.headers.get('content-length')??0);
-  requireCondition(!declared||declared<=MAX_BYTES,'CATALOG_RESPONSE_TOO_LARGE',`${label} exceeds 2 MiB.`,{},502);
+  requireCondition(!declared||declared<=maxBytes,'CATALOG_RESPONSE_TOO_LARGE',`${label} exceeds the declared body limit.`,{},502);
   const bytes=new Uint8Array(await response.arrayBuffer());
-  requireCondition(bytes.byteLength<=MAX_BYTES,'CATALOG_RESPONSE_TOO_LARGE',`${label} exceeds 2 MiB.`,{},502);
-  try{return JSON.parse(new TextDecoder().decode(bytes));}catch{throw new AppHostError('INVALID_CATALOG_JSON',`${label} returned malformed JSON.`,{},502);}
+  requireCondition(bytes.byteLength<=maxBytes,'CATALOG_RESPONSE_TOO_LARGE',`${label} exceeds the declared body limit.`,{},502);
+  let value;try{value=JSON.parse(new TextDecoder().decode(bytes));}catch{throw new AppHostError('INVALID_CATALOG_JSON',`${label} returned malformed JSON.`,{},502);}
+  if(!response.ok){
+    const codes={INVALID_REQUEST:400,INVALID_CATALOG_ORIGIN:400,CATALOG_CHANGED:409,UPSTREAM_UNAVAILABLE:503,CATALOG_RESPONSE_TOO_LARGE:500};
+    const code=value?.error?.code;
+    if(typeof code==='string'&&Object.hasOwn(codes,code)&&codes[code]===response.status){
+      const missing=Array.isArray(value.error.missing)?value.error.missing.filter(name=>['CATALOG_DB','HM_SERVER_ORIGIN'].includes(name)):[];
+      throw new AppHostError(code,`${label} was refused by the catalog provider.`,missing.length?{missing:[...new Set(missing)]}:{},response.status);
+    }
+    throw new AppHostError('CATALOG_HTTP_ERROR',`${label} returned HTTP ${response.status}.`,{status:response.status},502);
+  }
+  return value;
 }
 
 async function sameOriginFetch(start,fetchImpl,label){
@@ -102,10 +172,25 @@ export async function loadCatalog({fixture,sources=[],fetchImpl=globalThis.fetch
   requireCondition(enabled.length===1,'CATALOG_SOURCE_REQUIRED','Exactly one catalog source must be enabled.');
   const manifestUrl=validateManifestUrl(enabled[0].manifestUrl);
   const manifestResponse=await sameOriginFetch(manifestUrl,fetchImpl,'Catalog manifest');
-  const manifest=validateCatalogManifest(await responseJson(manifestResponse.response,'Catalog manifest'));
+  const manifest=validateCatalogManifest(await responseJson(manifestResponse.response,'Catalog manifest',MAX_BYTES,manifestUrl.searchParams.get('view')==='hanamesh'));
   const endpoint=validateManifestUrl(manifest.transport.endpoint);
   requireCondition(endpoint.origin===manifestUrl.origin,'INVALID_CATALOG_MANIFEST','Catalog endpoint must share the manifest origin.');
-  if(query)endpoint.searchParams.set('q',String(query).slice(0,200));if(category)endpoint.searchParams.set('category',String(category).slice(0,64));if(cursor)endpoint.searchParams.set('cursor',String(cursor).slice(0,2048));endpoint.searchParams.set('limit','50');
+  requireCondition(endpoint.searchParams.get('view')===manifestUrl.searchParams.get('view'),'INVALID_CATALOG_MANIFEST','Catalog endpoint must retain the selected view.');
+  const hana=endpoint.searchParams.get('view')==='hanamesh';
+  if(hana){
+    const categories=Array.isArray(category)?category:category?[category]:[];
+    requireCondition(typeof query==='string'&&query.length<=200&&categories.length<=20&&categories.every(value=>typeof value==='string'&&/^[a-z0-9][a-z0-9._:-]{0,63}$/.test(value))&&
+      (cursor===undefined||(typeof cursor==='string'&&cursor.length>0)),
+      'INVALID_REQUEST','Catalog query does not match the HanaMesh view contract.');
+    if(query)endpoint.searchParams.set('q',query);
+    for(const value of categories)endpoint.searchParams.append('category',value);
+    if(cursor!==undefined)endpoint.searchParams.set('cursor',cursor);
+    endpoint.searchParams.set('limit',String(manifest.query.defaultLimit));
+  }else{
+    if(query)endpoint.searchParams.set('q',String(query).slice(0,200));if(category)endpoint.searchParams.set('category',String(category).slice(0,64));if(cursor)endpoint.searchParams.set('cursor',String(cursor).slice(0,2048));endpoint.searchParams.set('limit','50');
+  }
   const pageResponse=await sameOriginFetch(endpoint,fetchImpl,'Catalog page');
-  return{source:{kind:'remote',manifestUrl:manifestUrl.href,manifest},...validateProviderPage(await responseJson(pageResponse.response,'Catalog page'))};
+  const page=await responseJson(pageResponse.response,'Catalog page',hana?manifest.limits.maxBodyBytes:MAX_BYTES,hana);
+  requireCondition(hana?page?.schemaVersion===HANAMESH_SCHEMA:catalogVersion(page?.schemaVersion),'INVALID_CATALOG_PAGE','Catalog page must match the selected view.');
+  return{source:{kind:'remote',manifestUrl:manifestUrl.href,manifest},...validateProviderPage(page,hana?{maxItems:manifest.query.maxLimit,maxSourceLinks:manifest.limits.maxSourceLinks}:{})};
 }
