@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { AppHostError, requireCondition } from '../errors.js';
-import { loopbackOrigin } from '../descriptor.js';
+import { controlOrigins } from '../control-origin.js';
 
 // Keep older route order; dsh.js registers each exact path on the public host API.
 export const LIBRARY_ROUTES=['/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/install','/hanamesh/library/provision','/hanamesh/library/uninstall','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/plugins/install','/hanamesh/library/plugins/uninstall','/hanamesh/library/target','/hanamesh/library/install-target'];
@@ -13,10 +13,10 @@ async function jsonBody(req){
 function send(res,status,value,publicProbe=false){
   res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'; frame-ancestors 'none'",...(publicProbe?{'access-control-allow-origin':'*'}:{})});res.end(JSON.stringify(value));
 }
-export function createLibraryHttpHandler(library,{parentOrigin,authenticate,authorize}){
-  parentOrigin=loopbackOrigin(parentOrigin);
+export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,authenticate,authorize}){
+  const origins=controlOrigins(parentOrigin,transportOrigin);parentOrigin=origins.parent;
   requireCondition(typeof authenticate==='function'&&typeof authorize==='function','AUTH_BINDING_REQUIRED','Host authentication and per-operation authorization callbacks are mandatory.');
-  const parent=new URL(parentOrigin),hosts=new Set([parent.host,`localhost:${parent.port}`]);
+  const parent=new URL(origins.transport),hosts=new Set(origins.forwarded?[parent.host]:[parent.host,`localhost:${parent.port}`]);
   return async(req,res)=>{const traceId=randomUUID();try{
     requireCondition(hosts.has(req.headers.host),'HOST_DENIED','Unrecognized request host.',{},403);
     requireCondition(req.url?.startsWith('/')&&!req.url.startsWith('//')&&!req.url.includes('\\'),'BAD_TARGET','Invalid request target.');
@@ -30,8 +30,8 @@ export function createLibraryHttpHandler(library,{parentOrigin,authenticate,auth
     }
     const readOnly=req.method==='GET'&&READ_ROUTES.has(path);
     requireCondition(readOnly||(req.method==='POST'&&!['/hanamesh/library/installedPlugins','/hanamesh/library/target'].includes(path)),'METHOD_NOT_ALLOWED','Unsupported library method.',{},405);
-    requireCondition(!req.headers.origin||req.headers.origin===requestOrigin,'ORIGIN_DENIED','Unapproved browser origin.',{},403);
-    if(!readOnly)requireCondition(req.headers.origin===requestOrigin&&req.headers['x-hanamesh-client']==='workspace-v1','CSRF_DENIED','Workspace origin and explicit client header are required.',{},403);
+    requireCondition(!req.headers.origin||(origins.forwarded?origins.acceptsOrigin(req.headers.origin):req.headers.origin===requestOrigin),'ORIGIN_DENIED','Unapproved browser origin.',{},403);
+    if(!readOnly)requireCondition((origins.forwarded?origins.acceptsOrigin(req.headers.origin):req.headers.origin===requestOrigin)&&req.headers['x-hanamesh-client']==='workspace-v1','CSRF_DENIED','Workspace origin and explicit client header are required.',{},403);
     const subject=await authenticate(req);
     requireCondition(subject&&typeof subject.principalId==='string','UNAUTHENTICATED','Host authentication is required.',{},401);
     if(readOnly)requireCondition(new Set(url.searchParams.keys()).size===[...url.searchParams.keys()].length,'INVALID_INPUT','Duplicate query fields are not accepted.');

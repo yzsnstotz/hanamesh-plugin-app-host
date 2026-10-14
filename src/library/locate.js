@@ -2,13 +2,16 @@
  * Library locations on plain DSH (PRD §A.8 official-distribution path, rc.26).
  *
  * The pinned kernel exposes neither the profile directory nor the profile name to a plugin, and the
- * desktop shell fills `library.profileDir/profileName/dshBin` and `nodeBinary` through its overlay.
+ * Historical desktop shell fills `library.profileDir/profileName/dshBin` and `nodeBinary` through its overlay.
  * A `dsh plugin add` user has no overlay, so without these the installed-app scan returned `[]` and
  * every install/uninstall answered `LIBRARY_INSTALL_UNAVAILABLE`. Each value below is inferred ONLY
  * when the explicit config leaves it undefined, and only from facts this process can prove about
  * itself: where its own package really lives, which script started it, and which Node runs it.
  */
-import { readFile, realpath } from 'node:fs/promises';
+import { readFile, realpath, access } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { basename, dirname, isAbsolute, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -51,6 +54,43 @@ export async function inferProfileDir(moduleUrl){
   }
 }
 
+/** Proven upstream Desktop launch layout, from desktop/src/host-process.ts and desktop-host/src/index.ts.
+ * The shell passes runtimeDir and profileDir to its named entry; prove the entry and this package's
+ * profile link before using them. Never infer from cwd, HOME, a port, or a supply overlay.
+ */
+export async function inferDesktopLayout({moduleUrl=import.meta.url,argv=process.argv}={}) {
+  const [entry,runtimeDir,profileDir]=[argv?.[1],argv?.[2],argv?.[3]];
+  if (![entry,runtimeDir,profileDir].every(value=>typeof value==='string'&&isAbsolute(value))) return undefined;
+  const hostRoot=join(runtimeDir,'node_modules/@deepseek-ai/dsh-desktop-host');
+  if (entry!==join(hostRoot,'lib/index.js') || (await json(join(hostRoot,'package.json')))?.name!=='@deepseek-ai/dsh-desktop-host') return undefined;
+  const root=await packageRoot(moduleUrl);
+  const linked=await realpath(join(profileDir,'node_modules',...PACKAGE_NAME.split('/'))).catch(()=>undefined);
+  if (!root || root!==linked || basename(profileDir)!=='desktop' || !isHanameshProfileManifest(await json(join(profileDir,'package.json')))) return undefined;
+  const dshRoot=join(runtimeDir,'node_modules/@deepseek-ai/dsh');
+  if ((await json(join(dshRoot,'package.json')))?.name!=='@deepseek-ai/dsh') return undefined;
+  const dshBin=await realpath(join(dshRoot,'lib/bin.js')).catch(()=>undefined);
+  if (!dshBin || !await realpath(entry).catch(()=>undefined)) return undefined;
+  const payload=argv[4]??join(dirname(runtimeDir),'runtime/primary-runtime');
+  const cli=join(hostRoot,'lib/cli.js');
+  const payloadNamed=typeof payload==='string'&&isAbsolute(payload)&&basename(payload)==='primary-runtime';
+  const desktopCli=payloadNamed&&!runtimeDir.split(sep).some(segment=>segment.endsWith('.asar'))&&await realpath(cli).catch(()=>undefined)
+    ? {entry:cli,runtimeDir,supportDir:dirname(payload)} : undefined;
+  let nodeBinary;
+  const metadata=payloadNamed?await json(join(payload,'runtime.json')):undefined;
+  // Current canonical runtime manifest only. No legacy descriptor inference or PATH search.
+  if(metadata?.platform===process.platform&&metadata?.arch===process.arch&&
+    metadata.desktopVersion===(await json(join(hostRoot,'package.json')))?.version&&/^24\.\d+\.\d+$/.test(metadata.node??'')) {
+    const node=join(payload,'dependencies/node/bin',process.platform==='win32'?'node.exe':'node');
+    try {
+      await access(node,constants.X_OK);
+      const {stdout}=await promisify(execFile)(node,['-p','JSON.stringify({node:process.versions.node,electron:process.versions.electron})'],{timeout:1000,env:{},maxBuffer:1024});
+      const actual=JSON.parse(stdout);
+      if(actual.node===metadata.node&&actual.electron===undefined)nodeBinary=await realpath(node);
+    } catch { /* Unavailable/unproven payload Node stays unavailable; never use Electron. */ }
+  }
+  return {profileDir:await realpath(profileDir),profileName:'desktop',dshBin,parentOrigin:'dsh-app://app',frameAncestors:[],desktopCli,nodeBinary};
+}
+
 /** The DSH CLI that started this process — `argv[1]` only when it IS `@deepseek-ai/dsh/lib/bin.js`. */
 export function inferDshBin(argv=process.argv){
   const candidate=argv?.[1];
@@ -68,12 +108,13 @@ export function inferNodeBinary({execPath=process.execPath,versions=process.vers
  * Explicit config always wins; every inferred key is named in `inferred` so the caller can log it.
  * `sources`: undefined → DEFAULT_CATALOG_SOURCES; an explicit array (including `[]`) is kept as is.
  */
-export async function resolveLibraryLocations(config={},{moduleUrl=import.meta.url,argv=process.argv,execPath=process.execPath,versions=process.versions,nodeBinary}={}){
+export async function resolveLibraryLocations(config={},{moduleUrl=import.meta.url,argv=process.argv,execPath=process.execPath,versions=process.versions,nodeBinary,desktop}={}){
+  desktop ??= await inferDesktopLayout({moduleUrl,argv});
   const inferred=[];
-  let profileDir=config.profileDir;if(profileDir===undefined){profileDir=await inferProfileDir(moduleUrl);if(profileDir)inferred.push('profileDir');}
-  let profileName=config.profileName;if(profileName===undefined&&profileDir){profileName=basename(profileDir);inferred.push('profileName');}
-  let dshBin=config.dshBin;if(dshBin===undefined){dshBin=inferDshBin(argv);if(dshBin)inferred.push('dshBin');}
-  let node=nodeBinary;if(node===undefined){node=inferNodeBinary({execPath,versions});if(node)inferred.push('nodeBinary');}
+  let profileDir=config.profileDir;if(profileDir===undefined){profileDir=desktop?.profileDir??await inferProfileDir(moduleUrl);if(profileDir)inferred.push('profileDir');}
+  let profileName=config.profileName;if(profileName===undefined&&profileDir){profileName=desktop?.profileDir===profileDir?desktop.profileName:basename(profileDir);inferred.push('profileName');}
+  let dshBin=config.dshBin;if(dshBin===undefined){dshBin=desktop?.dshBin??inferDshBin(argv);if(dshBin)inferred.push('dshBin');}
+  let node=nodeBinary;if(node===undefined){node=desktop?.nodeBinary??inferNodeBinary({execPath,versions});if(node)inferred.push('nodeBinary');}
   let sources=config.sources;if(sources===undefined){sources=structuredClone(DEFAULT_CATALOG_SOURCES);inferred.push('sources');}
-  return{profileDir,profileName,dshBin,nodeBinary:node,sources,inferred};
+  return{profileDir,profileName,dshBin,nodeBinary:node,sources,inferred,...(desktop?.desktopCli&&config.dshBin===undefined?{desktopCli:desktop.desktopCli}:{})};
 }

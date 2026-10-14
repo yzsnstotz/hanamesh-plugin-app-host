@@ -162,6 +162,14 @@ async function sameOriginFetch(start,fetchImpl,label){
   }
 }
 
+function hanaQueryCategories(query,category,cursor){
+    const categories=Array.isArray(category)?category:category?[category]:[];
+    requireCondition(typeof query==='string'&&query.length<=200&&categories.length<=20&&categories.every(value=>typeof value==='string'&&/^[a-z0-9][a-z0-9._:-]{0,63}$/.test(value))&&
+      (cursor===undefined||(typeof cursor==='string'&&cursor.length>0)),
+      'INVALID_REQUEST','Catalog query does not match the HanaMesh view contract.');
+  return categories;
+}
+
 export async function loadCatalog({fixture,sources=[],fetchImpl=globalThis.fetch,query='',category='',cursor}={}){
   if(fixture){
     requireCondition(typeof fixture==='string','INVALID_FIXTURE','Catalog fixture path is required.');
@@ -171,6 +179,8 @@ export async function loadCatalog({fixture,sources=[],fetchImpl=globalThis.fetch
   const enabled=sources.filter(source=>source?.enabled!==false);
   requireCondition(enabled.length===1,'CATALOG_SOURCE_REQUIRED','Exactly one catalog source must be enabled.');
   const manifestUrl=validateManifestUrl(enabled[0].manifestUrl);
+  // Validate caller input before any provider request, including discovery.
+  const queryCategories=manifestUrl.searchParams.get('view')==='hanamesh'?hanaQueryCategories(query,category,cursor):undefined;
   const manifestResponse=await sameOriginFetch(manifestUrl,fetchImpl,'Catalog manifest');
   const manifest=validateCatalogManifest(await responseJson(manifestResponse.response,'Catalog manifest',MAX_BYTES,manifestUrl.searchParams.get('view')==='hanamesh'));
   const endpoint=validateManifestUrl(manifest.transport.endpoint);
@@ -178,10 +188,7 @@ export async function loadCatalog({fixture,sources=[],fetchImpl=globalThis.fetch
   requireCondition(endpoint.searchParams.get('view')===manifestUrl.searchParams.get('view'),'INVALID_CATALOG_MANIFEST','Catalog endpoint must retain the selected view.');
   const hana=endpoint.searchParams.get('view')==='hanamesh';
   if(hana){
-    const categories=Array.isArray(category)?category:category?[category]:[];
-    requireCondition(typeof query==='string'&&query.length<=200&&categories.length<=20&&categories.every(value=>typeof value==='string'&&/^[a-z0-9][a-z0-9._:-]{0,63}$/.test(value))&&
-      (cursor===undefined||(typeof cursor==='string'&&cursor.length>0)),
-      'INVALID_REQUEST','Catalog query does not match the HanaMesh view contract.');
+    const categories=queryCategories;
     if(query)endpoint.searchParams.set('q',query);
     for(const value of categories)endpoint.searchParams.append('category',value);
     if(cursor!==undefined)endpoint.searchParams.set('cursor',cursor);

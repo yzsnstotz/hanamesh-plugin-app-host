@@ -1,3 +1,5 @@
+> D-202 / 0.5.6 implementation candidate: fixed upstream `d743267388641bc76f17c45ce8b4c231aed1d32c`, official DSH `0.2.1-alpha.2`, Cordis `4.0.5-alpha.1`, Schemastery `3.18.5-alpha.1`, React `18.3.1`. This candidate retains current catalog/market/verification behavior and adds proven Desktop layout discovery, the public reserved-profile CLI, and separate exact localhost control/data origins. `@hanamesh/lib-provision@0.2.1` is bundled from its approved unchanged Git source with its original LICENSE. This is not a release, native U2 pass or owner ACCEPTED. Current evidence is in the card run directory, separate from historical packages and native observations.
+
 # HanaMesh app-host · 0.2.0-rc.2 本地候选
 
 > J1S3-AH-03 / D-180：新增 C-MARKET 的匿名回环探测与严格 HanaMesh 目录视图消费，安装受理/终态/精确读回分开呈现，事件丢失不自动重装；开发表单及合约验证面板默认隐藏，仅测试包装 `verification:true` 启用。沿既有 DSH 扩展点，不改变应用启动/进程/租约所有权。源码与包验证不等同真实 Desktop 或 owner 验收，协议与测试入口见 `docs/INSTALL_TARGET.md`。
@@ -69,28 +71,29 @@
 
 ## 运行
 
-NPM-APPHOST-01 的本地开发环境是 **macOS arm64 / Node 24.13.1 / npm 11.8.0 / 官方 DSH 0.2.0-rc.2**。 本轮私有工具迁移候选为 `0.2.0-rc.4`，集中工具另固定 `pnpm 10.33.0`。该段为历史候选环境；当前 0.5.0 使用 pnpm 锁文件，运行依赖为 `zod 4.5.4` 和正常 Git 源 `@hanamesh/lib-provision`。
+当前候选使用 Node 24.13.1、pnpm 10.33.0、TypeScript 5.8.3 与官方 DSH 0.2.1-alpha.2。先为本次运行显式设置隔离 HOME、DSH_HOME、TMPDIR、npm cache 和 pnpm store，再执行：
 
 ```bash
-export npm_config_cache=$(mktemp -d)
-pnpm install --frozen-lockfile --store-dir ~/.cache/hanamesh-deps/pnpm-store
-npm run check:toolchain
-npm run build
-npm test
-npm run test:mutation
-npm run test:types
-npm run demo -- --smoke
+CI=true pnpm install --frozen-lockfile
+pnpm run build
+CI=true pnpm test
+pnpm run test:contract
+pnpm run test:mutation
+pnpm run test:types
+pnpm run check:consistency
+pnpm run check:toolchain
+pnpm run preflight
+pnpm pack --pack-destination /absolute/card-run/artifacts
+pnpm run verify:pack /absolute/card-run/artifacts/hanamesh-dsh-app-host-0.5.6.tgz
 ```
 
-开发工具只通过 `@hanamesh/devkit@0.1.0-rc.1` 的公开 API 执行；精确可选 peer + `file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz` 固定开发安装，SHA-256 为 `3cf0b621ca2950fbe21c114d5b31ac1a55f97a67eb0a2dada77fb2d3bf2cb6ff`。运行依赖、业务 `src/`、公开 exports 均保持原字节；后续 provision 分发记录更新见下文；devkit 不进入 runtime。模块自身保留 pins、DSH 检查、原 22 个变异 target/name filter/失败原因，以及原纯包消费者的断言。
+`@hanamesh/devkit` 仅为开发依赖，按声明的 Git 范围解析到锁定 e6ccf710 的 0.2.3，不进入 tarball 或运行时。43 个变异保留各自业务断言，`HANAMESH_APPHOST_RUN_DIR` 将证据写入本卡隔离子目录。lib-provision 仍是固定 575d63fb 的 0.2.1 原源包，正常 pack 随包分发并保留原 LICENSE；生产者使用 pnpm 要求的 hoisted 布局，不更改消费者的 exotic、peer 或脚本政策。
 
-`npm run check` 包含工具链、build、一致性声明、显式 TAP 全量 test、22 个断言变异、原类型消费与开发 preflight。`pnpm pack --pack-destination <目录>` 后运行 `pnpm run verify:pack <tgz绝对路径>`：第一段在独立目录尝试不带宿主 peers 的离线严格安装，断言 `ERR_PNPM_PEER_DEP_ISSUES` 且缺失名称与版本正好匹配声明的 9 个宿主 peers；devkit 0.2.3 在安装阶段拒绝，因此不再运行原来的无 peers `./dsh` 加载探针。第二段在另一个独立目录显式提供这 9 个直接宿主 peers，加上 `@deepseek-ai/dsh-storage`、`@deepseek-ai/dsh-invariants`、`@deepseek-ai/dsh-scope`（均 `0.2.0-rc.2`）三个传递宿主 peers，再严格安装、frozen-lock 重装并确认锁摘要不变，再验证 DSH 入口与公开严格 TS；两段均不安装 devkit。离线检查前须准备运行依赖 `zod` 与正常 Git 源 `@hanamesh/lib-provision`，其他安装错误不算预期拒绝。`npm run preflight:dsh` 继续要求原四个 DSH pins；单纯 `npm ci` 没有官方 DSH 本体时仍以 exit 2 拒绝。真正 DSH 加载/UI 门另外执行，组件检查不代替它。
+`verify:pack` 在独立目录先验证缺少宿主 peers 时准确报 `ERR_PNPM_PEER_DEP_ISSUES`，不强制 offline 或把缓存故障当缺 peer。随后显式提供九个直接 peers，加上官方 0.2.1-alpha.2 的 storage/scope 传递 peers，严格安装、冻结锁重装并核锁摘要，再消费公开 JS/TS。完整测试另在默认 pnpm11 的全新 HOME/store 下消费真实 tarball，保留正常 scripts/exotic/peer 政策。公开 browser 入口的解析/语法验证不代替原生 Loader 激活。
 
-`devkit.config.mjs` 与 `scripts/*-cases/policy/probes` 是本模块策略，不是通用执行器。`HANAMESH_APPHOST_RUN_DIR` 可把变异证据放入卡的隔离 run；未设置时写入 `artifacts/mutations`。工具链与开发 preflight 也可经 `hanamesh-devkit check-toolchain` / `hanamesh-devkit preflight` 调用；变异与封包使用本模块 npm 入口以保留全部专用断言。
+`pnpm run preflight:dsh [实际宿主项目绝对路径]` 只读检查实际 DSH/Cordis/storage-domain/schemastery 的精确 pins，并报告解析路径；不传路径时检查本模块开发目录，缺 DSH 本体会准确退出 2，不自动安装或伪称真实宿主。原生取证必须使用固定上游和独立 default Desktop profile，正常公开 CLI 安装同一最终 tarball，完成全部安全与 UI 门。
 
-`npm run demo` 启动一个受控示例应用，并让两个视图共用同一实例；终端打印应用 URL，Ctrl+C 清理自有进程和临时示例目录。它不是 DSH、工作台或两个上游应用的演示。
-
-`typescript 5.8.3` 已固定在开发依赖中。rc.3 tarball 可用 `npm install --offline --ignore-scripts --legacy-peer-deps /绝对路径/hanamesh-dsh-app-host-0.1.0-rc.3.tgz` 安装到独立测试工程；真实 DSH 验收须用独立 `DSH_HOME`，不要装到个人 profile。
+`devkit.config.mjs` 与 `scripts/*-cases/policy/probes` 保留本模块专用策略与断言。`pnpm run demo` 仅为受控本地示例，不是普通应用产品供给、真实 Desktop 或 owner 验收。
 
 ## 验收结果在哪里
 

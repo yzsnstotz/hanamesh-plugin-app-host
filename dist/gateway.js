@@ -1,7 +1,8 @@
 import { createServer, request } from 'node:http';
 import { randomBytes, createHash } from 'node:crypto';
 import { AppHostError, requireCondition, bounded } from './errors.js';
-import { loopbackOrigin } from './descriptor.js';
+import { documentOrigin, DESKTOP_ORIGIN } from './workspace-origin.js';
+import { loopbackOrigin, workspaceOrigin } from './descriptor.js';
 
 /**
  * `frame-ancestors` is matched against EVERY ancestor, not just the direct parent. Inside a
@@ -15,6 +16,7 @@ export function frameAncestorsValue(parentOrigin, frameAncestors = []) {
 }
 /** Only exact origins of a scheme a webview can actually host a top-level document on. */
 export function ancestorOrigin(value) {
+  if (value === DESKTOP_ORIGIN) return value;
   let url;
   try { url = new URL(value); } catch { requireCondition(false, 'INVALID_FRAME_ANCESTOR', 'Expected an explicit ancestor origin.'); }
   requireCondition(['http:', 'https:', 'tauri:', 'asset:', 'file:'].includes(url.protocol) && !url.username && !url.password &&
@@ -40,6 +42,8 @@ export function embeddingHeaders(rawHeaders, ancestors) {
   return output;
 }
 const token = () => randomBytes(32).toString('hex');
+// Keep retired names reserved for the process lifetime; 192-bit labels fit DNS's 63-byte limit.
+const desktopNames = new Set();
 function cookies(header) {
   const map = new Map();
   for (const part of (header ?? '').split(';')) {
@@ -55,7 +59,7 @@ function fail(res, status, code) {
 /** Fixed upstream only. Bootstrap is our own response, not a rewritten app document. */
 export class FixedGateway {
   constructor({ upstream, parentOrigin, isLeaseActive, cookieAllowlist = [], allowAppAuthorization = false, maxUploadBytes = 32 * 1024 * 1024, frameAncestors = [], onForward = () => {} }) {
-    this.upstream = loopbackOrigin(upstream); this.parentOrigin = loopbackOrigin(parentOrigin);
+    this.upstream = loopbackOrigin(upstream); this.parentOrigin = workspaceOrigin(parentOrigin);
     requireCondition(Array.isArray(frameAncestors) && frameAncestors.length <= 8, 'INVALID_FRAME_ANCESTOR', 'frameAncestors must be a short list of origins.');
     this.ancestors = frameAncestorsValue(this.parentOrigin, frameAncestors.map(ancestorOrigin));
     requireCondition(typeof isLeaseActive === 'function','INVALID_GATEWAY','A live lease authorization check is required.');
@@ -63,6 +67,7 @@ export class FixedGateway {
     this.allowAppAuthorization = allowAppAuthorization; this.maxUploadBytes = maxUploadBytes;
     requireCondition(typeof onForward === 'function','INVALID_GATEWAY','onForward must be a function.');
     this.onForward = onForward;
+    this.children = new Map(); this.pendingChildren = new Map(); this.scopeKey = null; this.closed = false; this.authorizations = new Map();
     this.tickets = new Map(); this.grants = new Map(); this.sockets = new Set(); this.upstreams = new Set();
     this.cookiePrefix = `hm_app_${token().slice(0,12)}_`;
   }
@@ -72,7 +77,14 @@ export class FixedGateway {
     this.server.on('upgrade', (req,socket,head) => this.#upgrade(req,socket,head));
     this.server.on('connect', (_req,socket) => socket.end('HTTP/1.1 405 Method Not Allowed\r\nConnection: close\r\n\r\n'));
     await new Promise((resolve,reject) => { this.server.once('error',reject); this.server.listen(0,'127.0.0.1',resolve); });
-    this.origin = `http://127.0.0.1:${this.server.address().port}`;
+    const port = this.server.address().port;
+    if (this.parentOrigin === DESKTOP_ORIGIN && this.scopeKey) {
+      const name = token().slice(0,48);
+      if (desktopNames.has(name)) { await this.close(); throw new AppHostError('GATEWAY_ORIGIN_REUSED','A retired origin name cannot be reassigned.'); }
+      desktopNames.add(name);
+      this.origin = `http://control-${name}.localhost:${port}`;
+      this.dataOrigin = `http://data-${name}.localhost:${port}`;
+    } else this.origin = `http://127.0.0.1:${port}`;
     return this.origin;
   }
   issue(viewKey) {
@@ -83,16 +95,115 @@ export class FixedGateway {
     const ticket = token(); this.tickets.set(ticket,{ viewKey, expiresAt:Date.now()+60_000 });
     return `${this.origin}/__hanamesh_bootstrap/${ticket}`;
   }
+  async issueAsync(viewKey) {
+    if (this.parentOrigin !== DESKTOP_ORIGIN) return this.issue(viewKey);
+    requireCondition(!this.closed && this.isLeaseActive(viewKey),'LEASE_EXPIRED','Inactive view.');
+    this.revokeInactive();
+    let child = this.children.get(viewKey);
+    if (!child) {
+      let pending = this.pendingChildren.get(viewKey);
+      if (!pending) {
+        requireCondition(this.children.size + this.pendingChildren.size < 512,'TOO_MANY_TICKETS','Too many views.');
+        pending = (async () => {
+          const scoped = new FixedGateway({upstream:this.upstream,parentOrigin:this.parentOrigin,frameAncestors:this.ancestors.split(' ').slice(1),
+            isLeaseActive:key => key === viewKey && this.isLeaseActive(key),cookieAllowlist:[...this.cookieAllowlist],
+            allowAppAuthorization:this.allowAppAuthorization,maxUploadBytes:this.maxUploadBytes,onForward:this.onForward});
+          scoped.scopeKey = viewKey;
+          await scoped.start();
+          if (this.closed || !this.isLeaseActive(viewKey)) { await scoped.close(); throw new AppHostError('LEASE_EXPIRED','Inactive view.'); }
+          this.children.set(viewKey,scoped);
+          scoped.expiryTimer = setInterval(() => { if (!scoped.isLeaseActive(viewKey)) void scoped.close(); },50);
+          scoped.expiryTimer.unref();
+          return scoped;
+        })();
+        this.pendingChildren.set(viewKey,pending);
+      }
+      try { child = await pending; }
+      finally { if (this.pendingChildren.get(viewKey) === pending) this.pendingChildren.delete(viewKey); }
+    }
+    return child.issue(viewKey);
+  }
+  authorizeChallenge(viewKey, gatewayOrigin, challenge) {
+    const child = this.children.get(viewKey), item = child?.tickets.get(challenge);
+    requireCondition(child && !child.closed && child.origin === gatewayOrigin && item && item.viewKey === viewKey &&
+      item.loaded && !item.authorized && item.expiresAt > Date.now() && child.isLeaseActive(viewKey),
+      'GATEWAY_CHALLENGE_DENIED','Invalid or inactive challenge.',{},403);
+    const authorization = token(); item.authorized = true;
+    child.authorizations.set(authorization,{challenge,viewKey,expiresAt:item.expiresAt});
+    return {authorization};
+  }
+  revokeInactive() {
+    for (const [key,child] of this.children) if (!this.isLeaseActive(key) || child.closed) {
+      this.children.delete(key); void child.close();
+    }
+  }
+  #desktopBootstrap(req,res) {
+    const challenge = req.url.slice('/__hanamesh_bootstrap/'.length), item = this.tickets.get(challenge);
+    if (!this.scopeKey || req.method !== 'GET' || req.headers['sec-fetch-dest'] !== 'iframe' ||
+      !item || item.loaded || item.expiresAt <= Date.now() || !this.isLeaseActive(item.viewKey)) return fail(res,403,'GATEWAY_BOOTSTRAP_DENIED');
+    item.loaded = true;
+    const nonce = token();
+    const body = `<!doctype html><meta charset="utf-8"><title>应用连接中</title><p>应用连接中…</p><script nonce="${nonce}">
+      const challenge=${JSON.stringify(challenge)}, gatewayOrigin=${JSON.stringify(this.origin)};
+      let proved=false, redeemed=false;
+      addEventListener('message',async event=>{
+        const exact=event.origin==='dsh-app://app'&&event.source===parent;
+        console.info('HM_BOOTSTRAP_PROOF',JSON.stringify({origin:event.origin,parent:event.source===parent,accepted:exact}));
+        if(!exact||event.data?.challenge!==challenge)return;
+        if(event.data.type==='hm-bootstrap-parent'&&!proved){proved=true;parent.postMessage({type:'hm-bootstrap-proof',challenge},'dsh-app://app');}
+        if(event.data.type==='hm-bootstrap-authorize'&&proved&&!redeemed&&typeof event.data.authorization==='string'){
+          redeemed=true;
+          const response=await fetch('/__hanamesh_exchange',{method:'POST',credentials:'omit',headers:{'content-type':'application/json'},
+            body:JSON.stringify({challenge,authorization:event.data.authorization})});
+          if(response.ok)location.replace(${JSON.stringify(this.dataOrigin+'/')});else document.querySelector('p').textContent='应用授权失败';
+        }
+      });
+      parent.postMessage({type:'hm-bootstrap-ready',challenge},'dsh-app://app');
+    </script>`;
+    res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store','referrer-policy':'origin',
+      'content-security-policy':`default-src 'none'; script-src 'nonce-${nonce}'; connect-src 'self'; frame-ancestors ${this.ancestors}`});
+    res.end(body);
+  }
+  async #exchange(req,res) {
+    if (!this.scopeKey || req.method !== 'POST' || req.headers.origin !== this.origin || req.headers['sec-fetch-site'] !== 'same-origin' ||
+      req.headers['content-type'] !== 'application/json') return fail(res,403,'GATEWAY_EXCHANGE_DENIED');
+    let body='';
+    for await (const chunk of req) { body+=chunk; if(body.length>1024)return fail(res,413,'BODY_TOO_LARGE'); }
+    let input; try { input=JSON.parse(body); } catch { return fail(res,400,'INVALID_JSON'); }
+    const grant=this.authorizations.get(input.authorization);
+    if(!grant || Object.keys(input).some(k=>!['challenge','authorization'].includes(k)) || grant.challenge!==input.challenge ||
+      grant.expiresAt<=Date.now() || !this.isLeaseActive(grant.viewKey))return fail(res,403,'GATEWAY_EXCHANGE_DENIED');
+    this.authorizations.delete(input.authorization);this.tickets.delete(grant.challenge);
+    this.grants.clear();this.grants.set(token(),{viewKey:grant.viewKey,initialNavigation:true,navigated:false});
+    res.writeHead(204,{'cache-control':'no-store'});res.end();
+  }
+  #desktopAuthorized(req) {
+    if (!this.scopeKey || this.closed || req.headers.host !== new URL(this.dataOrigin).host || !this.isLeaseActive(this.scopeKey)) return false;
+    const grant = [...this.grants.values()].find(g => g.viewKey === this.scopeKey);
+    if (!grant) return false;
+    let referer;try {referer=documentOrigin(req.headers.referer);}catch{}
+    // One natural control-to-data navigation, tied to the redeemed complete live view binding.
+    if (grant.initialNavigation && req.method === 'GET' && req.url === '/' && !req.headers.origin &&
+      req.headers['sec-fetch-dest'] === 'iframe' && req.headers['sec-fetch-mode'] === 'navigate' &&
+      req.headers['sec-fetch-site'] === 'cross-site' && referer === this.origin) {
+      grant.initialNavigation = false; grant.navigated = true; return true;
+    }
+    if (!grant.navigated) return false;
+    if (req.headers.upgrade?.toLowerCase() === 'websocket') return req.headers.origin === this.dataOrigin;
+    return req.headers['sec-fetch-site'] === 'same-origin' &&
+      (req.headers.origin ? req.headers.origin === this.dataOrigin : referer === this.dataOrigin);
+  }
   #requestShape(req) {
-    if (req.headers.host !== new URL(this.origin).host) return false;
+    if (![this.origin,this.dataOrigin].filter(Boolean).some(origin => req.headers.host === new URL(origin).host)) return false;
     if (!req.url?.startsWith('/') || req.url.startsWith('//') || req.url.includes('\\') || req.url.length > 8_192) return false;
     try { if (/^[\/\\]{2}|[\x00-\x1f]/.test(decodeURIComponent(req.url))) return false; } catch { return false; }
-    if (req.headers.origin && ![this.parentOrigin,this.origin].includes(req.headers.origin)) return false;
+    if (req.headers.origin && ![this.parentOrigin,this.origin,this.dataOrigin].includes(req.headers.origin)) return false;
     if (req.headers['sec-fetch-dest'] === 'document') return false; // never top-level navigation
     return true;
   }
   #authorized(req) {
     if (!this.#requestShape(req)) return false;
+    if (this.parentOrigin === DESKTOP_ORIGIN) return this.#desktopAuthorized(req);
     // Cookie capability + live lease. Origin/loopback alone never authenticate.
     for (const [name,value] of cookies(req.headers.cookie)) {
       if (!name.startsWith(this.cookiePrefix)) continue;
@@ -122,7 +233,7 @@ export class FixedGateway {
     if (req.headers.upgrade?.toLowerCase() === 'websocket' && req.headers.origin === this.origin) return true;
     if (site !== 'same-site' || req.headers['sec-fetch-dest'] !== 'iframe') return false;
     let referer;
-    try { referer = new URL(req.headers.referer).origin; } catch { return false; }
+    try { referer = documentOrigin(req.headers.referer); } catch { return false; }
     return referer === this.parentOrigin;
   }
   #liveGrantExists() {
@@ -143,10 +254,11 @@ export class FixedGateway {
     return headers;
   }
   #bootstrap(req,res) {
+    if (this.parentOrigin === DESKTOP_ORIGIN) return this.#desktopBootstrap(req,res);
     const ticket = req.url.slice('/__hanamesh_bootstrap/'.length);
     const item = this.tickets.get(ticket);
     let referer;
-    try { referer = new URL(req.headers.referer).origin; } catch {}
+    try { referer = documentOrigin(req.headers.referer); } catch {}
     if (req.method !== 'GET' || req.headers['sec-fetch-dest'] !== 'iframe' || referer !== this.parentOrigin ||
       !item || item.expiresAt <= Date.now() || !this.isLeaseActive(item.viewKey)) return fail(res,403,'GATEWAY_BOOTSTRAP_DENIED');
     this.tickets.delete(ticket);
@@ -174,13 +286,25 @@ export class FixedGateway {
   #forwarded() { try { this.onForward(); } catch {} }
   #handle(req,res) {
     if (!this.#requestShape(req)) return fail(res,403,'GATEWAY_REQUEST_DENIED');
-    if (req.url.startsWith('/__hanamesh_bootstrap/')) return this.#bootstrap(req,res);
+    if (this.parentOrigin === DESKTOP_ORIGIN && req.headers.host === new URL(this.origin).host && req.url === '/__hanamesh_exchange') {
+      void this.#exchange(req,res).catch(()=>{if(!res.headersSent)fail(res,400,'GATEWAY_EXCHANGE_DENIED');else res.destroy();});return;
+    }
+    if (this.parentOrigin === DESKTOP_ORIGIN) {
+      if (req.headers.host === new URL(this.origin).host) {
+        if (req.url.startsWith('/__hanamesh_bootstrap/')) return this.#bootstrap(req,res);
+        return fail(res,403,'GATEWAY_CONTROL_ONLY');
+      }
+      if (req.url.startsWith('/__hanamesh_bootstrap/') || req.url === '/__hanamesh_exchange') return fail(res,403,'GATEWAY_DATA_ONLY');
+    } else if (req.url.startsWith('/__hanamesh_bootstrap/')) return this.#bootstrap(req,res);
     if (!this.#authorized(req)) return fail(res,403,'GATEWAY_AUTH_REQUIRED');
     if (!['GET','HEAD','POST','PUT','PATCH','DELETE','OPTIONS'].includes(req.method)) return fail(res,405,'METHOD_NOT_ALLOWED');
     if (Number(req.headers['content-length']) > this.maxUploadBytes) return fail(res,413,'UPLOAD_TOO_LARGE');
     const upstream = request(this.upstream + req.url,{ method:req.method,headers:this.#headers(req) }, response => {
       if (response.statusCode !== 401 && response.statusCode !== 403) this.#forwarded();
-      res.writeHead(response.statusCode, embeddingHeaders(response.rawHeaders,this.ancestors));
+      // A nested app frame has both the workspace and its own registered data origin as ancestors.
+      // Only the data response admits that exact live view origin; control/bootstrap stays separate.
+      const ancestors = this.dataOrigin ? `${this.ancestors} ${this.dataOrigin}` : this.ancestors;
+      res.writeHead(response.statusCode, embeddingHeaders(response.rawHeaders,ancestors));
       response.pipe(res, { end:false });
       response.once('error', () => res.destroy());
       response.once('end', () => { if (Object.keys(response.trailers).length) res.addTrailers(response.trailers); res.end(); });
@@ -215,8 +339,13 @@ export class FixedGateway {
     upstream.once('response',() => { clearTimeout(timer); upstream.destroy(); socket.end('HTTP/1.1 502 Bad Gateway\r\nConnection: close\r\n\r\n'); });
     upstream.once('error',() => { clearTimeout(timer); socket.destroy(); }); upstream.end();
   }
-  async close() {
-    this.tickets.clear(); this.grants.clear();
+  close() { return this.closeTask ??= this.#close(); }
+  async #close() {
+    this.closed = true; clearInterval(this.expiryTimer);
+    this.tickets.clear(); this.grants.clear(); this.authorizations.clear();
+    await Promise.allSettled([...this.pendingChildren.values()]);
+    const children=[...this.children.values()];this.children.clear();
+    await Promise.all(children.map(child=>child.close()));
     for (const request of this.upstreams) request.destroy();
     for (const socket of this.sockets) socket.destroy();
     if (this.server?.listening) await bounded(new Promise((resolve,reject) => this.server.close(error => error ? reject(error) : resolve())),2_000,'Gateway shutdown');

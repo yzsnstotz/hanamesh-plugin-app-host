@@ -1,5 +1,6 @@
 import { readFile, lstat, unlink, rmdir } from 'node:fs/promises';
 import { join, resolve, dirname, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { spawn as nodeSpawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { AppHostError, requireCondition, SerialQueue } from '../errors.js';
@@ -39,7 +40,7 @@ async function clearGeneratedRuntimeCache(result,runtimeRoot){
   requireCondition(remaining.length===0&&residue===null,'RUNTIME_RESIDUE','Runtime has unowned files that require manual review.',{count:remaining.length},409);
 }
 
-export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBinary,dshBin,registry='https://registry.npmjs.org',allowPrerelease=false,
+export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBinary,dshBin,desktopCli,registry='https://registry.npmjs.org',allowPrerelease=false,
   fetchImpl=globalThis.fetch,spawn=defaultSpawn,provision,remove,ledger,emit=()=>{}}){
   requireCondition(typeof profileDir==='string'&&resolve(profileDir)===profileDir,'PROFILE_DIR_REQUIRED','library.profileDir must be an absolute path.');
   requireCondition(typeof dataRoot==='string'&&resolve(dataRoot)===dataRoot,'INVALID_ROOT','dataRoot must be absolute.');
@@ -54,7 +55,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
   /** Injected runtime functions (tests, suites) or the vendored lib-provision export of the same name. */
   const runtimeApi=async name=>injected[name]??(await defaults())[name];
   async function installed(packageNameValue){const root=join(profileDir,'node_modules',...packageNameValue.split('/')),pkg=await json(join(root,'package.json'));const appFile=typeof pkg.hanamesh?.app==='string'?pkg.hanamesh.app:'app.json';return{pkg,definition:validateDefinition(await json(join(root,appFile)))};}
-  async function run(args){const result=await spawn(nodeBinary,[dshBin,'plugin','--profile',profileName,...args],{cwd:profileDir});requireCondition(result.code===0,'DSH_PLUGIN_FAILED','DSH plugin operation failed.',{code:result.code,signal:result.signal,stderr:String(result.stderr??'').slice(-2000)},502);return result;}
+  async function run(args){const result=await spawn(nodeBinary,[...(desktopCli?['--expose-internals',fileURLToPath(new URL('./desktop-cli.js',import.meta.url)),desktopCli.entry,desktopCli.runtimeDir,desktopCli.supportDir]:[dshBin]),'plugin','--profile',profileName,...args],{cwd:profileDir});requireCondition(result.code===0,'DSH_PLUGIN_FAILED','DSH plugin operation failed.',{code:result.code,signal:result.signal,stderr:String(result.stderr??'').slice(-2000)},502);return result;}
   /** The exact version `dsh plugin add` will pin: the registry's `latest` dist-tag, re-checked here (the catalog's `latestVersion` is a hint only). */
   async function latest(name){
     const base=new URL(registry);requireCondition(['https:','http:'].includes(base.protocol),'REGISTRY_DENIED','Registry URL is invalid.');

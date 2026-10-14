@@ -184,6 +184,29 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     React.useEffect(()=>{if(embedded)return;libraryListeners.add(setVisible);return()=>libraryListeners.delete(setVisible);},[embedded]);
     const heldView=React.useRef(null),mounted=React.useRef(true),surfaceVisible=React.useRef(visible),surfaceEpoch=React.useRef(0),opening=React.useRef(null);
     surfaceVisible.current=visible;
+    const frame=React.useRef(null);
+    React.useEffect(()=>{
+      if(!receipt?.uiUrl||!globalThis.location?.href?.startsWith('dsh-app://app/'))return;
+      const url=new URL(receipt.uiUrl),challenge=url.pathname.slice('/__hanamesh_bootstrap/'.length);
+      if(!url.pathname.startsWith('/__hanamesh_bootstrap/'))return;
+      let active=true,issued=false;
+      const receive=async event=>{
+        const exact=event.origin===url.origin&&event.source===frame.current?.contentWindow;
+        if(!exact||event.data?.challenge!==challenge)return;
+        console.info('HM_WORKSPACE_PROOF',JSON.stringify({origin:event.origin,window:true,type:event.data.type}));
+        if(event.data.type==='hm-bootstrap-ready')event.source.postMessage({type:'hm-bootstrap-parent',challenge},url.origin);
+        if(event.data.type==='hm-bootstrap-proof'&&!issued){
+          issued=true;
+          try {
+            const result=await request('/apps/bootstrap-authorize',{method:'POST',body:JSON.stringify({viewId:receipt.lease.viewId,
+              leaseToken:receipt.leaseToken,gatewayOrigin:url.origin,challenge})});
+            if(active&&event.source===frame.current?.contentWindow)event.source.postMessage({type:'hm-bootstrap-authorize',challenge,authorization:result.authorization},url.origin);
+          }catch(error){if(active){setError(String(error.message??'GATEWAY_AUTHORIZATION_DENIED'));console.info('HM_WORKSPACE_AUTHORIZATION_DENIED');}}
+        }
+      };
+      globalThis.addEventListener('message',receive);return()=>{active=false;globalThis.removeEventListener('message',receive);};
+    },[receipt]);
+
     React.useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
     React.useEffect(()=>{
       if(!receipt)return;
@@ -287,7 +310,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       return h('article',{key:item.id,'data-hanamesh-library-item':item.id,'data-hanamesh-kind':item.kind},h('h3',null,item.displayName),h('p',null,item.summary),
         h('small',null,KIND_TEXT[item.kind]+' · '+(item.publisher?.name??'未知发布者')+' · '+(item.latestVersion??'—')+((item.categories??[]).length?' · '+item.categories.join('、'):'')),
         state,action,op&&!busy?h('p',{role:op.failed?'alert':'status',className:op.failed?'hm-library-failed':'hm-library-ok'},op.text):null);};
-    const catalogSection=receipt?h('div',{className:'hm-app-frame'},h('div',null,h('strong',null,receipt.instance.appId),h('button',{type:'button',disabled:closing,onClick:()=>void close()},closing?'关闭中…':'关闭视图')),h('iframe',{src:receipt.uiUrl,title:receipt.instance.appId,sandbox:'allow-forms allow-modals allow-popups allow-same-origin allow-scripts'})):
+    const catalogSection=receipt?h('div',{className:'hm-app-frame'},h('div',null,h('strong',null,receipt.instance.appId),h('button',{type:'button',disabled:closing,onClick:()=>void close()},closing?'关闭中…':'关闭视图')),h('iframe',{ref:frame,src:receipt.uiUrl,title:receipt.instance.appId,sandbox:'allow-forms allow-modals allow-popups allow-same-origin allow-scripts'})):
       h('div',{className:'hm-library-grid',key:'catalog'},...items.map(card));
     const moreButton=nextCursor&&!receipt?h('button',{type:'button',className:'hm-library-more',key:'more',onClick:()=>void more()},'更多'):null;
     const installedSection=!receipt&&(installed.length||plugins.length)?h('section',{className:'hm-market-installed',key:'installed'},h('h2',null,'已安装'),h('ul',null,

@@ -50,3 +50,13 @@ DSH/宿主 cookie、控制头与 Authorization 默认不传上游；应用 cooki
 实际 Chromium 启动于独立临时 profile，但回环导航返回 `net::ERR_BLOCKED_BY_ADMINISTRATOR`。未改管理员 policy、未关 CSP、未使用绕过标志。两个 REAL_BROWSER 测试显式 skip 并在产品矩阵标 PARTIAL，不算 PASS。
 
 测试 Chromium 的 `--no-sandbox` 仅为隔离容器内以 root 运行测试驱动所需，绝非生产应用/DSH 的启动配置；不应该移植到生产 profile。
+
+## D-202 Desktop control and data origin separation
+
+For the fixed Desktop workspace only, each full live view binding owns one independent loopback listener with two exact, freshly random 192-bit localhost names: `control-<nonce>.localhost:<port>` and `data-<nonce>.localhost:<port>`. Only 127.0.0.1 is listened on. Names are non-secret isolation identifiers, never credentials; known retired names cannot be reassigned. A reused OS port does not restore an old origin. Scope is principal/view/generation plus the owning instance and active lease checked by AppHost. A different live view never authorizes an old request.
+
+The workspace checks the precise control origin and the iframe Window; the controlled bootstrap checks exactly `dsh-app://app` and its parent Window. The existing public connection authentication, lease ownership and single-use challenge exchange precede navigation. Authorization appears only in the authenticated response and exact-window message/exchange body, never URLs or logs. One natural control-to-data navigation consumes its own initial grant, then HTTP/resources require the exact data-origin context and live complete binding; WS requires the exact data Origin. Closing, generation rotation and restart invalidate prior authority.
+
+Control serves only bootstrap/exchange, never application documents or resources. Data serves application bytes, never bootstrap authorization pages, so the application ServiceWorker cannot control the bootstrap origin. Only exact registered Host/Origin/Referer/WS origins are admitted; no wildcard localhost, null, aliases or unrelated live grants. Data CSP admits its exact data origin for nested application frames plus the approved workspace ancestor; control CSP does not admit data. Application bodies, SDK, auth/CSRF/CORS and other security headers are unchanged. Ordinary loopback workspace security and the separately specified public install-target endpoint retain their original boundaries.
+
+These are source invariants, not native browser evidence. Component synthetic-header requests, genuine natural native requests, third-party cookie policy, retained frame/worker/SW attacks, same-response bytes, restart and final-tarball U2 are recorded separately. A constructor rejection, skipped browser, draft package or older UI observation cannot close those gates.

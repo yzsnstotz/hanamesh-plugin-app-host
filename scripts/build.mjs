@@ -8,4 +8,4 @@ for(const file of await readdir(`${root}/src`))if(file.endsWith('.js')){
 }
 await rm(`${root}/dist`,{recursive:true,force:true});await mkdir(`${root}/dist`);
 await cp(`${root}/src`,`${root}/dist`,{recursive:true});
-console.error('Build completed: AppHost ESM modules and public type declarations; provision is an external source package.');
+console.error('Build completed: AppHost ESM modules and public type declarations; provision is bundled by the normal pack command.');

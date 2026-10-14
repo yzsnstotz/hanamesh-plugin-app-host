@@ -1,22 +1,24 @@
 {
   "package": {
     "name": "@hanamesh/dsh-app-host",
-    "version": "0.5.1",
+    "version": "0.5.6",
     "license": "SEE LICENSE IN LICENSE",
     "source": "git+https://github.com/yzsnstotz/hanamesh-plugin-app-host.git",
     "purpose": "Application ownership, view leases, Router forwarding, and application library for official DSH"
   },
-  "scope": "AppHost own code and declared external dependencies/peers; external components retain their own licenses and are not bundled or relicensed.",
+  "scope": "AppHost own code and declared dependencies/peers; lib-provision 随包分发、源仓不变; original LICENSE retained; no relicensing.",
   "components": {
     "@hanamesh/lib-provision": {
       "version": "0.2.1",
       "license": "SEE LICENSE IN LICENSE",
-      "source": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1",
-      "purpose": "External runtime ownership/provision/ledger API from canonical source tag; no inlined copy",
+      "source": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a",
+      "purpose": "Runtime provision/remove/ledger API; 随包分发、源仓不变; no inlined copy",
       "sha256": "4217b9fe1be98f6e82437539d1c4c43166ed1f5c292efff100733e0cb09530e9",
       "specs": {
-        "dependencies": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1"
-      }
+        "dependencies": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a"
+      },
+      "sourceCommit": "575d63fb70e08c47e980dbf25f07921a7ba5aa2a",
+      "distribution": "bundleDependencies; original LICENSE at node_modules/@hanamesh/lib-provision/LICENSE"
     },
     "zod": {
       "version": "4.5.4",
@@ -28,9 +30,9 @@
       ]
     },
     "@deepseek-ai/cordis": {
-      "version": "4.0.4",
+      "version": "4.0.5-alpha.1",
       "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/cordis/-/cordis-4.0.4.tgz",
+      "source": "https://registry.npmjs.org/@deepseek-ai/cordis/-/cordis-4.0.5-alpha.1.tgz",
       "purpose": "Official DSH plugin lifecycle and service container",
       "usedAs": [
         "peerDependencies",
@@ -38,9 +40,9 @@
       ]
     },
     "@deepseek-ai/dsh-storage-domain": {
-      "version": "0.2.0-rc.2",
+      "version": "0.2.1-alpha.2",
       "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-storage-domain/-/dsh-storage-domain-0.2.0-rc.2.tgz",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-storage-domain/-/dsh-storage-domain-0.2.1-alpha.2.tgz",
       "purpose": "Official DSH persistent storage service",
       "usedAs": [
         "peerDependencies",
@@ -48,9 +50,9 @@
       ]
     },
     "@deepseek-ai/schemastery": {
-      "version": "3.18.4",
+      "version": "3.18.5-alpha.1",
       "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/schemastery/-/schemastery-3.18.4.tgz",
+      "source": "https://registry.npmjs.org/@deepseek-ai/schemastery/-/schemastery-3.18.5-alpha.1.tgz",
       "purpose": "Official DSH configuration schema service",
       "usedAs": [
         "peerDependencies",
@@ -58,9 +60,9 @@
       ]
     },
     "@deepseek-ai/dsh-host-webserver": {
-      "version": "0.2.0-rc.2",
+      "version": "0.2.1-alpha.2",
       "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-host-webserver/-/dsh-host-webserver-0.2.0-rc.2.tgz",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-host-webserver/-/dsh-host-webserver-0.2.1-alpha.2.tgz",
       "purpose": "Official DSH authenticated HTTP route host",
       "usedAs": [
         "peerDependencies",
@@ -68,36 +70,36 @@
       ]
     },
     "@deepseek-ai/dsh-client-connection": {
-      "version": "0.2.0-rc.2",
+      "version": "0.2.1-alpha.2",
       "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-client-connection/-/dsh-client-connection-0.2.0-rc.2.tgz",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-client-connection/-/dsh-client-connection-0.2.1-alpha.2.tgz",
       "purpose": "Official DSH client connection service",
       "usedAs": [
         "peerDependencies"
       ]
     },
     "@deepseek-ai/dsh-client-ui-slots": {
-      "version": "0.2.0-rc.2",
+      "version": "0.2.1-alpha.2",
       "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-slots/-/dsh-client-ui-slots-0.2.0-rc.2.tgz",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-slots/-/dsh-client-ui-slots-0.2.1-alpha.2.tgz",
       "purpose": "Official DSH client UI placement",
       "usedAs": [
         "peerDependencies"
       ]
     },
     "@deepseek-ai/dsh-client-ui-settings": {
-      "version": "0.2.0-rc.2",
+      "version": "0.2.1-alpha.2",
       "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-settings/-/dsh-client-ui-settings-0.2.0-rc.2.tgz",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-settings/-/dsh-client-ui-settings-0.2.1-alpha.2.tgz",
       "purpose": "Official DSH client settings surface",
       "usedAs": [
         "peerDependencies"
       ]
     },
     "@deepseek-ai/dsh-client-locale": {
-      "version": "0.2.0-rc.2",
+      "version": "0.2.1-alpha.2",
       "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-client-locale/-/dsh-client-locale-0.2.0-rc.2.tgz",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-client-locale/-/dsh-client-locale-0.2.1-alpha.2.tgz",
       "purpose": "Official DSH client localization",
       "usedAs": [
         "peerDependencies"
@@ -113,63 +115,63 @@
       ]
     },
     "@deepseek-ai/dsh-scope": {
-      "version": "0.2.0-rc.2",
+      "version": "0.2.1-alpha.2",
       "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-scope/-/dsh-scope-0.2.0-rc.2.tgz",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-scope/-/dsh-scope-0.2.1-alpha.2.tgz",
       "purpose": "Build and test fixture for official DSH scopes",
       "usedAs": [
         "devDependencies"
       ]
     },
     "@deepseek-ai/dsh-session": {
-      "version": "0.2.0-rc.2",
+      "version": "0.2.1-alpha.2",
       "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-session/-/dsh-session-0.2.0-rc.2.tgz",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-session/-/dsh-session-0.2.1-alpha.2.tgz",
       "purpose": "Build and test fixture for official DSH sessions",
       "usedAs": [
         "devDependencies"
       ]
     },
     "@deepseek-ai/dsh-session-persistence": {
-      "version": "0.2.0-rc.2",
+      "version": "0.2.1-alpha.2",
       "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-session-persistence/-/dsh-session-persistence-0.2.0-rc.2.tgz",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-session-persistence/-/dsh-session-persistence-0.2.1-alpha.2.tgz",
       "purpose": "Build and test fixture for official DSH session persistence",
       "usedAs": [
         "devDependencies"
       ]
     },
     "@deepseek-ai/dsh-session-persistence-jsonl": {
-      "version": "0.2.0-rc.2",
+      "version": "0.2.1-alpha.2",
       "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-session-persistence-jsonl/-/dsh-session-persistence-jsonl-0.2.0-rc.2.tgz",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-session-persistence-jsonl/-/dsh-session-persistence-jsonl-0.2.1-alpha.2.tgz",
       "purpose": "Build and test fixture for official DSH JSONL session persistence",
       "usedAs": [
         "devDependencies"
       ]
     },
     "@deepseek-ai/dsh-session-projection": {
-      "version": "0.2.0-rc.2",
+      "version": "0.2.1-alpha.2",
       "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-session-projection/-/dsh-session-projection-0.2.0-rc.2.tgz",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-session-projection/-/dsh-session-projection-0.2.1-alpha.2.tgz",
       "purpose": "Build and test fixture for official DSH session projections",
       "usedAs": [
         "devDependencies"
       ]
     },
     "@deepseek-ai/dsh-storage": {
-      "version": "0.2.0-rc.2",
+      "version": "0.2.1-alpha.2",
       "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-storage/-/dsh-storage-0.2.0-rc.2.tgz",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-storage/-/dsh-storage-0.2.1-alpha.2.tgz",
       "purpose": "Build and test fixture for official DSH storage",
       "usedAs": [
         "devDependencies"
       ]
     },
     "@deepseek-ai/dsh-storage-json": {
-      "version": "0.2.0-rc.2",
+      "version": "0.2.1-alpha.2",
       "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-storage-json/-/dsh-storage-json-0.2.0-rc.2.tgz",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-storage-json/-/dsh-storage-json-0.2.1-alpha.2.tgz",
       "purpose": "Build and test fixture for official DSH JSON storage",
       "usedAs": [
         "devDependencies"
@@ -185,10 +187,9 @@
       ]
     },
     "@hanamesh/devkit": {
-      "version": "0.2.0",
+      "version": "0.2.3",
       "license": "SEE LICENSE IN LICENSE",
       "source": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit",
-      "sha256": "de15f0913dd6de5ba9ce96b8d92ea862ec44489eb698628de963cbbead68bc25",
       "purpose": "Development-only centralized tool execution; never imported by runtime; no public peer",
       "usedAs": [
         "devDependencies"
@@ -196,9 +197,15 @@
       "specs": {
         "devDependencies": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit"
       },
-      "sourceCommit": "8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89",
+      "sourceCommit": "e6ccf710369a77c5fbf9ce4810b182727e4f2aa8",
       "licenseNotice": "# HanaMesh distribution notice\n\nThis package contains HanaMesh-owned code. The project owner confirmed that its\nown code may be distributed (D-2026-10-05-02) and directed correction of outdated\nprivate / UNLICENSED package metadata (D-2026-10-05-16, 2026-10-05).\n\nThis notice records that distribution authorization. It does not assign an SPDX\nlicense identifier, adopt MIT or another standard license, or grant additional\nrelicensing rights. Rights not covered by the owner's recorded distribution\nauthorization remain reserved. See LICENSE_RECORD.md for the package name,\nversion, source, purpose and third-party boundaries.\n\nThird-party components retain their existing licenses. No third-party component\nis relicensed by this notice. This metadata change is not an npm publication or\na change to repository visibility.\n",
-      "distributionRecord": "# Devkit license and distribution record\n\n| Name | Version | License / authorization | Source | Purpose |\n| --- | --- | --- | --- | --- |\n| @hanamesh/devkit | 0.2.0 | SEE LICENSE IN LICENSE; HanaMesh-owned distribution authorized in D-2026-10-05-02 and D-2026-10-05-16; no new standard license or relicensing grant | yzsnstotz/hanamesh-server-shared, packages/devkit; baseline b2b5c9bb7faa990e3eb9f99007abd6427d62e88b / rc.1 | Development preflight, mutation execution, package verification and toolchain checks |\n\nThe original rc.1 manifest contained private=true and license=UNLICENSED, with no\nstandalone LICENSE text. Those obsolete metadata fields are superseded for rc.2\nby private=false and this explicit distribution notice. The old tarball and\nrecords remain unchanged. 0.2.0 adds Git tag-range installation and the\n`contract/` supply schema, fixtures and suite under the same authorization;\nit still adds no dependency. This package has no dependency or peerDependency and\nships no third-party runtime or compiler. It uses Node standard-library APIs;\nNode itself is supplied by the consumer and is not bundled here.\n\nAuthority: the project owner's 2026-10-05 instruction to correct lib-provision\nand devkit vendor metadata under D-2026-10-05-02, recorded in D-2026-10-05-16.\nThe notice does not extend that instruction into a new general license.\n"
+      "distributionRecord": "# Devkit license and distribution record\n\n| Name | Version | License / authorization | Source | Purpose |\n| --- | --- | --- | --- | --- |\n| @hanamesh/devkit | 0.2.3 | SEE LICENSE IN LICENSE; HanaMesh-owned distribution authorized in D-2026-10-05-02 and D-2026-10-05-16; no new standard license or relicensing grant | yzsnstotz/hanamesh-server-shared, packages/devkit; baseline b2b5c9bb7faa990e3eb9f99007abd6427d62e88b / rc.1 | Development preflight, mutation execution, package verification and toolchain checks |\n\nThe original rc.1 manifest contained private=true and license=UNLICENSED, with no\nstandalone LICENSE text. Those obsolete metadata fields are superseded for rc.2\nby private=false and this explicit distribution notice. The old tarball and\nrecords remain unchanged. 0.2.0 adds Git tag-range installation and the\n`contract/` supply schema, fixtures and suite under the same authorization;\nit still adds no dependency. This package has no dependency or peerDependency and\nships no third-party runtime or compiler. It uses Node standard-library APIs;\nNode itself is supplied by the consumer and is not bundled here.\n\nAuthority: the project owner's 2026-10-05 instruction to correct lib-provision\nand devkit vendor metadata under D-2026-10-05-02, recorded in D-2026-10-05-16.\nThe notice does not extend that instruction into a new general license.\n",
+      "licenseSha256": "242b0b71d3a4a91899ccf38fb70f06d151f3f005c3d7ac7d1e4a6c0461dc0e2d",
+      "historicalArtifact": {
+        "version": "0.2.0",
+        "sha256": "de15f0913dd6de5ba9ce96b8d92ea862ec44489eb698628de963cbbead68bc25",
+        "sourceCommit": "8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89"
+      }
     }
   }
 }
