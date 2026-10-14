@@ -1,6 +1,7 @@
 export const name:'hanamesh-app-host-client';
 export const inject:readonly ['slots','locale'];
-export function apply(ctx:unknown):void;
+/** Trusted producer configuration; normal Loader activation defaults to false. */
+export function apply(ctx:unknown,options?:{verification?:boolean}):void;
 export function ProvidersSection():unknown;
 /** Settings section「市场目录源」(rc.28 name; the export keeps its rc.11 identifier). */
 export function LibrarySourcesSection():unknown;
@@ -18,7 +19,7 @@ export interface InstallTargetReceipt {status:'confirmation-required'|'installin
 /** Show/resolve a target without installing. Resolves once confirmation is ready; rejects with a visible market error. */
 export function openInstallTarget(input:InstallTarget):Promise<InstallTargetReceipt>;
 /** rc.32: the client-side `market` service object read by the shell's Extension Management panel. */
-export function createMarketSeat():{render(options?:{preferredSubsectionId?:string,verification?:boolean}):unknown,setSettingsVisible(visible:boolean):void,openInstallTarget(input:InstallTarget):Promise<InstallTargetReceipt>};
+export function createMarketSeat(options?:{verification?:boolean}):{render(options?:{preferredSubsectionId?:string,verification?:boolean}):unknown,setSettingsVisible(visible:boolean):void,openInstallTarget(input:InstallTarget):Promise<InstallTargetReceipt>};
 export const MARKET_SEAT:'market';
 export const MARKET_CONFLICT_TEXT:string;
 /** Test/inspection view of the module-level market state; not part of the DSH contract. */

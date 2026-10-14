@@ -4,7 +4,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   const h=React.createElement;
   const request=async(path,init={})=>{
     const response=await globalThis.fetch.bind(globalThis)(path,{...init,headers:{'x-hanamesh-client':'workspace-v1',...(init.body?{'content-type':'application/json'}:{}),...init.headers}});
-    const value=await response.json();if(!response.ok)throw new Error(value?.error?.code??`HTTP_${response.status}`);return value;
+    const value=await response.json();if(!response.ok){const error=new Error(value?.error?.code??`HTTP_${response.status}`);error.response=value;throw error;}return value;
   };
   const entryId=entry=>entry.projection==='file'?`file:${entry.base??'home'}:${entry.path}`:`env:${entry.env}`;
   function ProvidersSection(){
@@ -177,7 +177,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
         // Even the test panel sends installations through the normal explicit confirmation.
         const result=call.path==='/hanamesh/library/install'?await openInstallTarget(input):call.method==='POST'?await request(call.path,{method:'POST',body:JSON.stringify(input)}):await request(call.path+(Object.keys(input).length?'?'+new URLSearchParams(input):''));
         setVerificationOutput(result);
-      }catch(error){setVerificationOutput({error:{code:String(error.message??error)}});}
+      }catch(error){setVerificationOutput(error.response??{error:{code:String(error.message??error)}});}
       finally{verificationBusy.current=false;setVerifying(false);}
     };
     React.useEffect(()=>{targetListeners.add(updateTarget);pendingListeners.add(updatePending);return()=>{targetListeners.delete(updateTarget);pendingListeners.delete(updatePending);};},[]);
@@ -347,9 +347,9 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       ...body);
   }
   /** The `market` seat object read by the shell's Extension Management panel. */
-  function createMarketSeat(){
+  function createMarketSeat({verification=false}={}){
     return{
-      render(options){return h(LibraryOverlay,{embedded:true,preferredSubsectionId:options?.preferredSubsectionId,...(options?.verification===true?{verification:true}:{})});},
+      render(options){return h(LibraryOverlay,{embedded:true,preferredSubsectionId:options?.preferredSubsectionId,...(verification===true||options?.verification===true?{verification:true}:{})});},
       setSettingsVisible(visible){setEntryVisible(visible!==false);},
       openInstallTarget,
     };
@@ -362,7 +362,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     catch{return false;}
   }
   /** Take the seat only when dshmarket is provably absent; otherwise stand down with a readable notice and a log line. */
-  function claimMarketSeat(ctx){
+  function claimMarketSeat(ctx,{verification=false}={}){
     let dispose,released=false;
     // Both logs: the host logger when the client context carries one, and always the browser console —
     // a DSH client logger is not visible from the page, and the console is where this is actually read.
@@ -375,19 +375,19 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       if(released)return;
       if(conflict){standDown();return;}
       // A seat that appears after the panel mounted is fine: cordis notifies every `inject(['market'])` fiber.
-      try{dispose=ctx.provide(MARKET_SEAT,createMarketSeat());}catch{standDown();}
+      try{dispose=ctx.provide(MARKET_SEAT,createMarketSeat({verification}));}catch{standDown();}
     })();
     return()=>{released=true;setMarketConflict('');setEntryVisible(true);dispose?.();};
   }
   const name='hanamesh-app-host-client',inject=['slots','locale'];
   // No cross-plugin reads here: the browser-side cordis context never carries host services such as hanameshCore
   // (dsh-client-modules boots its own root context); Core status lives in Core's own Settings section.
-  function apply(ctx){ctx.effect(()=>{const style=document.createElement('style');style.textContent='.hm-providers,.hm-library-sources{display:grid;gap:16px}.hm-providers table{width:100%;border-collapse:collapse}.hm-providers th,.hm-providers td{padding:8px;text-align:left;border-bottom:1px solid color-mix(in srgb,currentColor 14%,transparent)}.hm-provider-card{padding:16px;border:1px solid color-mix(in srgb,currentColor 18%,transparent);border-radius:12px}.hm-provider-row{display:grid;grid-template-columns:minmax(120px,1fr) auto minmax(180px,1fr) auto;gap:8px;align-items:center;margin:8px 0}.hm-source-row{display:grid;grid-template-columns:minmax(0,1fr) repeat(4,auto);gap:8px}.hm-source-row code{overflow-wrap:anywhere}.hm-source-add{display:flex;gap:8px}.hm-source-add input{flex:1}.hm-library-overlay{position:absolute;inset:0;z-index:30;pointer-events:auto;overflow:auto;padding:24px;background:#fff;color:#18181b}.hm-library-overlay button,.hm-library-overlay input{color:#18181b}.hm-library-overlay>header{display:flex;justify-content:space-between;align-items:center}.hm-library-toolbar{display:flex;gap:8px;align-items:center;margin:8px 0}.hm-library-toolbar input[type=search]{flex:1;padding:6px 10px}.hm-library-more{margin:12px auto;display:block}.hm-library-failed{color:#b91c1c;margin:0}.hm-library-ok{color:#166534;margin:0}.hm-restart-notice{padding:10px 12px;border:1px solid #f59e0b;border-radius:8px;background:#fffbeb;margin:8px 0}.hm-restart-link{margin-left:4px;font-weight:600}.hm-market-state{font-size:12px;color:#3f3f46}.hm-market-actions{display:flex;gap:8px;flex-wrap:wrap}.hm-market-embedded{display:block}.hm-market-embedded>header{display:flex;justify-content:space-between;align-items:center}.hm-market-conflict{padding:10px 12px;border:1px solid #6366f1;border-radius:8px;background:color-mix(in srgb,#6366f1 8%,transparent);margin:8px 0}.hm-install-target{display:grid;gap:8px;padding:16px;border:1px solid #d4d4d8;border-radius:12px;margin:12px 0}.hm-install-target form{display:flex;gap:8px;flex-wrap:wrap}.hm-install-target input{flex:1;min-width:180px;padding:6px 10px}.hm-install-target dl{display:grid;grid-template-columns:80px 1fr;gap:6px}.hm-install-target dd{margin:0;overflow-wrap:anywhere}.hm-market-installed{margin-top:24px}.hm-market-installed ul{padding-left:18px;display:grid;gap:6px}.hm-library-toolbar select{padding:6px 10px}.hm-library-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}.hm-library-grid article{display:grid;gap:10px;padding:16px;border:1px solid color-mix(in srgb,currentColor 16%,transparent);border-radius:12px}.hm-app-frame{display:grid;grid-template-rows:auto 1fr;height:calc(100vh - 130px)}.hm-market-embedded>.hm-app-frame{position:fixed;inset:0;z-index:1001;height:100vh;box-sizing:border-box;background:#fff;padding:12px 16px}.hm-app-frame>div{display:flex;justify-content:space-between}.hm-app-frame iframe{width:100%;height:100%;border:0}';document.head.append(style);return()=>style.remove();},'hanamesh-app-host:style');
+  function apply(ctx,{verification=false}={}){ctx.effect(()=>{const style=document.createElement('style');style.textContent='.hm-providers,.hm-library-sources{display:grid;gap:16px}.hm-providers table{width:100%;border-collapse:collapse}.hm-providers th,.hm-providers td{padding:8px;text-align:left;border-bottom:1px solid color-mix(in srgb,currentColor 14%,transparent)}.hm-provider-card{padding:16px;border:1px solid color-mix(in srgb,currentColor 18%,transparent);border-radius:12px}.hm-provider-row{display:grid;grid-template-columns:minmax(120px,1fr) auto minmax(180px,1fr) auto;gap:8px;align-items:center;margin:8px 0}.hm-source-row{display:grid;grid-template-columns:minmax(0,1fr) repeat(4,auto);gap:8px}.hm-source-row code{overflow-wrap:anywhere}.hm-source-add{display:flex;gap:8px}.hm-source-add input{flex:1}.hm-library-overlay{position:absolute;inset:0;z-index:30;pointer-events:auto;overflow:auto;padding:24px;background:#fff;color:#18181b}.hm-library-overlay button,.hm-library-overlay input{color:#18181b}.hm-library-overlay>header{display:flex;justify-content:space-between;align-items:center}.hm-library-toolbar{display:flex;gap:8px;align-items:center;margin:8px 0}.hm-library-toolbar input[type=search]{flex:1;padding:6px 10px}.hm-library-more{margin:12px auto;display:block}.hm-library-failed{color:#b91c1c;margin:0}.hm-library-ok{color:#166534;margin:0}.hm-restart-notice{padding:10px 12px;border:1px solid #f59e0b;border-radius:8px;background:#fffbeb;margin:8px 0}.hm-restart-link{margin-left:4px;font-weight:600}.hm-market-state{font-size:12px;color:#3f3f46}.hm-market-actions{display:flex;gap:8px;flex-wrap:wrap}.hm-market-embedded{display:block}.hm-market-embedded>header{display:flex;justify-content:space-between;align-items:center}.hm-market-conflict{padding:10px 12px;border:1px solid #6366f1;border-radius:8px;background:color-mix(in srgb,#6366f1 8%,transparent);margin:8px 0}.hm-install-target{display:grid;gap:8px;padding:16px;border:1px solid #d4d4d8;border-radius:12px;margin:12px 0}.hm-install-target form{display:flex;gap:8px;flex-wrap:wrap}.hm-install-target input{flex:1;min-width:180px;padding:6px 10px}.hm-install-target dl{display:grid;grid-template-columns:80px 1fr;gap:6px}.hm-install-target dd{margin:0;overflow-wrap:anywhere}.hm-market-installed{margin-top:24px}.hm-market-installed ul{padding-left:18px;display:grid;gap:6px}.hm-library-toolbar select{padding:6px 10px}.hm-library-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}.hm-library-grid article{display:grid;gap:10px;padding:16px;border:1px solid color-mix(in srgb,currentColor 16%,transparent);border-radius:12px}.hm-app-frame{display:grid;grid-template-rows:auto 1fr;height:calc(100vh - 130px)}.hm-market-embedded>.hm-app-frame{position:fixed;inset:0;z-index:1001;height:100vh;box-sizing:border-box;background:#fff;padding:12px 16px}.hm-app-frame>div{display:flex;justify-content:space-between}.hm-app-frame iframe{width:100%;height:100%;border:0}';document.head.append(style);return()=>style.remove();},'hanamesh-app-host:style');
     ctx.effect(()=>ctx.slots.inject('settings.section',()=>ctx.slots.register({name:'settings.section',id:'hanamesh-providers',order:18,label:'供应商'},ProvidersSection)),'hanamesh-app-host:providers');
     ctx.effect(()=>ctx.slots.inject('settings.section',()=>ctx.slots.register({name:'settings.section',id:'hanamesh-library-sources',order:19,label:'市场目录源'},LibrarySourcesSection)),'hanamesh-app-host:library-sources');
     ctx.effect(()=>ctx.slots.inject('sidebar.footer.action',()=>ctx.slots.register({name:'sidebar.footer.action',id:'hanamesh-library',order:30},LibraryAction)),'hanamesh-app-host:library-action');
-    ctx.effect(()=>ctx.slots.inject('shell.overlay',()=>ctx.slots.register({name:'shell.overlay',id:'hanamesh-library-overlay',order:30},LibraryOverlay)),'hanamesh-app-host:library-overlay');
-    ctx.effect(()=>claimMarketSeat(ctx),'hanamesh-app-host:market-seat');
+    ctx.effect(()=>ctx.slots.inject('shell.overlay',()=>ctx.slots.register({name:'shell.overlay',id:'hanamesh-library-overlay',order:30},verification===true?()=>h(LibraryOverlay,{verification:true}):LibraryOverlay)),'hanamesh-app-host:library-overlay');
+    ctx.effect(()=>claimMarketSeat(ctx,{verification}),'hanamesh-app-host:market-seat');
     ctx.effect(()=>{globalThis.addEventListener?.('hashchange',consumeInstallTargetHash);consumeInstallTargetHash();return()=>globalThis.removeEventListener?.('hashchange',consumeInstallTargetHash);},'hanamesh-app-host:install-target-navigation');}
   return{name,inject,apply,ProvidersSection,LibrarySourcesSection,LibraryAction,LibraryOverlay,MarketConflictNotice,createMarketSeat,openInstallTarget,
     MARKET_SEAT,MARKET_CONFLICT_TEXT,INSTALL_TARGET_HASH,INSTALL_TARGET_CONTRACT_VERSION,marketState:()=>({conflict:marketConflict,entryVisible})};

@@ -114,3 +114,13 @@ C-WEB-CATALOG 第1版的显式 `catalog-source.json?view=hanamesh` 与 manifest 
 ## 本轮供给与验证边界
 
 本包需要通过 Desktop owning 的正常本地冻结包供应进入统一客户端；当前 Desktop rc13 的 AppHost 固定 rc2，装配尚待 Desktop 卡消费本次包。公开 npm 发布与安装包发布不在本卡范围。本轮源码/HTTP/客户端 hook harness 证据不代替正式 HanaMesh.app 的安装、小界面首步与截图。
+
+## D-214 正常客户端测试包装
+
+生产构建仍为 `pnpm run build`，Loader 调用 `apply(ctx)` 时验证默认关闭；目标 URL 或全局变量不能开启。`apply(ctx,{verification:true})` 仅为可信本方测试包装，沿正常侧栏“市场”/shell.overlay及本方注册的market席位传给既有LibraryOverlay。公开 `market.render({verification:true})` 测试用法保留。
+
+在本卡新的隔离目录运行 `node scripts/pack-verification.mjs --destination <本卡新目录> --version 0.5.7-verification.0`。包装器不覆盖既有目录，不复制node_modules；按冻结锁正常安装，隔离包prepack执行 `node scripts/build.mjs --verification`，再正常pnpm pack。仅该产物的自有Loader工厂包装apply传true，模块id/manifest/正常浏览器路径保留。默认源码树拒绝verification构建覆盖生产dist。
+
+测试版通过公开plugin add正常安装此tgz并加载，在正常侧栏市场或宿主使用的本方market席位进入“C-MARKET 合约验证”，选择11项调用、编辑JSON、明确调用，显示提供方完整公开响应及拒绝JSON。安装调用只解析目标并弹正常确认；取消无POST，确认才发一次正常安装请求。202受理仍不能当已装成功。
+
+release与verification产物分别记录版本/来源/sha/许可/bundle及严格消费者证据；测试包验证页不证明正常release包普通应用U2或owner接受。

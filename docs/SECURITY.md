@@ -1,3 +1,5 @@
+D-214: verification is trusted producer/client-view configuration, never a Target/URL/global-page capability. Normal builds remain off. Verification uses the existing authenticated/authorized endpoints and explicit installation confirmation; showing full public error JSON does not expose internal exceptions or grant application privileges. Native test automation stays card-local and validates actual owned PID/start/PPID/PGID/argv before claiming launcher evidence.
+
 # 安全与运行边界
 
 ## 可信边界

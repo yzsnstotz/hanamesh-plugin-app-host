@@ -1,3 +1,5 @@
+> D-214 / 0.5.7 implementation candidate: the owned verification build connects the normal client Loader/apply/sidebar/market to the existing contract page and retains complete public success/rejection JSON. Release builds default off; installation still requires confirmation. The separate owned native driver uses the fixed upstream public launcher and records actual process argv/version. Package, real Desktop and ordinary application U2 evidence remain separate.
+
 > D-202 / 0.5.6 implementation candidate: fixed upstream `d743267388641bc76f17c45ce8b4c231aed1d32c`, official DSH `0.2.1-alpha.2`, Cordis `4.0.5-alpha.1`, Schemastery `3.18.5-alpha.1`, React `18.3.1`. This candidate retains current catalog/market/verification behavior and adds proven Desktop layout discovery, the public reserved-profile CLI, and separate exact localhost control/data origins. `@hanamesh/lib-provision@0.2.1` is bundled from its approved unchanged Git source with its original LICENSE. This is not a release, native U2 pass or owner ACCEPTED. Current evidence is in the card run directory, separate from historical packages and native observations.
 
 # HanaMesh app-host · 0.2.0-rc.2 本地候选
