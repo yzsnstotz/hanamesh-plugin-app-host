@@ -122,45 +122,92 @@ export async function apply(ctx, config) {
   const parentOrigin = config.parentOrigin ?? desktop?.parentOrigin ?? transportOrigin;
   const frameAncestors = config.frameAncestors ?? desktop?.frameAncestors ?? [];
   const locations = await resolveLibraryLocations(config.library??{}, {nodeBinary:config.nodeBinary, desktop});
-  const domain = await facility.open(appHostDomainSpec);
-  let routerDomain,receiptsDomain,receipts,libraryDomain,library;
-  const store = new DshDomainSnapshotStore(domainBinding(domain));
-  const host = new AppHost({ store, dataRoot, parentOrigin, frameAncestors,
-    ...(locations.nodeBinary === undefined ? {} : { nodeBinary: locations.nodeBinary }),
-    ...(config.leaseTtlMs === undefined ? {} : { leaseTtlMs: config.leaseTtlMs }),
-    ...(config.sweepIntervalMs === undefined ? {} : { sweepIntervalMs: config.sweepIntervalMs }) });
+  // Pair each acquisition immediately, including partial route registration.
+  // The same once-only release belongs to both failed startup and Cordis unload.
+  const acquired = [];
+  let closing = false, cleanupTail = Promise.resolve();
+  const drain = () => {
+    closing = true;
+    const pending = cleanupTail.then(async () => {
+      const failed = [];
+      while (acquired.length) {
+        const { label, release } = acquired.pop();
+        try { await release(); }
+        catch {
+          failed.push(label);
+          try { ctx.logger?.warn?.('APPHOST_CLEANUP_FAILED %s', label); } catch {}
+        }
+      }
+      requireCondition(failed.length === 0, 'APPHOST_CLEANUP_FAILED',
+        'AppHost resource cleanup failed.', { resources:failed });
+    });
+    cleanupTail = pending.catch(() => {});
+    return pending;
+  };
+  // Cordis unloads separate effects concurrently. One drain preserves resource
+  // dependencies, including ledger persistence and stopping before domain close.
+  ctx.effect(() => drain, 'hanameshApps.dispose');
+  const own = (label, action) => {
+    let pending;
+    const release = () => pending ??= (async () => { await action(); })();
+    acquired.push({ label, release });
+    // If an awaited acquisition completed after unload began, catch drains its
+    // newly acquired resource too; no further activation can publish a seat.
+    requireCondition(!closing, 'HOST_CLOSED', 'AppHost activation is being disposed.');
+    return release;
+  };
+  const optional = (name, receive) => {
+    const listener = ctx.inject([name], injected => {
+      receive(injected.get(name)); return () => receive(undefined);
+    });
+    own(`listener:${name}`, () => listener.dispose());
+  };
+  let host, store;
   let initialized = false;
   try {
+    const domain = await facility.open(appHostDomainSpec);
+    const closeDomain = own('app-domain', () => domain.close());
+    store = new DshDomainSnapshotStore(domainBinding({ global:domain.global, close:closeDomain }));
+    host = new AppHost({ store, dataRoot, parentOrigin, frameAncestors,
+      ...(locations.nodeBinary === undefined ? {} : { nodeBinary: locations.nodeBinary }),
+      ...(config.leaseTtlMs === undefined ? {} : { leaseTtlMs: config.leaseTtlMs }),
+      ...(config.sweepIntervalMs === undefined ? {} : { sweepIntervalMs: config.sweepIntervalMs }) });
+    own('host', () => initialized ? host.dispose() : store.close());
     for (const definition of config.applications ?? []) host.register(definition);
     await host.init(); initialized = true;
     const auth = { parentOrigin, transportOrigin, ...browserAuthentication(connection) };
     const handler = createHttpHandler(host, auth);
-    const disposers = ROUTES.map(path => webServer.register({ kind: 'exact', path, handler }));
+    for (const path of ROUTES) own(`route:${path}`, webServer.register({ kind:'exact', path, handler }));
     let credentialService, llmService, oauthService, usageService;
-    ctx.inject(['credentials'], injected => { credentialService=injected.get('credentials');return()=>{credentialService=undefined;}; });
+    optional('credentials', service => { credentialService=service; });
     // Optional Usage service presence does not provide original application success facts.
-    ctx.inject(['hanameshUsage'], injected => { usageService=injected.get('hanameshUsage');return()=>{usageService=undefined;}; });
+    optional('hanameshUsage', service => { usageService=service; });
     // Router hourly counts remain local diagnostics, never synthesized Usage open/use facts.
-    receiptsDomain = await facility.open(receiptsDomainSpec);
-    receipts = createReceiptLedger({ domain:receiptsDomain });
+    const receiptsDomain = await facility.open(receiptsDomainSpec);
+    own('receipts-domain', () => receiptsDomain.close());
+    const receipts = createReceiptLedger({ domain:receiptsDomain });
+    own('receipts', () => receipts.close());
     const evidence = createUsageEvidence({ host, seat:()=>usageService, receipts, logger:ctx.logger });
-    ctx.effect(() => async () => { evidence.close(); await evidence.settle(); await receipts.close(); await receiptsDomain.close(); }, 'hanameshApps.usage');
-    ctx.inject(['llm'], injected => { llmService=injected.get('llm');return()=>{llmService=undefined;}; });
-    ctx.inject(['hanameshOAuth'], injected => { oauthService=injected.get('hanameshOAuth');return()=>{oauthService=undefined;}; });
+    own('usage', async () => { evidence.close(); await evidence.settle(); });
+    optional('llm', service => { llmService=service; });
+    optional('hanameshOAuth', service => { oauthService=service; });
     const credentials = {
       describe: async ref => credentialService ? await credentialService.describe(ref) : { configured:false,writable:false },
       resolve: async ref => credentialService ? await credentialService.resolve(ref) : undefined,
       describeRecord: async key => credentialService ? await credentialService.describeRecord(key) : { configured:false,writable:false },
     };
-    routerDomain = await facility.open(routerDomainSpec);
+    const routerDomain = await facility.open(routerDomainSpec);
+    own('router-domain', () => routerDomain.close());
     const sources = createProviderSources({ credentials, apps:host, llm:()=>llmService,
       webOrigin:`http://127.0.0.1:${webServer.port}`, codingOauth:config.router?.codingOauth });
     const router = createRouter({ credentials, domain:routerDomain, apps:host, sources, oauth:()=>oauthService, receiptLedger:receipts,
       onInject:({ appId, instanceId, routes }) => { receipts.inject({ appId, instanceId, routes }); } });
-    const detachResolver=host.setCredentialResolver(router.credentialResolver),detachObserver=host.subscribe(router.observe);
+    own('resolver', host.setCredentialResolver(router.credentialResolver));
+    own('router-observer', host.subscribe(router.observe));
     const routerHandler=createRouterHttpHandler(router,auth);
-    const routerDisposers=ROUTER_ROUTES.map(path=>webServer.register({kind:'exact',path,handler:routerHandler}));
-    libraryDomain=await facility.open(libraryDomainSpec);
+    for (const path of ROUTER_ROUTES) own(`route:${path}`, webServer.register({kind:'exact',path,handler:routerHandler}));
+    const libraryDomain=await facility.open(libraryDomainSpec);
+    const closeLibraryDomain=own('library-domain', () => libraryDomain.close());
     // Explicit config wins; infer only proven process/profile locations.
     const libraryConfig={...(config.library??{}),sources:locations.sources,profileDir:locations.profileDir,profileName:locations.profileName};
     if(locations.inferred.length&&typeof ctx.logger?.info==='function')ctx.logger.info('hanamesh-app-host library: inferred %s',JSON.stringify(Object.fromEntries(
@@ -176,24 +223,19 @@ export async function apply(ctx, config) {
           emit:event=>library?.emit(event)});
       }
     }
-    library=createLibraryService({domain:libraryDomain,host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer});
+    const library=createLibraryService({domain:{global:libraryDomain.global,close:closeLibraryDomain},host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer});
+    own('library', () => library.close());
     await library.init();
     // rc.27: app bundles register plain `app.json` (no package name); the installed scan knows which npm package ships
     // which appId, and that package name is the usage-evidence `hanaRef`. Scan failure only costs evidence, never startup.
     try { for (const row of await library.installed()) if (row.appId && row.packageName) { try { host.bindPackageName(row.appId,row.packageName); } catch {} } }
     catch (error) { if (typeof ctx.logger?.debug === 'function') ctx.logger.debug('hanamesh-app-host usage: installed scan unavailable (%s)', error?.code ?? error?.message); }
     const libraryHandler=createLibraryHttpHandler(library,auth);
-    const libraryDisposers=LIBRARY_ROUTES.map(path=>webServer.register({kind:'exact',path,handler:libraryHandler}));
-    ctx.effect(() => () => { for (const dispose of disposers.splice(0)) dispose(); }, 'hanameshApps.routes');
-    ctx.effect(() => async () => { for(const dispose of routerDisposers.splice(0))dispose();detachResolver();detachObserver();await routerDomain.close(); }, 'hanameshApps.router');
-    ctx.effect(() => async () => { for(const dispose of libraryDisposers.splice(0))dispose();await library.close(); }, 'hanameshApps.library');
-    ctx.provide('hanameshApps', host);
+    for (const path of LIBRARY_ROUTES) own(`route:${path}`, webServer.register({kind:'exact',path,handler:libraryHandler}));
+    own('seat', ctx.provide('hanameshApps', host));
   } catch (error) {
-    await library?.close().catch(()=>{});await libraryDomain?.close().catch(()=>{});await routerDomain?.close().catch(()=>{});await receipts?.close().catch(()=>{});await receiptsDomain?.close().catch(()=>{});
-    if (initialized) await host.dispose().catch(() => {}); else await store.close().catch(() => {});
+    // Cleanup names failures without replacing the original activation error.
+    await drain().catch(() => {});
     throw error;
   }
-  // Disposal order: routes go first (registered later, disposed earlier by Cordis), then the host
-  // stops every owned instance and closes the domain. An attached instance is never signalled.
-  ctx.effect(() => async () => { await host.dispose(); }, 'hanameshApps.dispose');
 }

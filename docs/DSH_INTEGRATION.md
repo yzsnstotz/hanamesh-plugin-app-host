@@ -1,3 +1,9 @@
+## Current D-230 candidate (0.5.9)
+
+The current target is the fixed upstream d743267388641bc76f17c45ce8b4c231aed1d32c and official DSH 0.2.1-alpha.2, with unchanged exact host peers. Older target/version notes below are historical. Normal plugin installation consumes this package root via profile/cordis.patch.yml; upstream client discovery then loads the ./client browser condition. The separately produced 0.5.9-verification.0 client factory calls apply(ctx,{verification:true}); production calls apply(ctx) and defaults off. Both use the existing market/sidebar overlay and 11 editable contract calls, with normal installation confirmation. Config has no verification switch.
+
+For isolated Desktop validation, supply an owned absolute DSH_HOME before activation. AppHost proves the actual host argv/profile link and primary-runtime Node before deriving paths; it does not require a hand-written global overlay or infer a candidate app from an npm bin. Exact mode inputs and artifact hashes are supplied in this card run directory. Native startup remains subject to the independently approved Desktop logging/write-isolation route. Failed activation now removes earlier routes/listeners/domains before rejecting; successful unload retains normal owned-process termination semantics.
+
 # DSH 集成
 
 > **NPM-APPHOST-01（2026-10-05，当前候选）：** 目标为官方 `@deepseek-ai/dsh@0.2.0-rc.2`；本地 tarball 在隔离官方 profile 的 `dsh.profile.bundles` 中落座，`--dump-config` 可见 `hanamesh-app-host`。以下 rc.11 及更早说明保留为历史，不作为本候选的公开 npm 门。owner D-2026-10-05-02 已确认内联 `lib-provision` 为自有且可分发；独立许可分区见根 `LICENSE`，PUBLIC_NPM 由 PM 执行。浏览器可见性证据以 BlueMap 当前卡 REPORT 为准。
