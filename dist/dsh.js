@@ -1,6 +1,6 @@
 /**
  * DSH plugin entry for @hanamesh/dsh-app-host, bound to the PINNED public APIs
- * of the official DSH 0.2.1-alpha.2 release:
+ * of the official DSH 0.2.0-rc.2 release:
  *
  *   ctx.storageDomain.open(spec)      @deepseek-ai/dsh-storage-domain  — `single` layout, one
  *                                     global snapshot; `global.set()` is one whole-image publish
@@ -31,29 +31,29 @@ import { createRouterHttpHandler, ROUTER_ROUTES } from './router/routes.js';
 import { libraryDomainSpec } from './library/domain.js';
 import { createLibraryService } from './library/service.js';
 import { createLibraryInstaller } from './library/install.js';
-import { inferDesktopLayout, resolveLibraryLocations } from './library/locate.js';
+import { resolveLibraryLocations } from './library/locate.js';
 import { createLibraryHttpHandler, LIBRARY_ROUTES } from './library/routes.js';
 import { createUsageEvidence } from './usage-evidence.js';
 import { createReceiptLedger } from './router/receipts.js';
 import { receiptsDomainSpec } from './router/receipts-domain.js';
 
 export const name = 'hanamesh-app-host';
-export const DSH_TARGET = '0.2.1-alpha.2';
+export const DSH_TARGET = '0.2.0-rc.2';
 export const inject = ['webServer', 'storageDomain', 'connection'];
 /** One authenticated local browser session per profile; DSH web has no per-user principals. */
 export const BROWSER_PRINCIPAL = 'dsh-browser';
 /** Every route the HTTP handler answers; registered individually so nothing else is shadowed. */
 export const ROUTES = Object.freeze(['/hanamesh/apps', '/apps/open', '/apps/resume', '/apps/recover',
-  '/apps/close', '/apps/heartbeat', '/apps/stop', '/apps/events', '/apps/bootstrap-authorize']);
+  '/apps/close', '/apps/heartbeat', '/apps/stop', '/apps/events']);
 
 export const Config = z.object({
   /** Absolute canonical directory that owns every instance data root (secureDirectory refuses symlinks). */
   dataRoot: z.string().default(join(process.env.DSH_HOME ?? process.env.HOME ?? '.', 'data', 'hanamesh-apps')),
-  /** Exact workspace origin; inferred Desktop uses dsh-app://app, plain DSH uses HTTP loopback. */
+  /** Exact loopback workspace origin; defaults to the running web server's own origin. */
   parentOrigin: z.string(),
   /** Extra origins allowed as frame ancestors of app views — the desktop shell's own webview origin
    *  (e.g. `tauri://localhost`) when the DSH workspace itself runs inside the shell's iframe. */
-  frameAncestors: z.union([z.array(z.string()),z.const(undefined)]),
+  frameAncestors: z.array(z.string()),
   /** Standalone Node executable used for guardian/launcher processes; required under Electron. */
   nodeBinary: z.string(),
   router: z.object({ codingOauth: z.object({ mode:z.string() }) }),
@@ -62,7 +62,7 @@ export const Config = z.object({
     /** Undefined (not configured) → the HanaMesh catalog source; an explicit `[]` → no source. schemastery would
      *  coerce a missing array to `[]`, so the union keeps "unset" distinguishable from "deliberately empty". */
     sources:z.union([z.array(z.any()),z.const(undefined)]),
-    /** Locations are inferred from the verified Desktop argv/profile or plain DSH (see library/locate.js). */
+    /** All four are set by the desktop shell overlay; on plain DSH they are inferred (see library/locate.js). */
     profileDir:z.string(),profileName:z.string(),dshBin:z.string(),
     registry:z.string(),allowPrerelease:z.boolean(),
   }),
@@ -115,23 +115,19 @@ export async function apply(ctx, config) {
   config ??= {};
   const dataRoot = config.dataRoot ?? join(process.env.DSH_HOME ?? process.env.HOME ?? '.', 'data', 'hanamesh-apps');
   requireCondition(typeof dataRoot === 'string', 'INVALID_ROOT', 'dataRoot is required.');
-  const desktop = await inferDesktopLayout();
-  const transportOrigin = `http://127.0.0.1:${webServer.port}`;
-  const parentOrigin = config.parentOrigin ?? desktop?.parentOrigin ?? transportOrigin;
-  const frameAncestors = config.frameAncestors ?? desktop?.frameAncestors ?? [];
-  const locations = await resolveLibraryLocations(config.library??{}, {nodeBinary:config.nodeBinary, desktop});
+  const parentOrigin = config.parentOrigin ?? `http://127.0.0.1:${webServer.port}`;
   const domain = await facility.open(appHostDomainSpec);
   let routerDomain,receiptsDomain,receipts,libraryDomain,library;
   const store = new DshDomainSnapshotStore(domainBinding(domain));
-  const host = new AppHost({ store, dataRoot, parentOrigin, frameAncestors,
-    ...(locations.nodeBinary === undefined ? {} : { nodeBinary: locations.nodeBinary }),
+  const host = new AppHost({ store, dataRoot, parentOrigin, frameAncestors: config.frameAncestors ?? [],
+    ...(config.nodeBinary === undefined ? {} : { nodeBinary: config.nodeBinary }),
     ...(config.leaseTtlMs === undefined ? {} : { leaseTtlMs: config.leaseTtlMs }),
     ...(config.sweepIntervalMs === undefined ? {} : { sweepIntervalMs: config.sweepIntervalMs }) });
   let initialized = false;
   try {
     for (const definition of config.applications ?? []) host.register(definition);
     await host.init(); initialized = true;
-    const auth = { parentOrigin, transportOrigin, ...browserAuthentication(connection) };
+    const auth = { parentOrigin, ...browserAuthentication(connection) };
     const handler = createHttpHandler(host, auth);
     const disposers = ROUTES.map(path => webServer.register({ kind: 'exact', path, handler }));
     let credentialService, llmService, oauthService, usageService;
@@ -159,18 +155,19 @@ export async function apply(ctx, config) {
     const routerHandler=createRouterHttpHandler(router,auth);
     const routerDisposers=ROUTER_ROUTES.map(path=>webServer.register({kind:'exact',path,handler:routerHandler}));
     libraryDomain=await facility.open(libraryDomainSpec);
-    // Explicit config wins; infer only proven process/profile locations.
+    // Explicit config wins; on plain DSH (no shell overlay) the profile, DSH bin and Node are inferred from this process.
+    const locations=await resolveLibraryLocations(config.library??{},{nodeBinary:config.nodeBinary});
     const libraryConfig={...(config.library??{}),sources:locations.sources,profileDir:locations.profileDir,profileName:locations.profileName};
     if(locations.inferred.length&&typeof ctx.logger?.info==='function')ctx.logger.info('hanamesh-app-host library: inferred %s',JSON.stringify(Object.fromEntries(
       locations.inferred.map(key=>[key,key==='sources'?locations.sources.map(source=>source.manifestUrl):locations[key]]))));
     let provisionApi,installer;
-    if(locations.profileDir&&locations.profileName&&locations.nodeBinary&&(!desktop||locations.desktopCli||config.library?.dshBin)){
+    if(locations.profileDir&&locations.profileName&&locations.nodeBinary){
       let dshBin=locations.dshBin;
       if(!dshBin)try{dshBin=createRequire(join(locations.profileDir,'package.json')).resolve('@deepseek-ai/dsh/lib/bin.js');}catch{dshBin=undefined;}
       if(dshBin){
         provisionApi=await import('@hanamesh/lib-provision');
         installer=createLibraryInstaller({profileDir:locations.profileDir,profileName:locations.profileName,dataRoot,nodeBinary:locations.nodeBinary,
-          dshBin,desktopCli:locations.desktopCli,registry:libraryConfig.registry,allowPrerelease:libraryConfig.allowPrerelease,provision:provisionApi.provision,remove:provisionApi.remove,ledger:provisionApi.ledger,
+          dshBin,registry:libraryConfig.registry,allowPrerelease:libraryConfig.allowPrerelease,provision:provisionApi.provision,remove:provisionApi.remove,ledger:provisionApi.ledger,
           emit:event=>library?.emit(event)});
       }
     }

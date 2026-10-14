@@ -47,7 +47,7 @@ export interface AppListing {
 }
 export interface EventPage { events:HostEvent[]; sequence:number; resetRequired:boolean; }
 export interface HostOptions {
-  store:SnapshotStore; dataRoot:string; parentOrigin:string; frameAncestors?:string[]; leaseTtlMs?:number; sweepIntervalMs?:number;
+  store:SnapshotStore; dataRoot:string; parentOrigin:string; leaseTtlMs?:number; sweepIntervalMs?:number;
   nodeBinary?:string; clock?:()=>number; checkpoint?:(point:string,details:Record<string,unknown>)=>Awaitable<void>; credentialResolver?:CredentialResolver|null;
   runtimeLedgerReader?:(root:string)=>Awaitable<{schema:1;items:Record<string,{version:string}>}>;
 }
@@ -66,7 +66,6 @@ export class AppHost {
   open(input:OpenRequest,principalId?:string):Promise<OpenReceipt>; start(input:OpenRequest,principalId?:string):Promise<OpenReceipt>;
   resume(input:LeaseRequest,principalId?:string,options?:{waitForReady?:boolean}):Promise<OpenReceipt>;
   recoverView(input:RecoverRequest,principalId?:string):Promise<OpenReceipt>;
-  authorizeBootstrap(input:LeaseRequest & {gatewayOrigin:string;challenge:string},principalId?:string):Promise<{authorization:string}>;
   heartbeat(input:LeaseRequest,principalId?:string):Promise<ViewLease>;
   close(input:LeaseRequest,principalId?:string):Promise<{instanceId:string;alreadyClosed:boolean}>;
   stop(instanceId:string,options?:{confirm?:boolean},principalId?:string):Promise<InstanceRecord>; stopAll():Promise<void>;
@@ -89,7 +88,7 @@ export class DshDomainSnapshotStore implements SnapshotStore {
 }
 export interface AuthenticatedSubject { principalId:string; [key:string]:unknown; }
 export interface HttpOptions<Request=unknown> {
-  parentOrigin:string; transportOrigin?:string; authenticate(request:Request):Awaitable<AuthenticatedSubject|null>;
+  parentOrigin:string; authenticate(request:Request):Awaitable<AuthenticatedSubject|null>;
   authorize(subject:AuthenticatedSubject,path:string,input:unknown):Awaitable<boolean>;
 }
 export function createHttpHandler<Request=unknown,Response=unknown>(host:AppHost,options:HttpOptions<Request>):(request:Request,response:Response)=>Promise<void>;
@@ -97,7 +96,7 @@ export class FixedGateway {
   constructor(options:{upstream:string;parentOrigin:string;isLeaseActive:(viewKey:string)=>boolean;cookieAllowlist?:string[];allowAppAuthorization?:boolean;maxUploadBytes?:number;frameAncestors?:string[];
     /** rc.27: called once per forwarded request the upstream answered with anything but 401/403 (and per accepted WebSocket upgrade). */
     onForward?:()=>void});
-  origin:string; dataOrigin?:string; start():Promise<string>; issue(viewKey:string):string; issueAsync(viewKey:string):Promise<string>; authorizeChallenge(viewKey:string,gatewayOrigin:string,challenge:string):{authorization:string}; revokeInactive():void; close():Promise<void>;
+  origin:string; start():Promise<string>; issue(viewKey:string):string; close():Promise<void>;
 }
 export function rewriteCsp(value:string,parentOrigin:string):string;
 export function embeddingHeaders(rawHeaders:string[],parentOrigin:string):string[];

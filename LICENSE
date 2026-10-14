@@ -2,7 +2,7 @@ License scope for @hanamesh/dsh-app-host
 
 The MIT terms below cover this package's AppHost code and documentation.
 Installed dependencies and host peers keep their own licenses; the external
-@hanamesh/lib-provision package is bundled with its original LICENSE and is not relicensed here. Their names,
+@hanamesh/lib-provision package is not relicensed or bundled here. Their names,
 versions, sources, and purposes are recorded in docs/LICENSES.json.
 
 MIT License

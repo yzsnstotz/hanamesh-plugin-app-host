@@ -1,9 +1,3 @@
 # Preserve the existing official DSH native dependency's normal install lifecycle.
 onlyBuiltDependencies:
   - koffi
-
-# pnpm pack requires hoisted layout for the authorized lib-provision bundle.
-nodeLinker: hoisted
-
-# Isolated card stores must work in the required non-interactive install command.
-confirmModulesPurge: false

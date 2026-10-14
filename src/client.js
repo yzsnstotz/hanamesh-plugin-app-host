@@ -1,8 +1,8 @@
-import { isWorkspaceOrigin } from './workspace-origin.js';
 /** Workspace-side SDK only. Never inject this module into an application iframe. */
 export class WorkspaceAppClient {
   constructor({origin=globalThis.location?.origin,fetch:fetcher=globalThis.fetch,headers=()=>({})}={}) {
-    if(!isWorkspaceOrigin(origin))throw new TypeError('Expected exact loopback workspace origin.');
+    const parsed=new URL(origin);
+    if(parsed.origin!==origin||parsed.protocol!=='http:'||parsed.hostname!=='127.0.0.1'||!parsed.port)throw new TypeError('Expected exact loopback workspace origin.');
     if(typeof fetcher!=='function'||typeof headers!=='function')throw new TypeError('fetch and host headers provider are required.');
     this.origin=origin;this.fetcher=fetcher;this.headers=headers;
   }

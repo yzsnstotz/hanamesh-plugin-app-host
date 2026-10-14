@@ -188,33 +188,3 @@ Market seat 的「打开」保留原 receipt/heartbeat/close owner；应用 ifra
 `hanaRef` = 应用的 **npm 包名**（与 usage `validHana` 同形：`@scope/name` 或 `name`，≤128 字符），`sourcePlugin` = `@hanamesh/dsh-app-host`。包名来源按序：① 描述符可选字段 `packageName`（rc.27 新增，`validateDefinition` 校验形状；不带则完全向后兼容）；② 宿主启动时的已安装扫描（`<profile>/node_modules/<pkg>/app.json` → `id`）经 `host.bindPackageName(appId, packageName)` 绑定——应用包只注册纯 `app.json`，扫描先于应用包注册发生，所以绑定不要求 appId 已注册；③ 都没有 → 该应用不产生证据（debug 日志），启动照常。`list().apps[].packageName` 带出当前解析结果（无则 `null`）。
 
 新的宿主面：`host.bindPackageName(appId,name)`、`host.packageName(appId)`、`host.onActivity(listener)`（内存内活动通知 `{type:'instance.activity',instanceId,appId,deploymentId,principalId,at}`，不落 `eventsSince`）；`FixedGateway({ onForward })`；`createUsageEvidence({ host, seat:()=>ctx.hanameshUsage, logger })` 是把二者接到 record 座位的适配器（`dsh.js` 已装好；`close()` 随插件卸载）。
-
-## Desktop 来源与布局（J1S2-AH-02）
-
-工作区父来源允许精确 `http://127.0.0.1:<port>` 或精确 `dsh-app://app`。SDK 对 Desktop 使用完整 scheme URL，不使用 Node WHATWG URL 的 `null` origin。`dsh-app://shell`、端口、路径、userinfo、查询和 fragment 不作为工作区来源；应用 attach URL 和网关固定上游仍仅 HTTP 回环。
-
-上游 Desktop 的 `dsh-desktop-host/lib/index.js` 启动参数提供 runtimeDir/profileDir；须核对具名 entry 包、runtime 内 DSH 包、profile 清单与本 AppHost 包的 realpath 链接，才能推断 `library.profileDir`、`profileName=desktop`、`dshBin`、`parentOrigin=dsh-app://app`、`frameAncestors=[]`（工作区直接为顶层文档）。显式配置仍优先。未证明的布局继续既有 CLI 推断，绝不从 cwd、个人目录或端口猜身份。
-
-`HttpOptions.transportOrigin` 是宿主回环 HTTP 来源，与 Desktop 工作区来源分开。上游 `forwardWebRequest` 删除 Origin、附加宿主认证 cookie；仅在已配置 Desktop 父来源及准确回环 transport 的控制面允许缺失 Origin，仍必须经过 `connection.requestRejection`、逐请求授权、POST JSON 正文、workspace-v1 头和非 iframe 控制检查。普通 HTTP 写入仍必须有精确 Origin。
-
-独立 Node 约束不变：从已核布局 argv[4] 的 primary-runtime/runtime.json 当前清单验证 desktopVersion、platform、arch、Node 24 版本，固定 dependencies/node/bin/node（Windows node.exe），再以空环境运行有界的 process.versions 核验实际版本且不含 electron，才采用。失败不回退到 Electron/PATH。库操作经本模块参数适配器调用已读上游 dsh-desktop-host/lib/cli.js 的 runDesktopCli(runtimeDir,supportDir)，由上游允许管理 reserved desktop profile。ASAR 内 CLI 不支持独立 Node 读取，安装显式不可用。没有 standalone Node 时 owned 返回 NODE_RUNTIME_REQUIRED。布局识别本身不证明当前 master ABI、安装或 U2 iframe 可用。
-
-
-J1S2-AH-02 / Q-35 / HM-9：官方 peer 和开发测试依赖精确对齐上游 dsh-v0.2.1-alpha.2，Cordis 4.0.5-alpha.1、Schemastery 3.18.5-alpha.1。lib-provision 0.2.1 的实际 Git 源提交不变，以 bundleDependencies 随包分发并保留原始 LICENSE，不内联、不再许可。该供应变更不改变来源、认证、一次性租约、generation、持久身份或进程归属契约。
-
-
-## J1S2-AH-02 / D-26 A Desktop bootstrap candidate
-
-Only exact `dsh-app://app` uses a controlled bootstrap page. Workspace checks the exact returned gateway origin and its own iframe Window; bootstrap checks `event.origin === "dsh-app://app"` and `event.source === parent`. The workspace then POSTs `/apps/bootstrap-authorize` with `{viewId, leaseToken, gatewayOrigin, challenge}` through the existing authenticated connection. The server checks the principal, complete lease identity, owning instance, generation and active lease before returning `{authorization}`. Errors include `UNAUTHENTICATED`, `LEASE_NOT_OWNED`, `LEASE_EXPIRED`, `GATEWAY_CHALLENGE_DENIED`. Example mock response: `{authorization: "test-only-not-a-real-grant"}`; mocks do not prove native source identity.
-
-The authorization is sent only to that bootstrap Window at its exact origin, exchanged once in a same-origin POST body, and never put in URLs or logs. Each Desktop lease key owns a separate loopback gateway origin; the grant cannot authorize a different view. With cookies absent, HTTP needs same-origin Fetch Metadata plus exact Origin (when present) or exact gateway Referer, and a live grant bound to that lease. WS needs the exact per-view gateway Origin and the same live lease-bound grant. Closing/recovering/expiring a lease revokes its gateway and sockets; a different live view cannot keep it authorized. No application script or HTML is injected; application response bytes remain unchanged, only XFO and the named frame-ancestors are adjusted. Ordinary HTTP workspace bootstrap/authentication gates are unchanged. This is a candidate, not owner ACCEPTED.
-
-
-**Q-47 BLOCKED / security RED:** The above Desktop data path is an experimental draft. A controlled port-reuse negative proves that a revoked view's old browser origin can be identical to a new view's origin and inherit its live grant (expected 403, actual 200). Per-view random ports are not a durable view identity. The native reciprocal handshake is proven, but full U2/security delivery is not established; do not merge/promote this draft. `tests/desktop-port-reuse.test.mjs` intentionally records this failing invariant. PM must decide a data-path identity mechanism within D-26 or obtain approval for any new trust boundary; this worker does not widen hostname, cookie, browser policy or application SDK/HTML boundaries.
-
-
-## D27 Desktop 来源隔离（Q98 源码检查点，尚非完整验收）
-
-固定 Desktop 下每个完整活 view 绑定独立192-bit随机 localhost 名，control/data 使用不同精确 Host，共用仅127.0.0.1的监听端口；端口复用不会复用完整origin。process生命周期内登记名不回收，随机碰撞拒绝。control仅服务受控bootstrap/单次exchange，不转发应用；data拒绝控制路径。公开connection认证及精确dsh-app://app与Window/source双向握手仍先于授权；兑换后的data首次导航仅一次且核对精确control Referer、iframe/navigate/cross-site及完整活view。后续data请求/WS只核对精确data来源、活lease及generation，撤销立即拒绝并关闭旧通路。localhost名非凭据，授权仍不进URL/日志；应用正文不改，HTTP工作区原门不变。
-
-Q98新增来源/端口复用定位测试不代替最终包、第三方cookie禁用、并存profile/客户端、强杀/恢复及完整真实U2；当前保持PARTIAL，不能解锁workspace或宣称ACCEPTED。

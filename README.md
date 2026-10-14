@@ -1,10 +1,8 @@
-# HanaMesh app-host · 0.5.5 本地候选
-
-> J1S2-AH-02 / Q-35 / HM-9：候选依赖精确对齐官方 dsh-v0.2.1-alpha.2（Cordis 4.0.5-alpha.1、Schemastery 3.18.5-alpha.1）。lib-provision 0.2.1 固定源提交 `575d63fb70e08c47e980dbf25f07921a7ba5aa2a`，通过 `bundleDependencies` 随包分发、源仓不变，原始 LICENSE 保留于 tarball 的 `node_modules/@hanamesh/lib-provision/LICENSE`。不关闭上游 pnpm 的 Git 子依赖策略，不内联、不再许可、不发布 registry。AppHost 自己从经验证的 Desktop 启动布局推断 profile、独立 Node 与 `dsh-app://app` 父来源；真实 UI 与 ACCEPTED 按本卡独立证据判断。
+# HanaMesh app-host · 0.2.0-rc.2 本地候选
 
 > 历史 METADATA-DEVKIT-VENDOR-APPHOST-01（2026-10-06，现已由下方0.4.0正常源供给替代）：既有开发工具 `@hanamesh/devkit` 更新为精确 optional peer `0.1.0-rc.2` 与同版 file vendor，SHA256 `ae815e589c3e5a573e407da5c982bb0fc8df15b57683ebbfaccd828d9dd588e0`。devkit 不进入运行时依赖或随包代码；canonical 分发授权原文记录于 `docs/LICENSES.json`，不新增 MIT 或再许可。AppHost 根许可分区和内联 provision rc3 保持不变。
 
-> NPM-APPHOST-01（2026-10-05）：本地候选 `0.2.0-rc.10` 对齐官方 `@deepseek-ai/dsh@0.2.0-rc.2`、Cordis `4.0.4`、Schemastery `3.18.4` 与 storage-domain `0.2.0-rc.2`。`@hanamesh/lib-provision@0.1.0-rc.3` 仅以已核 SHA-256 的 vendor tgz 在构建期内联，公共 registry E404，因此不声明为运行时 peer。owner D-2026-10-05-02 已确认该自有代码可分发；内联代码的自有分发授权原文随 canonical rc3 包复制，不推断新增 MIT 或再许可授权。包级许可分区见 [`LICENSE`](LICENSE) 与 [`docs/LICENSES.json`](docs/LICENSES.json)。本地官方 DSH 装配不等于公开 npm 安装门或产品验收。
+> NPM-APPHOST-01（2026-10-05）：本地候选 `0.2.0-rc.10` 对齐官方 `@deepseek-ai/dsh@0.2.0-rc.2`、Cordis `4.0.4`、Schemastery `3.18.4` 与 storage-domain `0.2.0-rc.2`。`@hanamesh/lib-provision@0.1.0-rc.3` 仅以已核 SHA-256 的 vendor tgz 在构建期内联，公共 registry E404，因此不声明为运行时 peer。owner D-2026-10-05-02 已确认该自有代码可分发；内联代码的自有分发授权原文随 canonical rc3 包复制，不推断新增 MIT 或再许可授权。包级许可分区见 [`LICENSE`](LICENSE) 与 [`docs/LICENSES.json`](docs/LICENSES.json)。本地官方 DSH 装配不等于公开 npm 安装门或产品验收；当前卡证据见 BlueMap `NPM-APPHOST-01/REPORT.md`。
 
 > rc.41（2026-10-01，P01-U05-RI 修复）：真实原生市场重装 Vibe 时，受管 Python runtime 卸载后留有32个运行时生成的 `__pycache__/*.pyc`，后续原子提升因目标目录无所有权清单而拒绝（`E_PROMOTE`）。AppHost 在 lib-provision 精确移除受管文件后仅清理由该 runtime 生成的 Python 字节码及空目录；未知残留继续保留并报告 `RUNTIME_RESIDUE`，不以 force 覆盖。两项回归、模块 check/types 通过；仍需固定消费者组合和独立原生产品复验。
 
@@ -51,7 +49,7 @@
 
 > 收录不代表审核或推荐。新客户端 seed 对 Core、Usage、AppHost 各安装并启用一次；同一 profile 不得再手工插入第二条 `hanamesh-app-host` loader entry。
 
-> rc.4 增加 `credentialEnv` / `credentialResolver`；rc.5 增加文件投射根与格式；rc.6 增加文件生命周期策略；rc.7 允许停止实例在下次打开时采用新定义；rc.8 增加 `credentialEnv[].sets` 声明。逐项证据见 `docs/acceptance/`。
+> rc.4 增加 `credentialEnv` / `credentialResolver`；rc.5 增加文件投射根与格式；rc.6 增加文件生命周期策略；rc.7 允许停止实例在下次打开时采用新定义；rc.8 增加 `credentialEnv[].sets` 声明。逐项证据见 `docs/acceptance/`。`ACCEPTED` 仍只有用户能给。
 
 本仓完成可独立运行的应用实例管理、持久视图租约、受控网关和工作台 SDK。原型源码所在私有仓当时访问返回 404，因此这是新的实现候选，不是原型提取；原型许可证和 commit 尚未核实（原型现在可读，见 `<umbrella>/research/dsh-greenfield-2026-09-09/workspace/packages/hanamesh-app-host/`，契约差异未逐项对照）。
 
@@ -84,7 +82,7 @@ npm run demo -- --smoke
 
 开发工具只通过 `@hanamesh/devkit@0.1.0-rc.1` 的公开 API 执行；精确可选 peer + `file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz` 固定开发安装，SHA-256 为 `3cf0b621ca2950fbe21c114d5b31ac1a55f97a67eb0a2dada77fb2d3bf2cb6ff`。运行依赖、业务 `src/`、公开 exports 均保持原字节；后续 provision 分发记录更新见下文；devkit 不进入 runtime。模块自身保留 pins、DSH 检查、原 22 个变异 target/name filter/失败原因，以及原纯包消费者的断言。
 
-`npm run check` 包含工具链、build、一致性声明、显式 TAP 全量 test、22 个断言变异、原类型消费与开发 preflight。`pnpm pack --pack-destination <目录>` 后运行 `pnpm run verify:pack <tgz绝对路径>`：第一段在独立目录尝试不带宿主 peers 的离线严格安装，断言 `ERR_PNPM_PEER_DEP_ISSUES` 且缺失名称与版本正好匹配声明的 9 个宿主 peers；devkit 0.2.3 在安装阶段拒绝，因此不再运行原来的无 peers `./dsh` 加载探针。第二段在另一个独立目录显式提供这 9 个直接宿主 peers，加上 `@deepseek-ai/dsh-storage`、`@deepseek-ai/dsh-scope`（当前均 `0.2.1-alpha.2`）两个传递宿主 peers（alpha.2 已移除旧 dsh-invariants），再严格安装、frozen-lock 重装并确认锁摘要不变，再验证 DSH 入口与公开严格 TS；两段均不安装 devkit。离线检查前须准备运行依赖 `zod`；lib-provision 已随 tarball 分发，其他安装错误不算预期拒绝。`npm run preflight:dsh` 继续要求原四个 DSH pins；单纯 `npm ci` 没有官方 DSH 本体时仍以 exit 2 拒绝。真正 DSH 加载/UI 门另外执行，组件检查不代替它。
+`npm run check` 包含工具链、build、一致性声明、显式 TAP 全量 test、22 个断言变异、原类型消费与开发 preflight。`pnpm pack --pack-destination <目录>` 后运行 `pnpm run verify:pack <tgz绝对路径>`：第一段在独立目录尝试不带宿主 peers 的离线严格安装，断言 `ERR_PNPM_PEER_DEP_ISSUES` 且缺失名称与版本正好匹配声明的 9 个宿主 peers；devkit 0.2.3 在安装阶段拒绝，因此不再运行原来的无 peers `./dsh` 加载探针。第二段在另一个独立目录显式提供这 9 个直接宿主 peers，加上 `@deepseek-ai/dsh-storage`、`@deepseek-ai/dsh-invariants`、`@deepseek-ai/dsh-scope`（均 `0.2.0-rc.2`）三个传递宿主 peers，再严格安装、frozen-lock 重装并确认锁摘要不变，再验证 DSH 入口与公开严格 TS；两段均不安装 devkit。离线检查前须准备运行依赖 `zod` 与正常 Git 源 `@hanamesh/lib-provision`，其他安装错误不算预期拒绝。`npm run preflight:dsh` 继续要求原四个 DSH pins；单纯 `npm ci` 没有官方 DSH 本体时仍以 exit 2 拒绝。真正 DSH 加载/UI 门另外执行，组件检查不代替它。
 
 `devkit.config.mjs` 与 `scripts/*-cases/policy/probes` 是本模块策略，不是通用执行器。`HANAMESH_APPHOST_RUN_DIR` 可把变异证据放入卡的隔离 run；未设置时写入 `artifacts/mutations`。工具链与开发 preflight 也可经 `hanamesh-devkit check-toolchain` / `hanamesh-devkit preflight` 调用；变异与封包使用本模块 npm 入口以保留全部专用断言。
 
@@ -138,15 +136,3 @@ The upstream Git subdirectory route supports pnpm 10.33.0; npm 11.8.0 cannot ins
 ## 0.5.1 · origin/main dependency closure
 
 Removed the unused public Devkit peer; all Devkit imports belong to development scripts. Its normal pnpm Git subdirectory range and the external lib-provision runtime dependency are unchanged. No runtime API, schema, fixture, protocol or business code changes. Normal npm tarball runtime consumption remains applicable; npm source Git cannot resolve the Devkit subdirectory route.
-
-J1S2-AH-02：AppHost 从上游 `dsh-desktop-host/lib/index.js` 的 runtime/profile argv、具名包清单及自己的 profile 安装链接识别 Desktop，无需 `hanamesh-supply` 位置配置。工作区来源为 `dsh-app://app`，HTTP 传输仍绑定本机显式回环端口；应用上游 URL 仍只允许 HTTP 回环。从上游 primary-runtime 的当前具名清单与固定 Node 路径核验实际版本及非 Electron 身份；库操作调用上游 runDesktopCli 的 reserved-profile 入口。缺失/不匹配 payload 保持不可用；ASAR 内的 CLI 不交给独立 Node，安装保持不可用。U2 真实 Desktop 证据与阻塞见本卡 REPORT。
-
-
-## J1S2-AH-02 / D-26 A Desktop bootstrap candidate
-
-Only exact `dsh-app://app` uses a controlled bootstrap page. Workspace checks the exact returned gateway origin and its own iframe Window; bootstrap checks `event.origin === "dsh-app://app"` and `event.source === parent`. The workspace then POSTs `/apps/bootstrap-authorize` with `{viewId, leaseToken, gatewayOrigin, challenge}` through the existing authenticated connection. The server checks the principal, complete lease identity, owning instance, generation and active lease before returning `{authorization}`. Errors include `UNAUTHENTICATED`, `LEASE_NOT_OWNED`, `LEASE_EXPIRED`, `GATEWAY_CHALLENGE_DENIED`. Example mock response: `{authorization: "test-only-not-a-real-grant"}`; mocks do not prove native source identity.
-
-The authorization is sent only to that bootstrap Window at its exact origin, exchanged once in a same-origin POST body, and never put in URLs or logs. Each Desktop lease key owns a separate loopback gateway origin; the grant cannot authorize a different view. With cookies absent, HTTP needs same-origin Fetch Metadata plus exact Origin (when present) or exact gateway Referer, and a live grant bound to that lease. WS needs the exact per-view gateway Origin and the same live lease-bound grant. Closing/recovering/expiring a lease revokes its gateway and sockets; a different live view cannot keep it authorized. No application script or HTML is injected; application response bytes remain unchanged, only XFO and the named frame-ancestors are adjusted. Ordinary HTTP workspace bootstrap/authentication gates are unchanged. This is a candidate, not owner ACCEPTED.
-
-
-**Q-47 BLOCKED / security RED:** The above Desktop data path is an experimental draft. A controlled port-reuse negative proves that a revoked view's old browser origin can be identical to a new view's origin and inherit its live grant (expected 403, actual 200). Per-view random ports are not a durable view identity. The native reciprocal handshake is proven, but full U2/security delivery is not established; do not merge/promote this draft. `tests/desktop-port-reuse.test.mjs` intentionally records this failing invariant. PM must decide a data-path identity mechanism within D-26 or obtain approval for any new trust boundary; this worker does not widen hostname, cookie, browser policy or application SDK/HTML boundaries.

@@ -1,7 +1,7 @@
 {
   "name": "@hanamesh/dsh-app-host",
-  "version": "0.5.5",
-  "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.1-alpha.2",
+  "version": "0.5.1",
+  "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.0-rc.2",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
   "repository": {
@@ -97,23 +97,23 @@
   },
   "dependencies": {
     "zod": "4.5.4",
-    "@hanamesh/lib-provision": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a"
+    "@hanamesh/lib-provision": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#semver:^0.2.1"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "4.0.5-alpha.1",
-    "@deepseek-ai/dsh-storage-domain": "0.2.1-alpha.2",
-    "@deepseek-ai/schemastery": "3.18.5-alpha.1",
-    "@deepseek-ai/dsh-host-webserver": "0.2.1-alpha.2",
-    "@deepseek-ai/dsh-client-connection": "0.2.1-alpha.2",
-    "@deepseek-ai/dsh-client-ui-slots": "0.2.1-alpha.2",
-    "@deepseek-ai/dsh-client-ui-settings": "0.2.1-alpha.2",
-    "@deepseek-ai/dsh-client-locale": "0.2.1-alpha.2",
+    "@deepseek-ai/cordis": "4.0.4",
+    "@deepseek-ai/dsh-storage-domain": "0.2.0-rc.2",
+    "@deepseek-ai/schemastery": "3.18.4",
+    "@deepseek-ai/dsh-host-webserver": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-connection": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-ui-slots": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-locale": "0.2.0-rc.2",
     "react": "18.3.1"
   },
   "hanamesh": {
     "module": "app-host",
     "contractVersion": 1,
-    "dshTarget": "0.2.1-alpha.2",
+    "dshTarget": "0.2.0-rc.2",
     "upstreamFilesModified": 0,
     "installTarget": {
       "contract": "hanamesh.install-target",
@@ -125,22 +125,19 @@
     }
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "4.0.5-alpha.1",
-    "@deepseek-ai/dsh-host-webserver": "0.2.1-alpha.2",
-    "@deepseek-ai/dsh-scope": "0.2.1-alpha.2",
-    "@deepseek-ai/dsh-session": "0.2.1-alpha.2",
-    "@deepseek-ai/dsh-session-persistence": "0.2.1-alpha.2",
-    "@deepseek-ai/dsh-session-persistence-jsonl": "0.2.1-alpha.2",
-    "@deepseek-ai/dsh-session-projection": "0.2.1-alpha.2",
-    "@deepseek-ai/dsh-storage": "0.2.1-alpha.2",
-    "@deepseek-ai/dsh-storage-domain": "0.2.1-alpha.2",
-    "@deepseek-ai/dsh-storage-json": "0.2.1-alpha.2",
-    "@deepseek-ai/schemastery": "3.18.5-alpha.1",
+    "@deepseek-ai/cordis": "4.0.4",
+    "@deepseek-ai/dsh-host-webserver": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-scope": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-session": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-session-persistence": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-session-persistence-jsonl": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-session-projection": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-storage": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-storage-domain": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-storage-json": "0.2.0-rc.2",
+    "@deepseek-ai/schemastery": "3.18.4",
     "typescript": "5.8.3",
     "@hanamesh/devkit": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit"
   },
-  "packageManager": "pnpm@10.33.0",
-  "bundleDependencies": [
-    "@hanamesh/lib-provision"
-  ]
+  "packageManager": "pnpm@10.33.0"
 }

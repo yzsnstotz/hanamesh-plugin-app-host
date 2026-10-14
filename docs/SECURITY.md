@@ -50,24 +50,3 @@ DSH/宿主 cookie、控制头与 Authorization 默认不传上游；应用 cooki
 实际 Chromium 启动于独立临时 profile，但回环导航返回 `net::ERR_BLOCKED_BY_ADMINISTRATOR`。未改管理员 policy、未关 CSP、未使用绕过标志。两个 REAL_BROWSER 测试显式 skip 并在产品矩阵标 PARTIAL，不算 PASS。
 
 测试 Chromium 的 `--no-sandbox` 仅为隔离容器内以 root 运行测试驱动所需，绝非生产应用/DSH 的启动配置；不应该移植到生产 profile。
-
-J1S2-AH-02：仅工作区父来源新增精确 `dsh-app://app`；应用目标不放宽。Desktop 控制面通过准确 HTTP transport + 上游 cookie 认证接受壳转发后的无 Origin 请求，普通 HTTP 写入 Origin 规则不变。历史 0.5.1/0.5.2 网关 bootstrap 要求精确 Desktop Referer，实际 Chromium 省略该头时被拒绝；D-26 A 候选在下方说明，不能以 Desktop 来源替代能力授权。
-
-
-## J1S2-AH-02 / D-26 A Desktop bootstrap candidate
-
-Only exact `dsh-app://app` uses a controlled bootstrap page. Workspace checks the exact returned gateway origin and its own iframe Window; bootstrap checks `event.origin === "dsh-app://app"` and `event.source === parent`. The workspace then POSTs `/apps/bootstrap-authorize` with `{viewId, leaseToken, gatewayOrigin, challenge}` through the existing authenticated connection. The server checks the principal, complete lease identity, owning instance, generation and active lease before returning `{authorization}`. Errors include `UNAUTHENTICATED`, `LEASE_NOT_OWNED`, `LEASE_EXPIRED`, `GATEWAY_CHALLENGE_DENIED`. Example mock response: `{authorization: "test-only-not-a-real-grant"}`; mocks do not prove native source identity.
-
-The authorization is sent only to that bootstrap Window at its exact origin, exchanged once in a same-origin POST body, and never put in URLs or logs. Each Desktop lease key owns a separate loopback gateway origin; the grant cannot authorize a different view. With cookies absent, HTTP needs same-origin Fetch Metadata plus exact Origin (when present) or exact gateway Referer, and a live grant bound to that lease. WS needs the exact per-view gateway Origin and the same live lease-bound grant. Closing/recovering/expiring a lease revokes its gateway and sockets; a different live view cannot keep it authorized. No application script or HTML is injected; application response bytes remain unchanged, only XFO and the named frame-ancestors are adjusted. Ordinary HTTP workspace bootstrap/authentication gates are unchanged. This is a candidate, not owner ACCEPTED.
-
-
-**Q-47 BLOCKED / security RED:** The above Desktop data path is an experimental draft. A controlled port-reuse negative proves that a revoked view's old browser origin can be identical to a new view's origin and inherit its live grant (expected 403, actual 200). Per-view random ports are not a durable view identity. The native reciprocal handshake is proven, but full U2/security delivery is not established; do not merge/promote this draft. `tests/desktop-port-reuse.test.mjs` intentionally records this failing invariant. PM must decide a data-path identity mechanism within D-26 or obtain approval for any new trust boundary; this worker does not widen hostname, cookie, browser policy or application SDK/HTML boundaries.
-
-
-## D27 Desktop 来源隔离（Q98 源码检查点，尚非完整验收）
-
-固定 Desktop 下每个完整活 view 绑定独立192-bit随机 localhost 名，control/data 使用不同精确 Host，共用仅127.0.0.1的监听端口；端口复用不会复用完整origin。process生命周期内登记名不回收，随机碰撞拒绝。control仅服务受控bootstrap/单次exchange，不转发应用；data拒绝控制路径。公开connection认证及精确dsh-app://app与Window/source双向握手仍先于授权；兑换后的data首次导航仅一次且核对精确control Referer、iframe/navigate/cross-site及完整活view。后续data请求/WS只核对精确data来源、活lease及generation，撤销立即拒绝并关闭旧通路。localhost名非凭据，授权仍不进URL/日志；应用正文不改，HTTP工作区原门不变。
-
-Q98新增来源/端口复用定位测试不代替最终包、第三方cookie禁用、并存profile/客户端、强杀/恢复及完整真实U2；当前保持PARTIAL，不能解锁workspace或宣称ACCEPTED。
-
-The D27 data response permits only the exact registered data origin alongside the workspace in named frame-ancestors, so an application can embed its own frames. Control/bootstrap does not gain this ancestor. The application body and other security headers remain unchanged; native and final-package closure is recorded per candidate in the card evidence.
