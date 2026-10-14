@@ -168,22 +168,27 @@ test('AH-L07 (plugin): an unconfigured library seeds the HanaMesh catalog source
   assert.equal(install.status, 503); assert.equal(install.json.error.code, 'LIBRARY_INSTALL_UNAVAILABLE');
 });
 
-test('AH-U07 (plugin): usage evidence reaches ctx.hanameshUsage.record when that sibling is provided — before or after this plugin — and its absence changes nothing', async t => {
+test('AH-U07 (plugin): real Cordis early/absent/late Usage services never turn readiness or traffic into original business facts', async t => {
+  // SOURCE/FIXTURE: real Cordis/storage/web/app; connection remains AUTH_DOUBLE.
+  const diagnostic = 'USAGE_FACT_UNAVAILABLE: no verified public presentation/success source; runtime readiness, transport and hourly receipts are diagnostics only.';
   const seat = { calls: [], record: async input => { seat.calls.push(structuredClone(input)); return { disposition: 'recorded', eventId: input.idempotencyKey }; } };
   const app = { ...definition({ embedding: 'gateway' }), packageName: '@hanamesh/app-example' };
-  // (1) Seat provided first (the usage plugin loaded earlier in the profile).
+  // (1) Service present before the actual plugin apply. Observe its normal logger.
   const first = await boot(t, { withPlugin: false });
+  const logged = [];
+  first.ctx.logger.exporter({ levels: { default: 3 }, export: message => logged.push(message) });
   first.ctx.provide('hanameshUsage', seat);
   first.fiber = first.ctx.plugin(appHost, { dataRoot: join(first.root, 'app-data'), applications: [app] });
   await until(() => first.ctx.get('hanameshApps') !== undefined);
+  const diagnosticMessages = logged.filter(message => String(message.args[0]).startsWith('USAGE_FACT_UNAVAILABLE'));
+  assert.deepEqual(diagnosticMessages.map(message => message.args), [[diagnostic]], 'fixed bounded source-unavailable diagnostic, without app data or credentials');
+  assert.equal(diagnosticMessages[0].type, 'debug');
   const opened = await first.post('/apps/open', { appId: 'example', deploymentId: 'local', viewId: 'view-u07' });
   assert.equal(opened.status, 200, JSON.stringify(opened.json));
   const ready = await until(async () => (await first.get('/hanamesh/apps')).json.instances.find(i => i.status === 'ready'));
-  await until(() => seat.calls.some(c => c.action === 'open'));
-  assert.deepEqual(seat.calls.filter(c => c.action === 'open').map(c => ({ ...c, occurredAt: undefined })),
-    [{ hanaRef: '@hanamesh/app-example', action: 'open', occurredAt: undefined, idempotencyKey: `open:example:${ready.id}`, sourcePlugin: '@hanamesh/dsh-app-host' }]);
+  assert.deepEqual(seat.calls, [], 'ready without actual public presentation facts is not open');
   assert.equal((await first.get('/hanamesh/apps')).json.apps[0].packageName, '@hanamesh/app-example');
-  // Real traffic through the gateway (bootstrap ticket → grant cookie → app document) is one `use` for this UTC hour.
+  // Keep the genuine authenticated control -> synthetic HTTP-workspace bootstrap -> data path.
   const resumed = await first.post('/apps/resume', { viewId: 'view-u07', leaseToken: opened.json.leaseToken });
   assert.equal(resumed.status, 200, JSON.stringify(resumed.json)); assert.ok(resumed.json.uiUrl);
   const boot303 = await http(resumed.json.uiUrl, { headers: { referer: first.origin + '/', 'sec-fetch-dest': 'iframe' } });
@@ -191,28 +196,51 @@ test('AH-U07 (plugin): usage evidence reaches ctx.hanameshUsage.record when that
   const cookie = boot303.headers['set-cookie'][0].split(';')[0], appOrigin = new URL(resumed.json.uiUrl).origin;
   assert.equal((await http(appOrigin + '/', { headers: { cookie } })).status, 200);
   assert.equal((await http(appOrigin + '/second', { headers: { cookie } })).status, 200);
-  // T6: the hour's `use` (with the receipt count) is reported when the hour closes or the app's last instance ends.
-  // Until then the local receipt ledger already shows the hour: two forwarded requests, no Router route → no provider.
+  const expectedRows = [{ appId: 'example', providerId: null, model: null, count: 2, reported: false }];
+  const rows = result => result.json.items.map(i => ({ appId: i.appId, providerId: i.providerId, model: i.model, count: i.count, reported: i.reported }));
   const localReceipts = await first.get('/hanamesh/router/receipts?appId=example');
   assert.equal(localReceipts.status, 200, JSON.stringify(localReceipts.json));
-  assert.deepEqual(localReceipts.json.items.map(i => ({ appId: i.appId, providerId: i.providerId, model: i.model, count: i.count, reported: i.reported })), [{ appId: 'example', providerId: null, model: null, count: 2, reported: false }]);
-  assert.equal(seat.calls.filter(c => c.action === 'use').length, 0);
+  assert.deepEqual(rows(localReceipts), expectedRows, 'Router transport count is preserved, not a business receipt');
+  assert.deepEqual(seat.calls, [], 'two authorized HTTP200 responses do not form successful business operations');
   const closedFirst = await first.post('/apps/close', { viewId: 'view-u07', leaseToken: opened.json.leaseToken });
   assert.equal(closedFirst.status, 200, JSON.stringify(closedFirst.json));
   const stopped = await first.post('/apps/stop', { instanceId: ready.id, confirm: true });
   assert.equal(stopped.status, 200, JSON.stringify(stopped.json));
-  await until(() => seat.calls.some(c => c.action === 'use'));
-  const uses = seat.calls.filter(c => c.action === 'use');
-  assert.equal(uses.length, 1); assert.match(uses[0].idempotencyKey, /^use:example:\d{10}$/); assert.equal(uses[0].hanaRef, '@hanamesh/app-example');
-  assert.equal(uses[0].targetRef, 'example'); assert.equal('receipt' in uses[0], false, 'no Router route → no receipt');
-  await until(async () => (await first.get('/hanamesh/router/receipts?appId=example')).json.items[0].reported === true);
-  // (2) No usage plugin at all: the app opens and serves exactly the same; nothing is recorded anywhere.
-  const alone = await boot(t, { applications: [app] });
+  const stoppedState = await first.get('/hanamesh/apps');
+  assert.equal(stoppedState.status, 200);
+  assert.equal(stoppedState.json.instances.find(i => i.id === ready.id).status, 'stopped');
+  const afterStop = await first.get('/hanamesh/router/receipts?appId=example');
+  assert.equal(afterStop.status, 200, JSON.stringify(afterStop.json));
+  assert.deepEqual(rows(afterStop), expectedRows, 'stopping neither sends hourly use nor marks it reported');
+  assert.deepEqual(seat.calls, [], 'stop is not a new original open/use fact');
+
+  // (2) Service absent; an actual diagnostic logger failure must not break apply or the app.
+  const alone = await boot(t, { withPlugin: false });
+  let loggerFailures = 0;
+  alone.ctx.logger.exporter({ levels: { default: 3 }, export: message => {
+    if (message.args[0] === diagnostic) { loggerFailures++; throw new Error('fixture diagnostic sink failure'); }
+  } });
+  alone.fiber = alone.ctx.plugin(appHost, { dataRoot: join(alone.root, 'app-data'), applications: [app] });
+  await until(() => alone.ctx.get('hanameshApps') !== undefined);
+  assert.equal(loggerFailures, 1, 'the throwing sink was actually reached during real plugin apply');
+  assert.equal(alone.ctx.get('hanameshUsage'), undefined);
   const solo = await alone.post('/apps/open', { appId: 'example', deploymentId: 'local', viewId: 'view-u07b' });
   assert.equal(solo.status, 200, JSON.stringify(solo.json));
   await until(async () => (await alone.get('/hanamesh/apps')).json.instances.find(i => i.status === 'ready'));
-  // (3) Seat provided AFTER this plugin (usage loaded later): the optional inject picks it up for the next open.
-  const late = { calls: [], record: async input => { late.calls.push(input); return { disposition: 'withheld' }; } };
+  const serve = async (viewId, receipt) => {
+    const result = await alone.post('/apps/resume', { viewId, leaseToken: receipt.leaseToken });
+    assert.equal(result.status, 200, JSON.stringify(result.json)); assert.ok(result.json.uiUrl);
+    const bootstrap = await http(result.json.uiUrl, { headers: { referer: alone.origin + '/', 'sec-fetch-dest': 'iframe' } });
+    assert.equal(bootstrap.status, 303);
+    const grant = bootstrap.headers['set-cookie'][0].split(';')[0];
+    const document = await http(new URL(result.json.uiUrl).origin + '/', { headers: { cookie: grant } });
+    assert.equal(document.status, 200); assert.match(document.body.toString(), /HANAMESH_FIXTURE/);
+  };
+  await serve('view-u07b', solo.json);
+  assert.equal((await alone.get('/hanamesh/apps')).json.apps[0].packageName, '@hanamesh/app-example');
+
+  // (3) The real optional service is provided late; reopening still has no original fact source.
+  const late = { calls: [], record: async input => { late.calls.push(structuredClone(input)); return { disposition: 'withheld' }; } };
   alone.ctx.provide('hanameshUsage', late);
   await until(() => alone.ctx.get('hanameshUsage') !== undefined);
   const closed = await alone.post('/apps/close', { viewId: 'view-u07b', leaseToken: solo.json.leaseToken });
@@ -220,8 +248,16 @@ test('AH-U07 (plugin): usage evidence reaches ctx.hanameshUsage.record when that
   await until(async () => (await alone.get('/hanamesh/apps')).json.instances.every(i => i.status === 'stopped'));
   const reopened = await alone.post('/apps/open', { appId: 'example', deploymentId: 'local', viewId: 'view-u07c' });
   assert.equal(reopened.status, 200, JSON.stringify(reopened.json));
-  await until(() => late.calls.some(c => c.action === 'open'));
-  assert.equal(late.calls[0].hanaRef, '@hanamesh/app-example');
+  await until(async () => (await alone.get('/hanamesh/apps')).json.instances.some(i => i.status === 'ready'));
+  await serve('view-u07c', reopened.json);
+  assert.deepEqual(late.calls, [], 'late service, re-ready and traffic do not supply missing source facts');
+  assert.equal((await alone.get('/hanamesh/apps')).json.apps[0].packageName, '@hanamesh/app-example');
+  const closeLate = await alone.post('/apps/close', { viewId: 'view-u07c', leaseToken: reopened.json.leaseToken });
+  assert.equal(closeLate.status, 200, JSON.stringify(closeLate.json));
+  await until(async () => (await alone.get('/hanamesh/apps')).json.instances.every(i => i.status === 'stopped'));
+  assert.deepEqual(late.calls, [], 'late-service stop never creates a business event');
+  assert.equal(loggerFailures, 1, 'no traffic/hourly diagnostic retry is manufactured');
+  t.diagnostic('AH-U07 SOURCE/FIXTURE: actual apply; early/absent/late service; 303 and HTTP200 paths; Router count=2/reported=false after stop; zero record; fixed diagnostic and throwing logger exercised. Not native CLIENT/U2.');
 });
 
 test('AH-M08 (plugin): rc.28 market routes are registered on the real web server behind the same auth chain; without an installer the plugin seats answer 503, never 500', async t => {
