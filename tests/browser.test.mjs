@@ -13,7 +13,12 @@ async function chrome(t){
   for(const candidate of candidates)try{await access(candidate);binary=candidate;break;}catch{}
   if(!binary){t.skip('REAL_BROWSER unavailable: isolated Chromium binary was not found.');return null;}
   const root=await temporary(),profile=join(root,'chromium-profile');
-  const processHandle=spawn(binary,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--no-first-run','--no-default-browser-check','--remote-debugging-address=127.0.0.1','--remote-debugging-port=0',`--user-data-dir=${profile}`,'about:blank'],{detached:true,stdio:['ignore','ignore','pipe']});
+  const home=join(root,'home'),tmp=join(root,'tmp'),cache=join(root,'cache');
+  for(const path of [home,tmp,cache])await mkdir(path,{recursive:true});
+  // Q329: no inherited personal HOME, credentials or keychain authorization.
+  // One launch for H13 and a separate required SIGKILL/no-unload H10 case; no launch loop.
+  const browserEnv={PATH:process.env.PATH,HOME:home,DSH_HOME:join(root,'dsh-home'),TMPDIR:tmp,XDG_CACHE_HOME:cache,XDG_CONFIG_HOME:join(root,'config'),XDG_DATA_HOME:join(root,'data'),LANG:process.env.LANG??'en_US.UTF-8'};
+  const processHandle=spawn(binary,['--headless=new','--use-mock-keychain','--password-store=basic','--no-sandbox','--disable-dev-shm-usage','--no-first-run','--no-default-browser-check','--remote-debugging-address=127.0.0.1','--remote-debugging-port=0',`--user-data-dir=${profile}`,'about:blank'],{detached:true,stdio:['ignore','ignore','pipe'],env:browserEnv});
   let stderr='';processHandle.stderr.on('data',b=>{stderr=(stderr+b).slice(-8000);});
   const kill=async signal=>{
     if(processHandle.exitCode!==null||processHandle.signalCode!==null)return;
