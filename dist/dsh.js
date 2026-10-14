@@ -138,9 +138,9 @@ export async function apply(ctx, config) {
     const disposers = ROUTES.map(path => webServer.register({ kind: 'exact', path, handler }));
     let credentialService, llmService, oauthService, usageService;
     ctx.inject(['credentials'], injected => { credentialService=injected.get('credentials');return()=>{credentialService=undefined;}; });
-    // rc.27: usage evidence goes through the usage plugin's record seat when (and only when) that plugin is loaded.
+    // Optional Usage service presence does not provide original application success facts.
     ctx.inject(['hanameshUsage'], injected => { usageService=injected.get('hanameshUsage');return()=>{usageService=undefined;}; });
-    // T6: hourly usage receipts live in app-host's own domain; the usage `use` event carries the hour's receipt.
+    // Router hourly counts remain local diagnostics, never synthesized Usage open/use facts.
     receiptsDomain = await facility.open(receiptsDomainSpec);
     receipts = createReceiptLedger({ domain:receiptsDomain });
     const evidence = createUsageEvidence({ host, seat:()=>usageService, receipts, logger:ctx.logger });

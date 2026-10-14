@@ -102,15 +102,15 @@ export class FixedGateway {
 export function rewriteCsp(value:string,parentOrigin:string):string;
 export function embeddingHeaders(rawHeaders:string[],parentOrigin:string):string[];
 export function validateDefinition(input:AppDefinition):AppDefinition;
-/** rc.27 usage evidence: `open` once per instance reaching ready, `use` once per app per UTC hour of real gateway activity, through the optional usage seat. */
+/** Canonical collecting plugin identity; runtime/transport observations never form business Usage facts. */
 export const SOURCE_PLUGIN:'@hanamesh/dsh-app-host';
 export function hourBucket(ms:number):string;
-/** T6 usage receipt riding on a `use` event: provider × model × forwarded-request count of that UTC hour; never content. */
+/** Independent Router diagnostic receipt: routed provider/model and forwarded-request count; not a successful-business fact. */
 export interface UsageReceipt { providerId:string; model:string|null; count:number; }
 export interface UsageRecordInput { hanaRef:string; action:'open'|'use'; occurredAt?:string; idempotencyKey:string; sourcePlugin:string; sourceHanaRef?:string; targetRef?:string; receipt?:UsageReceipt; }
 export interface UsageRecordResult { disposition:'recorded'|'duplicate'|'withheld'|'rejected'; eventId?:string; code?:string; }
 export interface UsageSeat { record(input:UsageRecordInput):Awaitable<UsageRecordResult>; }
-/** T6 receipt ledger (storage domain `hanamesh_router_receipts`): hourly rows per app × Router route, reported through the usage seat when the hour closes. */
+/** Router diagnostic ledger (hanamesh_router_receipts). Pending/reported are legacy ledger state, not Usage confirmation. */
 export interface ReceiptRoute { providerId:string; model:string|null; }
 export interface ReceiptRow { appId:string; providerId:string|null; model:string|null; hour:string; count:number; injections:number; firstAt:string; lastAt:string; reported:boolean; }
 export interface ReceiptLedger {
@@ -123,6 +123,7 @@ export interface ReceiptLedger {
 }
 export function createReceiptLedger(options?:{domain?:{global:{get():unknown;set(value:unknown):Promise<void>}};clock?:()=>number;persistDelayMs?:number;maxItems?:number;retentionMs?:number}):ReceiptLedger;
 export function normalizeRoute(route:unknown):ReceiptRoute|null;
+/** No verified original fact source is connected: logs USAGE_FACT_UNAVAILABLE and persists Router diagnostics only. Legacy scheduling options remain accepted; no reporting timer runs. flush/settle do not observe Usage completion. */
 export function createUsageEvidence(options:{host:AppHost;seat:()=>UsageSeat|unknown;receipts?:ReceiptLedger;logger?:{debug?:(...args:unknown[])=>void};clock?:()=>number;sweepIntervalMs?:number}):{
   flush(options?:{appId?:string;includeCurrent?:boolean}):Promise<void>; settle():Promise<void>; receipts:ReceiptLedger; close():void;
 };

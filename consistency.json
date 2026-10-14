@@ -40,13 +40,13 @@
     },
     {
       "id": "receipt-hour",
-      "name": "回执行的计数与已上报标记一起发布",
+      "name": "独立Router诊断行整体发布",
       "facts": [
         "receipt-row:count",
         "receipt-row:reported"
       ],
       "medium": "single-snapshot:hanamesh_router_receipts",
-      "why": "T6：同一 (app, 路由, 小时) 行的 count/injections/firstAt 与 reported 标记在一次去抖后的 global.set 里整体发布；不存在第二张回执表。强杀最多丢最后一个去抖窗口内的计数，永不出现 reported 却没有行。",
+      "why": "同一(app,路由,小时)诊断行的count/injections/firstAt和遗留reported兼容位在一次去抖global.set整体发布；强杀可丢最后窗口计数，不新增表。不自动发业务Usage或设置reported，遗留位不证明Usage确认。",
       "test": "tests/usage-evidence.test.mjs:AH-U09"
     }
   ],
@@ -75,13 +75,13 @@
     },
     {
       "id": "receipt-report",
-      "name": "usage 席位收到小时 use 事件 → 账本标记 reported",
+      "name": "转发观察 → 独立Router诊断镜像",
       "sides": [
-        "usage-seat:use-event",
+        "router-diagnostics:runtime-observation",
         "single-snapshot:hanamesh_router_receipts"
       ],
-      "safeDirection": "usage-seat:use-event",
-      "why": "先让席位 recorded/duplicate，再标 reported；允许席位已有而账本未标（下次重报得 duplicate），不允许账本已标而席位从未收到。rejected/withheld/席位缺席都不标。",
+      "safeDirection": "router-diagnostics:runtime-observation",
+      "why": "先有受控转发观察再累计诊断；允许丢未持久化窗口，不制造业务成功。ready/跨小时/恢复/停止/flush不调用record、不自动标reported，未知事实明确诊断；此边界不声称Usage投递或提交。",
       "test": "tests/usage-evidence.test.mjs:AH-U04"
     },
     {

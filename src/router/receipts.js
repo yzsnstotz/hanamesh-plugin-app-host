@@ -6,18 +6,15 @@
  *
  *     { appId, providerId, model, hour, count }      hour = UTC `YYYYMMDDHH`, count = forwarded requests in that hour
  *
- * kept in app-host's own storage domain (`hanamesh_router_receipts`, one global snapshot, ONE `global.set` per
- * publication, debounced) and reported through the usage plugin's record seat as the receipt of that hour's `use`
- * event (see usage-evidence.js). No prompt, response, credential or URL is ever recorded — only the provider id,
- * the model name the Router routed, and a count.
+ * kept in app-host's own storage domain (`hanamesh_router_receipts`, one global snapshot,
+ * ONE debounced `global.set` per publication). These are transport diagnostics only;
+ * ready/HTTP/WS counts and restoring old rows never prove presentation or business
+ * success and are never automatically sent to the Usage record service.
  *
- *   inject   Router `credentialResolver` resolved a route for an instance → the instance's route is remembered
- *            (first api-key / provider env entry in declaration order) and the (app, route, hour) row counts one injection.
- *   activity the instance's gateway forwarded an authorized request → the (app, route, hour) row counts one request;
- *            an instance whose route is unknown (recovered / attached, no injection this run) counts against a
- *            route-less row so the hour's `use` is still reported, just without a receipt.
- *   reported once the usage seat accepted (or already had) the hour's `use` event the rows are flagged; later requests in
- *            the same hour keep counting locally but are not re-reported (the seat de-duplicates by key).
+ * `inject` remembers the first resolved route and increments injections; `activity`
+ * counts forwarded requests. Unknown routes remain null. The legacy `reported`
+ * field and explicit markReported() operation stay available for existing ledger
+ * consumers, without asserting Usage acceptance, delivery or business success.
  *
  * Without a storage domain (library use, tests) the ledger is memory-only and behaves identically.
  */

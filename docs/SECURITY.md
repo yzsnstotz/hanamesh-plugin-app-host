@@ -1,3 +1,5 @@
+D-221: service availability, package binding, readiness and authorized traffic are not proof of application presentation/business success. No verified original fact source is connected, so the adapter emits no automatic Usage record or timestamp and logs only a fixed USAGE_FACT_UNAVAILABLE capability diagnostic. Independent Router counts, including legacy reported bits, do not prove business success or Usage confirmation. No application event/SDK/credential or trust bridge is introduced.
+
 D-214: verification is trusted producer/client-view configuration, never a Target/URL/global-page capability. Normal builds remain off. Verification uses the existing authenticated/authorized endpoints and explicit installation confirmation; showing full public error JSON does not expose internal exceptions or grant application privileges. Native test automation stays card-local and validates actual owned PID/start/PPID/PGID/argv before claiming launcher evidence.
 
 # 安全与运行边界

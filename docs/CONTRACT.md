@@ -174,20 +174,21 @@ Market seat 的「打开」保留原 receipt/heartbeat/close owner；应用 ifra
 
 **壳内重启（rc.32 改）**：`hanamesh://restart` 在壳 iframe 内改走壳已有的入站 postMessage 桥 —— `window.parent.postMessage({type:'hanamesh://restart'}, '*')`，与壳 → iframe 的 `hanamesh://bound-refresh` 同一命名空间；壳按 `event.source`/`event.origin` 校验来源后调用自己的重启。原因：WKWebView 不会把 iframe 内发起的自定义 scheme 导航交给系统，`location.assign('hanamesh://restart')` 在壳内不可达。`hanamesh://restart` 这个 URL 仍是系统级入口（外部浏览器 / `open hanamesh://restart`），由壳 `deep_link.rs` 的 `restart` 分支处理。官方 DSH 直开浏览器时仍只提示「请手动重启 DSH」。
 
-## 应用使用证据（rc.27，用户 2026-09-21 定，STATUS `P2-USE-EVENTS`）
+## 应用使用证据（D-221，C-USAGE-LOCAL 第1版）
 
-应用的 `open` / `use` 使用证据由 **app-host** 经 usage 插件的 record 座位上报；app-host 自己不存事件、不签名、不上传。三插件互不 import：`ctx.inject(['hanameshUsage'], …)` 以**可选**服务取得 `ctx.hanameshUsage`，只鸭子类型地要求 `record(input): Promise<{disposition:'recorded'|'duplicate'|'withheld'|'rejected', eventId?, code?}>`。座位缺席、形状不符、抛错或返回 `rejected`，一律**只打 debug 日志**，不抛、不阻止应用启动或网关转发；`withheld`（用户未同意）与 `duplicate`（重复）是正常结果，同样只 debug。
+`instance.ready`、成功授权/HTTP资源转发、WebSocket升级、小时桶关闭、应用停止与旧receipt恢复都不能证明实际界面呈现或成功业务操作。AppHost目前没有连接已核实的普通应用公开原事实源，因此**不自动调用 Usage record**，不以接收端时钟、运行时就绪时间或流量时间制造事实。
 
-| 事件 | 触发点 | `idempotencyKey` | `occurredAt` |
-|---|---|---|---|
-| `open` | 实例到达 `ready`（视图真被服务）——每次成功启动一次；同一实例的第二个 view 不重复 | `open:<appId>:<instanceId>` | 就绪时刻 |
-| `use` | 该实例的网关**真的转发**了一个已授权请求且应用回应不是 401/403（含成功的 WebSocket 升级）；每应用每 UTC 小时最多一次 | `use:<appId>:<YYYYMMDDHH>` | 该小时桶内第一个被转发请求的时刻 |
+`createUsageEvidence({host,seat,receipts?,logger?,clock?,sweepIntervalMs?})` 保留既有生命周期接口：
+- 注册时通过现有logger给出有界 `USAGE_FACT_UNAVAILABLE` 诊断；不记录应用内容、身份、token、时间或服务响应，logger失败不影响应用。
+- `host.onActivity` 仅累计独立Router诊断计数；终止事件清除该实例的路由引用。原401/403过滤、路由校验、计数/去抖持久化与保留规则不变。
+- `flush` / `settle` 仅等待本地诊断账本持久化，不代表Usage受理、处理或提交确认。`flush`旧筛选参数仍可传，但不会筛选生成业务事件；`sweepIntervalMs`仍校验并接受，但不启动小时上报timer。
+- 启动、flush、close及恢复旧行不发送record、不自动重试、不自动置reported。遗留 `reported` 位/显式 `markReported()` 操作是账本兼容状态，不能证明业务成功或Usage确认。
 
-不计入 `use` 的：引导票据 `/__hanamesh_bootstrap/*`、网关拒绝（403 `GATEWAY_*`）、应用自己的 401/403 回应、宿主的就绪探针（探针直连上游，不经网关）、`embedding:'direct'` 部署（没有网关，没有活动信号）。每实例只记一个「上次小时桶」，实例 `stopped`/`failed`/`interrupted` 即丢弃，map 以活实例数为界。
+可选Usage席位仍经公开Cordis注入，不互相import。只有席位存在或返回recorded也不能使无源事实合法；缺席、不兼容、拒绝均不妨碍应用启动/转发。当前适配器不会向该席位提交运行时或流量观察。
 
-`hanaRef` = 应用的 **npm 包名**（与 usage `validHana` 同形：`@scope/name` 或 `name`，≤128 字符），`sourcePlugin` = `@hanamesh/dsh-app-host`。包名来源按序：① 描述符可选字段 `packageName`（rc.27 新增，`validateDefinition` 校验形状；不带则完全向后兼容）；② 宿主启动时的已安装扫描（`<profile>/node_modules/<pkg>/app.json` → `id`）经 `host.bindPackageName(appId, packageName)` 绑定——应用包只注册纯 `app.json`，扫描先于应用包注册发生，所以绑定不要求 appId 已注册；③ 都没有 → 该应用不产生证据（debug 日志），启动照常。`list().apps[].packageName` 带出当前解析结果（无则 `null`）。
+`packageName`、`host.bindPackageName()`、`host.packageName()` 与 `list().apps[].packageName` 保持正常登记/安装读回归属能力，包名字符串或item/appId相似不证明完整映射。未来消费合法源必须先核正常安装的item/package/app/Hana关系及公开呈现/成功源与原UTC时间，按正式C-USAGE-LOCAL原键和可选归因调用record，并通过health/observeCollection区分重复、冲突、拒绝、pending/confirmed；不在AppHost复制提供方去重/签名或把pending=0当完成。当前缺面保持未知并交PM，不新造应用event/SDK/信任桥。
 
-新的宿主面：`host.bindPackageName(appId,name)`、`host.packageName(appId)`、`host.onActivity(listener)`（内存内活动通知 `{type:'instance.activity',instanceId,appId,deploymentId,principalId,at}`，不落 `eventsSince`）；`FixedGateway({ onForward })`；`createUsageEvidence({ host, seat:()=>ctx.hanameshUsage, logger })` 是把二者接到 record 座位的适配器（`dsh.js` 已装好；`close()` 随插件卸载）。
+本轮SOURCE/FIXTURE负例证明停止伪事实；真实普通应用的两次新结果、合法原事实及真实Usage正向结果仍须独立产品取证。
 
 ## D-202 fixed Desktop extension
 
