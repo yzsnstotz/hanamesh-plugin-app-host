@@ -1,6 +1,7 @@
 /** Real client module, minimal hook lifecycle stand-in, no production process globals modified. */
 import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
+import {createHostDom} from './host-dom.mjs';
 export const settle=async()=>{for(let i=0;i<30;i++)await Promise.resolve();};
 export function fakeClock(){
   let now=1_700_000_000_000,sequence=0;const timers=new Map();
@@ -8,6 +9,7 @@ export function fakeClock(){
     async advance(ms){const end=now+ms;while(true){const next=[...timers].sort((a,b)=>a[1].at-b[1].at)[0];if(!next||next[1].at>end)break;now=next[1].at;timers.delete(next[0]);next[1].fn();await settle();}now=end;await settle();},get pending(){return timers.size;}};
 }
 export async function clientHarness({fetch,clock,embedded=true,verification=false,href}={}){
+  const dom=createHostDom();
   const source=await readFile(new URL('../../src/client-ui.js',import.meta.url),'utf8');
   let loaded,tree,cursor=0,dead=false,scheduled=false,props={embedded,verification};const hooks=[],pendingEffects=[];
   const schedule=()=>{if(!dead&&!scheduled){scheduled=true;queueMicrotask(()=>{scheduled=false;if(!dead)render();});}};
@@ -24,12 +26,12 @@ export async function clientHarness({fetch,clock,embedded=true,verification=fals
   const timer=clock??{Date,setTimeout,clearTimeout};scope.Date=timer.Date;scope.setTimeout=timer.setTimeout.bind(timer);scope.clearTimeout=timer.clearTimeout.bind(timer);
   new Function('window','document','globalThis','setTimeout','clearTimeout','Date',source)(window,document,scope,scope.setTimeout,scope.clearTimeout,timer.Date);
   const module=loaded.factory(id=>{assert.equal(id,'react');return React;});
-  function render(){cursor=0;tree=module.LibraryOverlay(props);for(const effect of pendingEffects.splice(0))effect();return tree;}
+  function render(){cursor=0;tree=module.LibraryOverlay(props);dom.commit(tree);for(const effect of pendingEffects.splice(0))effect();return tree;}
   function find(node,predicate){if(!node)return; if(Array.isArray(node)){for(const child of node){const match=find(child,predicate);if(match)return match;}return;}if(typeof node!=='object')return;if(predicate(node))return node;return find(node.children,predicate);}
-  const api={module,render,find:predicate=>find(tree,predicate),get tree(){return tree;},async click(label){const button=find(tree,node=>node.type==='button'&&node.children.includes(label));assert(button,'visible button '+label);button.props.onClick();await settle();},
+  const api={module,render,dom,find:predicate=>find(tree,predicate),get tree(){return tree;},async click(label){const button=find(tree,node=>node.type==='button'&&node.children.includes(label));assert(button,'visible button '+label);button.props.onClick();await settle();},
     message(event){return listeners.get('message')?.(event);},
     hashchange(hash){scope.location.hash=hash;listeners.get('hashchange')?.();},
-    unmount(){dead=true;for(const hook of hooks)hook?.cleanup?.();},pagehide(){listeners.get('pagehide')?.();},pageshow(){listeners.get('pageshow')?.();},
+    unmount(){dead=true;dom.clear();for(const hook of hooks)hook?.cleanup?.();},pagehide(){listeners.get('pagehide')?.();},pageshow(){listeners.get('pageshow')?.();},
     visibility(state){document.visibilityState=state;documentListeners.get('visibilitychange')?.();},
     async show(){module.LibraryAction().props.onClick();await settle();},async hide(){const close=find(tree,node=>node.type==='button'&&node.children.includes('关闭'));assert(close);close.props.onClick();await settle();}};
   render();await settle();return api;
