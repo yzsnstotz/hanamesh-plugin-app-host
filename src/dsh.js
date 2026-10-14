@@ -65,6 +65,8 @@ export const Config = z.object({
     /** All four are set by the desktop shell overlay; on plain DSH they are inferred (see library/locate.js). */
     profileDir:z.string(),profileName:z.string(),dshBin:z.string(),
     registry:z.string(),allowPrerelease:z.boolean(),
+    /** Publicly named event history capacity; a lost cursor reports resetRequired. */
+    eventRetention:z.number().default(512),
   }),
   applications: z.array(z.any()).default([]),
   leaseTtlMs: z.number(),

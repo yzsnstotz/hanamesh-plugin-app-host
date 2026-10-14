@@ -33,7 +33,7 @@ Promise 在目录解析后返回 `{status,itemId?,packageName?}`：
 
 ## 合约版本与一致性套件
 
-契约名 `hanamesh.install-target`，当前版本 `1`。单一来源是随包 schema `schemas/install-target.schema.json`（出口 `@hanamesh/dsh-app-host/install-target/schema.json`，`x-hanamesh-contract` 节写版本、片段前缀、路由与拒绝规则）。
+契约名 `hanamesh.install-target`，当前版本 `1`。正式协议以 C-MARKET 文档为准；随包 schema `schemas/install-target.schema.json`（出口 `@hanamesh/dsh-app-host/install-target/schema.json`）描述既有目标字段，`x-hanamesh-contract` 节记录版本、片段前缀、路由与拒绝规则，不替代正式文档。
 
 **变更说明（rc8，小版本，只加不改）：** 新增可选字段 `contractVersion`，可出现在 `openInstallTarget` 入参、`#hanamesh-install?` 片段与 `GET /hanamesh/library/target`、`POST /hanamesh/library/install` 的输入中；`GET target` 的 200 结果新增 `contractVersion:'1'`；包 `package.json` 的 `hanamesh.installTarget` 声明提供方实现的版本。itemId/packageName、字段语法、确认、取消、auth、同源与既有拒绝码都不变。影响：Desktop 现有不带版本的安装链接按 v1 照常工作，无需改动；要声明版本时由唯一宿主收尾卡改钉 rc8 后再做。Vibe 钉的应用包协议（rc2）与本契约无关，不受影响。
 
@@ -97,9 +97,19 @@ node node_modules/@hanamesh/dsh-app-host/dist/install-target/run.js consumer --u
 
 **随包验证（SOURCE）：** `./install-target/fixtures/install-failure-cases.json` 与 `./install-target/fixtures/source-profile.js`。提供方套件 RB01–RB15 覆盖新装/升级 × add 前/CLI/add 后校验/provision 失败及补偿自身失败、并发写者、未认领文件，RS01/RS02 成功读回，RU01/RU02 用本包真实客户端显示；消费方套件 RP01–RP05 检查消费方的失败呈现（可选方法 `presentInstallFailure(event) → {installed,restored,version?,residue?}`，没有该方法的消费方记 skipped），链路套件 CX-RB04/RB10/RB11 把真实提供方事件交给消费方。官方 CLI 与 lib-provision 在套件里是临时 profile 上的具名替身，结果只代表 SOURCE，不代表真实安装或 REAL_UI 产品门。
 
-## 开发小界面
+## 测试版验证入口（D-180）
 
-AppHost 市场顶部「安装目标」：填写「目录条目 ID」或「包名」→「查看安装目标」→市场四字段确认→「确认安装」或「取消」。它调用上述同一公开入口。目录/鉴权失败留在界面中，不放宽检查。
+测试包装只在自己的验证入口渲染 `LibraryOverlay({verification:true})`，或调用 `market.render({verification:true})`。默认 `verification:false`，正常版本不显示开发表单或合约验证面板；正常导航触发的确认框始终可见。开关不能由网站 Target 或 URL 片段开启。
+
+测试版「安装目标」表单：填写目录 ID/包名→查看→正常四字段确认→确认安装/取消。另一个「C-MARKET 合约验证」面板列出探测、目录、目标、安装、事件、已装列表、应用列表和 open/resume/heartbeat/close，每项可编辑 JSON 样例并查看返回。路径/方法固定，租约只使用当前授权调用的真实回执；无自动安装或打开。选择 install 仍进入同一正常确认框，不能代按确认。错误直接可见，认证/同源/非 iframe 检查不放宽；输出只在当前验证视图显示，不上传、不写公开 URL。
+
+## 本机公开探测与目录消费（D-180）
+
+`GET /hanamesh/library/install-target` 无参数，精确回环 Host、非 iframe，允许跨源匿名只读探测。返回 `{client:'dsh',ready,installTarget:{contract:'hanamesh.install-target',contractVersion:'1',supported:['1'],fragmentPrefix:'#hanamesh-install?'},traceId,error?}`；缺安装器 `ready:false` 且 `error.code='INSTALL_TARGET_UNAVAILABLE'`。只这一项带 `Access-Control-Allow-Origin:*`、no-store，不发 Cookie/Allow-Credentials，不返回 profile、已装行、工作区认证地址、命令或租约。独立 DSH 默认报 dsh；没有真实 Desktop 公开证据时不推断 HanaMesh 品牌。其余控制路径仍按原 DSH 认证与准确同源授权执行。
+
+C-WEB-CATALOG 第1版的显式 `catalog-source.json?view=hanamesh` 与 manifest 的 `/v1/plugins?view=hanamesh` 可配置为目录来源。旧无 view 源仍严格按 catalog-major-1，不混 schema 或静默降级。新 DTO 保留 id=itemId、可空 npm 身份及公开 sourceLinks；q 是子串查询，目标按精确身份匹配，空页仍有游标则续翻。只给包名时遍历确认唯一目录身份；多个身份返回409 CATALOG_TARGET_AMBIGUOUS。无 npm 包仅浏览；来源链接/分类/目录版本都不能成为启动或安装权限。CATALOG_CHANGED 中止本轮、不拼代或自动重试，其余提供方公开错误保持原 code；故障不退 fixture。
+
+安装事件是当前宿主内存历史。`events.resetRequired` 指游标来自重启前或已丢失的保留段；`library.eventRetention` 为正安全整数，默认512，可显式配置。客户端对不可追溯且不再进行中的操作显示结果未知并刷新已装列表，不从空事件推断取消/成功，不自动重装。终态仍须匹配 operationId；完成后的错包/错版本/缺行读回统一显示 INSTALL_READBACK_MISMATCH。
 
 ## 本轮供给与验证边界
 

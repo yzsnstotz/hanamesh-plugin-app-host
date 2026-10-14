@@ -1,6 +1,6 @@
 # app-host 仓库行为边界
 
-当前本地候选版本 0.1.0-rc.6；真实 DSH profile 已跑，但只有用户可以签 ACCEPTED。不要把通过本地 fixture 等同于真实宿主 ACCEPTED。
+流程规则只在 segflow：worker 读 /Users/yzliu/work/tools/segflow/roles/worker.md，架构准则见 roles/principles.md；本文件只写本模块事实。
 
 ## 只维护本模块
 
@@ -14,8 +14,6 @@
 
 ## 验证与修改纪律
 
-修改前读 README、CONTRACT、SECURITY、consistency.json 和 acceptance/REPORT。运行 build、test、mutation、类型检查与干净目录 tarball 验证；X02/X03 用真正 SIGKILL，抛异常不算。默认测试独立临时路径和随机回环端口，不触碰 ~/.dsh 或 3080，不用进程名批量 kill。新补真实 DSH 验收必须指定独立 DSH_HOME 和已锁定 profile。
+修改前读 README、CONTRACT、SECURITY、consistency.json。运行 build、test、mutation、类型检查与干净目录 tarball 验证；X02/X03 用真正 SIGKILL，抛异常不算。默认测试独立临时路径和随机回环端口，不触碰 ~/.dsh 或 3080，不用进程名批量 kill。新补真实 DSH 验收必须指定独立 DSH_HOME 和已锁定 profile。
 
 当前源码并非从指定原型提取。拿到私有原型后核实 commit/path/license，再决定映射或替换；不要编造继承关系。候选契约不可直接宣称兼容未见过的原型描述符。
-
-只有用户可以标 ACCEPTED。存在 H01/H11 阻塞时保持 PARTIAL，不把 rc 产物登记成可解锁 workspace 的正式版本。只改本模块代码、证据和自己的交接记录，不覆盖其他模块的 STATUS/checkpoint。模型实际使用按事实记录，禁止冒称已切换 Opus 或完成多模型审查。

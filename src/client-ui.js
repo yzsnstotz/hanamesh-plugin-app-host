@@ -149,9 +149,37 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       return closeTask??=request('/apps/close',{method:'POST',body:JSON.stringify(lease),keepalive:true}).catch(error=>{closeTask=undefined;throw error;});
     }};
   }
-  function LibraryOverlay({embedded,preferredSubsectionId}={}){
+  const VERIFICATION_CALLS=[
+    {method:'GET',path:'/hanamesh/library/install-target',sample:{}},
+    {method:'GET',path:'/hanamesh/library',sample:{category:''}},
+    {method:'GET',path:'/hanamesh/library/target',sample:{itemId:'example.notes',packageName:'example-notes',contractVersion:'1'}},
+    {method:'POST',path:'/hanamesh/library/install',sample:{itemId:'example.notes',packageName:'example-notes',contractVersion:'1'}},
+    {method:'GET',path:'/hanamesh/library/events',sample:{after:0}},
+    {method:'GET',path:'/hanamesh/library/installedPlugins',sample:{}},
+    {method:'GET',path:'/hanamesh/apps',sample:{}},
+    {method:'POST',path:'/apps/open',sample:{appId:'notes',deploymentId:'local',viewId:'verification-view'}},
+    {method:'POST',path:'/apps/resume',sample:{viewId:'verification-view',leaseToken:''}},
+    {method:'POST',path:'/apps/heartbeat',sample:{viewId:'verification-view',leaseToken:''}},
+    {method:'POST',path:'/apps/close',sample:{viewId:'verification-view',leaseToken:''}},
+  ];
+  function LibraryOverlay({embedded,preferredSubsectionId,verification=false}={}){
     const[visible,setVisible]=React.useState(embedded?true:libraryVisible),[snapshot,setSnapshot]=React.useState(null),[error,setError]=React.useState(''),[receipt,setReceipt]=React.useState(null),[query,setQuery]=React.useState(''),[filter,setFilter]=React.useState(''),[extra,setExtra]=React.useState([]),[pending,updatePending]=React.useState(pendingOperations),[seenCategories,setSeenCategories]=React.useState([]),[changed,setChanged]=React.useState(false),[openingAppId,setOpeningAppId]=React.useState(null),[closing,setClosing]=React.useState(false);
     const[target,updateTarget]=React.useState(targetSelection),[targetItemId,setTargetItemId]=React.useState(''),[targetPackageName,setTargetPackageName]=React.useState('');
+    const[verificationCall,setVerificationCall]=React.useState('GET /hanamesh/library/install-target'),[verificationInput,setVerificationInput]=React.useState('{}'),[verificationOutput,setVerificationOutput]=React.useState(null),[verifying,setVerifying]=React.useState(false);
+    const verificationBusy=React.useRef(false);
+    const verify=async()=>{
+      if(verification!==true||verificationBusy.current)return;
+      verificationBusy.current=true;setVerifying(true);
+      try{
+        const call=VERIFICATION_CALLS.find(call=>call.method+' '+call.path===verificationCall);
+        const input=JSON.parse(verificationInput);
+        if(!call||!input||typeof input!=='object'||Array.isArray(input))throw new Error('INVALID_INPUT');
+        // Even the test panel sends installations through the normal explicit confirmation.
+        const result=call.path==='/hanamesh/library/install'?await openInstallTarget(input):call.method==='POST'?await request(call.path,{method:'POST',body:JSON.stringify(input)}):await request(call.path+(Object.keys(input).length?'?'+new URLSearchParams(input):''));
+        setVerificationOutput(result);
+      }catch(error){setVerificationOutput({error:{code:String(error.message??error)}});}
+      finally{verificationBusy.current=false;setVerifying(false);}
+    };
     React.useEffect(()=>{targetListeners.add(updateTarget);pendingListeners.add(updatePending);return()=>{targetListeners.delete(updateTarget);pendingListeners.delete(updatePending);};},[]);
     React.useEffect(()=>{if(embedded)return;libraryListeners.add(setVisible);return()=>libraryListeners.delete(setVisible);},[embedded]);
     const heldView=React.useRef(null),mounted=React.useRef(true),surfaceVisible=React.useRef(visible),surfaceEpoch=React.useRef(0),opening=React.useRef(null);
@@ -178,27 +206,28 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     const params=React.useCallback(cursor=>{const p=new URLSearchParams();if(query)p.set('q',query);p.set('category',filter==='plugin'?'':filter);if(cursor)p.set('cursor',cursor);return'?'+p.toString();},[query,filter]);
     const remember=page=>setSeenCategories(list=>[...new Set([...list,...(page.categories??[])])].sort());
     const load=React.useCallback(async()=>{try{setError('');setExtra([]);const page=await request('/hanamesh/library'+params());setSnapshot(page);remember(page);}catch(e){setError(String(e.message??e));}},[params]);
-    const more=async()=>{try{const cursor=(extra.at(-1)??snapshot)?.page?.nextCursor;if(!cursor)return;const next=await request('/hanamesh/library'+params(cursor));setExtra(list=>[...list,next]);remember(next);}catch(e){setError(String(e.message??e));}};
+    const more=async()=>{try{const cursor=(extra.at(-1)??snapshot)?.page?.nextCursor;if(!cursor)return;const next=await request('/hanamesh/library'+params(cursor));setExtra(list=>[...list,next]);remember(next);}catch(e){if(String(e.message??e)==='CATALOG_CHANGED'){setSnapshot(null);setExtra([]);}setError(String(e.message??e));}};
     React.useEffect(()=>{if(visible)void load();},[visible,load]);
     React.useEffect(()=>{if(visible&&target?.status==='installed')void load();},[visible,load,target?.status]);
     // rc.18: install/provision/uninstall are 202 + events. Track the operation per card so the user sees
     // 「安装中…」 and, on failure, the code with a readable reason (user 2026-09-20: clicked install, nothing happened).
-    const operate=async(path,body,key,label)=>{if(pendingOperations[key]?.busy)return;setError('');setPending(p=>({...p,[key]:{label,text:label+'中…',busy:true}}));try{const started=await request(path,{method:'POST',body:JSON.stringify(body)});const {operationId}=started;let after=0;const deadline=Date.now()+600000;let outcome=started.status==='already-installed'?{ok:true}:null;while(!outcome&&Date.now()<deadline){await new Promise(resolve=>setTimeout(resolve,1000));const feed=await request('/hanamesh/library/events?after='+after);after=feed.sequence??after;for(const event of feed.events??[]){if(event.operationId!==operationId)continue;if(event.type.endsWith('-done'))outcome={ok:true,result:event.result};else if(event.type.endsWith('-failed'))outcome={ok:false,code:event.code??'LIBRARY_OPERATION_FAILED',recovery:event.recovery};}}
+    const operate=async(path,body,key,label,awaitReadback=false)=>{if(pendingOperations[key]?.busy)return;setError('');setPending(p=>({...p,[key]:{label,text:label+'中…',busy:true}}));try{const started=await request(path,{method:'POST',body:JSON.stringify(body)});const {operationId}=started;let after=0;const deadline=Date.now()+600000;let outcome=started.status==='already-installed'?{ok:true}:null;while(!outcome&&Date.now()<deadline){await new Promise(resolve=>setTimeout(resolve,1000));const feed=await request('/hanamesh/library/events?after='+after);after=feed.sequence??after;for(const event of feed.events??[]){if(event.operationId!==operationId)continue;if(event.type.endsWith('-done'))outcome={ok:true,result:event.result};else if(event.type.endsWith('-failed'))outcome={ok:false,code:event.code??'LIBRARY_OPERATION_FAILED',recovery:event.recovery};}if(feed.resetRequired&&!outcome&&!feed.operations?.includes(operationId))outcome={ok:false,unknown:true,code:'OPERATION_RESULT_UNAVAILABLE'};}
       if(!outcome)outcome={ok:false,code:'OPERATION_TIMEOUT'};
-      if(outcome.ok)setChanged(true);
-      setPending(p=>({...p,[key]:outcome.ok?{label,text:label+'完成，重启 DSH 后生效'}:{label,text:label+'失败：'+outcome.code+'（'+failureReason(outcome.code)+'）'+recoveryText(outcome.recovery),failed:true}}));
+      if(outcome.ok&&!awaitReadback)setChanged(true);
+      setPending(p=>({...p,[key]:outcome.ok?(awaitReadback?{label,text:label+'读回中…',busy:true}:{label,text:label+'完成，重启 DSH 后生效'}):{label,text:outcome.unknown?label+'结果不可追溯，请查看已安装列表后再明确操作':label+'失败：'+outcome.code+'（'+failureReason(outcome.code)+'）'+recoveryText(outcome.recovery),failed:true}}));
       await load();return outcome;}catch(e){const code=String(e.message??e);setPending(p=>({...p,[key]:{label,text:label+'失败：'+code,failed:true}}));return{ok:false,code};}};
     const confirmTarget=async()=>{
       const selected=targetSelection;if(selected?.status!=='confirmation-required'||pendingOperations[selected.item.id]?.busy)return;
       setTarget({...selected,status:'installing'});
-      const outcome=await operate('/hanamesh/library/install',{itemId:selected.item.id,packageName:selected.item.package.name},selected.item.id,'安装');
-      if(targetSelection?.item?.id===selected.item.id&&outcome){
-        if(!outcome.ok){setTarget({...targetSelection,status:'failed',error:outcome.code});return;}
+      const outcome=await operate('/hanamesh/library/install',{itemId:selected.item.id,packageName:selected.item.package.name},selected.item.id,'安装',true);
+      if(outcome){
+        if(!outcome.ok){if(targetSelection?.item?.id===selected.item.id)setTarget({...targetSelection,status:outcome.unknown?'result-unavailable':'failed',error:outcome.code});return;}
         try{const fresh=await request('/hanamesh/library/target?'+new URLSearchParams({itemId:selected.item.id,packageName:selected.item.package.name}));
           const row=fresh.item?.installed;
-          if(row?.packageName!==selected.item.package.name||!['registered','installed','installed-not-loaded'].includes(row.state)||(outcome.result?.version&&row.version!==outcome.result.version))throw new Error('INSTALLED_READBACK_MISSING');
+          if(row?.packageName!==selected.item.package.name||!['registered','installed','installed-not-loaded'].includes(row.state)||(outcome.result?.version&&row.version!==outcome.result.version))throw new Error('INSTALL_READBACK_MISMATCH');
+          setPending(p=>({...p,[selected.item.id]:{label:'安装',text:'安装完成，已按精确版本读回'}}));setChanged(true);
           if(targetSelection?.item?.id===selected.item.id)setTarget({...fresh,status:'installed'});
-        }catch(error){if(targetSelection?.item?.id===selected.item.id)setTarget({...targetSelection,status:'readback-failed',error:'安装操作已完成，但目录读回失败：'+String(error.message??error)});}
+        }catch(error){const text='安装读回失败：'+String(error.message??error);setPending(p=>({...p,[selected.item.id]:{label:'安装',text,failed:true}}));if(targetSelection?.item?.id===selected.item.id)setTarget({...targetSelection,status:'readback-failed',error:'安装操作已完成，但目录读回失败：'+String(error.message??error)});}
       }
     };
     const open=async installed=>{
@@ -270,17 +299,24 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     return h('section',{className:embedded?'hm-market hm-market-embedded':'hm-library-overlay hm-market'},
       h('header',null,h('div',null,h('h1',null,'HanaMesh 市场')),embedded?null:h('button',{type:'button',onClick:()=>setLibraryVisible(false)},'关闭')),
       h(MarketConflictNotice,null),
-      h('section',{className:'hm-install-target','aria-label':'安装目标开发小界面'},h('h2',null,'安装目标'),
+      verification===true?h('section',{className:'hm-install-target','aria-label':'安装目标开发小界面'},h('h2',null,'安装目标'),
         h('p',null,'输入目录条目 ID 或包名，市场查询当前目录后确认安装。'),
         h('form',{onSubmit:event=>{event.preventDefault();void openInstallTarget({...(targetItemId.trim()?{itemId:targetItemId.trim()}:{}),...(targetPackageName.trim()?{packageName:targetPackageName.trim()}:{} )}).catch(()=>{});}},
           h('input',{'aria-label':'目录条目 ID',value:targetItemId,placeholder:'itemId（可选）',onChange:event=>setTargetItemId(event.target.value)}),
-          h('input',{'aria-label':'包名',value:targetPackageName,placeholder:'packageName（可选）',onChange:event=>setTargetPackageName(event.target.value)}),h('button',{type:'submit'},'查看安装目标')),
+          h('input',{'aria-label':'包名',value:targetPackageName,placeholder:'packageName（可选）',onChange:event=>setTargetPackageName(event.target.value)}),h('button',{type:'submit'},'查看安装目标'))):null,
         target?h('div',{role:target.status==='confirmation-required'?'dialog':'status','aria-label':'市场安装确认'},
           target.item?h('dl',null,h('dt',null,'插件名'),h('dd',null,target.item.displayName),h('dt',null,'包名'),h('dd',null,target.item.package.name),h('dt',null,'版本'),h('dd',null,target.item.latestVersion??'目录未提供版本'),h('dt',null,'来源'),h('dd',null,target.source?.kind==='fixture'?'测试目录（fixture）':target.source?.manifestUrl??'当前市场目录')):null,
           target.status==='confirmation-required'?h('div',null,h('button',{type:'button',onClick:()=>void confirmTarget()},'确认安装'),h('button',{type:'button',onClick:()=>{targetSequence++;setTarget({...targetSelection,status:'cancelled'});}},'取消')):
-          h('p',{role:['failed','readback-failed'].includes(target.status)?'alert':'status'},({resolving:'正在查询市场目录…',installing:'安装中…',installed:'安装完成，请查看已安装列表',cancelled:'已取消，未安装','already-installed':'已安装，无需重复安装',failed:'未安装：'+(target.error??pending[target.item?.id]?.text??'安装失败'),'readback-failed':target.error})[target.status]),
+          h('p',{role:['failed','readback-failed'].includes(target.status)?'alert':'status'},({resolving:'正在查询市场目录…',installing:'安装中…',installed:'安装完成，请查看已安装列表',cancelled:'已取消，未安装','result-unavailable':'安装结果不可追溯，请查看已安装列表；不会自动重试','already-installed':'已安装，无需重复安装',failed:'未安装：'+(target.error??pending[target.item?.id]?.text??'安装失败'),'readback-failed':target.error})[target.status]),
+          target.item?.source?h('div',{'aria-label':'目录条目来源'},h('p',null,target.item.source.sourceId+' · '+target.item.source.sourceRef),...(target.item.source.sourceLinks??[]).map((link,index)=>h('p',{key:index},h('a',{href:link.sourceUrl,target:'_blank',rel:'noopener noreferrer'},link.sourceId+' · '+link.sourceRef),h('small',null,' '+link.firstSeenAt+' / '+link.lastSeenAt)))):null,
           target.item&&pending[target.item.id]?h('p',{role:pending[target.item.id].failed?'alert':'status'},pending[target.item.id].text):null,
-          ['installed','already-installed'].includes(target.status)&&target.item?.installed?.state==='registered'?openButton(target.item.installed):null):null),
+          ['installed','already-installed'].includes(target.status)&&target.item?.installed?.state==='registered'?openButton(target.item.installed):null):null,
+      verification===true?h('section',{'aria-label':'C-MARKET 合约验证'},h('h2',null,'C-MARKET 合约验证'),
+        h('p',null,'测试版；输入与输出仅供当前客户端验证。安装仍须在正常确认框确认。'),
+        h('select',{'aria-label':'合约调用',value:verificationCall,onChange:event=>{const call=VERIFICATION_CALLS.find(call=>call.method+' '+call.path===event.target.value);if(call){setVerificationCall(event.target.value);setVerificationInput(JSON.stringify(call.sample,null,2));setVerificationOutput(null);}}},...VERIFICATION_CALLS.map(call=>h('option',{key:call.method+' '+call.path,value:call.method+' '+call.path},call.method+' '+call.path))),
+        h('textarea',{'aria-label':'合约样例输入',value:verificationInput,onChange:event=>setVerificationInput(event.target.value)}),
+        h('button',{type:'button',disabled:verifying,onClick:()=>void verify()},'调用合约'),
+        h('pre',{'aria-label':'合约调用输出'},verificationOutput===null?'尚未调用':JSON.stringify(verificationOutput,null,2))):null,
       h('div',{className:'hm-library-toolbar'},h('input',{type:'search',placeholder:'搜索应用与插件',value:query,onChange:e=>setQuery(e.target.value),onKeyDown:e=>{if(e.key==='Enter')void load();}}),h('button',{type:'button',onClick:()=>void load()},'搜索'),
         h('select',{'aria-label':'类别',value:filter,onChange:e=>setFilter(e.target.value)},...filters.map(([value,label])=>h('option',{key:value||'all',value},label)))),
       restartRequired?h(RestartNotice,null):null,
@@ -290,7 +326,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   /** The `market` seat object read by the shell's Extension Management panel. */
   function createMarketSeat(){
     return{
-      render(options){return h(LibraryOverlay,{embedded:true,preferredSubsectionId:options?.preferredSubsectionId});},
+      render(options){return h(LibraryOverlay,{embedded:true,preferredSubsectionId:options?.preferredSubsectionId,...(options?.verification===true?{verification:true}:{})});},
       setSettingsVisible(visible){setEntryVisible(visible!==false);},
       openInstallTarget,
     };

@@ -7,9 +7,9 @@ export function fakeClock(){
   return{now:()=>now,Date:{now:()=>now},setTimeout(fn,ms){const id=++sequence;timers.set(id,{fn,at:now+ms});return id;},clearTimeout(id){timers.delete(id);},
     async advance(ms){const end=now+ms;while(true){const next=[...timers].sort((a,b)=>a[1].at-b[1].at)[0];if(!next||next[1].at>end)break;now=next[1].at;timers.delete(next[0]);next[1].fn();await settle();}now=end;await settle();},get pending(){return timers.size;}};
 }
-export async function clientHarness({fetch,clock,embedded=true,href}={}){
+export async function clientHarness({fetch,clock,embedded=true,verification=false,href}={}){
   const source=await readFile(new URL('../../src/client-ui.js',import.meta.url),'utf8');
-  let loaded,tree,cursor=0,dead=false,scheduled=false,props={embedded};const hooks=[],pendingEffects=[];
+  let loaded,tree,cursor=0,dead=false,scheduled=false,props={embedded,verification};const hooks=[],pendingEffects=[];
   const schedule=()=>{if(!dead&&!scheduled){scheduled=true;queueMicrotask(()=>{scheduled=false;if(!dead)render();});}};
   const React={createElement:(type,props,...children)=>({type,props:props??{},children}),
     useState(initial){const id=cursor++;if(!hooks[id])hooks[id]={value:typeof initial==='function'?initial():initial};return[hooks[id].value,next=>{hooks[id].value=typeof next==='function'?next(hooks[id].value):next;schedule();}];},
