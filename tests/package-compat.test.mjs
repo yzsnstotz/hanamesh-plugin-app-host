@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, mkdtemp, rm } from 'node:fs/promises';
+import { readFile, mkdtemp, mkdir, rm } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -25,9 +25,11 @@ test('NPM-APPHOST-01: published metadata resolves against HM-9 official alpha.2 
 test('NPM-APPHOST-01: actual packed manifest keeps devkit only as a development source range', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'hm-apphost-pack-'));
   try {
+    const cache = join(dir, 'npm-cache');
+    await mkdir(cache);
     const raw = execFileSync('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', dir], {
       cwd: new URL('..', import.meta.url),
-      env: { ...process.env, npm_config_cache: process.env.npm_config_cache ?? '/Users/yzliu/.cache/npm' },
+      env: { ...process.env, npm_config_cache: cache, NPM_CONFIG_CACHE: cache },
       encoding: 'utf8',
     });
     const [{ filename, files }] = JSON.parse(raw);
