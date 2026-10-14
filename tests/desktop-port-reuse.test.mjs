@@ -7,8 +7,10 @@ import {Server,createServer,request} from 'node:http';
 import {FixedGateway} from '../src/gateway.js';
 import {writeFileSync} from 'node:fs';
 const http=(url,opts={})=>new Promise((resolve,reject)=>{const q=request({hostname:'127.0.0.1',port:new URL(url).port,path:new URL(url).pathname+new URL(url).search,agent:false,...opts,headers:{host:new URL(url).host,...opts.headers}},r=>{const b=[];r.on('data',c=>b.push(c));r.once('end',()=>resolve({status:r.statusCode,body:Buffer.concat(b).toString()}));});q.once('error',reject);if(opts.body)q.write(opts.body);q.end();});
-test('D26 security RED: revoked view origin must not inherit another view grant after port reuse',async()=>{
+test('D26 security RED: revoked view origin must not inherit another view grant after port reuse',async t=>{
 const upstream=createServer((_q,r)=>r.end('UNMODIFIED_ORDINARY_BODY'));await new Promise(r=>upstream.listen(0,'127.0.0.1',r));
+// Register cleanup before gateway construction so an unsupported pre-review baseline still finishes RED.
+t.after(()=>upstream.listening?new Promise(r=>upstream.close(r)):undefined);
 const live=new Set(['principal:view-A:instance:gen1','principal:view-B:instance:gen1']);
 const g=new FixedGateway({upstream:`http://127.0.0.1:${upstream.address().port}`,parentOrigin:'dsh-app://app',isLeaseActive:k=>live.has(k)});await g.start();
 let outcome;
