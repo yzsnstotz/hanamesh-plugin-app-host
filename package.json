@@ -68,6 +68,7 @@
     "test:contract": "pnpm run build && node --test --test-reporter=tap --test-concurrency=1 tests/install-target-contract.test.mjs tests/catalog-major-compat.test.mjs",
     "test:mutation": "node scripts/mutations.mjs",
     "test:types": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext tests/consumer.mts",
+    "test:native-driver": "node --test --test-reporter=tap tests/native/driver.test.mjs",
     "check": "npm run check:toolchain && npm run build && npm run check:consistency && npm test && npm run test:mutation && npm run test:types && npm run preflight",
     "prepack": "npm run build",
     "demo": "node examples/demo.mjs",

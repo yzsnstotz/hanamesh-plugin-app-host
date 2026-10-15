@@ -86,6 +86,8 @@ CI=true pnpm test
 pnpm run test:contract
 pnpm run test:mutation
 pnpm run test:types
+# 原生驱动契约（需要已安装并构建的上游 DSH dsh-v0.2.1-alpha.2 检出，不在 pnpm test 内）
+AH_DSH_UPSTREAM=/absolute/upstream-checkout pnpm run test:native-driver
 pnpm run check:consistency
 pnpm run check:toolchain
 pnpm run preflight
