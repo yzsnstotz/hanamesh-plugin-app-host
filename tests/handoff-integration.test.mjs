@@ -41,8 +41,8 @@ function pluginManager(profile) {
   } };
 }
 
-async function boot(t) {
-  const root = await scratch('handoff-integration-'), profile = join(root, 'profile');
+async function boot(t, options = {}) {
+  const root = options.root ?? await scratch('handoff-integration-'), profile = join(root, 'profile');
   await mkdir(profile, { recursive: true });
   await writeFile(join(profile, 'package.json'), JSON.stringify({ name: 'profile', dependencies: {}, dsh: { profile: { bundles: [] } } }));
   const managerPackage=join(profile,'node_modules/@deepseek-ai/dsh-plugin-manager');
@@ -66,7 +66,7 @@ async function boot(t) {
   await until(() => ctx.get('hanameshApps') !== undefined);
   t.after(async () => { await ctx.fiber?.dispose?.(); });
   const headers = { origin, authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json', 'x-hanamesh-client': 'workspace-v1' };
-  return { ctx, manager, port, listener: `http://127.0.0.1:${port}`,
+  return { ctx, manager, port, origin, root, listener: `http://127.0.0.1:${port}`,
     post: (path, body) => http(origin + path, { method: 'POST', headers, body: JSON.stringify(body) }),
     get: path => http(origin + path, { headers }) };
 }
@@ -122,4 +122,43 @@ test('AH-HO02: settings page shows defaults, names and fixed rules; saving re-bi
   assert.equal(refused.status, 400); assert.equal(refused.json.error.code, 'INVALID_HANDOFF_SETTINGS');
   await h.ctx.fiber.dispose();
   await assert.rejects(fetch(`http://127.0.0.1:${next}/hanamesh/library/install-target`), 'unload closes the listener');
+});
+
+
+test('N16-6: both discovery listeners use the current website allowlist without exposing capabilities to other origins', async t => {
+  const h = await boot(t), path = '/hanamesh/library/install-target';
+  for (const base of [h.origin, h.listener]) {
+    const denied = await site(base + path, {headers: {origin: 'https://unapproved.example'}});
+    assert.equal(denied.status, 403);assert.equal(denied.headers.get('access-control-allow-origin'), null);
+    const body = await denied.json();assert.equal(body.client, undefined);assert.equal(body.ready, undefined);assert.equal(body.installTarget, undefined);
+    const deniedPreflight = await site(base + path, {method:'OPTIONS',headers:{origin:'https://unapproved.example'}});assert.equal(deniedPreflight.status,403);assert.equal(deniedPreflight.headers.get('access-control-allow-origin'),null);
+    assert.equal((await fetch(base + path)).status,200,'non-browser local discovery remains available');
+    const invalid = await site(base + path + '?unknown=1');assert.equal(invalid.status,400);assert.equal(invalid.headers.get('access-control-allow-origin'),SITE);
+    const allowed = await site(base + path);assert.equal(allowed.status, 200);
+    assert.equal(allowed.headers.get('access-control-allow-origin'), SITE);assert.equal(allowed.headers.get('vary'), 'Origin');
+    const preflight = await site(base + path, {method: 'OPTIONS'});assert.equal(preflight.status, 204);
+    assert.equal(preflight.headers.get('access-control-allow-origin'), SITE);
+  }
+  const settings = (await h.get('/hanamesh/library/handoff-settings')).json.settings;
+  assert.equal((await h.post('/hanamesh/library/handoff-settings', {...settings, allowedOrigins: ['https://approved.example']})).status, 200);
+  for (const base of [h.origin, h.listener]) {
+    assert.equal((await site(base + path)).status, 403);
+    const allowed = await site(base + path, {headers: {origin: 'https://approved.example'}});assert.equal(allowed.status, 200);
+    assert.equal(allowed.headers.get('access-control-allow-origin'), 'https://approved.example');
+  }
+  assert.equal((await h.get(path)).status, 200, 'the same-origin authenticated workspace keeps its discovery entry');
+});
+
+test('N16-7: real DSH JSON storage preserves pollMs after unloading and reopening the plugin', async t => {
+  const first = await boot(t), settings = (await first.get('/hanamesh/library/handoff-settings')).json.settings;
+  assert.equal((await first.post('/hanamesh/library/handoff-settings', {...settings, pollMs: 900})).status, 200);
+  await first.ctx.fiber.dispose();
+  const second = await boot(t, {root: first.root});
+  assert.equal((await second.get('/hanamesh/library/handoff-settings')).json.settings.pollMs, 900);
+  assert.equal((await second.get('/hanamesh/library/handoffs')).json.pollMs, 900);
+  await second.ctx.fiber.dispose();
+  const file=join(first.root,'storages/hanamesh_library.json'),legacy=JSON.parse(await readFile(file,'utf8'));let removed=0;
+  function removePoll(value){if(!value||typeof value!=='object')return;if(Object.hasOwn(value,'pollMs')){delete value.pollMs;removed++;}for(const child of Object.values(value))removePoll(child);}
+  removePoll(legacy);assert.equal(removed,1,'seed the actual legacy saved-handoff shape without pollMs');await writeFile(file,JSON.stringify(legacy));
+  const third=await boot(t,{root:first.root});assert.equal((await third.get('/hanamesh/library/handoffs')).json.pollMs,1500,'old saved settings reopen with the documented default');
 });

@@ -11,24 +11,31 @@ async function jsonBody(req){
   const chunks=[];let total=0;for await(const chunk of req){total+=chunk.length;requireCondition(total<=65_536,'BODY_TOO_LARGE','Request body is too large.',{},413);chunks.push(chunk);}
   try{return JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw new AppHostError('INVALID_JSON','Malformed JSON.',{},400);}
 }
-function send(res,status,value,publicProbe=false){
-  res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'; frame-ancestors 'none'",...(publicProbe?{'access-control-allow-origin':'*'}:{})});res.end(JSON.stringify(value));
+function send(res,status,value,headers={}){
+  res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'; frame-ancestors 'none'",...headers});res.end(JSON.stringify(value));
 }
 /** `handoff` (optional): {queue, listener, restart} of the website handoff (handoff.js); the client window reads and reports through these authenticated routes. */
 export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,authenticate,authorize,handoff}){
   const origins=controlOrigins(parentOrigin,transportOrigin);parentOrigin=origins.parent;
   requireCondition(typeof authenticate==='function'&&typeof authorize==='function','AUTH_BINDING_REQUIRED','Host authentication and per-operation authorization callbacks are mandatory.');
   const parent=new URL(origins.transport),hosts=new Set(origins.forwarded?[parent.host]:[parent.host,`localhost:${parent.port}`]);
-  return async(req,res)=>{const traceId=randomUUID();try{
+  return async(req,res)=>{const traceId=randomUUID();let cors={};try{
     requireCondition(hosts.has(req.headers.host),'HOST_DENIED','Unrecognized request host.',{},403);
     requireCondition(req.url?.startsWith('/')&&!req.url.startsWith('//')&&!req.url.includes('\\'),'BAD_TARGET','Invalid request target.');
     const requestOrigin=`${parent.protocol}//${req.headers.host}`,url=new URL(req.url,requestOrigin),path=url.pathname;
     requireCondition(LIBRARY_ROUTES.includes(path),'NOT_FOUND','Unknown library route.',{},404);
     requireCondition(req.headers['sec-fetch-dest']!=='iframe','FRAME_CONTROL_DENIED','An application frame cannot control the host.',{},403);
     if(path==='/hanamesh/library/install-target'){
+      // Match the website handoff policy; same-origin workspace and non-browser local reads remain available.
+      const origin=req.headers.origin;
+      if(origin!==undefined){
+        requireCondition(origin===requestOrigin||origins.acceptsOrigin(origin)||library.handoffSettings().allowedOrigins.includes(origin),'ORIGIN_DENIED','Not available.',undefined,403);
+        cors={'access-control-allow-origin':origin,vary:'Origin','access-control-allow-private-network':'true'};
+      }
+      if(req.method==='OPTIONS'){send(res,204,undefined,{...cors,'access-control-allow-methods':'GET'});return;}
       requireCondition(req.method==='GET','METHOD_NOT_ALLOWED','Discovery requires GET.',{},405);
       requireCondition(!url.search,'UNKNOWN_FIELDS','Discovery takes no parameters.');
-      send(res,200,{...library.installTarget(),traceId},true);return;
+      send(res,200,{...library.installTarget(),traceId},cors);return;
     }
     const readOnly=req.method==='GET'&&READ_ROUTES.has(path);
     requireCondition(readOnly||(req.method==='POST'&&!['/hanamesh/library/installedPlugins','/hanamesh/library/target','/hanamesh/library/handoffs'].includes(path)),'METHOD_NOT_ALLOWED','Unsupported library method.',{},405);
@@ -57,5 +64,5 @@ export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,a
     else if(path==='/hanamesh/library/plugins/uninstall')result=await library.uninstallPlugin(input);
     else{requireCondition(Object.keys(input).every(key=>key==='after'),'UNKNOWN_FIELDS','Unknown event parameters.');result=library.events(Number(input.after??0));}
     send(res,!readOnly&&path!=='/hanamesh/library/sources'&&result.status!=='already-installed'?202:200,{...result,traceId});
-  }catch(error){const trusted=error instanceof AppHostError;send(res,trusted?error.status:500,{error:{code:trusted?error.code:'INTERNAL_ERROR',message:trusted?error.message:'The operation could not be completed.',...(trusted?{details:error.details}:{})},traceId});}};
+  }catch(error){const trusted=error instanceof AppHostError;send(res,trusted?error.status:500,{error:{code:trusted?error.code:'INTERNAL_ERROR',message:trusted?error.message:'The operation could not be completed.',...(trusted?{details:error.details}:{})},traceId},cors);}};
 }

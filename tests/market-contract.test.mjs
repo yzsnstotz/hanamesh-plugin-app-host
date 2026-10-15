@@ -86,7 +86,7 @@ async function provider(t, { available = true, gate, cliFails = false, readbackV
   let state = { schema: 1, revision: 0, sources: [] };
   service = await createLibraryService({
     domain: { global: { get: async () => structuredClone(state), set: async value => { state = structuredClone(value); } }, close: async () => {} },
-    host, dataRoot, config: { fixture: catalogFixture, profileDir: profile },
+    host, dataRoot, config: { fixture: catalogFixture, profileDir: profile, handoff: {allowedOrigins: ['https://market.example']} },
     ledgerReader: async () => ({ schema: 1, items: {} }), installer,
   }).init();
   server.on('request', createLibraryHttpHandler(service, {
@@ -110,7 +110,7 @@ for (const available of [true, false]) test(`CM01/${available}: public website d
     assert.equal(reply.json.client, 'dsh', 'standalone official DSH is not evidence of the HanaMesh Desktop');
     assert.equal(reply.json.ready, available);
     assert.deepEqual(reply.json.installTarget, { contract: 'hanamesh.install-target', contractVersion: '1', supported: ['1'], fragmentPrefix: '#hanamesh-install?' });
-    assert.equal(reply.headers['access-control-allow-origin'], '*', 'only public discovery is readable by a website without credentials');
+    assert.equal(reply.headers['access-control-allow-origin'], 'https://market.example', 'only an approved website can read discovery without credentials');
     assert.equal(reply.headers['access-control-allow-credentials'], undefined);
     assert.equal(reply.headers['set-cookie'], undefined);
     assert.equal(reply.headers['cache-control'], 'no-store');
@@ -325,7 +325,7 @@ test('CM13: pinned Cordis/webserver registers the discovery route and plugin dis
   await ctx.start?.();
   await until(() => ctx.get('webServer')?.port > 0);
   const origin = `http://127.0.0.1:${ctx.get('webServer').port}`;
-  const fiber = ctx.plugin(appHost, { dataRoot: join(root, 'apps'), library: { sources: [], handoff: { enabled: false } } });
+  const fiber = ctx.plugin(appHost, { dataRoot: join(root, 'apps'), library: { sources: [], handoff: { enabled: false, allowedOrigins: ['https://market.example'] } } });
   await until(() => ctx.get('hanameshApps'));
   const reply = await http(origin + probePath, { headers: { origin: 'https://market.example' } });
   assert.equal(reply.status, 200, 'the real registered route must answer even when no browser session is present');

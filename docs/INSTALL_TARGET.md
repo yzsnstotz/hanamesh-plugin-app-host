@@ -1,5 +1,9 @@
 # 客户端市场安装目标入口
 
+网站发现：DSH 本地路由与交接监听的 `/hanamesh/library/install-target` 都按当前 `library.handoff.allowedOrigins` 回答跨来源 GET / OPTIONS；只回显获准 Origin（Vary: Origin），不使用通配 CORS。未获准来源为 403 ORIGIN_DENIED，正文无客户端能力。正常工作区同源读取、无 Origin 的本机工具读取保留。其余安装/状态路由继续需要各自认证与确认。
+
+轮询设置：`pollMs` 写入应用库真实 storage domain；保存、卸载再加载后保持。旧记录没有该字段时使用既有配置/默认 1500 ms，不重写其它存储数据。
+
 AppHost `0.2.0-rc.10`（安装目标入口自 rc7；合约声明与随包套件自 rc8；安装失败恢复结果自 rc10）。目标输入、目录解析、确认、安装与结果全部归本模块；调用方只传目录标识，负责呈现原市场表面。
 
 ## Desktop 正常导航入口
