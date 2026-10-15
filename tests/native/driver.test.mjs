@@ -5,11 +5,11 @@
 // test:native-driver`), not part of `pnpm test`. No Electron is started.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp, mkdir, rm, stat} from 'node:fs/promises';
+import {mkdir, rm, stat} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {dirname, isAbsolute, resolve} from 'node:path';
-import {tmpdir} from 'node:os';
+import { scratch } from '../helpers.mjs';
 
 const FIXED = 'd743267388641bc76f17c45ce8b4c231aed1d32c';
 const NEED = 'AH_DSH_UPSTREAM must be the absolute path of an installed and built DSH checkout at tag dsh-v0.2.1-alpha.2 (' + FIXED + ')';
@@ -25,7 +25,7 @@ test('owned native driver satisfies keychain, argv and isolation contracts', asy
   assert.equal(diff.stdout, '', 'NATIVE_TEST_PREPARATION: upstream source must remain unmodified');
   assert.equal(process.version, 'v24.13.1', 'NATIVE_TEST_PREPARATION: Node toolchain');
   const driver = fileURLToPath(new URL('../../scripts/native-desktop/lifecycle.py', import.meta.url));
-  const work = await mkdtemp(resolve(tmpdir(), 'app-host-native-driver-'));
+  const work = await scratch('app-host-native-driver-');
   try {
     for (const dir of ['home', 'dsh-home', 'userData', 'tmp', 'cache', 'scratch']) await mkdir(resolve(work, dir));
     const args = [fileURLToPath(new URL('../../scripts/native-driver-test.py', import.meta.url)),

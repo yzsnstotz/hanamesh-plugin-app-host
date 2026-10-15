@@ -17,13 +17,14 @@ const present=row=>row&&['registered','installed','installed-not-loaded'].includ
  * `client`: which client this host is ('dsh' | 'hanamesh', see client-identity.js). `unavailable`: when there is no
  * installer, the facts that are missing, in words a person can act on (`[{need, how}]`); probes and 503s carry them.
  */
-export function createLibraryService({domain,host,config={},dataRoot,ledgerReader,installer,client='dsh',unavailable=()=>[]}){
+export function createLibraryService({domain,host,config={},dataRoot,ledgerReader,installer,client='dsh',unavailable=()=>[],logger}){
+  const warn=(message,...args)=>{if(typeof logger?.warn==='function')logger.warn(message,...args);else console.warn(message,...args);};
   const ready=()=>typeof installer?.install==='function'&&installer.ready!==false;
   const events=[];let sequence=0;let state;const running=new Map(),installing=new Map();let bootDependencies;
   const eventRetention=config.eventRetention??512;
   requireCondition(Number.isSafeInteger(eventRetention)&&eventRetention>0,'INVALID_INPUT','library.eventRetention must be a positive safe integer.');
   const observers=new Set();
-  const emit=event=>{const value={sequence:++sequence,at:Date.now(),...event};events.push(value);if(events.length>eventRetention)events.shift();for(const observer of observers){try{observer(value);}catch{}}return value;};
+  const emit=event=>{const value={sequence:++sequence,at:Date.now(),...event};events.push(value);if(events.length>eventRetention)events.shift();for(const observer of observers){try{observer(value);}catch(error){warn('hanamesh-app-host library: event observer failed (%s): %s',value.type,error?.message??error);}}return value;};
   // Real sources hold ~10k entries (2026-09-20: market.hanamesh.com 12,121). `/hanamesh/library` keeps its rc.16 default
   // (`category=hanamesh-app`, backward compatible); the rc.28 market page asks for `category=''` (everything) explicitly.
   const catalog=({q='',category='hanamesh-app',cursor}={})=>loadCatalog({fixture:config.fixture,sources:state.sources,fetchImpl:config.fetchImpl,query:q,category,cursor});
@@ -32,11 +33,19 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   async function persist(next){next.revision=state.revision+1;await domain.global.set(next);state=next;}
   async function operation(type,task){const operationId=randomUUID();emit({type:`library.${type}-started`,operationId});const work=Promise.resolve().then(()=>task(operationId)).then(result=>{emit({type:`library.${type}-done`,operationId,result});return result;},error=>{emit({type:`library.${type}-failed`,operationId,code:error.code??'LIBRARY_OPERATION_FAILED',...(error.recovery?{recovery:error.recovery}:{})});throw error;}).finally(()=>running.delete(operationId));running.set(operationId,work);work.catch(()=>{});return{operationId,status:'started'};}
   const requireInstaller=(message)=>requireCondition(ready(),'LIBRARY_INSTALL_UNAVAILABLE',message,{need:unavailable()},503);
-  /** The host itself loaded/unloaded a plugin (pluginManager `applied`): it no longer waits for a restart. */
+  /**
+   * The host itself loaded/unloaded a plugin (pluginManager `applied`): it no longer waits for a restart. When the profile
+   * cannot be read back, the result says so (`restartBaseline`) instead of the installed list silently showing 「需重启」.
+   */
+  let bootSnapshotError;
   async function markLive(result){
-    if(result?.status!=='applied'||!bootDependencies||!config.profileDir)return;
-    const now=await snapshotProfileDependencies(config.profileDir).catch(()=>undefined);if(!now)return;
+    if(result?.status!=='applied'||!config.profileDir)return result;
+    if(!bootDependencies)return{...result,restartBaseline:{updated:false,code:'BOOT_SNAPSHOT_UNREADABLE',cause:bootSnapshotError}};
+    let now;
+    try{now=await snapshotProfileDependencies(config.profileDir);}
+    catch(error){const code=error?.code??'PROFILE_READ_FAILED';warn('hanamesh-app-host library: profile read-back after live %s failed (%s)',result.packageName,code);return{...result,restartBaseline:{updated:false,code}};}
     if(now[result.packageName])bootDependencies[result.packageName]=now[result.packageName];else delete bootDependencies[result.packageName];
+    return{...result,restartBaseline:{updated:true}};
   }
   async function resolveTarget(input){
     requireCondition(input&&typeof input==='object'&&!Array.isArray(input),'INVALID_INPUT','Only itemId and packageName are accepted.');
@@ -73,7 +82,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   }
   function installItem(item){
     const key=item.package.name;if(installing.has(key))return installing.get(key);
-    const started=operation('install',async operationId=>{try{const result=await installer.install(item,{operationId});await markLive(result);return result;}finally{installing.delete(key);}});
+    const started=operation('install',async operationId=>{try{return await markLive(await installer.install(item,{operationId}));}finally{installing.delete(key);}});
     installing.set(key,started);return started;
   }
   async function findByPackage(packageName){
@@ -84,8 +93,9 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   const runningApp=appId=>host.instanceList().some(instance=>instance.appId===appId&&!['stopped','failed','interrupted'].includes(instance.status));
   return{
     async init(){state=await domain.global.get();if(state.sources.length===0&&Array.isArray(config.sources)&&config.sources.length){const sources=config.sources.map((source,index)=>({manifestUrl:validateManifestUrl(source.manifestUrl).href,enabled:source.enabled===true||(source.enabled!==false&&index===0)}));requireCondition(sources.filter(source=>source.enabled).length===1,'CATALOG_SOURCE_REQUIRED','Exactly one catalog source must be enabled.');await persist({...state,sources});}
-      // rc.28: the dependency set at boot is the "loaded" baseline for plugin restart states; unreadable → everything counts as loaded.
-      if(config.profileDir){try{bootDependencies=await snapshotProfileDependencies(config.profileDir);}catch{bootDependencies=undefined;}}
+      // rc.28: the dependency set at boot is the "loaded" baseline for plugin restart states; unreadable → everything counts as
+      // loaded, logged and reported as `restartBaseline` on list() so the market can say restart states are unknown.
+      if(config.profileDir){try{bootDependencies=await snapshotProfileDependencies(config.profileDir);}catch(error){bootDependencies=undefined;bootSnapshotError=error?.code??'PROFILE_READ_FAILED';warn('hanamesh-app-host library: boot profile snapshot unreadable (%s); restart states cannot be told',bootSnapshotError);}}
       return this;},
     async list({q='',category,cursor}={}){requireCondition(typeof q==='string'&&q.length<=200,'INVALID_QUERY','q must be a string of at most 200 characters.');requireCondition(category===undefined||(typeof category==='string'&&category.length<=64&&/^[a-z0-9._:-]*$/.test(category)),'INVALID_QUERY','category is invalid.');requireCondition(cursor===undefined||(typeof cursor==='string'&&cursor.length>0&&cursor.length<=2048),'INVALID_CURSOR','cursor is invalid.');
       const page=await catalog({q,category,cursor});const installedRows=await installed();const pluginRows=await installedPlugins();
@@ -93,7 +103,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       const items=page.items.map(item=>{const row=byPackage.get(item.package?.name)??null;const kind=itemKind(item);
         return{...item,kind,application:isApplication(item),installed:row,upgradeAvailable:Boolean(row&&row.version&&row.state!=='uninstalled-not-unloaded'&&upgradeAvailable(item.latestVersion,row.version))};});
       const categories=[...new Set(page.items.flatMap(item=>item.categories??[]))].sort();
-      return{source:page.source,items,categories,installed:installedRows,plugins:pluginRows,restartRequired:[...pluginRows,...installedRows].some(row=>RESTART_STATES.has(row.state)),page:page.page};},
+      return{source:page.source,items,categories,installed:installedRows,plugins:pluginRows,restartRequired:[...pluginRows,...installedRows].some(row=>RESTART_STATES.has(row.state)),...(bootSnapshotError?{restartBaseline:{known:false,code:bootSnapshotError}}:{}),page:page.page};},
     sources(){return{sources:structuredClone(state.sources),revision:state.revision};},
     /** Effective website handoff settings: saved (library settings page) → plugin config `library.handoff` → proposed defaults. */
     handoffSettings(){return handoffSettings(state.handoff??config.handoff??{});},
@@ -121,7 +131,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
     async uninstallPlugin(input){requireInstaller('Plugin uninstall is unavailable.');const packageName=input?.packageName;requireCondition(text(packageName,214)&&PACKAGE_NAME.test(packageName),'INVALID_INPUT','packageName is required.');requireCondition(!protectedPackage(packageName),'PACKAGE_DENIED','The HanaMesh suite is not managed through the market.',{packageName},403);
       const app=(await installed()).find(row=>row.packageName===packageName&&row.appId);
       if(app)return await operation('uninstall',()=>installer.uninstall({appId:app.appId,packageName,runtimeItem:app.runtimeItem,running:runningApp(app.appId)}));
-      return await operation('uninstall',async()=>{const result=await installer.uninstallPlugin({packageName});await markLive(result);return result;});},
+      return await operation('uninstall',async()=>{return await markLive(await installer.uninstallPlugin({packageName}));});},
     /** Installed application packages of the profile (empty without `profileDir`); rc.27 binds package names for usage evidence. */
     installed,
     /** rc.28: installed plugins (every non-application dependency of the profile) with restart states. */

@@ -7,21 +7,20 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, rm, realpath, readFile } from 'node:fs/promises';
+import { mkdir, writeFile, rm, realpath, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { join, resolve } from 'node:path';
-import { tmpdir } from 'node:os';
 import { createLibraryInstaller, PROTECTED_PACKAGES } from '../src/library/install.js';
 import { scanInstalledPlugins, snapshotProfileDependencies, readProfileManifest } from '../src/library/installed.js';
 import { createLibraryService } from '../src/library/service.js';
 import { createLibraryHttpHandler, LIBRARY_ROUTES } from '../src/library/routes.js';
 import { compareVersions, upgradeAvailable, itemKind } from '../src/library/catalog.js';
-import { http, until } from './helpers.mjs';
+import { http, until, scratch } from './helpers.mjs';
 
 const fixture=resolve('tests/fixtures/catalog/provider-page.json');
 const appDefinition={id:'vibe',name:'Vibe',singleInstanceOnly:true,deployments:[{id:'local',dataId:'data-v1',mode:'owned',command:'/bin/sh',args:['-c','exec','{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:'Vibe'}}]};
 async function profileFixture(t,{dependencies,bundles=['@deepseek-ai/dsh-base','@deepseek-ai/dsh-web-app'],packages={}}){
-  const root=await realpath(await mkdtemp(join(tmpdir(),'hm-market-')));t.after(()=>rm(root,{recursive:true,force:true}));
+  const root=await realpath(await scratch('hm-market-'));t.after(()=>rm(root,{recursive:true,force:true}));
   const profile=join(root,'profiles','web');await mkdir(profile,{recursive:true});
   await writeFile(join(profile,'package.json'),JSON.stringify({name:'dsh-profile-web',private:true,dependencies,dsh:{profile:{bundles}}}));
   for(const[name,pkg]of Object.entries(packages)){const dir=join(profile,'node_modules',...name.split('/'));await mkdir(dir,{recursive:true});await writeFile(join(dir,'package.json'),JSON.stringify({name,...pkg}));if(pkg.hanamesh?.app)await writeFile(join(dir,'app.json'),JSON.stringify(appDefinition));}
@@ -65,8 +64,8 @@ test('AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite
   const result=await installer.uninstallPlugin({packageName:'dsh-plugin-tether'});
   assert.deepEqual(result,{status:'restart-required',kind:'plugin',packageName:'dsh-plugin-tether'});
   assert.deepEqual(calls[0].args,['/opt/dsh/lib/bin.js','plugin','--profile','web','remove','dsh-plugin-tether']);
-  assert.deepEqual([...PROTECTED_PACKAGES].sort(),['@hanamesh/dsh-app-host','@hanamesh/dsh-core','@hanamesh/dsh-usage','hanamesh-core','hanamesh-usage']);
-  for(const name of ['hanamesh-core','hanamesh-usage','@hanamesh/dsh-app-host']){
+  assert.deepEqual([...PROTECTED_PACKAGES].sort(),['@hanamesh/dsh-app-host','@hanamesh/dsh-core','@hanamesh/dsh-usage','hanamesh-brand','hanamesh-core','hanamesh-usage']);
+  for(const name of ['hanamesh-core','hanamesh-usage','@hanamesh/dsh-app-host','hanamesh-brand']){
     await assert.rejects(installer.uninstallPlugin({packageName:name}),{code:'PACKAGE_DENIED'});
     await assert.rejects(installer.installPlugin({packageName:name}),{code:'PACKAGE_DENIED'});
     await assert.rejects(installer.install({...plugin,package:{registry:'npm',name}}),{code:'PACKAGE_DENIED'});
@@ -194,6 +193,7 @@ test('AH-M07 (client source): the entry is 「市场」, cards carry kind/state/
   assert.match(source,/item\.upgradeAvailable\)action=/,'upgrade action');
   assert.match(source,/'升级到 '\+item\.latestVersion/);
   assert.match(source,/'installed-not-loaded':'需重启'/);
-  assert.match(source,/const PROTECTED=new Set\(\['@hanamesh\/dsh-app-host','hanamesh-core','hanamesh-usage'\]\)/,'no uninstall button for the suite');
+  const clientProtected=JSON.parse(source.match(/const PROTECTED=new Set\((\[[^\]]*\])\)/)[1].replaceAll("'",'"'));
+  assert.deepEqual(clientProtected.sort(),[...PROTECTED_PACKAGES].sort(),'no uninstall button for the suite (brand included), same list as the host');
   assert.doesNotMatch(source,/ctx\.get\(/,'the browser bundle never reads host services');
 });

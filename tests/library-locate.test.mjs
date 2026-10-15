@@ -4,20 +4,20 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, symlink, realpath, rm } from 'node:fs/promises';
+import { mkdir, writeFile, symlink, realpath, rm } from 'node:fs/promises';
 import { basename, join } from 'node:path';
-import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { DEFAULT_CATALOG_SOURCES, inferDshBin, inferNodeBinary, inferProfileDir, resolveLibraryLocations } from '../src/library/locate.js';
 import { createLibraryService } from '../src/library/service.js';
 import { scanInstalled } from '../src/library/installed.js';
+import { scratch } from './helpers.mjs';
 
 const HANAMESH_SOURCE='https://market.hanamesh.com/catalog-source.json';
 const argvDsh=['/opt/node/bin/node','/home/u/.dsh/node_modules/@deepseek-ai/dsh/lib/bin.js','--profile','web'];
 
 /** A `dsh plugin add` profile: package.json written by `dsh plugin`, hoisted node_modules, this package inside. */
 async function profileFixture(t,{link=false,manifest}={}){
-  const root=await realpath(await mkdtemp(join(tmpdir(),'hm-locate-')));t.after(()=>rm(root,{recursive:true,force:true}));
+  const root=await realpath(await scratch('hm-locate-'));t.after(()=>rm(root,{recursive:true,force:true}));
   const profile=join(root,'profiles','suite');await mkdir(join(profile,'node_modules','@hanamesh'),{recursive:true});
   await writeFile(join(profile,'package.json'),JSON.stringify(manifest??{name:'dsh-profile-suite',private:true,dependencies:{'hanamesh-core':'0.2.0-rc.27','@hanamesh/app-vibe-trading':'0.1.0-rc.22'},dsh:{profile:{bundles:['@deepseek-ai/dsh-base','@deepseek-ai/dsh-web-app','hanamesh-core']}}}));
   let pkg=join(profile,'node_modules','@hanamesh','dsh-app-host');

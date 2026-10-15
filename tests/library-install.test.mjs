@@ -1,16 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, readFile, rm, access, stat } from 'node:fs/promises';
+import { mkdir, writeFile, readFile, rm, access, stat } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import { createLibraryInstaller } from '../src/library/install.js';
+import { scratch } from './helpers.mjs';
 
 async function installedPackage(profile){const root=join(profile,'node_modules','@hanamesh','app-vibe-trading');await mkdir(root,{recursive:true});
   await writeFile(join(root,'package.json'),JSON.stringify({name:'@hanamesh/app-vibe-trading',version:'1.2.3',hanamesh:{app:'app.json'}}));
   await writeFile(join(root,'app.json'),JSON.stringify({id:'vibe',name:'Vibe',deployments:[{id:'local',dataId:'data-v1',mode:'owned',args:['{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:'Vibe'},runtime:{manifest:{schema:1,sources:[],items:[{id:'runtime',version:'0.1.15',kind:'tar.gz',installTo:'runtime',platforms:{}}]},item:'runtime',exec:'bin/vibe'}}]}));}
 
 test('AH-L04/L05: install uses explicit Node + DSH argv, exact stable registry version, then provisions the declared item',async()=>{
-  const profile=await mkdtemp(join(tmpdir(),'hm-library-install-')),dataRoot=join(profile,'data');const calls=[],events=[];
+  const profile=await scratch('hm-library-install-'),dataRoot=join(profile,'data');const calls=[],events=[];
   const installer=createLibraryInstaller({profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
     fetchImpl:async()=>new Response(JSON.stringify({version:'1.2.3'}),{headers:{'content-type':'application/json'}}),
     spawn:async(command,args,options)=>{calls.push({command,args,options});await installedPackage(profile);await writeFile(join(profile,'package.json'),JSON.stringify({dependencies:{'@hanamesh/app-vibe-trading':'1.2.3'}}));return{code:0,stdout:'ok',stderr:''};},
@@ -24,7 +24,7 @@ test('AH-L04/L05: install uses explicit Node + DSH argv, exact stable registry v
 });
 
 test('AH-L06: uninstall removes the package and owned runtime but preserves application data',async()=>{
-  const profile=await mkdtemp(join(tmpdir(),'hm-library-remove-')),dataRoot=join(profile,'data');await installedPackage(profile);
+  const profile=await scratch('hm-library-remove-'),dataRoot=join(profile,'data');await installedPackage(profile);
   const kept=join(dataRoot,'principal','vibe','local','data-v1','single','user.db');await mkdir(join(kept,'..'),{recursive:true});await writeFile(kept,'keep');
   const calls=[];const installer=createLibraryInstaller({profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
     fetchImpl:async()=>{throw new Error('unused');},spawn:async(command,args,options)=>{calls.push({command,args,options});return{code:0,stdout:'',stderr:''};},
@@ -37,7 +37,7 @@ test('AH-L06: uninstall removes the package and owned runtime but preserves appl
 });
 
 test('AH-RI01: uninstall clears generated Python bytecode left by provision remove',async()=>{
-  const profile=await mkdtemp(join(tmpdir(),'hm-library-bytecode-')),dataRoot=join(profile,'data');
+  const profile=await scratch('hm-library-bytecode-'),dataRoot=join(profile,'data');
   const runtimeRoot=join(dataRoot,'runtimes','vibe'),target=join(runtimeRoot,'vibe-trading');
   const cache=join(target,'python','lib','__pycache__');await mkdir(cache,{recursive:true});
   const bytecode=join(cache,'module.cpython-311.pyc');await writeFile(bytecode,'generated');
@@ -49,7 +49,7 @@ test('AH-RI01: uninstall clears generated Python bytecode left by provision remo
 });
 
 test('AH-RI02: uninstall preserves unknown runtime residue and reports incomplete cleanup',async()=>{
-  const profile=await mkdtemp(join(tmpdir(),'hm-library-residue-')),dataRoot=join(profile,'data');
+  const profile=await scratch('hm-library-residue-'),dataRoot=join(profile,'data');
   const target=join(dataRoot,'runtimes','vibe','vibe-trading');await mkdir(target,{recursive:true});
   const other=join(target,'user.txt');await writeFile(other,'keep');
   const installer=createLibraryInstaller({profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
@@ -71,7 +71,7 @@ function cliDouble(profile,{failing=new Set(),order=[]}={}){
 const registry=async()=>new Response(JSON.stringify({version:'2.0.0'}),{headers:{'content-type':'application/json'}});
 
 test('AH-RB01: a failed install keeps its original error; a failed compensation is reported with residue and kept originals, never as restored',async()=>{
-  const profile=await mkdtemp(join(tmpdir(),'hm-library-recovery-')),dataRoot=join(profile,'data');
+  const profile=await scratch('hm-library-recovery-'),dataRoot=join(profile,'data');
   await writeFile(join(profile,'package.json'),JSON.stringify({dependencies:{}}));await writeFile(join(profile,'pnpm-lock.yaml'),'{}');
   const events=[];const installer=createLibraryInstaller({profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
     fetchImpl:registry,spawn:cliDouble(profile,{failing:new Set(['remove'])}),ledger:async()=>({schema:1,items:{}}),emit:event=>events.push(event)});
@@ -84,7 +84,7 @@ test('AH-RB01: a failed install keeps its original error; a failed compensation 
 });
 
 test('AH-RB02: market installs and their compensations never interleave profile writes inside one host',async()=>{
-  const profile=await mkdtemp(join(tmpdir(),'hm-library-serial-')),dataRoot=join(profile,'data');
+  const profile=await scratch('hm-library-serial-'),dataRoot=join(profile,'data');
   await writeFile(join(profile,'package.json'),JSON.stringify({dependencies:{}}));await writeFile(join(profile,'pnpm-lock.yaml'),'{}');
   const order=[];const installer=createLibraryInstaller({profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
     fetchImpl:registry,spawn:cliDouble(profile,{order}),ledger:async()=>({schema:1,items:{}})});

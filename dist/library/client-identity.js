@@ -25,7 +25,7 @@ export async function detectClient({ desktop, platform = process.platform, readB
   let id;
   try {
     id = readBundleId ? await readBundleId(app) : (await promisify(execFile)('/usr/bin/plutil',
-      ['-extract', 'CFBundleIdentifier', 'raw', '-o', '-', join(app, 'Contents', 'Info.plist')], { timeout: 2000 })).stdout.trim();
+      ['-extract', 'CFBundleIdentifier', 'raw', '-o', '-', join(app, 'Contents', 'Info.plist')])).stdout.trim();
   } catch (error) { return { client: 'dsh', evidence: `bundle-id-unreadable:${error.code ?? error.message}` }; }
   return { client: id === HANAMESH_BUNDLE_ID ? 'hanamesh' : 'dsh', evidence: `bundle-id:${id}` };
 }

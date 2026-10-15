@@ -1,4 +1,5 @@
 import { mkdtemp, rm, realpath, readFile } from 'node:fs/promises';
+import { rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { request, createServer } from 'node:http';
@@ -7,7 +8,15 @@ import { AppHost, AtomicFileStore } from '../src/index.js';
 export const fixture=resolve(import.meta.dirname,'fixtures/app.mjs');
 export const parentOrigin='http://127.0.0.1:49123';
 export const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-export async function temporary(){return await mkdtemp(join(await realpath(tmpdir()),`hm-app-host-${process.pid}-`));}
+// Every test directory lives under one root per test process, removed when that process exits — passed, failed or
+// thrown. Tests never call mkdtemp on the system temp dir themselves (tests/temp-cleanup.test.mjs guards this).
+let processRoot,processRootPath;
+export async function scratch(prefix='t-'){
+  processRoot??=realpath(tmpdir()).then(base=>mkdtemp(join(base,`hm-app-host-${process.pid}-`))).then(path=>processRootPath=path);
+  return await mkdtemp(join(await processRoot,prefix));
+}
+process.on('exit',()=>{if(processRootPath)rmSync(processRootPath,{recursive:true,force:true});});
+export async function temporary(){return await scratch('t-');}
 export function definition({id='example',single=true,extra={},embedding='direct'}={}){
   const args=[fixture,'port={{port}}','data={{dataDir}}','runtimeId={{runtimeId}}','instanceId={{instanceId}}',
     ...Object.entries(extra).map(([k,v])=>`${k}=${v}`)];

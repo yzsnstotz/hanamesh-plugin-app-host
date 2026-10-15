@@ -4,7 +4,7 @@
  * DSH web server. The library therefore opens its own loopback listener on the first free port of a named list and
  * answers exactly three routes there:
  *
- *   GET  /hanamesh/library/install-target   public probe (client, ready, need), ACAO *
+ *   GET  /hanamesh/library/install-target   probe (client, ready, need) for allowed website origins only
  *   POST /hanamesh/library/handoff          queue a target from an allowed website origin; never installs
  *   GET  /hanamesh/library/handoff?id=      that handoff's state for the same origin
  *
@@ -17,13 +17,30 @@ import { AppHostError, requireCondition } from '../errors.js';
 
 export const HANDOFF_STATES = Object.freeze(['pending', 'shown', 'confirmed', 'installed', 'cancelled', 'failed']);
 const FINAL = new Set(['installed', 'cancelled', 'failed']);
-/** Proposed defaults (owner decides; all three are visible and editable in the library settings). */
+/** Defaults (owner-approved 2026-10-15, plan §2); every one is visible and editable in the library settings. */
 export const HANDOFF_DEFAULTS = Object.freeze({
   enabled: true,
   ports: Object.freeze([39317, 39318, 39319]),
   allowedOrigins: Object.freeze(['https://market.hanamesh.com']),
   ttlMs: 600_000,
+  pollMs: 1_500,
 });
+/** Largest accepted handoff request body. A target is itemId (≤160) + packageName (≤214) + contractVersion. */
+export const HANDOFF_BODY_MAX_BYTES = 4096;
+const TIMER_MAX_MS = 2_147_483_647;
+/** Fixed rules (correctness, not policy): listed on the settings page with the reason they cannot be switched off. */
+export const HANDOFF_RULES = Object.freeze([
+  { rule: '只在本机 127.0.0.1 上监听，请求的 Host 必须是 127.0.0.1 或 localhost 加监听端口', why: '防止别的机器或 DNS 重绑定的网页冒充本机' },
+  { rule: '只有「允许交接的网站」里的网站能探测本客户端、交接安装、读交接状态；别的网站什么也读不到', why: '否则任何网页都能知道你装了什么客户端、缺什么，用来识别你' },
+  { rule: '网站交接只会在应用库里弹出确认；只有你点「确认安装」才会安装', why: '网站不能替你决定装什么' },
+  { rule: '交接状态只给发起它的那个网站看', why: '一个网站不能读另一个网站的交接' },
+  { rule: `交接请求体不超过 ${HANDOFF_BODY_MAX_BYTES} 字节`, why: '合法请求只有插件 id、包名、合约版本三项，最长不到 500 字节；更大的一定不是交接' },
+  { rule: '端口在 1024–65535 之间、互不重复，至少一个', why: '1024 以下要管理员权限；没有端口就没有地方让网站找到' },
+  { rule: '网站必须写成来源（协议 + 域名 [+ 端口]），http 只允许 127.0.0.1 / localhost', why: '浏览器按来源校验；明文 http 的公网网站可被中间人冒充' },
+  { rule: `轮询间隔是 1–${TIMER_MAX_MS} 毫秒的整数，作废时间必须大于轮询间隔`, why: '计时器超过上限会立即触发；作废早于第一次轮询，交接永远不会被看到' },
+]);
+export const HANDOFF_SETTING_NAMES = Object.freeze({ enabled: 'library.handoff.enabled', ports: 'library.handoff.ports',
+  allowedOrigins: 'library.handoff.allowedOrigins', ttlMs: 'library.handoff.ttlMs', pollMs: 'library.handoff.pollMs' });
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 /** Validate and normalise handoff settings; every field is required after merging with the defaults. */
@@ -32,24 +49,29 @@ export function handoffSettings(input = {}) {
   const invalid = message => new AppHostError('INVALID_HANDOFF_SETTINGS', message, {}, 400);
   if (Object.keys(value).some(key => !(key in HANDOFF_DEFAULTS))) throw invalid('Unknown handoff setting.');
   if (typeof value.enabled !== 'boolean') throw invalid('enabled must be true or false.');
-  if (!Array.isArray(value.ports) || value.ports.length < 1 || value.ports.length > 16 ||
+  if (!Array.isArray(value.ports) || value.ports.length < 1 ||
     value.ports.some(port => !Number.isInteger(port) || port < 1024 || port > 65535) || new Set(value.ports).size !== value.ports.length)
-    throw invalid('ports must be 1–16 distinct ports between 1024 and 65535.');
-  if (!Array.isArray(value.allowedOrigins) || value.allowedOrigins.length > 32) throw invalid('allowedOrigins must be a list of at most 32 origins.');
+    throw invalid('ports must be at least one distinct port between 1024 and 65535.');
+  if (!Array.isArray(value.allowedOrigins)) throw invalid('allowedOrigins must be a list of origins.');
   const origins = value.allowedOrigins.map(origin => {
     let url; try { url = new URL(origin); } catch { throw invalid(`Not an origin: ${origin}`); }
     if (!['https:', 'http:'].includes(url.protocol) || url.origin !== origin.replace(/\/$/, '')) throw invalid(`Not an origin: ${origin}`);
     if (url.protocol === 'http:' && !['127.0.0.1', 'localhost'].includes(url.hostname)) throw invalid(`Plain http is only accepted for loopback: ${origin}`);
     return url.origin;
   });
-  if (!Number.isSafeInteger(value.ttlMs) || value.ttlMs < 10_000 || value.ttlMs > 86_400_000) throw invalid('ttlMs must be between 10000 and 86400000.');
-  return { enabled: value.enabled, ports: [...value.ports], allowedOrigins: [...new Set(origins)], ttlMs: value.ttlMs };
+  if (!Number.isInteger(value.pollMs) || value.pollMs < 1 || value.pollMs > TIMER_MAX_MS) throw invalid(`pollMs must be an integer between 1 and ${TIMER_MAX_MS}.`);
+  if (!Number.isSafeInteger(value.ttlMs) || value.ttlMs <= value.pollMs) throw invalid('ttlMs must be an integer greater than pollMs.');
+  return { enabled: value.enabled, ports: [...value.ports], allowedOrigins: [...new Set(origins)], ttlMs: value.ttlMs, pollMs: value.pollMs };
 }
 
-/** In-memory handoffs. `observe` links library install events to the handoff shown for the same package. */
-export function createHandoffQueue({ ttlMs = () => HANDOFF_DEFAULTS.ttlMs, now = Date.now } = {}) {
-  const records = new Map(), listeners = new Set();
-  const publish = record => { for (const listener of listeners) { try { listener(view(record)); } catch {} } };
+/**
+ * In-memory handoffs. `observe` links library install events to the handoff shown for the same package. `clientPolled`
+ * records when the client window last fetched open handoffs, so an expiry can say whether the window ever saw it.
+ * A failing subscriber is reported through `onError` (default: console.warn) and does not stop the others.
+ */
+export function createHandoffQueue({ ttlMs = () => HANDOFF_DEFAULTS.ttlMs, now = Date.now, onError = (message, error) => console.warn(message, error) } = {}) {
+  const records = new Map(), listeners = new Set(); let lastPolledAt = null;
+  const publish = record => { for (const listener of listeners) { try { listener(view(record)); } catch (error) { onError('hanamesh-app-host handoff: subscriber failed', error); } } };
   const view = record => ({ handoffId: record.handoffId, state: record.state, origin: record.origin,
     ...(record.itemId ? { itemId: record.itemId } : {}), ...(record.packageName ? { packageName: record.packageName } : {}),
     ...(record.displayName ? { displayName: record.displayName } : {}), ...(record.result ? { result: record.result } : {}),
@@ -61,7 +83,13 @@ export function createHandoffQueue({ ttlMs = () => HANDOFF_DEFAULTS.ttlMs, now =
   const expire = () => {
     for (const record of records.values()) {
       if (!FINAL.has(record.state) && now() - record.createdAt > ttlMs())
-        move(record, 'failed', { error: { code: 'HANDOFF_EXPIRED', message: '交接已过期：在应用库里没有被确认。' } });
+        move(record, 'failed', { error: record.state === 'pending'
+          ? { code: 'HANDOFF_NOT_PICKED_UP', message: lastPolledAt === null || lastPolledAt < record.createdAt
+            ? '交接已过期：客户端的应用库窗口一直没有来取（窗口没打开，或应用库读取交接失败，见应用库提示）。'
+            : '交接已过期：应用库取到了交接，但没能弹出确认，也没有报回原因。', lastPolledAt }
+          : { code: 'HANDOFF_EXPIRED', message: record.state === 'shown'
+            ? '交接已过期：确认框已经弹出，但到期前没有收到「确认」或「取消」（如果点了取消，说明取消没能报回，见应用库提示）。'
+            : '交接已过期：已确认安装，但到期前没有收到安装结果。' } });
       if (FINAL.has(record.state) && now() - record.updatedAt > ttlMs()) records.delete(record.handoffId);
     }
   };
@@ -81,13 +109,23 @@ export function createHandoffQueue({ ttlMs = () => HANDOFF_DEFAULTS.ttlMs, now =
     },
     /** Handoffs the client window still has to show or is showing. */
     open() { expire(); return [...records.values()].filter(record => ['pending', 'shown', 'confirmed'].includes(record.state)).map(view); },
-    /** Client window reports: shown | cancelled. Installs are linked from library events, never from a client claim. */
+    clientPolled() { lastPolledAt = now(); },
+    lastPolledAt: () => lastPolledAt,
+    /**
+     * Client window reports: shown | cancelled | failed (the confirmation could not be opened; `error.code` says why).
+     * Installs are linked from library events, never from a client claim.
+     */
     report(input) {
-      requireCondition(input && typeof input === 'object' && Object.keys(input).every(key => ['handoffId', 'state'].includes(key)) &&
-        ['shown', 'cancelled'].includes(input.state), 'INVALID_INPUT', 'Only handoffId and state shown|cancelled are accepted.');
+      requireCondition(input && typeof input === 'object' && Object.keys(input).every(key => ['handoffId', 'state', 'error'].includes(key)) &&
+        ['shown', 'cancelled', 'failed'].includes(input.state) && (input.state === 'failed'
+          ? input.error && typeof input.error === 'object' && Object.keys(input.error).every(key => key === 'code') && typeof input.error.code === 'string' && /^[A-Z][A-Z0-9_]{0,63}$/.test(input.error.code)
+          : input.error === undefined),
+      'INVALID_INPUT', 'Only handoffId and state shown|cancelled, or failed with error.code, are accepted.');
       const record = records.get(this.get(input.handoffId).handoffId);
       if (input.state === 'shown' && record.state !== 'pending') return view(record);
-      move(record, input.state); return view(record);
+      move(record, input.state, input.state === 'failed'
+        ? { error: { code: 'HANDOFF_OPEN_FAILED', message: `应用库没能弹出这个安装确认：${input.error.code}`, cause: input.error.code } } : {});
+      return view(record);
     },
     observe(event) {
       const name = event?.packageName ?? event?.result?.packageName; if (!name) return;
@@ -110,7 +148,7 @@ function send(res, status, value, headers = {}) {
 async function jsonBody(req) {
   requireCondition(req.headers['content-type']?.split(';')[0].trim() === 'application/json', 'CONTENT_TYPE_REQUIRED', 'Expected application/json.', {}, 415);
   const chunks = []; let total = 0;
-  for await (const chunk of req) { total += chunk.length; requireCondition(total <= 4096, 'BODY_TOO_LARGE', 'Request body is too large.', {}, 413); chunks.push(chunk); }
+  for await (const chunk of req) { total += chunk.length; requireCondition(total <= HANDOFF_BODY_MAX_BYTES, 'BODY_TOO_LARGE', `Request body is larger than ${HANDOFF_BODY_MAX_BYTES} bytes.`, { maxBytes: HANDOFF_BODY_MAX_BYTES }, 413); chunks.push(chunk); }
   try { return JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { throw new AppHostError('INVALID_JSON', 'Malformed JSON.', {}, 400); }
 }
 
@@ -126,7 +164,12 @@ export function createHandoffHandler({ library, queue, settings, port }) {
       requireCondition([`127.0.0.1:${bound}`, `localhost:${bound}`].includes(req.headers.host), 'HOST_DENIED', 'Unrecognized request host.', {}, 403);
       const url = new URL(req.url ?? '/', `http://${req.headers.host}`), path = url.pathname, origin = req.headers.origin;
       if (path === '/hanamesh/library/install-target') {
-        cors = { 'access-control-allow-origin': '*', 'access-control-allow-private-network': 'true' };
+        // A website not in allowedOrigins gets no CORS grant and no body: it cannot tell which client runs or what it lacks.
+        // Requests without an Origin are not from a website (a person's address bar, a local tool) and are answered.
+        if (origin !== undefined) {
+          requireCondition(settings().allowedOrigins.includes(origin), 'ORIGIN_DENIED', 'Not available.', undefined, 403);
+          cors = { 'access-control-allow-origin': origin, vary: 'Origin', 'access-control-allow-private-network': 'true' };
+        }
         if (req.method === 'OPTIONS') { send(res, 204, undefined, { ...cors, 'access-control-allow-methods': 'GET' }); return; }
         requireCondition(req.method === 'GET', 'METHOD_NOT_ALLOWED', 'Discovery requires GET.', {}, 405);
         requireCondition(!url.search, 'UNKNOWN_FIELDS', 'Discovery takes no parameters.');
@@ -137,7 +180,7 @@ export function createHandoffHandler({ library, queue, settings, port }) {
         'This website is not allowed to hand installs to this client. Add it in the HanaMesh library settings.', { origin: origin ?? null }, 403);
       cors = { 'access-control-allow-origin': origin, vary: 'Origin', 'access-control-allow-private-network': 'true' };
       if (req.method === 'OPTIONS') {
-        send(res, 204, undefined, { ...cors, 'access-control-allow-methods': 'GET, POST', 'access-control-allow-headers': 'content-type', 'access-control-max-age': '600' });
+        send(res, 204, undefined, { ...cors, 'access-control-allow-methods': 'GET, POST', 'access-control-allow-headers': 'content-type' });
         return;
       }
       if (req.method === 'GET') {

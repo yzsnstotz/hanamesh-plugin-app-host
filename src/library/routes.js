@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { AppHostError, requireCondition } from '../errors.js';
 import { controlOrigins } from '../control-origin.js';
+import { HANDOFF_DEFAULTS, HANDOFF_RULES, HANDOFF_SETTING_NAMES } from './handoff.js';
 
 // Keep older route order; dsh.js registers each exact path on the public host API.
 export const LIBRARY_ROUTES=['/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/install','/hanamesh/library/provision','/hanamesh/library/uninstall','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/plugins/install','/hanamesh/library/plugins/uninstall','/hanamesh/library/target','/hanamesh/library/install-target','/hanamesh/library/handoffs','/hanamesh/library/handoffs/state','/hanamesh/library/handoff-settings'];
@@ -40,10 +41,10 @@ export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,a
     requireCondition(await authorize(subject,path,input)===true,'FORBIDDEN','Operation is not authorized.',{},403);
     let result;
     if(path.startsWith('/hanamesh/library/handoff'))requireCondition(handoff,'HANDOFF_UNAVAILABLE','Website handoff is not wired in this host.',{},503);
-    if(path==='/hanamesh/library/handoffs'){requireCondition(Object.keys(input).length===0,'UNKNOWN_FIELDS','handoffs takes no parameters.');result={handoffs:handoff.queue.open(),listener:handoff.listener.state(),live:library.live,client:library.installTarget().client};}
+    if(path==='/hanamesh/library/handoffs'){requireCondition(Object.keys(input).length===0,'UNKNOWN_FIELDS','handoffs takes no parameters.');handoff.queue.clientPolled();result={handoffs:handoff.queue.open(),listener:handoff.listener.state(),pollMs:library.handoffSettings().pollMs,live:library.live,client:library.installTarget().client};}
     else if(path==='/hanamesh/library/handoffs/state'){send(res,200,{...handoff.queue.report(input),traceId});return;}
-    else if(path==='/hanamesh/library/handoff-settings'&&readOnly){requireCondition(Object.keys(input).length===0,'UNKNOWN_FIELDS','handoff-settings takes no parameters.');result={settings:library.handoffSettings(),listener:handoff.listener.state()};}
-    else if(path==='/hanamesh/library/handoff-settings'){const settings=await library.replaceHandoffSettings(input);send(res,200,{settings,listener:await handoff.restart(),traceId});return;}
+    else if(path==='/hanamesh/library/handoff-settings'&&readOnly){requireCondition(Object.keys(input).length===0,'UNKNOWN_FIELDS','handoff-settings takes no parameters.');result={settings:library.handoffSettings(),defaults:HANDOFF_DEFAULTS,names:HANDOFF_SETTING_NAMES,rules:HANDOFF_RULES,listener:handoff.listener.state()};}
+    else if(path==='/hanamesh/library/handoff-settings'){const settings=await library.replaceHandoffSettings(input);send(res,200,{settings,defaults:HANDOFF_DEFAULTS,names:HANDOFF_SETTING_NAMES,rules:HANDOFF_RULES,listener:await handoff.restart(),traceId});return;}
     else if(path==='/hanamesh/library/target')result=await library.resolveTarget(input);
     else if(path==='/hanamesh/library'&&readOnly){requireCondition(Object.keys(input).every(key=>['q','category','cursor'].includes(key)),'UNKNOWN_FIELDS','Unknown library parameters.');result=await library.list(input);}
     else if(path==='/hanamesh/library/sources'&&readOnly)result=library.sources();
