@@ -40,7 +40,7 @@ test('AH-ACT01: failed public bundle activation releases routes before the host 
         return typeof value === 'function' ? value.bind(target) : value;
       } });
       try {
-        await bundle.apply(activation, { dataRoot: join(root, 'apps'), applications: [], library: { sources: [] } });
+        await bundle.apply(activation, { dataRoot: join(root, 'apps'), applications: [], library: { sources: [], handoff: { enabled: false } } });
         outcome.resolve(null);
       } catch (error) {
         outcome.resolve(error);

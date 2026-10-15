@@ -1,3 +1,5 @@
+> 2026-10-15 · 0.6.0（第 2 段 Session E）：①网站交接——应用库在 127.0.0.1 上另起交接监听（默认端口 39317/39318/39319），网站探测、交接、轮询状态，客户端窗口弹出原有确认，用户确认才安装（C-MARKET 2026-10-15 追加）；②宿主有公开 `pluginManager` 时插件安装/卸载改由它完成，装完即加载、无需重启（结果 `applied`）；③探测返回真实客户端 `dsh`/`hanamesh` 和「还不能安装」的具体原因；④设置页新增「网站安装交接」，端口、允许的网站、过期时间都可见可改。
+
 > D-230 / 0.5.9 candidate: each acquired AppHost route, optional-service listener, observer, resolver, domain and host now registers its release immediately. Failed activation drains the acquired resources and preserves the original error; cleanup failures produce only a named APPHOST_CLEANUP_FAILED diagnostic. Normal unload uses the same once-only releases. Ordinary-app admission, original presentation/success facts, native isolation and final-package U2 remain separate gates.
 
 > D-221 / 0.5.8 candidate: runtime readiness, HTTP/resources/WS and hourly Router receipts no longer synthesize Usage open/use. No verified public presentation/business-success source is connected; USAGE_FACT_UNAVAILABLE preserves unknown state. Router diagnostics remain available. Real source facts, native isolation and final-package U2 are still pending. Historical rc.27/rc.30 hourly reporting descriptions below are superseded by this correction.
@@ -86,6 +88,8 @@ CI=true pnpm test
 pnpm run test:contract
 pnpm run test:mutation
 pnpm run test:types
+# 原生驱动契约（需要已安装并构建的上游 DSH dsh-v0.2.1-alpha.2 检出，不在 pnpm test 内）
+AH_DSH_UPSTREAM=/absolute/upstream-checkout pnpm run test:native-driver
 pnpm run check:consistency
 pnpm run check:toolchain
 pnpm run preflight

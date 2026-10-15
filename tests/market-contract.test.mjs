@@ -325,7 +325,7 @@ test('CM13: pinned Cordis/webserver registers the discovery route and plugin dis
   await ctx.start?.();
   await until(() => ctx.get('webServer')?.port > 0);
   const origin = `http://127.0.0.1:${ctx.get('webServer').port}`;
-  const fiber = ctx.plugin(appHost, { dataRoot: join(root, 'apps'), library: { sources: [] } });
+  const fiber = ctx.plugin(appHost, { dataRoot: join(root, 'apps'), library: { sources: [], handoff: { enabled: false } } });
   await until(() => ctx.get('hanameshApps'));
   const reply = await http(origin + probePath, { headers: { origin: 'https://market.example' } });
   assert.equal(reply.status, 200, 'the real registered route must answer even when no browser session is present');

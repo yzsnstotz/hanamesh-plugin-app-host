@@ -88,7 +88,7 @@ export async function inferDesktopLayout({moduleUrl=import.meta.url,argv=process
       if(actual.node===metadata.node&&actual.electron===undefined)nodeBinary=await realpath(node);
     } catch { /* Unavailable/unproven payload Node stays unavailable; never use Electron. */ }
   }
-  return {profileDir:await realpath(profileDir),profileName:'desktop',dshBin,parentOrigin:'dsh-app://app',frameAncestors:[],desktopCli,nodeBinary};
+  return {profileDir:await realpath(profileDir),profileName:'desktop',dshBin,parentOrigin:'dsh-app://app',frameAncestors:[],desktopCli,nodeBinary,runtimeDir};
 }
 
 /** The DSH CLI that started this process — `argv[1]` only when it IS `@deepseek-ai/dsh/lib/bin.js`. */

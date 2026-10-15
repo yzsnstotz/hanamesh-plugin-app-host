@@ -3,6 +3,7 @@ import { AppHostError, requireCondition } from '../errors.js';
 import { loadCatalog, isApplication, itemKind, upgradeAvailable, validateManifestUrl } from './catalog.js';
 import { scanInstalled, scanInstalledPlugins, snapshotProfileDependencies } from './installed.js';
 import { PROTECTED_PACKAGES } from './install.js';
+import { handoffSettings } from './handoff.js';
 
 /** Install-target contract version this market implements (schemas/install-target.schema.json). */
 export const INSTALL_TARGET_CONTRACT_VERSION='1';
@@ -12,11 +13,17 @@ const RESTART_STATES=new Set(['installed-not-loaded','uninstalled-not-unloaded']
 const protectedPackage=name=>PROTECTED_PACKAGES.includes(name);
 const present=row=>row&&['registered','installed','installed-not-loaded'].includes(row.state);
 
-export function createLibraryService({domain,host,config={},dataRoot,ledgerReader,installer}){
+/**
+ * `client`: which client this host is ('dsh' | 'hanamesh', see client-identity.js). `unavailable`: when there is no
+ * installer, the facts that are missing, in words a person can act on (`[{need, how}]`); probes and 503s carry them.
+ */
+export function createLibraryService({domain,host,config={},dataRoot,ledgerReader,installer,client='dsh',unavailable=()=>[]}){
+  const ready=()=>typeof installer?.install==='function'&&installer.ready!==false;
   const events=[];let sequence=0;let state;const running=new Map(),installing=new Map();let bootDependencies;
   const eventRetention=config.eventRetention??512;
   requireCondition(Number.isSafeInteger(eventRetention)&&eventRetention>0,'INVALID_INPUT','library.eventRetention must be a positive safe integer.');
-  const emit=event=>{const value={sequence:++sequence,at:Date.now(),...event};events.push(value);if(events.length>eventRetention)events.shift();return value;};
+  const observers=new Set();
+  const emit=event=>{const value={sequence:++sequence,at:Date.now(),...event};events.push(value);if(events.length>eventRetention)events.shift();for(const observer of observers){try{observer(value);}catch{}}return value;};
   // Real sources hold ~10k entries (2026-09-20: market.hanamesh.com 12,121). `/hanamesh/library` keeps its rc.16 default
   // (`category=hanamesh-app`, backward compatible); the rc.28 market page asks for `category=''` (everything) explicitly.
   const catalog=({q='',category='hanamesh-app',cursor}={})=>loadCatalog({fixture:config.fixture,sources:state.sources,fetchImpl:config.fetchImpl,query:q,category,cursor});
@@ -24,7 +31,13 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   async function installedPlugins(){return config.profileDir?await scanInstalledPlugins({profileDir:config.profileDir,bootDependencies}):[];}
   async function persist(next){next.revision=state.revision+1;await domain.global.set(next);state=next;}
   async function operation(type,task){const operationId=randomUUID();emit({type:`library.${type}-started`,operationId});const work=Promise.resolve().then(()=>task(operationId)).then(result=>{emit({type:`library.${type}-done`,operationId,result});return result;},error=>{emit({type:`library.${type}-failed`,operationId,code:error.code??'LIBRARY_OPERATION_FAILED',...(error.recovery?{recovery:error.recovery}:{})});throw error;}).finally(()=>running.delete(operationId));running.set(operationId,work);work.catch(()=>{});return{operationId,status:'started'};}
-  const requireInstaller=(message)=>requireCondition(installer,'LIBRARY_INSTALL_UNAVAILABLE',message,{},503);
+  const requireInstaller=(message)=>requireCondition(ready(),'LIBRARY_INSTALL_UNAVAILABLE',message,{need:unavailable()},503);
+  /** The host itself loaded/unloaded a plugin (pluginManager `applied`): it no longer waits for a restart. */
+  async function markLive(result){
+    if(result?.status!=='applied'||!bootDependencies||!config.profileDir)return;
+    const now=await snapshotProfileDependencies(config.profileDir).catch(()=>undefined);if(!now)return;
+    if(now[result.packageName])bootDependencies[result.packageName]=now[result.packageName];else delete bootDependencies[result.packageName];
+  }
   async function resolveTarget(input){
     requireCondition(input&&typeof input==='object'&&!Array.isArray(input),'INVALID_INPUT','Only itemId and packageName are accepted.');
     // rc.8: optional install-target contract declaration. Absent keeps the v1 semantics; anything but '1' is refused explicitly, before field checks.
@@ -60,7 +73,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   }
   function installItem(item){
     const key=item.package.name;if(installing.has(key))return installing.get(key);
-    const started=operation('install',async operationId=>{try{return await installer.install(item,{operationId});}finally{installing.delete(key);}});
+    const started=operation('install',async operationId=>{try{const result=await installer.install(item,{operationId});await markLive(result);return result;}finally{installing.delete(key);}});
     installing.set(key,started);return started;
   }
   async function findByPackage(packageName){
@@ -82,11 +95,18 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       const categories=[...new Set(page.items.flatMap(item=>item.categories??[]))].sort();
       return{source:page.source,items,categories,installed:installedRows,plugins:pluginRows,restartRequired:[...pluginRows,...installedRows].some(row=>RESTART_STATES.has(row.state)),page:page.page};},
     sources(){return{sources:structuredClone(state.sources),revision:state.revision};},
+    /** Effective website handoff settings: saved (library settings page) → plugin config `library.handoff` → proposed defaults. */
+    handoffSettings(){return handoffSettings(state.handoff??config.handoff??{});},
+    async replaceHandoffSettings(input){const next=handoffSettings(input);await persist({...state,handoff:next});return next;},
+    observe(listener){observers.add(listener);return()=>observers.delete(listener);},
     async replaceSources(input){requireCondition(Array.isArray(input?.sources)&&input.sources.length<=16,'INVALID_SOURCES','sources must be an array of at most 16 entries.');const sources=input.sources.map(source=>({manifestUrl:validateManifestUrl(source.manifestUrl).href,enabled:source.enabled===true}));requireCondition(sources.length===0||sources.filter(source=>source.enabled).length===1,'CATALOG_SOURCE_REQUIRED','Exactly one catalog source must be enabled.');await persist({...state,sources});return this.sources();},
     /** `{itemId, packageName?}`: applications and plugins take the same path (`dsh plugin add --save-exact`); also the upgrade path. */
     resolveTarget,
     /** Public discovery is metadata only: no profile, authentication or installed rows. */
-    installTarget(){const ready=typeof installer?.install==='function';return{client:'dsh',ready,installTarget:{contract:'hanamesh.install-target',contractVersion:INSTALL_TARGET_CONTRACT_VERSION,supported:[INSTALL_TARGET_CONTRACT_VERSION],fragmentPrefix:'#hanamesh-install?'},...(!ready?{error:{code:'INSTALL_TARGET_UNAVAILABLE',message:'Controlled installer is unavailable.'}}:{})};},
+    installTarget(){const need=ready()?[]:unavailable();return{client,ready:ready(),installTarget:{contract:'hanamesh.install-target',contractVersion:INSTALL_TARGET_CONTRACT_VERSION,supported:[INSTALL_TARGET_CONTRACT_VERSION],fragmentPrefix:'#hanamesh-install?'},
+      ...(!ready()?{error:{code:'INSTALL_TARGET_UNAVAILABLE',message:need.length?'应用库还不能安装：'+need.map(row=>row.need).join('；'):'Controlled installer is unavailable.',need}}:{})};},
+    /** Plugin changes load without a restart (the host's public plugin manager is present). */
+    get live(){return Boolean(installer?.live);},
     async install(input){requireInstaller('Install requires absolute profileDir, nodeBinary, dshBin and profileName.');const{item}=await resolveTarget(input??{});if(present(item.installed)&&!item.upgradeAvailable)return{status:'already-installed',itemId:item.id,packageName:item.package.name};return await installItem(item);},
     async provision(input){requireInstaller('Runtime provision is unavailable.');
       // LIB-PROVISION-INPUT: a missing field is the caller's error (400), not an internal TypeError inside the operation.
@@ -101,7 +121,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
     async uninstallPlugin(input){requireInstaller('Plugin uninstall is unavailable.');const packageName=input?.packageName;requireCondition(text(packageName,214)&&PACKAGE_NAME.test(packageName),'INVALID_INPUT','packageName is required.');requireCondition(!protectedPackage(packageName),'PACKAGE_DENIED','The HanaMesh suite is not managed through the market.',{packageName},403);
       const app=(await installed()).find(row=>row.packageName===packageName&&row.appId);
       if(app)return await operation('uninstall',()=>installer.uninstall({appId:app.appId,packageName,runtimeItem:app.runtimeItem,running:runningApp(app.appId)}));
-      return await operation('uninstall',()=>installer.uninstallPlugin({packageName}));},
+      return await operation('uninstall',async()=>{const result=await installer.uninstallPlugin({packageName});await markLive(result);return result;});},
     /** Installed application packages of the profile (empty without `profileDir`); rc.27 binds package names for usage evidence. */
     installed,
     /** rc.28: installed plugins (every non-application dependency of the profile) with restart states. */
