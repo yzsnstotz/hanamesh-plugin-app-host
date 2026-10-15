@@ -6,7 +6,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdir, rm, stat} from 'node:fs/promises';
-import {spawnSync} from 'node:child_process';
+import {spawnGitSafe as spawnChecked} from '../../src/git-process.js';
 import {fileURLToPath} from 'node:url';
 import {dirname, isAbsolute, resolve} from 'node:path';
 import { scratch } from '../helpers.mjs';
@@ -19,9 +19,9 @@ test('owned native driver satisfies keychain, argv and isolation contracts', asy
   assert.ok(upstream && isAbsolute(upstream), `NATIVE_TEST_PREPARATION: ${NEED}`);
   assert.ok((await stat(resolve(upstream, 'apps/desktop/scripts/development-app.ts')).catch(() => null))?.isFile(),
     `NATIVE_TEST_PREPARATION: ${NEED}; apps/desktop/scripts/development-app.ts is missing`);
-  const git = spawnSync('/usr/bin/git', ['-C', upstream, 'rev-parse', 'HEAD'], {encoding: 'utf8'});
+  const git = await spawnChecked('/usr/bin/git', ['-C', upstream, 'rev-parse', 'HEAD'], {encoding: 'utf8'});
   assert.equal(git.stdout.trim(), FIXED, `NATIVE_TEST_PREPARATION: ${NEED}`);
-  const diff = spawnSync('/usr/bin/git', ['-C', upstream, 'diff', '--name-only'], {encoding: 'utf8'});
+  const diff = await spawnChecked('/usr/bin/git', ['-C', upstream, 'diff', '--name-only'], {encoding: 'utf8'});
   assert.equal(diff.stdout, '', 'NATIVE_TEST_PREPARATION: upstream source must remain unmodified');
   assert.equal(process.version, 'v24.13.1', 'NATIVE_TEST_PREPARATION: Node toolchain');
   const driver = fileURLToPath(new URL('../../scripts/native-desktop/lifecycle.py', import.meta.url));
@@ -30,7 +30,7 @@ test('owned native driver satisfies keychain, argv and isolation contracts', asy
     for (const dir of ['home', 'dsh-home', 'userData', 'tmp', 'cache', 'scratch']) await mkdir(resolve(work, dir));
     const args = [fileURLToPath(new URL('../../scripts/native-driver-test.py', import.meta.url)),
       '--driver', driver, '--upstream', upstream, '--node', process.execPath, '--scratch', resolve(work, 'scratch')];
-    const result = spawnSync('/usr/bin/python3', args, {cwd: work, encoding: 'utf8',
+    const result = await spawnChecked('/usr/bin/python3', args, {cwd: work, encoding: 'utf8',
       env: {PATH: `${dirname(process.execPath)}:/usr/bin:/bin:/usr/sbin:/sbin`,
         HOME: resolve(work, 'home'), DSH_HOME: resolve(work, 'dsh-home'),
         DSH_DESKTOP_USER_DATA_DIR: resolve(work, 'userData'), TMPDIR: resolve(work, 'tmp'),

@@ -35,7 +35,9 @@ Internal connection HTTPS/bind-address handling changed upstream; the local HTTP
 
 AppHost reads public package metadata resolved from the proven Desktop runtime, or the CLI/profile package anchor.
 It never infers capability from the presence of a method alone or from function source text. Unknown versions do not
-enable live exact installation. Compatible manager versions at least `0.2.1-alpha.2` support `saveExact`.
+enable live exact installation. Compatible manager versions at least `0.2.1-alpha.2` support `saveExact`,
+but neither consumed manager exposes a scoped child environment/credential monitor. Since 0.6.5 all package mutations
+therefore use the public CLI under the AppHost Git supervisor, including alpha hosts. The host environment is not mutated.
 
 For a proven packaged macOS ASAR layout, AppHost uses the executable public `runtime/cli/bin/dsh` launcher unchanged.
 That launcher supports the reserved `desktop` profile and owns Electron/pnpm startup. `DSH_HOME` is derived from the
@@ -44,7 +46,7 @@ installed package version are still both read back. A CLI install reports `resta
 Prepared non-ASAR layouts retain the existing public `runDesktopCli` route. Windows' `.cmd` carrier and Linux packaged
 Desktop launcher have no new validation here; absent supported carriers remain unavailable rather than being guessed.
 
-Without either exact-save capability or a usable public CLI, the probe returns `ready:false` with readable `need`;
+Without a usable public CLI, the probe returns `ready:false` with readable `need`;
 installation refuses before touching the profile. Browsing, existing installed rows and authenticated view APIs remain.
 
 ## Why the pins regressed

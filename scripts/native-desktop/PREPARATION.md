@@ -42,3 +42,5 @@ ready, U2, a test of third-party cookie policy, or owner ACCEPTED. Later app
 creation/system registration, native logs isolation and cold start remain
 separate authorization and evidence gates. Preserve the two existing 0.5.9
 packages; helper-only changes do not require repacking them.
+
+Git policy: launch the staged helper and lifecycle driver through the AppHost `scripts/safe-git.mjs` runner under `fnm exec --using=24.13.1`. Preparation refuses without the full cleared-helper/gh environment and outer Git trace. Minimal native environments retain this monitor and disable pnpm automatic version management. No system Git/keychain settings are changed.

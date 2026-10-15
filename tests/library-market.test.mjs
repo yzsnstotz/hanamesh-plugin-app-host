@@ -48,7 +48,9 @@ test('AH-M01: a catalog plugin installs through the same `dsh plugin add --save-
   const result=await installer.install(plugin);
   assert.deepEqual(result,{status:'restart-required',kind:'plugin',packageName:'dsh-plugin-tether',version:'0.1.17'});
   assert.match(calls[0].fetch,/\/dsh-plugin-tether\/latest$/);
-  assert.deepEqual(calls[1],{command:'/opt/node/bin/node',args:['/opt/dsh/lib/bin.js','plugin','--profile','web','add','--save-exact','dsh-plugin-tether@0.1.17'],options:{cwd:profile.profile}});
+  assert.equal(calls[1].options.env.GIT_CONFIG_NOSYSTEM,'1');
+  assert.equal(calls[1].options.env.GIT_CONFIG_VALUE_1,'!gh auth git-credential');
+  assert.deepEqual({...calls[1],options:{cwd:calls[1].options.cwd}},{command:'/opt/node/bin/node',args:['/opt/dsh/lib/bin.js','plugin','--profile','web','add','--save-exact','dsh-plugin-tether@0.1.17'],options:{cwd:profile.profile}});
   assert.equal(calls.length,2);
   assert.deepEqual(events.map(event=>event.type),['library.install-started','library.install-done']);
   assert.equal(events[1].kind,'plugin');

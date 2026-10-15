@@ -1,6 +1,6 @@
 > 2026-10-15 · 0.6.2 compatibility candidate: public host peers admit official DSH `0.2.0-rc.2` and `0.2.1-alpha.2` with Cordis `4.0.4` / `4.0.5-alpha.1` and Schemastery `3.18.4` / `3.18.5-alpha.1`; development inputs stay exact. The rc.2 plugin manager has no public `saveExact` option. A proven packaged macOS Desktop uses its unchanged shipped `runtime/cli/bin/dsh` launcher for exact installs and reports `restart-required`; alpha.2 keeps the public live manager path. If neither a verified exact-save manager nor the supported public CLI is available, discovery reports `ready:false` and a concrete reason before installation mutates the profile. Existing browsing and application-view APIs remain available. See [the public API audit and validation limits](docs/DSH_COMPATIBILITY.md). Source checks and fixture results do not establish native or owner acceptance.
 
-当前 0.6.4：套件只显示一张官方卡，读回实际组件版本；兼容升级展示三个固定组件的版本变化并需本人确认，升级后完全退出并重开。原有DSH 本地 `install-target` 与网站交接监听共用允许网站名单，未获准网站不能读客户端能力；`library.handoff.pollMs` 保存后在真实存储重启中保留，旧记录缺字段仍用默认值。
+当前 0.6.5：Git 依赖安装先清除继承的凭据 helper，再只使用 gh；安装与测试入口监测到 osxkeychain 即失败。套件能力沿用 0.6.4：套件只显示一张官方卡，读回实际组件版本；兼容升级展示三个固定组件的版本变化并需本人确认，升级后完全退出并重开。原有DSH 本地 `install-target` 与网站交接监听共用允许网站名单，未获准网站不能读客户端能力；`library.handoff.pollMs` 保存后在真实存储重启中保留，旧记录缺字段仍用默认值。
 
 > 2026-10-15 · 0.6.1（核查修正）：①探测只回答「允许交接的网站」，别的网站拿不到客户端、就绪、缺什么；②交接出错不再被吞：过期分成「客户端没来取 / 确认框打不开 / 弹出后没回复」，确认框打不开报 `HANDOFF_OPEN_FAILED` 带原因，上报失败、读取失败在应用库里提示并写日志；免重启装完读回 profile 失败会照实提示；③轮询间隔成为设置 `library.handoff.pollMs`（默认 1500 毫秒）；去掉端口数、网站数、过期上下限、预检缓存、读包标识超时这些写死的限值，剩下的固定规则在设置页逐条列出并说明原因；④品牌插件 `hanamesh-brand` 进保护名单，不可从市场卸载；⑤测试临时目录全部在进程退出时删除（失败也删），有守卫测试。
 > 2026-10-15 · 0.6.0（第 2 段 Session E）：①网站交接——应用库在 127.0.0.1 上另起交接监听（默认端口 39317/39318/39319），网站探测、交接、轮询状态，客户端窗口弹出原有确认，用户确认才安装（C-MARKET 2026-10-15 追加）；②宿主有公开 `pluginManager` 时插件安装/卸载改由它完成，装完即加载、无需重启（结果 `applied`）；③探测返回真实客户端 `dsh`/`hanamesh` 和「还不能安装」的具体原因；④设置页新增「网站安装交接」，端口、允许的网站、过期时间都可见可改。
@@ -156,3 +156,17 @@ The upstream Git subdirectory route supports pnpm 10.33.0; npm 11.8.0 cannot ins
 ## 0.5.1 · origin/main dependency closure
 
 Removed the unused public Devkit peer; all Devkit imports belong to development scripts. Its normal pnpm Git subdirectory range and the external lib-provision runtime dependency are unchanged. No runtime API, schema, fixture, protocol or business code changes. Normal npm tarball runtime consumption remains applicable; npm source Git cannot resolve the Devkit subdirectory route.
+
+开发安装与检查使用固定工具链和模块自有的 Git 守卫（不修改用户的 Git 配置）：
+
+```sh
+fnm exec --using=24.13.1 node scripts/safe-git.mjs pnpm install --frozen-lockfile
+fnm exec --using=24.13.1 node scripts/safe-git.mjs npm run check
+fnm exec --using=24.13.1 node scripts/safe-git.mjs npm run verify:pack -- /absolute/path/package.tgz
+```
+
+守卫为子进程设置 `GIT_CONFIG_NOSYSTEM=1`、关闭终端提示，并用空 helper 清空继承项后设置 `!gh auth git-credential`。隔离 HOME 时，私有 Git 依赖需要该环境可用的 gh 登录；不复制个人凭据。pnpm 自动切换版本关闭。Git Trace2 只写权限受限的临时文件，发现禁用 helper 时失败并结束自有进程组；正常、失败、SIGINT/SIGTERM 后删除 trace，不把原始内容写入报告。测试使用假的 gh/钥匙串 helper，不访问真实钥匙串。
+
+应用库公开 CLI 安装也使用同一守卫。进程内插件管理器不能传入独立环境和监测边界，因此包变更统一走受控公开 CLI，并显示需重启；CLI 不可用时在安装前显示缺失条件。原生准备、旧 wave01 复演等脚本也必须从 `scripts/safe-git.mjs` 启动；原有隔离目录与浏览器 `--use-mock-keychain --password-store=basic` 要求继续适用。
+
+页面的 `env -u …` 首次安装/补齐命令仅供 macOS / Linux 的 POSIX 终端使用；Windows 安全复制命令尚未提供，不将其计为 Windows 产品验收通过。运行时守卫的 Windows npm/pnpm JS 入口和进程树清理仅作源码处理，仍待 Windows 实测。

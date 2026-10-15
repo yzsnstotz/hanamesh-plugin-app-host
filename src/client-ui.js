@@ -152,7 +152,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   }
   const FAILURE_REASONS={INSTALL_READBACK_MISMATCH:'安装命令返回成功，但 profile 读回的版本与固定版本不一致',REGISTRY_LOOKUP_FAILED:'包不在当前 registry 上——尚未发布到 npm，或客户端 registry 设置不对',DSH_PLUGIN_FAILED:'DSH 安装命令失败，查看宿主日志',LIBRARY_INSTALL_UNAVAILABLE:'当前宿主未提供安装参数（profile / node 路径）',CATALOG_ITEM_MISSING:'目录里已没有这一项，刷新后重试',UNSTABLE_VERSION:'registry 上的最新版是预发布版（rc），客户端未允许安装预发布版',RUNTIME_ARCHIVE_UNAVAILABLE:'运行时归档下载失败，检查网络或来源',OPERATION_TIMEOUT:'10 分钟内没有结果，可稍后重试',PACKAGE_DENIED:'HanaMesh 套件自身不能从市场安装或卸载',INSTANCE_IN_USE:'先关闭该应用的所有视图再卸载'};
   const failureReason=code=>FAILURE_REASONS[code]??'详细原因见宿主日志';
-  const suiteRecoveryText=details=>details?.stage==='suite-upgrade'?'；升级未完成，部分组件可能已改变。当前读回：'+(details.actual?.components?.map(c=>c.label+' '+(c.version??'检测不到')+(c.active?'':'（未启用）')).join('；')||'检测不到')+'。请完全退出客户端，使用补齐命令修复并重新打开：'+details.command:'';
+  const suiteRecoveryText=details=>details?.stage==='suite-upgrade'?'；升级未完成，部分组件可能已改变。当前读回：'+(details.actual?.components?.map(c=>c.label+' '+(c.version??'检测不到')+(c.active?'':'（未启用）')).join('；')||'检测不到')+'。请完全退出客户端，使用补齐命令（仅 macOS / Linux 终端；Windows 安全命令暂未提供）修复并重新打开：'+details.command:'';
   /** pluginManager applied it, but the profile could not be read back: the installed list may still say 「需重启」. */
   const baselineText=result=>result?.restartBaseline?.updated===false?'；但应用库没能读回 profile（'+result.restartBaseline.code+'），已安装列表可能仍显示「需重启」':'';
   /** rc.10 install recovery result: only an item-by-item readback that matched the baseline is shown as restored. */

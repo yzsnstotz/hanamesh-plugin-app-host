@@ -80,16 +80,17 @@ for(const version of ['0.2.0-rc.2',undefined])test(`manager ${version??'unknown'
   await library.init();const probe=library.installTarget();assert.equal(probe.ready,false);assert.match(probe.error.message,/精确版本/);assert.ok(probe.error.need.length);await library.close();
 });
 
-test('proved alpha.2 manager retains live exact install',async t=>{
-  const h=await fixture(t,'0.2.1-alpha.2');let calls=0;
+test('alpha.2 manager also uses monitored public CLI instead of an unscoped live install',async t=>{
+  const h=await fixture(t,'0.2.1-alpha.2');let managerCalls=0,cliCalls=0;
   const installer=createLibraryInstaller({profileDir:h.profileDir,profileName:'desktop',dataRoot:join(h.root,'data'),pluginManagerVersion:h.desktop.pluginManagerVersion,
-    pluginManager:()=>({async installBundle(spec,options){calls++;assert.deepEqual(options,{saveExact:true});await writeInstalled(h.profileDir,'example-notes','1.2.3');return{application:'applied'};},async removeBundle(){}}),fetchImpl:registry});
-  assert.equal(installer.live,true);assert.equal((await installer.install(item)).status,'applied');assert.equal(calls,1);
+    pluginManager:()=>({async installBundle(){managerCalls++;},async removeBundle(){managerCalls++;}}),desktopLauncher:h.desktop.desktopLauncher,fetchImpl:registry,
+    spawn:async()=>{cliCalls++;await writeInstalled(h.profileDir,'example-notes','1.2.3');return{code:0};}});
+  assert.equal(installer.live,false);assert.equal((await installer.install(item)).status,'restart-required');assert.equal(managerCalls,0);assert.equal(cliCalls,1);
 });
 
 test('public peers admit official rc.2 and supported alpha peers while development versions remain pinned',async()=>{
   const pkg=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
-  assert.equal(pkg.version,'0.6.4');
+  assert.equal(pkg.version,'0.6.5');
   assert.equal(pkg.peerDependencies['@deepseek-ai/dsh-storage-domain'],'>=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0');
   assert.equal(pkg.peerDependencies['@deepseek-ai/cordis'],'>=4.0.4 <4.1.0-0 || >=4.0.5-alpha.1 <4.1.0-0');
   assert.equal(pkg.peerDependencies['@deepseek-ai/schemastery'],'>=3.18.4 <3.19.0-0 || >=3.18.5-alpha.1 <3.19.0-0');

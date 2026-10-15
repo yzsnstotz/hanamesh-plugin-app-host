@@ -1,7 +1,9 @@
 // One-off real DSH profile acceptance. Usage: node scripts/acceptance-wave01.mjs <dsh-rt> <tarball>
 // Creates and removes an isolated DSH_HOME. Never prints launch tokens, cookies or lease tokens.
 import assert from 'node:assert/strict';
-import { spawn, spawnSync, execFileSync } from 'node:child_process';
+import {safeGitEnv,requireGuardedGitEnv,spawnGitSafe as spawnChecked} from '../src/git-process.js';
+requireGuardedGitEnv();
+import { spawn, execFileSync } from 'node:child_process';
 import { mkdtemp, mkdir, writeFile, readFile, readdir, rm, realpath } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -15,13 +17,14 @@ const dshBin = join(runtimeDirectory, 'node_modules/@deepseek-ai/dsh/lib/bin.js'
 const temporaryRoot = await mkdtemp(join(await realpath(tmpdir()), 'hm-app-host-wave01-'));
 const dshHome = join(temporaryRoot, 'dsh-home');
 const dataRoot = join(dshHome, 'app-data');
-const env = { ...process.env, DSH_HOME: dshHome, PATH: `${dirname(process.execPath)}:${process.env.PATH ?? ''}` };
+const home=join(temporaryRoot,'home');await mkdir(home);
+const env = {...safeGitEnv({HOME:home,DSH_HOME:dshHome,TMPDIR:temporaryRoot,LANG:'C.UTF-8',PATH:`${dirname(process.execPath)}:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin`}),GIT_TRACE2_EVENT:process.env.GIT_TRACE2_EVENT};
 const evidence = { profile: 'isolated web-derived acc', node: process.version, setup: [], actions: [], cleanup: {} };
 const launchedPids = new Set();
 let host;
 
-function checkCli(label, args) {
-  const result = spawnSync(process.execPath, [dshBin, ...args], {
+async function checkCli(label, args) {
+  const result = await spawnChecked(process.execPath, [dshBin, ...args], {
     cwd: runtimeDirectory, env, encoding: 'utf8', timeout: 120_000,
   });
   evidence.setup.push({ label, exit: result.status, signal: result.signal });
@@ -127,8 +130,8 @@ async function request(session, path, body) {
 
 try {
   await mkdir(dshHome, { recursive: true });
-  checkCli('create profile', ['--profile', 'acc', '--from-default-profile', 'web', '--dump-config']);
-  checkCli('install packaged plugin', ['plugin', '--profile', 'acc', 'add', tarball]);
+  await checkCli('create profile', ['--profile', 'acc', '--from-default-profile', 'web', '--dump-config']);
+  await checkCli('install packaged plugin', ['plugin', '--profile', 'acc', 'add', tarball]);
   const patch = `- insert:
     - id: hanamesh-app-host
       name: '@hanamesh/dsh-app-host/dsh'
@@ -151,7 +154,7 @@ try {
                   bodyIncludes: HANAMESH_FIXTURE
 `;
   await writeFile(join(dshHome, 'profiles/acc/cordis.patch.yml'), patch);
-  assert(checkCli('compose patched profile', ['--profile', 'acc', '--dump-config']).includes("name: '@hanamesh/dsh-app-host/dsh'"));
+  assert((await checkCli('compose patched profile', ['--profile', 'acc', '--dump-config'])).includes("name: '@hanamesh/dsh-app-host/dsh'"));
   const port = await portNumber();
   let session = await boot(port);
   const listed = await request(session, '/hanamesh/apps');

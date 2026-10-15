@@ -16,7 +16,9 @@ test('AH-L04/L05: install uses explicit Node + DSH argv, exact stable registry v
     spawn:async(command,args,options)=>{calls.push({command,args,options});await installedPackage(profile);await writeFile(join(profile,'package.json'),JSON.stringify({dependencies:{'@hanamesh/app-vibe-trading':'1.2.3'}}));return{code:0,stdout:'ok',stderr:''};},
     provision:async(manifest,options)=>{calls.push({manifest,options});return[{item:'runtime',action:'installed'}];},remove:async()=>{},ledger:async()=>({schema:1,items:{}}),emit:event=>events.push(event)});
   const result=await installer.install({id:'vibe-item',categories:['hanamesh-app'],package:{registry:'npm',name:'@hanamesh/app-vibe-trading'}});
-  assert.deepEqual(calls[0],{command:'/opt/node/bin/node',args:['/opt/dsh/bin.js','plugin','--profile','p3','add','--save-exact','@hanamesh/app-vibe-trading@1.2.3'],options:{cwd:profile}});
+  assert.equal(calls[0].options.env.GIT_CONFIG_NOSYSTEM,'1');
+  assert.equal(calls[0].options.env.GIT_CONFIG_VALUE_1,'!gh auth git-credential');
+  assert.deepEqual({...calls[0],options:{cwd:calls[0].options.cwd}},{command:'/opt/node/bin/node',args:['/opt/dsh/bin.js','plugin','--profile','p3','add','--save-exact','@hanamesh/app-vibe-trading@1.2.3'],options:{cwd:profile}});
   assert.equal(calls[1].options.root,join(dataRoot,'runtimes','vibe'));
   assert.deepEqual(calls[1].options.only,['runtime']);
   assert.equal(result.status,'restart-required');

@@ -3,7 +3,7 @@
 import {parseArgs} from 'node:util';
 import {cp, mkdir, readFile, writeFile, realpath, access} from 'node:fs/promises';
 import {resolve, join, relative, isAbsolute, dirname} from 'node:path';
-import {spawnSync} from 'node:child_process';
+import {spawnGitSafe as spawn} from '../src/git-process.js';
 import {createHash} from 'node:crypto';
 const {values} = parseArgs({options: {destination: {type: 'string'}, version: {type: 'string'}}});
 if (!values.destination || !/^\d+\.\d+\.\d+-verification\.\d+$/.test(values.version ?? '')) {
@@ -41,13 +41,13 @@ for (const [key, subdir] of Object.entries(dirs)) {
   env[key] = join(destination, subdir); await mkdir(env[key], {recursive: true});
 }
 const commands = [];
-function run(args) {
-  const result = spawnSync('pnpm', args, {cwd: producer, env, stdio: ['ignore', 'inherit', 'inherit']});
+async function run(args) {
+  const result = await spawn('pnpm', args, {cwd: producer, env, stdio: ['ignore', 'inherit', 'inherit']});
   commands.push({command: ['pnpm', ...args], exitCode: result.status, signal: result.signal});
   if (result.error || result.status !== 0) throw result.error ?? new Error(`Normal pnpm ${args[0]} exited ${result.status}`);
 }
-run(['install', '--frozen-lockfile']);
-run(['pack', '--pack-destination', destination]);
+await run(['install', '--frozen-lockfile']);
+await run(['pack', '--pack-destination', destination]);
 const archive = join(destination, `hanamesh-dsh-app-host-${values.version}.tgz`);
 const evidence = {kind: 'APPHOST_VERIFICATION_PACKAGE_NOT_U2', version: values.version,
   source, producer, archive, commands, sha256: createHash('sha256').update(await readFile(archive)).digest('hex'),

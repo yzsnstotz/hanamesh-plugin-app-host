@@ -38,7 +38,7 @@ import { detectClient } from './library/client-identity.js';
 import { createUsageEvidence } from './usage-evidence.js';
 import { createReceiptLedger } from './router/receipts.js';
 import { receiptsDomainSpec } from './router/receipts-domain.js';
-import {DSH_RANGE,managerSupportsExactSave} from './dsh-compat.js';
+import {DSH_RANGE} from './dsh-compat.js';
 
 export const name = 'hanamesh-app-host';
 export const DSH_TARGET = DSH_RANGE;
@@ -238,10 +238,10 @@ export async function apply(ctx, config) {
     const unavailable=()=>{
       if(!locations.profileDir)return[{need:'找不到这个 DSH profile 的目录',how:'用 dsh plugin --profile <名字> add 安装 HanaMesh 应用库，或在插件设置 library.profileDir 里填 profile 目录'}];
       if(installer?.ready)return[];
-      if(pluginManager&&!managerSupportsExactSave(locations.pluginManagerVersion))return installer?.unavailable??[{need:'无法核实宿主插件管理的精确版本安装能力',how:'恢复客户端随附的公开 dsh 命令启动器。'}];
+      if(installer?.unavailable?.length)return installer.unavailable;
       const rows=[];
       if(!locations.nodeBinary)rows.push({need:'找不到能运行 DSH 命令行的 Node',how:desktop?'桌面版的运行时缺少 Node：重新安装客户端':'在插件设置 nodeBinary 里填 Node 的绝对路径'});
-      if(!dshBin||(desktop&&!locations.desktopCli&&!config.library?.dshBin))rows.push({need:'找不到 DSH 的插件管理（宿主没有启用 pluginManager，也找不到 dsh 命令行）',how:'在 DSH 设置里启用插件管理，或在插件设置 library.dshBin 里填 dsh 的 lib/bin.js'});
+      if(!dshBin||(desktop&&!locations.desktopCli&&!config.library?.dshBin))rows.push({need:'找不到可在受控进程中运行的 DSH 命令行',how:'恢复客户端随附的公开 dsh 命令启动器，或在插件设置 library.dshBin 里填 dsh 的 lib/bin.js'});
       return rows;
     };
     const identity=await detectClient({desktop});
