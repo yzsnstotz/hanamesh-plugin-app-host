@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import { scanInstalled } from '../src/library/installed.js';
+import { scratch } from './helpers.mjs';
 
 const definition=(id,runtime)=>({id,name:id,singleInstanceOnly:true,deployments:[{id:'local',dataId:'data-v1',mode:'owned',...(runtime?{runtime}:{command:'/bin/sh'}),args:['-c','exec', '{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:id}}]});
 async function addPackage(profile,name,id,runtime){
@@ -13,7 +13,7 @@ async function addPackage(profile,name,id,runtime){
 }
 
 test('AH-L03: installed scan reports registered, installed-not-loaded and runtime-missing independently of catalog sources',async()=>{
-  const profile=await mkdtemp(join(tmpdir(),'hm-library-profile-'));
+  const profile=await scratch('hm-library-profile-');
   await writeFile(join(profile,'package.json'),JSON.stringify({dependencies:{'@hanamesh/app-one':'1.0.0','third-app':'1.0.0','runtime-app':'1.0.0'}}));
   await addPackage(profile,'@hanamesh/app-one','one');
   await addPackage(profile,'third-app','two');

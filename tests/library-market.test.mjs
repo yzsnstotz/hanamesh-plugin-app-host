@@ -7,21 +7,20 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, rm, realpath, readFile } from 'node:fs/promises';
+import { mkdir, writeFile, rm, realpath, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { join, resolve } from 'node:path';
-import { tmpdir } from 'node:os';
 import { createLibraryInstaller, PROTECTED_PACKAGES } from '../src/library/install.js';
 import { scanInstalledPlugins, snapshotProfileDependencies, readProfileManifest } from '../src/library/installed.js';
 import { createLibraryService } from '../src/library/service.js';
 import { createLibraryHttpHandler, LIBRARY_ROUTES } from '../src/library/routes.js';
 import { compareVersions, upgradeAvailable, itemKind } from '../src/library/catalog.js';
-import { http, until } from './helpers.mjs';
+import { http, until, scratch } from './helpers.mjs';
 
 const fixture=resolve('tests/fixtures/catalog/provider-page.json');
 const appDefinition={id:'vibe',name:'Vibe',singleInstanceOnly:true,deployments:[{id:'local',dataId:'data-v1',mode:'owned',command:'/bin/sh',args:['-c','exec','{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:'Vibe'}}]};
 async function profileFixture(t,{dependencies,bundles=['@deepseek-ai/dsh-base','@deepseek-ai/dsh-web-app'],packages={}}){
-  const root=await realpath(await mkdtemp(join(tmpdir(),'hm-market-')));t.after(()=>rm(root,{recursive:true,force:true}));
+  const root=await realpath(await scratch('hm-market-'));t.after(()=>rm(root,{recursive:true,force:true}));
   const profile=join(root,'profiles','web');await mkdir(profile,{recursive:true});
   await writeFile(join(profile,'package.json'),JSON.stringify({name:'dsh-profile-web',private:true,dependencies,dsh:{profile:{bundles}}}));
   for(const[name,pkg]of Object.entries(packages)){const dir=join(profile,'node_modules',...name.split('/'));await mkdir(dir,{recursive:true});await writeFile(join(dir,'package.json'),JSON.stringify({name,...pkg}));if(pkg.hanamesh?.app)await writeFile(join(dir,'app.json'),JSON.stringify(appDefinition));}

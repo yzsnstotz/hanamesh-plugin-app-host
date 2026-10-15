@@ -1,11 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { chmod, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import * as runtime from '../src/runtime.js';
-import { setup, input } from './helpers.mjs';
+import { setup, input, scratch } from './helpers.mjs';
 
 test('AH-K5-1: guardian and launcher use the explicit executable Node runtime', async t => {
   assert.equal(typeof runtime.resolveNodeBinary, 'function');
@@ -51,7 +50,7 @@ test('AH-K5-2: Electron self-hosting refuses fallback and persists a failed inst
 test('AH-K5-2: configured nodeBinary must be absolute and executable', async t => {
   assert.equal(typeof runtime.resolveNodeBinary, 'function');
   await assert.rejects(runtime.resolveNodeBinary('node'), { code: 'NODE_RUNTIME_REQUIRED' });
-  const root = await mkdtemp(join(tmpdir(), 'hm-k5-node-'));
+  const root = await scratch('hm-k5-node-');
   t.after(() => rm(root, { recursive: true, force: true }));
   const notExecutable = join(root, 'node');
   await writeFile(notExecutable, '#!/bin/sh\nexit 0\n');

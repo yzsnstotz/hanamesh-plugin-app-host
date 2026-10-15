@@ -1,15 +1,15 @@
 // Real artifact/consumer acceptance. No host-peer preinstallation or policy override.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,mkdir,writeFile,rm,readdir,readFile} from 'node:fs/promises';
-import {tmpdir} from 'node:os';
+import {mkdir,writeFile,rm,readdir,readFile} from 'node:fs/promises';
 import {join,resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
+import { scratch } from './helpers.mjs';
 const cwd=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 test('DIST11 normal tarball installs under default pnpm11 strict peers and exposes self-contained JS/types',async t=>{
- const root=await mkdtemp(join(tmpdir(),'apphost-pnpm11-'));t.after(()=>rm(root,{recursive:true,force:true}));
+ const root=await scratch('apphost-pnpm11-');t.after(()=>rm(root,{recursive:true,force:true}));
  const home=join(root,'home'),cache=join(root,'cache'),temp=join(root,'tmp'),consumer=join(root,'consumer');for(const p of [home,cache,temp,consumer])await mkdir(p);
  const env={PATH:process.env.PATH,HOME:home,DSH_HOME:join(home,'dsh'),TMPDIR:temp,XDG_CACHE_HOME:cache,XDG_CONFIG_HOME:join(home,'config'),npm_config_cache:join(cache,'npm'),npm_config_store_dir:join(cache,'pnpm-store')};
  const run=(file,args,dir)=>spawnSync(file,args,{cwd:dir,env,encoding:'utf8'});

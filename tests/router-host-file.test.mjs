@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, writeFile, rm, stat, realpath } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readFile, writeFile, rm, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { AppHost, AtomicFileStore } from '../src/index.js';
 import { createRouter } from '../src/router/broker.js';
+import { scratch } from './helpers.mjs';
 
 test('AH-R01/AK09: locked app-host file policies preserve rotated files and remove revoked grants',async t=>{
-  const root=await mkdtemp(join(await realpath(tmpdir()),'ah-router-file-'));
+  const root=await scratch('ah-router-file-');
   const host=new AppHost({store:new AtomicFileStore(join(root,'sidecar')),dataRoot:join(root,'data'),parentOrigin:'http://127.0.0.1:49123',nodeBinary:process.execPath});
   t.after(async()=>{await host.dispose();await rm(root,{recursive:true,force:true});});
   const entry={path:'auth/test.json',base:'dataDir',projection:'file',kind:'grant',providers:['openai-chatgpt'],format:'oauth-cli-kit'};

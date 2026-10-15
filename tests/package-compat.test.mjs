@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, mkdtemp, mkdir, rm } from 'node:fs/promises';
+import { readFile, mkdir, rm } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DSH_TARGET } from '../src/dsh.js';
+import { scratch } from './helpers.mjs';
 
 test('NPM-APPHOST-01: published metadata resolves against HM-9 official alpha.2 with bundled provision source dependency', async () => {
   const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
@@ -23,7 +23,7 @@ test('NPM-APPHOST-01: published metadata resolves against HM-9 official alpha.2 
 });
 
 test('NPM-APPHOST-01: actual packed manifest keeps devkit only as a development source range', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'hm-apphost-pack-'));
+  const dir = await scratch('hm-apphost-pack-');
   try {
     const cache = join(dir, 'npm-cache');
     await mkdir(cache);

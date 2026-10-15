@@ -1,12 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { chmod, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createProviderSources } from '../src/router/sources.js';
 import { createRouterHttpHandler, ROUTER_ROUTES } from '../src/router/routes.js';
-import { http } from './helpers.mjs';
+import { http, scratch } from './helpers.mjs';
 
 const apps={list:()=>({apps:[{id:'vibe-trading',deployments:[{mode:'owned',credentialEnv:[{env:'OPENAI_API_KEY',providers:['openai','coding-oauth-gateway']}]}]}]})};
 const credentials={describe:async ref=>({configured:ref==='OPENAI_API_KEY',writable:true,source:'file'}),resolve:async()=>({value:'provider-secret'})};
@@ -35,7 +34,7 @@ test('AH-R03 coding gateway maps 404, off, configured and unreachable without ex
 });
 
 test('AH-R09 file gateway requires mode 0600 and returns the same provider contract',async t=>{
-  const home=await mkdtemp(join(tmpdir(),'hm-router-file-'));t.after(()=>rm(home,{recursive:true,force:true}));const path=join(home,'.coding-oauth-gateway.json');
+  const home=await scratch('hm-router-file-');t.after(()=>rm(home,{recursive:true,force:true}));const path=join(home,'.coding-oauth-gateway.json');
   await writeFile(path,JSON.stringify({enabled:true,port:18081,models:['file-model'],apiKey:'file-secret',keyHint:'…cret'}),{mode:0o600});
   const sources=createProviderSources({credentials,apps,codingOauth:{mode:'file'},dshHome:home,webOrigin:'http://127.0.0.1:9'});
   assert.equal((await sources.list()).at(-1).baseUrl,'http://127.0.0.1:18081/v1');assert.equal((await sources.resolve({kind:'provider',providerId:'coding-oauth-gateway'})).value,'file-secret');
