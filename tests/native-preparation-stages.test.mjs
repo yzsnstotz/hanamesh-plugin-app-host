@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdir, mkdtemp, readFile, writeFile, copyFile, chmod, rm} from 'node:fs/promises';
-import {spawnSync} from 'node:child_process';
+import {spawnGitSafe as spawnChecked} from '../src/git-process.js';
 import {createHash} from 'node:crypto';
 import {resolve, join, dirname, relative, isAbsolute} from 'node:path';
 
@@ -62,7 +62,7 @@ const record = value => appendFileSync(process.env.AH_PREPARATION_TRACE, JSON.st
     env[key] = join(root, dir); await mkdir(env[key]);
   }
   return {projectDir:join(root, 'upstream/apps/desktop/.desktop-build/development/project'), async run(args) {
-    const result = spawnSync(process.execPath, [helper, ...args], {cwd:root, env, encoding:'utf8', stdio:['ignore','pipe','pipe']});
+    const result = await spawnChecked(process.execPath, [helper, ...args], {cwd:root, env, encoding:'utf8', stdio:['ignore','pipe','pipe']});
     assert.ifError(result.error); assert.equal(result.signal, null, 'entry exits naturally');
     const calls = (await readFile(trace,'utf8').catch(error => error.code === 'ENOENT' ? '' : Promise.reject(error)))
       .trim().split('\n').filter(Boolean).map(row => JSON.parse(row));

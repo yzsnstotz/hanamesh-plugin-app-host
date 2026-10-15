@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {requireGuardedGitEnv} from './src/git-process.js';
 import {createHash} from 'node:crypto';
 import {readFile, mkdir, mkdtemp, realpath, rm, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
@@ -54,7 +55,7 @@ async function mutateAll(runner){
 
 export function packOptions(tarball){
   return {root,tarball:resolve(tarball??join(root,`hanamesh-dsh-app-host-${pkg.version}.tgz`)),
-    required:['dist/catalog/suite.js','dist/catalog/suite.d.ts','dist/catalog/fixtures/provider.json','dist/catalog/fixtures/consumer.json','package.json','dist/index.js','dist/index.d.ts','dist/client.js','dist/client.d.ts','dist/client-ui.js','dist/client-ui.d.ts','docs/INSTALL_TARGET.md','dist/dsh.js','schemas/install-target.schema.json','dist/install-target/suite.js','dist/install-target/suite.d.ts','dist/install-target/run.js','dist/install-target/harness.js','dist/install-target/fixtures/catalog.json','dist/install-target/fixtures/provider-cases.json','dist/install-target/fixtures/consumer-cases.json','dist/install-target/fixtures/reference-consumer.js','node_modules/@hanamesh/lib-provision/package.json','node_modules/@hanamesh/lib-provision/LICENSE'],
+    required:['dist/git-process.js','dist/git-worker.js','dist/catalog/suite.js','dist/catalog/suite.d.ts','dist/catalog/fixtures/provider.json','dist/catalog/fixtures/consumer.json','package.json','dist/index.js','dist/index.d.ts','dist/client.js','dist/client.d.ts','dist/client-ui.js','dist/client-ui.d.ts','docs/INSTALL_TARGET.md','dist/dsh.js','schemas/install-target.schema.json','dist/install-target/suite.js','dist/install-target/suite.d.ts','dist/install-target/run.js','dist/install-target/harness.js','dist/install-target/fixtures/catalog.json','dist/install-target/fixtures/provider-cases.json','dist/install-target/fixtures/consumer-cases.json','dist/install-target/fixtures/reference-consumer.js','node_modules/@hanamesh/lib-provision/package.json','node_modules/@hanamesh/lib-provision/LICENSE'],
     forbidden:/dist\/provision\/|node_modules\/(?!@hanamesh\/lib-provision\/)|vendor\/|tests?\/|scripts\/|artifacts\/|devkit\.config\.mjs|toolchain\.json/u,
     temporaryRoot:undefined,
     validate:async({read})=>{
@@ -71,7 +72,7 @@ export function packOptions(tarball){
       assert.equal(packed.dependencies['@hanamesh/devkit'],undefined);
       assert.equal(packed.peerDependencies['@hanamesh/devkit'],undefined);
       assert.equal(packed.peerDependenciesMeta?.['@hanamesh/devkit'],undefined);
-      for(const path of ['client-ui.js','client-ui.d.ts','library/routes.js','library/service.js','install-target/suite.js','install-target/harness.js','install-target/fixtures/provider-cases.json','install-target/fixtures/consumer-cases.json'])assert.deepEqual(read('dist/'+path),await readFile(join(root,'src',path)),'packed install-target bytes: '+path);
+      for(const path of ['git-process.js','git-worker.js','client-ui.js','client-ui.d.ts','library/routes.js','library/service.js','install-target/suite.js','install-target/harness.js','install-target/fixtures/provider-cases.json','install-target/fixtures/consumer-cases.json'])assert.deepEqual(read('dist/'+path),await readFile(join(root,'src',path)),'packed install-target bytes: '+path);
     }};
 }
 
@@ -89,6 +90,7 @@ export function assertHostPeerInstallRejected(error){
 }
 
 export async function verifyAppHostPack(tarball){
+  requireGuardedGitEnv();
   const options=packOptions(tarball);
   options.temporaryRoot=await realpath(tmpdir());
   // Devkit rejects missing host peers during strict installation, before any JS probe can run.

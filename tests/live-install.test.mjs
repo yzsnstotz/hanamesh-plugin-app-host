@@ -1,6 +1,4 @@
-// Plugin installs through the host's public plugin manager (upstream @deepseek-ai/dsh-plugin-manager installBundle /
-// removeBundle): loaded without a restart when upstream reports `applied`; upstream's own `restart-required` and
-// failures are carried through. The manager is a stand-in that writes the same profile files pnpm would.
+// Guarded CLI process integration; own profile fixture only.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile, readFile, rm } from 'node:fs/promises';
@@ -14,52 +12,30 @@ async function profile(t) {
   await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'profile', dependencies: {}, dsh: { profile: { bundles: [] } } }));
   return dir;
 }
-function manager(dir, { application = 'applied', fail } = {}) {
-  const calls = [];
-  return { calls, value: {
-    async installBundle(spec, options) {
-      calls.push(['install', spec, options]);
-      if (fail) return { changed: false, application: 'failed', stage: 'install', target: spec, error: { code: fail } };
-      const [name, version] = [spec.slice(0, spec.lastIndexOf('@')), spec.slice(spec.lastIndexOf('@') + 1)];
-      const manifest = JSON.parse(await readFile(join(dir, 'package.json'), 'utf8'));
-      manifest.dependencies[name] = version; manifest.dsh.profile.bundles.push(name);
-      await writeFile(join(dir, 'package.json'), JSON.stringify(manifest));
-      await mkdir(join(dir, 'node_modules', name), { recursive: true });
-      await writeFile(join(dir, 'node_modules', name, 'package.json'), JSON.stringify({ name, version, dsh: { bundle: { patch: './p.yml' } } }));
-      return { changed: true, application, stage: 'enable', target: name, bundle: name, version };
-    },
-    async removeBundle(name) { calls.push(['remove', name]); return { changed: true, application, stage: 'remove', target: name }; },
-  } };
-}
 const registry = version => async () => ({ ok: true, json: async () => ({ version }) });
 const item = { id: 'example.notes', package: { registry: 'npm', name: 'example-notes' } };
 
-test('plugin install goes through pluginManager, pins the registry latest exactly, and reports applied', async t => {
-  const dir = await profile(t), live = manager(dir), events = [];
-  const installer = createLibraryInstaller({ profileDir: dir, profileName: 'desktop', dataRoot: dir, fetchImpl: registry('1.2.3'), pluginManagerVersion: '0.2.1-alpha.2', pluginManager: () => live.value, emit: e => events.push(e) });
-  assert.equal(installer.ready, true); assert.equal(installer.live, true);
-  const result = await installer.install(item);
-  assert.deepEqual(result, { status: 'applied', kind: 'plugin', packageName: 'example-notes', version: '1.2.3' });
-  assert.deepEqual(live.calls, [['install', 'example-notes@1.2.3', { saveExact: true }]]);
-  assert.deepEqual(events.map(e => e.type), ['library.install-started', 'library.install-done']);
-  assert.deepEqual(await installer.uninstallPlugin({ packageName: 'example-notes' }), { status: 'applied', kind: 'plugin', packageName: 'example-notes' });
+const cliFixture=new URL('./fixtures/profile-cli.mjs',import.meta.url).pathname;
+test('plugin install and remove use a guarded CLI, exact registry version, and restart-required',async t=>{
+ const dir=await profile(t),events=[];let managerCalls=0;
+ const installer=createLibraryInstaller({profileDir:dir,profileName:'desktop',dataRoot:dir,fetchImpl:registry('1.2.3'),nodeBinary:process.execPath,dshBin:cliFixture,
+  pluginManager:()=>({installBundle(){managerCalls++;},removeBundle(){managerCalls++;}}),emit:e=>events.push(e)});
+ assert.equal(installer.ready,true);assert.equal(installer.live,false);
+ assert.deepEqual(await installer.install(item),{status:'restart-required',kind:'plugin',packageName:'example-notes',version:'1.2.3'});
+ assert.equal(JSON.parse(await readFile(join(dir,'package.json'),'utf8')).dependencies['example-notes'],'1.2.3');
+ assert.deepEqual(await installer.uninstallPlugin({packageName:'example-notes'}),{status:'restart-required',kind:'plugin',packageName:'example-notes'});
+ assert.equal(managerCalls,0);assert.deepEqual(events.map(e=>e.type),['library.install-started','library.install-done']);
 });
-
-test('upstream restart-required is reported as such; a failed manager run is an install failure with its code', async t => {
-  const dir = await profile(t);
-  const later = createLibraryInstaller({ profileDir: dir, profileName: 'desktop', dataRoot: dir, fetchImpl: registry('1.0.0'), pluginManagerVersion: '0.2.1-alpha.2', pluginManager: () => manager(dir, { application: 'restart-required' }).value });
-  assert.equal((await later.install(item)).status, 'restart-required');
-  const dir2 = await profile(t), events = [];
-  const failing = createLibraryInstaller({ profileDir: dir2, profileName: 'desktop', dataRoot: dir2, fetchImpl: registry('1.0.0'), pluginManagerVersion: '0.2.1-alpha.2', pluginManager: () => manager(dir2, { fail: 'not-bundle' }).value, emit: e => events.push(e) });
-  await assert.rejects(failing.install(item), error => error.code === 'DSH_PLUGIN_FAILED' && error.details.error.code === 'not-bundle' && error.recovery.status === 'not-needed');
-  assert.equal(events.at(-1).type, 'library.install-failed');
+test('guarded CLI failure retains its failure and reports compensation status',async t=>{
+ const dir=await profile(t),events=[];await writeFile(join(dir,'.fixture-fail'),'own failure');
+ const installer=createLibraryInstaller({profileDir:dir,profileName:'desktop',dataRoot:dir,fetchImpl:registry('1.0.0'),nodeBinary:process.execPath,dshBin:cliFixture,emit:e=>events.push(e)});
+ await assert.rejects(installer.install(item),error=>error.code==='DSH_PLUGIN_FAILED'&&error.details.code===19&&error.recovery.status==='not-needed');
+ assert.equal(events.at(-1).type,'library.install-failed');
 });
-
-test('without pluginManager or CLI nothing can install, and the CLI path says what it needs', async t => {
-  const dir = await profile(t);
-  const installer = createLibraryInstaller({ profileDir: dir, profileName: 'desktop', dataRoot: dir, fetchImpl: registry('1.0.0') });
-  assert.equal(installer.ready, false); assert.equal(installer.live, false);
-  await assert.rejects(installer.install(item), error => error.code === 'DSH_CLI_UNAVAILABLE' && error.details.need.includes('dshBin'));
+test('without a public CLI even an exact-save manager refuses with the missing monitored path',async t=>{
+ const dir=await profile(t),installer=createLibraryInstaller({profileDir:dir,profileName:'desktop',dataRoot:dir,fetchImpl:registry('1.0.0')});
+ assert.equal(installer.ready,false);assert.equal(installer.live,false);
+ await assert.rejects(installer.install(item),error=>error.code==='DSH_EXACT_INSTALL_UNAVAILABLE'&&/Git/.test(error.details.need[0].need));
 });
 
 test('client identity comes from the containing app bundle id only', async () => {
@@ -71,4 +47,18 @@ test('client identity comes from the containing app bundle id only', async () =>
   assert.equal((await detectClient({ desktop, readBundleId: async () => 'com.deepseek.harness' })).client, 'dsh');
   const unreadable = await detectClient({ desktop, readBundleId: async () => { throw Object.assign(new Error('x'), { code: 'ENOENT' }); } });
   assert.deepEqual(unreadable, { client: 'dsh', evidence: 'bundle-id-unreadable:ENOENT' });
+});
+
+test('live result from an admitted installer updates the service loaded baseline (public service fixture)',async t=>{
+ const {createLibraryService}=await import('../src/library/service.js');
+ const {until}=await import('./helpers.mjs');const dir=await profile(t);
+ const cli=createLibraryInstaller({profileDir:dir,profileName:'desktop',dataRoot:dir,nodeBinary:process.execPath,dshBin:cliFixture,fetchImpl:registry('1.0.0')});
+ const library=createLibraryService({domain:{global:{get:()=>({schema:1,revision:0,sources:[]}),set:async()=>{}},close:async()=>{}},host:{instanceList:()=>[],list:()=>[]},dataRoot:dir,
+  config:{profileDir:dir,fixture:new URL('./fixtures/catalog/provider-page.json',import.meta.url).pathname},
+  // Only the admitted public service port reports applied; this is not the production CLI or a real host reload.
+  installer:{install:async item=>({...await cli.install(item),status:'applied'})}});
+ await library.init();t.after(()=>library.close());await library.install({packageName:'@hanamesh/utility-plugin'});
+ await until(()=>library.events().events.some(event=>event.type==='library.install-done'));
+ const done=library.events().events.find(event=>event.type==='library.install-done');assert.deepEqual(done.result.restartBaseline,{updated:true});
+ assert.equal((await library.installedPlugins()).find(row=>row.packageName==='@hanamesh/utility-plugin')?.state,'installed');
 });

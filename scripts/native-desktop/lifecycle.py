@@ -144,6 +144,15 @@ def isolated_environment(root,ports):
  for key,path in dirs.items():env[key]=str(path)
  node=u/'apps/desktop/.desktop-build/targets/mac-arm64/runtime/primary-runtime/dependencies/node/bin/node'
  env['PATH']=str(node.parent)+':/usr/bin:/bin:/usr/sbin:/sbin'
+ # Native Desktop may invoke its public package manager later. Keep the outer
+ # AppHost Git monitor across this deliberately minimal environment boundary.
+ git_policy={'GIT_CONFIG_NOSYSTEM':'1','GIT_TERMINAL_PROMPT':'0','GIT_CONFIG_COUNT':'2','GIT_CONFIG_KEY_0':'credential.helper','GIT_CONFIG_VALUE_0':'','GIT_CONFIG_KEY_1':'credential.helper','GIT_CONFIG_VALUE_1':'!gh auth git-credential'}
+ if any(os.environ.get(k)!=v for k,v in git_policy.items()) or os.environ.get('GIT_CONFIG_PARAMETERS') or not os.environ.get('GIT_TRACE2_EVENT'):raise GateError('GIT_GUARD_REQUIRED')
+ env.update(git_policy)
+ env['GIT_TRACE2_EVENT']=os.environ['GIT_TRACE2_EVENT']
+ env['npm_config_manage_package_manager_versions']='false'
+ env['pnpm_config_manage_package_manager_versions']='false'
+ env['PATH']+=':/opt/homebrew/bin:/usr/local/bin'
  env['npm_execpath']=str(u/'apps/desktop/node_modules/pnpm/bin/pnpm.cjs')
  # The public dev.ts normally supplies this required unpackaged-launch path.
  # We launch its public generated HarnessDev directly, preserving the same value.

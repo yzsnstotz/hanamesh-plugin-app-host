@@ -11,6 +11,9 @@ if (args.length !== 1 || !['--stage=project', '--stage=primary-runtime'].include
   throw new Error('Required: exactly --stage=project or --stage=primary-runtime. No app/launch stage.');
 }
 const stage = args[0].slice('--stage='.length);
+// This staged helper deliberately has no hidden environment mutation or credential access.
+const gitPolicy={GIT_CONFIG_NOSYSTEM:'1',GIT_TERMINAL_PROMPT:'0',GIT_CONFIG_COUNT:'2',GIT_CONFIG_KEY_0:'credential.helper',GIT_CONFIG_VALUE_0:'',GIT_CONFIG_KEY_1:'credential.helper',GIT_CONFIG_VALUE_1:'!gh auth git-credential'};
+if(Object.entries(gitPolicy).some(([key,value])=>process.env[key]!==value)||process.env.GIT_CONFIG_PARAMETERS||!process.env.GIT_TRACE2_EVENT)throw new Error('GIT_GUARD_REQUIRED: launch via the AppHost scripts/safe-git.mjs runner.');
 const root = realpathSync(resolve(import.meta.dirname, '..'));
 const upstream = join(root, 'upstream'), app = join(upstream, 'apps/desktop');
 function stat(path) {

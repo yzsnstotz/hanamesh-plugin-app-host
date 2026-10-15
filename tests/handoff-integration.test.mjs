@@ -18,6 +18,7 @@ import WebServer from '@deepseek-ai/dsh-host-webserver';
 import * as appHost from '../src/dsh.js';
 import { scratch, http, until } from './helpers.mjs';
 
+const cliFixture=new URL('./fixtures/profile-cli.mjs',import.meta.url).pathname;
 const SITE = 'https://market.hanamesh.com', TOKEN = 'browser-session';
 const catalogFixture = resolve(import.meta.dirname, 'fixtures/catalog/provider-page.json');
 const item = { itemId: 'com.hanamesh.utility-plugin', packageName: '@hanamesh/utility-plugin' };
@@ -60,8 +61,8 @@ async function boot(t, options = {}) {
   await ctx.start?.();
   await until(() => ctx.get('webServer')?.port > 0);
   const origin = `http://127.0.0.1:${ctx.get('webServer').port}`, port = await freePort();
-  ctx.plugin(appHost, { dataRoot: join(root, 'app-data'), applications: [], library: {
-    profileDir: profile, profileName: 'desktop', fixture: catalogFixture, registry: `http://127.0.0.1:${registry.address().port}`,
+  ctx.plugin(appHost, { nodeBinary:process.execPath,dataRoot: join(root, 'app-data'), applications: [], library: {
+    profileDir: profile, profileName: 'desktop',dshBin:cliFixture, fixture: catalogFixture, registry: `http://127.0.0.1:${registry.address().port}`,
     handoff: { enabled: true, ports: [port], allowedOrigins: [SITE] } } });
   await until(() => ctx.get('hanameshApps') !== undefined);
   t.after(async () => { await ctx.fiber?.dispose?.(); });
@@ -72,7 +73,7 @@ async function boot(t, options = {}) {
 }
 const site = (url, init = {}) => fetch(url, { ...init, headers: { origin: SITE, ...(init.body ? { 'content-type': 'application/json' } : {}), ...init.headers } });
 
-test('AH-HO01: the real plugin starts the listener, the window confirms, the install is loaded live and the website sees installed', async t => {
+test('AH-HO01: the real plugin starts the listener, the window confirms, the guarded CLI installs and the website sees restart-required', async t => {
   const h = await boot(t);
   const before = (await h.get('/hanamesh/library/handoffs')).json.listener;
   assert.deepEqual([before.status, before.port], ['listening', h.port], 'dsh.js started the listener on the configured port');
@@ -86,7 +87,7 @@ test('AH-HO01: the real plugin starts the listener, the window confirms, the ins
   const open = await h.get('/hanamesh/library/handoffs');
   assert.equal(open.status, 200, JSON.stringify(open.json));
   assert.deepEqual(open.json.handoffs.map(row => [row.handoffId, row.state, row.packageName]), [[handoffId, 'pending', item.packageName]]);
-  assert.equal(open.json.pollMs, 1500); assert.equal(open.json.listener.port, h.port); assert.equal(open.json.live, true);
+  assert.equal(open.json.pollMs, 1500); assert.equal(open.json.listener.port, h.port); assert.equal(open.json.live, false);
   assert.equal((await h.post('/hanamesh/library/handoffs/state', { handoffId, state: 'shown' })).json.state, 'shown');
   // The person confirms: the market's normal install route.
   const started = await h.post('/hanamesh/library/install', item);
@@ -95,12 +96,12 @@ test('AH-HO01: the real plugin starts the listener, the window confirms, the ins
   // Waiting is only for the background operation; the assertion below is the check.
   await until(async () => (await read()).state === 'installed').catch(() => {});
   assert.equal((await read()).state, 'installed', 'library install events reach the handoff');
-  assert.deepEqual((await read()).result, { status: 'applied' });
-  assert.deepEqual(h.manager.calls, [['install', '@hanamesh/utility-plugin@1.0.0', { saveExact: true }]]);
+  assert.deepEqual((await read()).result, { status: 'restart-required' });
+  assert.deepEqual(h.manager.calls, [],'in-process manager is never called');
   const done = (await h.get('/hanamesh/library/events?after=0')).json.events.find(event => event.type === 'library.install-done' && event.operationId);
-  assert.deepEqual(done.result.restartBaseline, { updated: true }, 'the installed list no longer waits for a restart');
+  assert.equal(done.result.status,'restart-required');
   const plugins = (await h.get('/hanamesh/library/installedPlugins')).json.plugins;
-  assert.equal(plugins.find(row => row.packageName === item.packageName)?.state, 'installed');
+  assert.equal(plugins.find(row => row.packageName === item.packageName)?.state, 'installed-not-loaded');
 });
 
 test('AH-HO02: settings page shows defaults, names and fixed rules; saving re-binds the listener; unload closes it', async t => {
