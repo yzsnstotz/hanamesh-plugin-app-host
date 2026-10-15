@@ -1,7 +1,7 @@
 {
   "package": {
     "name": "@hanamesh/dsh-app-host",
-    "version": "0.6.1",
+    "version": "0.6.2",
     "license": "SEE LICENSE IN LICENSE",
     "source": "git+https://github.com/yzsnstotz/hanamesh-plugin-app-host.git",
     "purpose": "Application ownership, view leases, Router forwarding, and application library for official DSH"
@@ -27,7 +27,10 @@
       "purpose": "Runtime snapshot validation",
       "usedAs": [
         "dependencies"
-      ]
+      ],
+      "specs": {
+        "dependencies": "4.5.4"
+      }
     },
     "@deepseek-ai/cordis": {
       "version": "4.0.5-alpha.1",
@@ -37,7 +40,11 @@
       "usedAs": [
         "peerDependencies",
         "devDependencies"
-      ]
+      ],
+      "specs": {
+        "peerDependencies": ">=4.0.4 <4.1.0-0 || >=4.0.5-alpha.1 <4.1.0-0",
+        "devDependencies": "4.0.5-alpha.1"
+      }
     },
     "@deepseek-ai/dsh-storage-domain": {
       "version": "0.2.1-alpha.2",
@@ -47,7 +54,11 @@
       "usedAs": [
         "peerDependencies",
         "devDependencies"
-      ]
+      ],
+      "specs": {
+        "peerDependencies": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0",
+        "devDependencies": "0.2.1-alpha.2"
+      }
     },
     "@deepseek-ai/schemastery": {
       "version": "3.18.5-alpha.1",
@@ -57,7 +68,11 @@
       "usedAs": [
         "peerDependencies",
         "devDependencies"
-      ]
+      ],
+      "specs": {
+        "peerDependencies": ">=3.18.4 <3.19.0-0 || >=3.18.5-alpha.1 <3.19.0-0",
+        "devDependencies": "3.18.5-alpha.1"
+      }
     },
     "@deepseek-ai/dsh-host-webserver": {
       "version": "0.2.1-alpha.2",
@@ -67,7 +82,11 @@
       "usedAs": [
         "peerDependencies",
         "devDependencies"
-      ]
+      ],
+      "specs": {
+        "peerDependencies": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0",
+        "devDependencies": "0.2.1-alpha.2"
+      }
     },
     "@deepseek-ai/dsh-client-connection": {
       "version": "0.2.1-alpha.2",
@@ -76,7 +95,10 @@
       "purpose": "Official DSH client connection service",
       "usedAs": [
         "peerDependencies"
-      ]
+      ],
+      "specs": {
+        "peerDependencies": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0"
+      }
     },
     "@deepseek-ai/dsh-client-ui-slots": {
       "version": "0.2.1-alpha.2",
@@ -85,7 +107,10 @@
       "purpose": "Official DSH client UI placement",
       "usedAs": [
         "peerDependencies"
-      ]
+      ],
+      "specs": {
+        "peerDependencies": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0"
+      }
     },
     "@deepseek-ai/dsh-client-ui-settings": {
       "version": "0.2.1-alpha.2",
@@ -94,7 +119,10 @@
       "purpose": "Official DSH client settings surface",
       "usedAs": [
         "peerDependencies"
-      ]
+      ],
+      "specs": {
+        "peerDependencies": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0"
+      }
     },
     "@deepseek-ai/dsh-client-locale": {
       "version": "0.2.1-alpha.2",
@@ -103,7 +131,10 @@
       "purpose": "Official DSH client localization",
       "usedAs": [
         "peerDependencies"
-      ]
+      ],
+      "specs": {
+        "peerDependencies": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0"
+      }
     },
     "react": {
       "version": "18.3.1",
@@ -112,7 +143,10 @@
       "purpose": "Official DSH client UI peer",
       "usedAs": [
         "peerDependencies"
-      ]
+      ],
+      "specs": {
+        "peerDependencies": "^18.3.1"
+      }
     },
     "@deepseek-ai/dsh-scope": {
       "version": "0.2.1-alpha.2",
@@ -121,7 +155,10 @@
       "purpose": "Build and test fixture for official DSH scopes",
       "usedAs": [
         "devDependencies"
-      ]
+      ],
+      "specs": {
+        "devDependencies": "0.2.1-alpha.2"
+      }
     },
     "@deepseek-ai/dsh-session": {
       "version": "0.2.1-alpha.2",
@@ -130,7 +167,10 @@
       "purpose": "Build and test fixture for official DSH sessions",
       "usedAs": [
         "devDependencies"
-      ]
+      ],
+      "specs": {
+        "devDependencies": "0.2.1-alpha.2"
+      }
     },
     "@deepseek-ai/dsh-session-persistence": {
       "version": "0.2.1-alpha.2",
@@ -139,7 +179,10 @@
       "purpose": "Build and test fixture for official DSH session persistence",
       "usedAs": [
         "devDependencies"
-      ]
+      ],
+      "specs": {
+        "devDependencies": "0.2.1-alpha.2"
+      }
     },
     "@deepseek-ai/dsh-session-persistence-jsonl": {
       "version": "0.2.1-alpha.2",
@@ -148,7 +191,10 @@
       "purpose": "Build and test fixture for official DSH JSONL session persistence",
       "usedAs": [
         "devDependencies"
-      ]
+      ],
+      "specs": {
+        "devDependencies": "0.2.1-alpha.2"
+      }
     },
     "@deepseek-ai/dsh-session-projection": {
       "version": "0.2.1-alpha.2",
@@ -157,7 +203,10 @@
       "purpose": "Build and test fixture for official DSH session projections",
       "usedAs": [
         "devDependencies"
-      ]
+      ],
+      "specs": {
+        "devDependencies": "0.2.1-alpha.2"
+      }
     },
     "@deepseek-ai/dsh-storage": {
       "version": "0.2.1-alpha.2",
@@ -166,7 +215,10 @@
       "purpose": "Build and test fixture for official DSH storage",
       "usedAs": [
         "devDependencies"
-      ]
+      ],
+      "specs": {
+        "devDependencies": "0.2.1-alpha.2"
+      }
     },
     "@deepseek-ai/dsh-storage-json": {
       "version": "0.2.1-alpha.2",
@@ -175,7 +227,10 @@
       "purpose": "Build and test fixture for official DSH JSON storage",
       "usedAs": [
         "devDependencies"
-      ]
+      ],
+      "specs": {
+        "devDependencies": "0.2.1-alpha.2"
+      }
     },
     "typescript": {
       "version": "5.8.3",
@@ -184,7 +239,10 @@
       "purpose": "Build-time type checking and declarations",
       "usedAs": [
         "devDependencies"
-      ]
+      ],
+      "specs": {
+        "devDependencies": "5.8.3"
+      }
     },
     "@hanamesh/devkit": {
       "version": "0.2.3",
@@ -205,6 +263,15 @@
         "version": "0.2.0",
         "sha256": "de15f0913dd6de5ba9ce96b8d92ea862ec44489eb698628de963cbbead68bc25",
         "sourceCommit": "8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89"
+      }
+    },
+    "semver": {
+      "version": "7.8.5",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/semver/-/semver-7.8.5.tgz",
+      "purpose": "Public host compatibility ranges and PluginManager exact-save capability version check",
+      "specs": {
+        "dependencies": "7.8.5"
       }
     }
   }

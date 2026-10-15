@@ -1,6 +1,6 @@
 import type { AppHost, AppDefinition, AuthenticatedSubject, Awaitable, DshStorageBinding } from './index.js';
 export const name: 'hanamesh-app-host';
-export const DSH_TARGET: '0.2.1-alpha.2';
+export const DSH_TARGET: '>=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0';
 export const inject: readonly ['webServer', 'storageDomain', 'connection'];
 export const BROWSER_PRINCIPAL: 'dsh-browser';
 export const ROUTES: readonly string[];

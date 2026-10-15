@@ -1,31 +1,28 @@
-# 第 2 段 · 应用库验收说明（Session E，2026-10-15，app-host 0.6.1）
+# 第 2 段 · 应用库验收说明（Session E 原说明；Session G 兼容修订，app-host 0.6.2）
 
 给 owner 亲手走的步骤。用到的都是普通 DSH 自己的界面，不需要脚本。
 
 ## 你需要
-- 普通 DSH **0.2.1-alpha.2** 桌面版（官方机器上的 0.2.0-rc.2 太旧，插件装不上）。安装包按第 2 段「前置」由 Session D 给出（D 从上游 `dsh-v0.2.1-alpha.2` 原样构建的未签名 DMG，右键「打开」）。
-- 应用库安装包：`~/.cache/hanamesh-runs/session-e-20261015/hanamesh-dsh-app-host-0.6.1.tgz`（插件还没发布到 npm）。
-  sha256 `0203ff576e374a890c2e0d7f3f4b355798201d894e3e4de07f5d88b40e3c420f`，114 个文件；同目录 `.sha256` 文件可用 `shasum -a 256 -c` 核对。从仓库 tag `v0.6.1` 执行 `npm pack` 得到同一字节。
+- 官方更新源的 DSH **0.2.0-rc.2** 桌面版即可。0.6.2 修复宿主范围与精确安装能力检测；无需寻找官方未提供的 alpha 桌面安装包。隔离安装三插件的最新命令和每步预期见 [owner 验证三](/Users/yzliu/work/projects/hanamesh/hanamesh-core/docs/acceptance/OWNER-VALIDATION-3.md)。
+- 应用库安装包：`~/.cache/hanamesh-runs/session-g-dsh-compat-20261015/hanamesh-dsh-app-host-0.6.2.tgz`（插件还没发布到 npm）。
+  sha256 `4f8124a27bd9eeb749f19b5541759a10479907bec6c4d5ad1d1a4a0131205329`，116 个文件；交付目录的 SHA256SUMS 可用 `shasum -a 256 -c` 核对。本轮没有新增标签，包按摘要固定。
 
 ## 一、把应用库装进 DSH（一次）
-1. 打开 DSH 一次（它会建好自己的 desktop 配置），然后完全退出（菜单 Quit）。
-2. 终端执行（上游官方的插件命令）：
-   `"/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/dsh" plugin --profile desktop add --save-exact ~/.cache/hanamesh-runs/session-e-20261015/hanamesh-dsh-app-host-0.6.1.tgz`
-3. 再打开 DSH。左下角出现「市场」按钮。
+使用上方 owner 验证三的全新 HOME / DSH_HOME / Electron user-data 命令；本轮测试不修改 owner 的 `~/.dsh`。该说明有三包同时安装的命令、SHA256、初始化与清理步骤。再打开隔离 DSH，左下应出现「市场」。
 
 ## 二、从市场装一个普通插件并打开（第 2 段的完成标准）
 1. 点左下角「市场」→ 搜索框输入 `environment-tray` → 点「搜索」。
 2. 在「dsh-environment-tray」卡片上点「安装」。
-3. **你会看到**：按钮变成「安装中…」，几秒到半分钟后卡片显示「已安装 0.1.2」和「安装完成，已生效，可以直接使用」；下方「已安装」列表里它标「已安装」（不是「需重启」）。**不用重启 DSH。**
+3. **官方 rc.2**：按钮变成「安装中…」，完成后明确显示「重启 DSH 后生效」，请完全退出再打开；随后已安装列表显示正常。**alpha.2**：宿主公开管理器支持精确保存时可热加载，显示「已生效，可以直接使用」。此处 environment-tray 是原第2段手动目标；G 本轮只用本机无害 fixture 独立实测，没有访问生产目录。
 4. 点「关闭」回到对话页，点右上角的滑杆图标 → 弹出「Environment variables」窗口（这就是刚装的插件）。
 5. 也可在左侧「Plugins」页的「Installed plugins」里看到「Environment Variable Manager」。
 
-卸载：市场「已安装」列表里该插件右侧「卸载」，同样不需要重启。
+卸载：市场「已安装」列表里该插件右侧「卸载」，按宿主实际返回显示已生效或需重启。
 HanaMesh 自己的插件（应用库、Core、使用记录、品牌 `hanamesh-brand`）在列表里标「HanaMesh 套件」，没有卸载按钮；市场也不会替你安装或卸载它们。
 
 ## 三、网站「安装」交给客户端（需要 Session F 的网站这一版）
 1. 保持 DSH 打开。在网站目录页某个插件详情里点「安装」。
-2. **你会看到**：网站找到本机 DSH（如果同时开着 HanaMesh 客户端，网站先问装到哪个）→ DSH 窗口被带到前台，市场里弹出这个插件的确认（插件名、包名、版本、来源、「确认安装」「取消」）→ 点「确认安装」→ DSH 里显示「安装完成，已加载，可以直接使用」，网站同时显示「已可使用」。点「取消」则网站显示已取消，什么都不装。
+2. **你会看到**：网站找到本机 DSH（如果同时开着 HanaMesh 客户端，网站先问装到哪个）→ DSH 窗口被带到前台，市场里弹出这个插件的确认（插件名、包名、版本、来源、「确认安装」「取消」）→ 点「确认安装」→ DSH 里显示「安装完成，已加载，可以直接使用」，网站按真实结果显示「已可使用」或「需重启」。点「取消」则网站显示已取消，什么都不装。
 3. 设置 → 「网站安装交接」里能看到正在监听的地址（默认 `http://127.0.0.1:39317`）、允许交接的网站（默认 `https://market.hanamesh.com`）、过期时间（默认 10 分钟）、应用库查新交接的间隔（默认 1.5 秒），都可以改，保存后立即生效。下面「固定规则（不能关）」逐条写了不能改的规则和原因。
 4. 出问题时你会看到什么：
    - 不在允许名单里的网站：什么也读不到，网站上显示找不到客户端。
@@ -46,3 +43,5 @@ HanaMesh 自己的插件（应用库、Core、使用记录、品牌 `hanamesh-br
 - 能「装完即用」的前提是插件声明了 `dsh.bundle`（上游只加载这种插件；目录里大多数 npm 插件都有）。没有的，上游拒装，市场显示失败原因。
 - HanaMesh 应用（`hanamesh-app` 类）仍走官方命令行安装，需要重启才生效，市场会照实显示「重启 DSH 后生效」。
 - 上游没有让插件触发「重启 DSH」的公开入口；需要重启时市场只能提示手动重启。
+
+本轮真实官方 rc.2 桌面工程证据：三包加载、同意前0/同意后签名本机事件、市场精确安装并提示重启、重启后目标 Running、Usage 页面打开与撤回清零通过。alpha/其他平台/owner 判断见验证三和计划 §1 最新回执；此说明没有把工程测试升格为 owner ACCEPTED。

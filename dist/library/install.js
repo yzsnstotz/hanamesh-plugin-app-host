@@ -7,6 +7,7 @@ import { AppHostError, requireCondition, SerialQueue } from '../errors.js';
 import { validateDefinition } from '../descriptor.js';
 import { itemKind } from './catalog.js';
 import { profileSnapshot, runtimeSnapshot, profileChecks, runtimeChecks, packageRestoreArgs, keepOriginals } from './recovery.js';
+import {managerSupportsExactSave} from '../dsh-compat.js';
 
 /** The HanaMesh suite itself (real names + the historical scoped spellings) is never installed or removed through the market. */
 export const PROTECTED_PACKAGES=Object.freeze(['@hanamesh/dsh-app-host','hanamesh-core','hanamesh-usage','hanamesh-brand','@hanamesh/dsh-core','@hanamesh/dsh-usage']);
@@ -14,7 +15,7 @@ const blocked=new Set(PROTECTED_PACKAGES);
 const packageName=value=>typeof value==='string'&&/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(value);
 const versionText=value=>typeof value==='string'&&/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(value);
 async function json(path){return JSON.parse(await readFile(path,'utf8'));}
-function defaultSpawn(command,args,options){return new Promise((resolvePromise,reject)=>{const child=nodeSpawn(command,args,{...options,env:{HOME:process.env.HOME,DSH_HOME:process.env.DSH_HOME,LANG:process.env.LANG??'C.UTF-8',PATH:`${command.slice(0,command.lastIndexOf('/'))}:/usr/bin:/bin`},stdio:['ignore','pipe','pipe']});let stdout='',stderr='';child.stdout.on('data',chunk=>stdout+=chunk);child.stderr.on('data',chunk=>stderr+=chunk);child.on('error',reject);child.on('exit',(code,signal)=>resolvePromise({code,signal,stdout,stderr}));});}
+function defaultSpawn(command,args,options){return new Promise((resolvePromise,reject)=>{const child=nodeSpawn(command,args,{...options,env:options.env??{HOME:process.env.HOME,DSH_HOME:process.env.DSH_HOME,LANG:process.env.LANG??'C.UTF-8',PATH:`${command.slice(0,command.lastIndexOf('/'))}:/usr/bin:/bin`},stdio:['ignore','pipe','pipe']});let stdout='',stderr='';child.stdout.on('data',chunk=>stdout+=chunk);child.stderr.on('data',chunk=>stderr+=chunk);child.on('error',reject);child.on('exit',(code,signal)=>resolvePromise({code,signal,stdout,stderr}));});}
 
 async function defaults(){return await import('../provision/index.js');}
 
@@ -52,18 +53,21 @@ function managerOutcome(result,code){
 
 /**
  * `pluginManager` (optional getter): the host's public @deepseek-ai/dsh-plugin-manager service. When present, plugin
- * installs and removals go through it and take effect without a restart; applications and every compensation keep
- * the official `dsh plugin` CLI, which then needs nodeBinary and dshBin.
+ * installs use it only when its public package version proves saveExact support. Older/unknown managers use the
+ * public CLI when available. Applications and every compensation keep that CLI; removals may use the live manager.
  */
-export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBinary,dshBin,desktopCli,registry='https://registry.npmjs.org',allowPrerelease=false,
+export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBinary,dshBin,desktopCli,desktopLauncher,pluginManagerVersion,registry='https://registry.npmjs.org',allowPrerelease=false,
   fetchImpl=globalThis.fetch,spawn=defaultSpawn,provision,remove,ledger,pluginManager=()=>undefined,emit=()=>{}}){
   requireCondition(typeof profileDir==='string'&&resolve(profileDir)===profileDir,'PROFILE_DIR_REQUIRED','library.profileDir must be an absolute path.');
   requireCondition(typeof dataRoot==='string'&&resolve(dataRoot)===dataRoot,'INVALID_ROOT','dataRoot must be absolute.');
-  const cliAvailable=typeof nodeBinary==='string'&&resolve(nodeBinary)===nodeBinary&&typeof dshBin==='string'&&resolve(dshBin)===dshBin;
+  const launcherAvailable=typeof desktopLauncher?.command==='string'&&resolve(desktopLauncher.command)===desktopLauncher.command&&typeof desktopLauncher.home==='string'&&join(desktopLauncher.home,'profiles',profileName)===profileDir;
+  const cliAvailable=launcherAvailable||(typeof nodeBinary==='string'&&resolve(nodeBinary)===nodeBinary&&typeof dshBin==='string'&&resolve(dshBin)===dshBin);
   requireCondition(nodeBinary===undefined||(typeof nodeBinary==='string'&&resolve(nodeBinary)===nodeBinary),'NODE_RUNTIME_REQUIRED','nodeBinary must be an absolute path.');
   requireCondition(dshBin===undefined||(typeof dshBin==='string'&&resolve(dshBin)===dshBin),'DSH_BIN_REQUIRED','dshBin must be an absolute DSH bin.js path.');
   requireCondition(typeof profileName==='string'&&/^[A-Za-z0-9_.-]+$/.test(profileName),'PROFILE_NAME_REQUIRED','library.profileName is required.');
   const manager=()=>{const value=pluginManager();return typeof value?.installBundle==='function'&&typeof value?.removeBundle==='function'?value:undefined;};
+  const exactManager=()=>managerSupportsExactSave(pluginManagerVersion)?manager():undefined;
+  const unavailable=()=>!cliAvailable&&manager()&&!exactManager()?[{need:`宿主插件管理${pluginManagerVersion?`（${pluginManagerVersion}）`:'（版本无法核实）'}不能保证保存精确版本，且找不到可用的公开 DSH 命令行`,how:'恢复客户端随附的公开 dsh 命令启动器，或使用提供精确版本安装能力的官方 DSH。'}]:[];
   const runtimeRoot=appId=>join(dataRoot,'runtimes',appId);
   const permitted=name=>requireCondition(packageName(name)&&!blocked.has(name),'PACKAGE_DENIED','Package name is not permitted.',{packageName:name});
   /** rc.10: one profile writer at a time inside this host; `dsh plugin` itself serialises against other writers per command. */
@@ -72,7 +76,11 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
   /** Injected runtime functions (tests, suites) or the vendored lib-provision export of the same name. */
   const runtimeApi=async name=>injected[name]??(await defaults())[name];
   async function installed(packageNameValue){const root=join(profileDir,'node_modules',...packageNameValue.split('/')),pkg=await json(join(root,'package.json'));const appFile=typeof pkg.hanamesh?.app==='string'?pkg.hanamesh.app:'app.json';return{pkg,definition:validateDefinition(await json(join(root,appFile)))};}
-  async function run(args){requireCondition(cliAvailable,'DSH_CLI_UNAVAILABLE','The official dsh plugin CLI is unavailable in this host.',{need:['nodeBinary','dshBin']},503);const result=await spawn(nodeBinary,[...(desktopCli?['--expose-internals',fileURLToPath(new URL('./desktop-cli.js',import.meta.url)),desktopCli.entry,desktopCli.runtimeDir,desktopCli.supportDir]:[dshBin]),'plugin','--profile',profileName,...args],{cwd:profileDir});requireCondition(result.code===0,'DSH_PLUGIN_FAILED','DSH plugin operation failed.',{code:result.code,signal:result.signal,stderr:String(result.stderr??'').slice(-2000)},502);return result;}
+  async function run(args){requireCondition(cliAvailable,'DSH_CLI_UNAVAILABLE','The official dsh plugin CLI is unavailable in this host.',{need:['nodeBinary','dshBin']},503);
+    const options={cwd:profileDir},tail=['plugin','--profile',profileName,...args];
+    if(launcherAvailable)options.env={HOME:process.env.HOME,DSH_HOME:desktopLauncher.home,LANG:process.env.LANG??'C.UTF-8',PATH:`${dirname(desktopLauncher.command)}:/usr/bin:/bin`};
+    const result=await spawn(launcherAvailable?desktopLauncher.command:nodeBinary,launcherAvailable?tail:[...(desktopCli?['--expose-internals',fileURLToPath(new URL('./desktop-cli.js',import.meta.url)),desktopCli.entry,desktopCli.runtimeDir,desktopCli.supportDir]:[dshBin]),...tail],options);
+    requireCondition(result.code===0,'DSH_PLUGIN_FAILED','DSH plugin operation failed.',{code:result.code,signal:result.signal,stderr:String(result.stderr??'').slice(-2000)},502);return result;}
   /** The exact version `dsh plugin add` will pin: the registry's `latest` dist-tag, re-checked here (the catalog's `latestVersion` is a hint only). */
   async function latest(name){
     const base=new URL(registry);requireCondition(['https:','http:'].includes(base.protocol),'REGISTRY_DENIED','Registry URL is invalid.');
@@ -120,11 +128,12 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
    * and reported with the original error; nothing is retried.
    */
   async function transaction(item,kind,context){
+    requireCondition(!manager()||exactManager()||cliAvailable,'DSH_EXACT_INSTALL_UNAVAILABLE','The host cannot install a package with an exact saved version.',{need:unavailable()},503);
     const name=item.package.name,operationId=/^[A-Za-z0-9-]{1,64}$/.test(context?.operationId??'')?context.operationId:randomUUID();let stage='baseline',base,runtime;
     try{
       base=await profileSnapshot(profileDir,name);
       stage='before-add';const version=await latest(name);
-      const live=kind==='plugin'?manager():undefined;let status='restart-required';
+      const live=kind==='plugin'?exactManager():undefined;let status='restart-required';
       stage='add';if(live)status=managerOutcome(await live.installBundle(`${name}@${version}`,{saveExact:true}),'DSH_PLUGIN_FAILED');else await run(['add','--save-exact',`${name}@${version}`]);
       stage='readback';const added=await profileSnapshot(profileDir,name);
       requireCondition(added.spec===version&&added.module===version,'INSTALL_READBACK_MISMATCH','The profile does not resolve the exact version that was added.',{expected:version,spec:added.spec,module:added.module},502);
@@ -156,8 +165,9 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       if(live)return{status:managerOutcome(await live.removeBundle(installedName),'DSH_PLUGIN_FAILED'),kind:'plugin',packageName:installedName};
       await run(['remove',installedName]);return{status:'restart-required',kind:'plugin',packageName:installedName};});},
     /** Whether plugin changes load without a restart (the host's public plugin manager is present). */
-    get live(){return manager()!==undefined;},
+    get live(){return exactManager()!==undefined;},
     /** Something can install: the host's plugin manager, or the official CLI. */
-    get ready(){return cliAvailable||manager()!==undefined;},
+    get ready(){return cliAvailable||exactManager()!==undefined;},
+    get unavailable(){return unavailable();},
   };
 }

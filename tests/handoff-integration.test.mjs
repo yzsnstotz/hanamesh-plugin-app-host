@@ -45,6 +45,8 @@ async function boot(t) {
   const root = await scratch('handoff-integration-'), profile = join(root, 'profile');
   await mkdir(profile, { recursive: true });
   await writeFile(join(profile, 'package.json'), JSON.stringify({ name: 'profile', dependencies: {}, dsh: { profile: { bundles: [] } } }));
+  const managerPackage=join(profile,'node_modules/@deepseek-ai/dsh-plugin-manager');
+  await mkdir(managerPackage,{recursive:true});await writeFile(join(managerPackage,'package.json'),JSON.stringify({name:'@deepseek-ai/dsh-plugin-manager',version:'0.2.1-alpha.2'}));
   const registry = createServer((req, res) => {
     const known = req.url === '/' + encodeURIComponent(item.packageName) + '/latest';
     res.writeHead(known ? 200 : 404, { 'content-type': 'application/json' }); res.end(JSON.stringify(known ? { version: '1.0.0' } : {}));

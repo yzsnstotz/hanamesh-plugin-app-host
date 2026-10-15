@@ -82,7 +82,7 @@ export function assertHostPeerInstallRejected(error){
   const output=[error.stdout,error.stderr].map(value=>value?.toString()??'').join('\n');
   assert.deepEqual(output.match(/ERR_PNPM_[A-Z_]+/gu),['ERR_PNPM_PEER_DEP_ISSUES'],'only strict peer rejection is expected');
   assert.doesNotMatch(output,/unmet peer \S+@/iu,'incompatible peers are not missing host peers');
-  const missing=[...output.matchAll(/missing peer (\S+)/gu)].map(match=>match[1]).sort();
+  const missing=[...output.matchAll(/missing peer ([^\r\n]+)/gu)].map(match=>match[1].trim().replace(/@"([^"]+)"$/u,'@$1')).sort();
   assert.deepEqual(missing,Object.entries(pkg.peerDependencies).map(([name,version])=>`${name}@${version}`).sort(),
     'missing host peers must exactly match declared names and versions');
   return missing;
@@ -107,9 +107,10 @@ export async function verifyAppHostPack(tarball){
     if(prior.peers===undefined)delete process.env.npm_config_auto_install_peers;else process.env.npm_config_auto_install_peers=prior.peers;
   }
   // Explicit consumer closure; these remain transitive host peers, not AppHost declarations.
-  const peers={...pkg.peerDependencies,
+  const peers=Object.fromEntries(Object.keys(pkg.peerDependencies).map(name=>[name,pkg.devDependencies[name]??(name.startsWith('@deepseek-ai/dsh-')?'0.2.1-alpha.2':name==='react'?'18.3.1':pkg.peerDependencies[name])]))
+  Object.assign(peers,{
     '@deepseek-ai/dsh-storage':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-scope':'0.2.1-alpha.2'};
+    '@deepseek-ai/dsh-scope':'0.2.1-alpha.2'});
   await verifyPack({...options,consumer:{packageJson:{private:true,type:'module',dependencies:{...peers,
     '@hanamesh/dsh-app-host':`file:${options.tarball}`}},
     javascript:"import assert from 'node:assert/strict';import{createRequire}from'node:module';import{apply}from'@hanamesh/dsh-app-host/dsh';assert.equal(typeof apply,'function');const require=createRequire(import.meta.url);assert.throws(()=>require.resolve('@hanamesh/devkit'),{code:'MODULE_NOT_FOUND'});",

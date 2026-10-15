@@ -18,9 +18,14 @@ test('J1S2-AH-05: accepts only the exact nine declared host peers, including ver
   assert.deepEqual(policy.assertHostPeerInstallRejected(rejection([...peers].reverse())),[...peers].sort());
 });
 
+test('strict peer diagnostics preserve pnpm quoted whitespace ranges',()=>{
+  const quoted=Object.entries(pkg.peerDependencies).map(([name,range])=>`${name}@${range.includes(' ')?JSON.stringify(range):range}`);
+  assert.deepEqual(policy.assertHostPeerInstallRejected(rejection(quoted)),[...peers].sort());
+});
+
 test('J1S2-AH-05: missing, extra, duplicate and wrong-version peer lists fail',()=>{
   for(const list of [peers.slice(1),[...peers,'unexpected-peer@1.0.0'],[...peers,peers[0]],
-    peers.map(peer=>peer==='react@18.3.1'?'react@19.0.0':peer)]){
+    peers.map(peer=>peer==='react@^18.3.1'?'react@19.0.0':peer)]){
     assert.throws(()=>policy.assertHostPeerInstallRejected(rejection(list)),{code:'ERR_ASSERTION'});
   }
 });

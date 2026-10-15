@@ -12,6 +12,7 @@ import { readFile, realpath, access } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { createRequire } from 'node:module';
 import { basename, dirname, isAbsolute, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -21,6 +22,11 @@ export const DEFAULT_CATALOG_SOURCES=Object.freeze([Object.freeze({manifestUrl:'
 const DSH_BIN_SUFFIX='/@deepseek-ai/dsh/lib/bin.js';
 
 async function json(path){try{return JSON.parse(await readFile(path,'utf8'));}catch{return undefined;}}
+/** The public package manifest resolved by the host's installation/profile anchor. No service flags are inferred. */
+export async function inferPluginManagerVersion(anchor){
+  if(typeof anchor!=='string'||!isAbsolute(anchor))return undefined;
+  try{const pkg=await json(createRequire(anchor).resolve('@deepseek-ai/dsh-plugin-manager/package.json'));return pkg?.name==='@deepseek-ai/dsh-plugin-manager'?pkg.version:undefined;}catch{return undefined;}
+}
 /** A DSH profile manifest that carries HanaMesh: `dsh.profile` (written by `dsh plugin`) or a hanamesh dependency. */
 export function isHanameshProfileManifest(manifest){
   if(!manifest||typeof manifest!=='object'||Array.isArray(manifest))return false;
@@ -61,13 +67,14 @@ export async function inferProfileDir(moduleUrl){
 export async function inferDesktopLayout({moduleUrl=import.meta.url,argv=process.argv}={}) {
   const [entry,runtimeDir,profileDir]=[argv?.[1],argv?.[2],argv?.[3]];
   if (![entry,runtimeDir,profileDir].every(value=>typeof value==='string'&&isAbsolute(value))) return undefined;
-  const hostRoot=join(runtimeDir,'node_modules/@deepseek-ai/dsh-desktop-host');
-  if (entry!==join(hostRoot,'lib/index.js') || (await json(join(hostRoot,'package.json')))?.name!=='@deepseek-ai/dsh-desktop-host') return undefined;
+  const hostRoot=join(runtimeDir,'node_modules/@deepseek-ai/dsh-desktop-host'),hostManifest=await json(join(hostRoot,'package.json'));
+  if (entry!==join(hostRoot,'lib/index.js') || hostManifest?.name!=='@deepseek-ai/dsh-desktop-host') return undefined;
   const root=await packageRoot(moduleUrl);
   const linked=await realpath(join(profileDir,'node_modules',...PACKAGE_NAME.split('/'))).catch(()=>undefined);
   if (!root || root!==linked || basename(profileDir)!=='desktop' || !isHanameshProfileManifest(await json(join(profileDir,'package.json')))) return undefined;
   const dshRoot=join(runtimeDir,'node_modules/@deepseek-ai/dsh');
-  if ((await json(join(dshRoot,'package.json')))?.name!=='@deepseek-ai/dsh') return undefined;
+  const dshManifest=await json(join(dshRoot,'package.json'));
+  if (dshManifest?.name!=='@deepseek-ai/dsh') return undefined;
   const dshBin=await realpath(join(dshRoot,'lib/bin.js')).catch(()=>undefined);
   if (!dshBin || !await realpath(entry).catch(()=>undefined)) return undefined;
   const payload=argv[4]??join(dirname(runtimeDir),'runtime/primary-runtime');
@@ -77,6 +84,18 @@ export async function inferDesktopLayout({moduleUrl=import.meta.url,argv=process
     ? {entry:cli,runtimeDir,supportDir:dirname(payload)} : undefined;
   let nodeBinary;
   const metadata=payloadNamed?await json(join(payload,'runtime.json')):undefined;
+  const matchingRuntime=typeof hostManifest.version==='string'&&metadata?.platform===process.platform&&metadata?.arch===process.arch&&metadata.desktopVersion===hostManifest.version&&hostManifest.version===dshManifest.version;
+  // Packaged Desktop supplies a public launcher outside ASAR. Invoke that launcher unchanged;
+  // standalone Node cannot import the archived CLI, and the launcher owns Electron's boot details.
+  let desktopLauncher;
+  const resources=dirname(dirname(runtimeDir));
+  if(matchingRuntime&&runtimeDir===join(resources,'app.asar','dsh')&&payload===join(resources,'runtime','primary-runtime')&&basename(dirname(profileDir))==='profiles'){
+    // Upstream ships a POSIX launcher on macOS. Windows' .cmd needs a separately verified carrier;
+    // Linux has no official packaged Desktop launcher. Both stay explicitly unavailable here.
+    if(process.platform==='darwin')try{const command=join(resources,'runtime','cli','bin','dsh');await access(command,constants.X_OK);desktopLauncher={command:await realpath(command),home:await realpath(dirname(dirname(profileDir)))};}catch{}
+  }
+  const managerManifest=await json(join(runtimeDir,'node_modules/@deepseek-ai/dsh-plugin-manager/package.json'));
+  const pluginManagerVersion=managerManifest?.name==='@deepseek-ai/dsh-plugin-manager'&&managerManifest.version===hostManifest.version?managerManifest.version:undefined;
   // Current canonical runtime manifest only. No legacy descriptor inference or PATH search.
   if(metadata?.platform===process.platform&&metadata?.arch===process.arch&&
     metadata.desktopVersion===(await json(join(hostRoot,'package.json')))?.version&&/^24\.\d+\.\d+$/.test(metadata.node??'')) {
@@ -88,7 +107,7 @@ export async function inferDesktopLayout({moduleUrl=import.meta.url,argv=process
       if(actual.node===metadata.node&&actual.electron===undefined)nodeBinary=await realpath(node);
     } catch { /* Unavailable/unproven payload Node stays unavailable; never use Electron. */ }
   }
-  return {profileDir:await realpath(profileDir),profileName:'desktop',dshBin,parentOrigin:'dsh-app://app',frameAncestors:[],desktopCli,nodeBinary,runtimeDir};
+  return {profileDir:await realpath(profileDir),profileName:'desktop',dshBin,parentOrigin:'dsh-app://app',frameAncestors:[],desktopCli,desktopLauncher,pluginManagerVersion,nodeBinary,runtimeDir};
 }
 
 /** The DSH CLI that started this process — `argv[1]` only when it IS `@deepseek-ai/dsh/lib/bin.js`. */
@@ -116,5 +135,6 @@ export async function resolveLibraryLocations(config={},{moduleUrl=import.meta.u
   let dshBin=config.dshBin;if(dshBin===undefined){dshBin=desktop?.dshBin??inferDshBin(argv);if(dshBin)inferred.push('dshBin');}
   let node=nodeBinary;if(node===undefined){node=desktop?.nodeBinary??inferNodeBinary({execPath,versions});if(node)inferred.push('nodeBinary');}
   let sources=config.sources;if(sources===undefined){sources=structuredClone(DEFAULT_CATALOG_SOURCES);inferred.push('sources');}
-  return{profileDir,profileName,dshBin,nodeBinary:node,sources,inferred,...(desktop?.desktopCli&&config.dshBin===undefined?{desktopCli:desktop.desktopCli}:{})};
+  const pluginManagerVersion=desktop?desktop.pluginManagerVersion:await inferPluginManagerVersion(inferDshBin(argv)??(profileDir?join(profileDir,'package.json'):undefined));
+  return{profileDir,profileName,dshBin,nodeBinary:node,sources,inferred,...(pluginManagerVersion?{pluginManagerVersion}:{}),...(desktop&&desktop.profileDir===profileDir&&config.dshBin===undefined?{desktopCli:desktop.desktopCli,desktopLauncher:desktop.desktopLauncher}:{})};
 }

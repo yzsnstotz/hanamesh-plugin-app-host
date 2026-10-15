@@ -1,3 +1,17 @@
+## 0.6.2 compatibility candidate (2026-10-15)
+
+Public host peers use the ranges recorded in `package.json`; development package versions remain exact. The installed
+official Desktop rc.2 public API and alpha.2 tag were compared; details and remaining product gates are in
+`DSH_COMPATIBILITY.md`. Older exact-target descriptions below are historical inputs, not current host restrictions.
+
+The rc.2 manager cannot save an exact version through its public `installBundle` options. For the verified packaged
+macOS layout, AppHost invokes the installation's executable `runtime/cli/bin/dsh` directly with ordinary
+`plugin --profile desktop add --save-exact ...` arguments. The launcher owns its Electron boot details and its bundled
+pnpm selection; AppHost neither extracts ASAR nor writes a replacement launcher. The inferred `DSH_HOME` selects the
+same proven `profiles/desktop`; only HOME, that DSH_HOME, LANG and the launcher/system PATH enter the child environment.
+The result remains `restart-required`. A verified alpha.2-or-later compatible manager retains live installation.
+Missing/unproven manager capability plus missing CLI produces `ready:false` and readable `need` before mutation.
+
 ## 0.6.1 (2026-10-15)
 
 Review fixes. The install-target probe on the handoff listener answers only origins in `library.handoff.allowedOrigins`

@@ -36,7 +36,7 @@ const item = { id: 'example.notes', package: { registry: 'npm', name: 'example-n
 
 test('plugin install goes through pluginManager, pins the registry latest exactly, and reports applied', async t => {
   const dir = await profile(t), live = manager(dir), events = [];
-  const installer = createLibraryInstaller({ profileDir: dir, profileName: 'desktop', dataRoot: dir, fetchImpl: registry('1.2.3'), pluginManager: () => live.value, emit: e => events.push(e) });
+  const installer = createLibraryInstaller({ profileDir: dir, profileName: 'desktop', dataRoot: dir, fetchImpl: registry('1.2.3'), pluginManagerVersion: '0.2.1-alpha.2', pluginManager: () => live.value, emit: e => events.push(e) });
   assert.equal(installer.ready, true); assert.equal(installer.live, true);
   const result = await installer.install(item);
   assert.deepEqual(result, { status: 'applied', kind: 'plugin', packageName: 'example-notes', version: '1.2.3' });
@@ -47,10 +47,10 @@ test('plugin install goes through pluginManager, pins the registry latest exactl
 
 test('upstream restart-required is reported as such; a failed manager run is an install failure with its code', async t => {
   const dir = await profile(t);
-  const later = createLibraryInstaller({ profileDir: dir, profileName: 'desktop', dataRoot: dir, fetchImpl: registry('1.0.0'), pluginManager: () => manager(dir, { application: 'restart-required' }).value });
+  const later = createLibraryInstaller({ profileDir: dir, profileName: 'desktop', dataRoot: dir, fetchImpl: registry('1.0.0'), pluginManagerVersion: '0.2.1-alpha.2', pluginManager: () => manager(dir, { application: 'restart-required' }).value });
   assert.equal((await later.install(item)).status, 'restart-required');
   const dir2 = await profile(t), events = [];
-  const failing = createLibraryInstaller({ profileDir: dir2, profileName: 'desktop', dataRoot: dir2, fetchImpl: registry('1.0.0'), pluginManager: () => manager(dir2, { fail: 'not-bundle' }).value, emit: e => events.push(e) });
+  const failing = createLibraryInstaller({ profileDir: dir2, profileName: 'desktop', dataRoot: dir2, fetchImpl: registry('1.0.0'), pluginManagerVersion: '0.2.1-alpha.2', pluginManager: () => manager(dir2, { fail: 'not-bundle' }).value, emit: e => events.push(e) });
   await assert.rejects(failing.install(item), error => error.code === 'DSH_PLUGIN_FAILED' && error.details.error.code === 'not-bundle' && error.recovery.status === 'not-needed');
   assert.equal(events.at(-1).type, 'library.install-failed');
 });

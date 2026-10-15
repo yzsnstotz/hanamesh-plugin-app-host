@@ -1,7 +1,7 @@
 {
   "currentCandidate": {
-    "version": "0.6.1",
-    "dshTarget": "0.2.1-alpha.2",
+    "version": "0.6.2",
+    "dshTarget": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0",
     "vendorSha256VerifiedAtBuild": false,
     "libProvisionDistribution": "随包分发、源仓不变; bundleDependencies; original LICENSE retained, no relicensing",
     "publicNpmGate": "NOT_RUN",
@@ -10,7 +10,8 @@
     "pnpm": "10.33.0",
     "fixedUpstream": "d743267388641bc76f17c45ce8b4c231aed1d32c",
     "devkit": "0.2.3",
-    "libProvision": "0.2.1"
+    "libProvision": "0.2.1",
+    "compatibility": "SOURCE: official installed rc.2 public API audit; separate runtime, browser, package and owner gates pending"
   },
   "module": "app-host",
   "version": "0.1.0-rc.12",
