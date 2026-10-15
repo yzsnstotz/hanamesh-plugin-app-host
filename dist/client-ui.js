@@ -40,7 +40,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   const setTarget=value=>{targetSelection=value;for(const listener of targetListeners)listener(value);};
   const setPending=update=>{pendingOperations=typeof update==='function'?update(pendingOperations):update;for(const listener of pendingListeners)listener(pendingOperations);};
   /** Public client entry: identifiers only; the market fetches its own catalog and owns confirmation. */
-  async function openInstallTarget(input){
+  async function openInstallTarget(input,{handoffId}={}){
     const sequence=++targetSequence;if(entryVisible)setLibraryVisible(true);
     try{
       if(!input||typeof input!=='object'||Array.isArray(input))throw new Error('INVALID_INPUT');
@@ -54,8 +54,21 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       if(sequence!==targetSequence)return{status:'superseded'};
       const item=resolved.item,op=pendingOperations[item.id];
       const status=op?.busy?'installing':['registered','installed','installed-not-loaded'].includes(item.installed?.state)&&!item.upgradeAvailable?'already-installed':'confirmation-required';
-      setTarget({...resolved,status});return{status,itemId:item.id,packageName:item.package.name};
+      setTarget({...resolved,status,...(handoffId?{handoffId}:{})});return{status,itemId:item.id,packageName:item.package.name};
     }catch(error){if(sequence===targetSequence)setTarget({status:'failed',error:String(error.message??error)});throw error;}
+  }
+  // Website handoff (C-MARKET 2026-10-15): the library's own loopback listener queued a target from an allowed website;
+  // this window shows it with the normal confirmation. Only the person's 「确认安装」 installs.
+  const HANDOFF_POLL_MS=1500;const handled=new Set();
+  const reportHandoff=(handoffId,state)=>{if(!handoffId)return;void request('/hanamesh/library/handoffs/state',{method:'POST',body:JSON.stringify({handoffId,state})}).catch(()=>{});};
+  async function pollHandoffs(){
+    const value=await request('/hanamesh/library/handoffs');
+    for(const row of value.handoffs??[]){
+      if(row.state!=='pending'||handled.has(row.handoffId))continue;handled.add(row.handoffId);
+      const input={...(row.itemId?{itemId:row.itemId}:{}),...(row.packageName?{packageName:row.packageName}:{}),contractVersion:INSTALL_TARGET_CONTRACT_VERSION};
+      try{await openInstallTarget(input,{handoffId:row.handoffId});reportHandoff(row.handoffId,'shown');}catch{reportHandoff(row.handoffId,'cancelled');}
+      return;
+    }
   }
   function consumeInstallTargetHash(){
     const hash=globalThis.location?.hash;if(!hash?.startsWith(INSTALL_TARGET_HASH))return;
@@ -95,6 +108,25 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     return h('section',{className:'hm-library-sources'},h('h2',null,'市场目录源'),h('p',null,'可保存多个来源，但浏览时只启用一个。'),error?h('p',{role:'alert'},error):null,
       ...sources.map((source,index)=>h('div',{className:'hm-source-row',key:source.manifestUrl},h('code',null,source.manifestUrl),h('button',{type:'button',disabled:source.enabled,onClick:()=>void save(sources.map((row,i)=>({...row,enabled:i===index})))},source.enabled?'已启用':'启用'),h('button',{type:'button',onClick:()=>move(index,-1)},'上移'),h('button',{type:'button',onClick:()=>move(index,1)},'下移'),h('button',{type:'button',onClick:()=>void save(sources.filter((_,i)=>i!==index))},'删除'))),
       h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://…/catalog-source.json',onChange:event=>setDraft(event.target.value)}),h('button',{type:'button',onClick:()=>{if(draft)void save([...sources.map(row=>({...row,enabled:false})),{manifestUrl:draft,enabled:true}]);setDraft('');}},'添加并启用')));
+  }
+  /** Website handoff settings (all named, visible and editable; defaults are proposals for the owner). */
+  function HandoffSettingsSection(){
+    const[value,setValue]=React.useState(null),[draft,setDraft]=React.useState(null),[error,setError]=React.useState('');
+    const load=React.useCallback(async()=>{try{const next=await request('/hanamesh/library/handoff-settings');setValue(next);setDraft({...next.settings,ports:next.settings.ports.join(', '),allowedOrigins:next.settings.allowedOrigins.join('\n')});setError('');}catch(e){setError(String(e.message??e));}},[]);
+    React.useEffect(()=>{void load();},[load]);
+    const save=async()=>{try{const next=await request('/hanamesh/library/handoff-settings',{method:'POST',body:JSON.stringify({enabled:draft.enabled,ttlMs:Number(draft.ttlMs),
+      ports:draft.ports.split(/[\s,，]+/).filter(Boolean).map(Number),allowedOrigins:draft.allowedOrigins.split(/\s+/).filter(Boolean)})});setValue(next);setError('');}catch(e){setError(String(e.message??e)+(e.response?.error?.message?'：'+e.response.error.message:''));}};
+    const listener=value?.listener;
+    const status=!listener?'读取中…':listener.status==='listening'?'正在 '+listener.origin+' 接收网站交接':listener.status==='disabled'?'已关闭：网站上的「安装」按钮找不到本客户端':listener.status==='unavailable'?listener.need:'未启动';
+    return h('section',{className:'hm-library-sources'},h('h2',null,'网站安装交接'),
+      h('p',null,'网站（如 market.hanamesh.com）点「安装」时，会在下列本机端口上找到本客户端，把要装的插件交给应用库；应用库在这里弹出确认，你确认后才安装。'),
+      h('p',{role:'status'},status),error?h('p',{role:'alert'},error):null,
+      draft?h('div',{className:'hm-handoff-settings'},
+        h('label',null,h('input',{type:'checkbox',checked:draft.enabled,onChange:event=>setDraft({...draft,enabled:event.target.checked})}),' 启用（library.handoff.enabled，默认 开）'),
+        h('label',null,'端口（library.handoff.ports，默认 39317, 39318, 39319；按顺序取第一个空闲的）',h('input',{value:draft.ports,onChange:event=>setDraft({...draft,ports:event.target.value})})),
+        h('label',null,'允许交接的网站（library.handoff.allowedOrigins，每行一个，默认 https://market.hanamesh.com）',h('textarea',{rows:3,value:draft.allowedOrigins,onChange:event=>setDraft({...draft,allowedOrigins:event.target.value})})),
+        h('label',null,'未确认多久后作废，毫秒（library.handoff.ttlMs，默认 600000 = 10 分钟）',h('input',{value:String(draft.ttlMs),onChange:event=>setDraft({...draft,ttlMs:event.target.value})})),
+        h('button',{type:'button',onClick:()=>void save()},'保存并重新监听')):null);
   }
   const FAILURE_REASONS={INSTALL_READBACK_MISMATCH:'安装命令返回成功，但 profile 读回的版本与固定版本不一致',REGISTRY_LOOKUP_FAILED:'包不在当前 registry 上——尚未发布到 npm，或客户端 registry 设置不对',DSH_PLUGIN_FAILED:'DSH 安装命令失败，查看宿主日志',LIBRARY_INSTALL_UNAVAILABLE:'当前宿主未提供安装参数（profile / node 路径）',CATALOG_ITEM_MISSING:'目录里已没有这一项，刷新后重试',UNSTABLE_VERSION:'registry 上的最新版是预发布版（rc），客户端未允许安装预发布版',RUNTIME_ARCHIVE_UNAVAILABLE:'运行时归档下载失败，检查网络或来源',OPERATION_TIMEOUT:'10 分钟内没有结果，可稍后重试',PACKAGE_DENIED:'HanaMesh 套件自身不能从市场安装或卸载',INSTANCE_IN_USE:'先关闭该应用的所有视图再卸载'};
   const failureReason=code=>FAILURE_REASONS[code]??'详细原因见宿主日志';
@@ -231,13 +263,14 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     const load=React.useCallback(async()=>{try{setError('');setExtra([]);const page=await request('/hanamesh/library'+params());setSnapshot(page);remember(page);}catch(e){setError(String(e.message??e));}},[params]);
     const more=async()=>{try{const cursor=(extra.at(-1)??snapshot)?.page?.nextCursor;if(!cursor)return;const next=await request('/hanamesh/library'+params(cursor));setExtra(list=>[...list,next]);remember(next);}catch(e){if(String(e.message??e)==='CATALOG_CHANGED'){setSnapshot(null);setExtra([]);}setError(String(e.message??e));}};
     React.useEffect(()=>{if(visible)void load();},[visible,load]);
-    React.useEffect(()=>{if(visible&&target?.status==='installed')void load();},[visible,load,target?.status]);
+    React.useEffect(()=>{if(visible&&['installed','installed-live'].includes(target?.status))void load();},[visible,load,target?.status]);
     // rc.18: install/provision/uninstall are 202 + events. Track the operation per card so the user sees
     // 「安装中…」 and, on failure, the code with a readable reason (user 2026-09-20: clicked install, nothing happened).
     const operate=async(path,body,key,label,awaitReadback=false)=>{if(pendingOperations[key]?.busy)return;setError('');setPending(p=>({...p,[key]:{label,text:label+'中…',busy:true}}));try{const started=await request(path,{method:'POST',body:JSON.stringify(body)});const {operationId}=started;let after=0;const deadline=Date.now()+600000;let outcome=started.status==='already-installed'?{ok:true}:null;while(!outcome&&Date.now()<deadline){await new Promise(resolve=>setTimeout(resolve,1000));const feed=await request('/hanamesh/library/events?after='+after);after=feed.sequence??after;for(const event of feed.events??[]){if(event.operationId!==operationId)continue;if(event.type.endsWith('-done'))outcome={ok:true,result:event.result};else if(event.type.endsWith('-failed'))outcome={ok:false,code:event.code??'LIBRARY_OPERATION_FAILED',recovery:event.recovery};}if(feed.resetRequired&&!outcome&&!feed.operations?.includes(operationId))outcome={ok:false,unknown:true,code:'OPERATION_RESULT_UNAVAILABLE'};}
       if(!outcome)outcome={ok:false,code:'OPERATION_TIMEOUT'};
-      if(outcome.ok&&!awaitReadback)setChanged(true);
-      setPending(p=>({...p,[key]:outcome.ok?(awaitReadback?{label,text:label+'读回中…',busy:true}:{label,text:label+'完成，重启 DSH 后生效'}):{label,text:outcome.unknown?label+'结果不可追溯，请查看已安装列表后再明确操作':label+'失败：'+outcome.code+'（'+failureReason(outcome.code)+'）'+recoveryText(outcome.recovery),failed:true}}));
+      const liveLoaded=outcome.ok&&outcome.result?.status==='applied';
+      if(outcome.ok&&!awaitReadback&&!liveLoaded)setChanged(true);
+      setPending(p=>({...p,[key]:outcome.ok?(awaitReadback?{label,text:label+'读回中…',busy:true}:{label,text:liveLoaded?label+'完成，已生效，可以直接使用':label+'完成，重启 DSH 后生效'}):{label,text:outcome.unknown?label+'结果不可追溯，请查看已安装列表后再明确操作':label+'失败：'+outcome.code+'（'+failureReason(outcome.code)+'）'+recoveryText(outcome.recovery),failed:true}}));
       await load();return outcome;}catch(e){const code=String(e.message??e);setPending(p=>({...p,[key]:{label,text:label+'失败：'+code,failed:true}}));return{ok:false,code};}};
     const confirmTarget=async()=>{
       const selected=targetSelection;if(selected?.status!=='confirmation-required'||pendingOperations[selected.item.id]?.busy)return;
@@ -248,8 +281,8 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
         try{const fresh=await request('/hanamesh/library/target?'+new URLSearchParams({itemId:selected.item.id,packageName:selected.item.package.name}));
           const row=fresh.item?.installed;
           if(row?.packageName!==selected.item.package.name||!['registered','installed','installed-not-loaded'].includes(row.state)||(outcome.result?.version&&row.version!==outcome.result.version))throw new Error('INSTALL_READBACK_MISMATCH');
-          setPending(p=>({...p,[selected.item.id]:{label:'安装',text:'安装完成，已按精确版本读回'}}));setChanged(true);
-          if(targetSelection?.item?.id===selected.item.id)setTarget({...fresh,status:'installed'});
+          const live=outcome.result?.status==='applied';setPending(p=>({...p,[selected.item.id]:{label:'安装',text:live?'安装完成，已加载，可以直接使用（已按精确版本读回）':'安装完成，已按精确版本读回'}}));if(!live)setChanged(true);
+          if(targetSelection?.item?.id===selected.item.id)setTarget({...fresh,status:live?'installed-live':'installed'});
         }catch(error){const text='安装读回失败：'+String(error.message??error);setPending(p=>({...p,[selected.item.id]:{label:'安装',text,failed:true}}));if(targetSelection?.item?.id===selected.item.id)setTarget({...targetSelection,status:'readback-failed',error:'安装操作已完成，但目录读回失败：'+String(error.message??error)});}
       }
     };
@@ -329,8 +362,8 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
           h('input',{'aria-label':'包名',value:targetPackageName,placeholder:'packageName（可选）',onChange:event=>setTargetPackageName(event.target.value)}),h('button',{type:'submit'},'查看安装目标'))):null,
         target?h('div',{role:target.status==='confirmation-required'?'dialog':'status','aria-label':'市场安装确认'},
           target.item?h('dl',null,h('dt',null,'插件名'),h('dd',null,target.item.displayName),h('dt',null,'包名'),h('dd',null,target.item.package.name),h('dt',null,'版本'),h('dd',null,target.item.latestVersion??'目录未提供版本'),h('dt',null,'来源'),h('dd',null,target.source?.kind==='fixture'?'测试目录（fixture）':target.source?.manifestUrl??'当前市场目录')):null,
-          target.status==='confirmation-required'?h('div',null,h('button',{type:'button',onClick:()=>void confirmTarget()},'确认安装'),h('button',{type:'button',onClick:()=>{targetSequence++;setTarget({...targetSelection,status:'cancelled'});}},'取消')):
-          h('p',{role:['failed','readback-failed'].includes(target.status)?'alert':'status'},({resolving:'正在查询市场目录…',installing:'安装中…',installed:'安装完成，请查看已安装列表',cancelled:'已取消，未安装','result-unavailable':'安装结果不可追溯，请查看已安装列表；不会自动重试','already-installed':'已安装，无需重复安装',failed:'未安装：'+(target.error??pending[target.item?.id]?.text??'安装失败'),'readback-failed':target.error})[target.status]),
+          target.status==='confirmation-required'?h('div',null,h('button',{type:'button',onClick:()=>void confirmTarget()},'确认安装'),h('button',{type:'button',onClick:()=>{targetSequence++;reportHandoff(targetSelection?.handoffId,'cancelled');setTarget({...targetSelection,status:'cancelled'});}},'取消')):
+          h('p',{role:['failed','readback-failed'].includes(target.status)?'alert':'status'},({resolving:'正在查询市场目录…',installing:'安装中…',installed:'安装完成，请查看已安装列表','installed-live':'安装完成，已加载，可以直接使用',cancelled:'已取消，未安装','result-unavailable':'安装结果不可追溯，请查看已安装列表；不会自动重试','already-installed':'已安装，无需重复安装',failed:'未安装：'+(target.error??pending[target.item?.id]?.text??'安装失败'),'readback-failed':target.error})[target.status]),
           target.item?.source?h('div',{'aria-label':'目录条目来源'},h('p',null,target.item.source.sourceId+' · '+target.item.source.sourceRef),...(target.item.source.sourceLinks??[]).map((link,index)=>h('p',{key:index},h('a',{href:link.sourceUrl,target:'_blank',rel:'noopener noreferrer'},link.sourceId+' · '+link.sourceRef),h('small',null,' '+link.firstSeenAt+' / '+link.lastSeenAt)))):null,
           target.item&&pending[target.item.id]?h('p',{role:pending[target.item.id].failed?'alert':'status'},pending[target.item.id].text):null,
           ['installed','already-installed'].includes(target.status)&&target.item?.installed?.state==='registered'?openButton(target.item.installed):null):null,
@@ -385,10 +418,12 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   function apply(ctx,{verification=false}={}){ctx.effect(()=>{const style=document.createElement('style');style.textContent='.hm-providers,.hm-library-sources{display:grid;gap:16px}.hm-providers table{width:100%;border-collapse:collapse}.hm-providers th,.hm-providers td{padding:8px;text-align:left;border-bottom:1px solid color-mix(in srgb,currentColor 14%,transparent)}.hm-provider-card{padding:16px;border:1px solid color-mix(in srgb,currentColor 18%,transparent);border-radius:12px}.hm-provider-row{display:grid;grid-template-columns:minmax(120px,1fr) auto minmax(180px,1fr) auto;gap:8px;align-items:center;margin:8px 0}.hm-source-row{display:grid;grid-template-columns:minmax(0,1fr) repeat(4,auto);gap:8px}.hm-source-row code{overflow-wrap:anywhere}.hm-source-add{display:flex;gap:8px}.hm-source-add input{flex:1}.hm-library-overlay{position:absolute;inset:0;z-index:30;pointer-events:auto;overflow:auto;padding:24px;background:#fff;color:#18181b}.hm-library-overlay button,.hm-library-overlay input{color:#18181b}.hm-library-overlay>header{display:flex;justify-content:space-between;align-items:center}.hm-library-toolbar{display:flex;gap:8px;align-items:center;margin:8px 0}.hm-library-toolbar input[type=search]{flex:1;padding:6px 10px}.hm-library-more{margin:12px auto;display:block}.hm-library-failed{color:#b91c1c;margin:0}.hm-library-ok{color:#166534;margin:0}.hm-restart-notice{padding:10px 12px;border:1px solid #f59e0b;border-radius:8px;background:#fffbeb;margin:8px 0}.hm-restart-link{margin-left:4px;font-weight:600}.hm-market-state{font-size:12px;color:#3f3f46}.hm-market-actions{display:flex;gap:8px;flex-wrap:wrap}.hm-market-embedded{display:block}.hm-market-embedded>header{display:flex;justify-content:space-between;align-items:center}.hm-market-conflict{padding:10px 12px;border:1px solid #6366f1;border-radius:8px;background:color-mix(in srgb,#6366f1 8%,transparent);margin:8px 0}.hm-install-target{display:grid;gap:8px;padding:16px;border:1px solid #d4d4d8;border-radius:12px;margin:12px 0}.hm-install-target form{display:flex;gap:8px;flex-wrap:wrap}.hm-install-target input{flex:1;min-width:180px;padding:6px 10px}.hm-install-target dl{display:grid;grid-template-columns:80px 1fr;gap:6px}.hm-install-target dd{margin:0;overflow-wrap:anywhere}.hm-market-installed{margin-top:24px}.hm-market-installed ul{padding-left:18px;display:grid;gap:6px}.hm-library-toolbar select{padding:6px 10px}.hm-library-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}.hm-library-grid article{display:grid;gap:10px;padding:16px;border:1px solid color-mix(in srgb,currentColor 16%,transparent);border-radius:12px}.hm-app-frame{display:grid;grid-template-rows:auto 1fr;height:calc(100vh - 130px)}.hm-market-embedded>.hm-app-frame{position:fixed;inset:0;z-index:1001;height:100vh;box-sizing:border-box;background:#fff;padding:12px 16px}.hm-app-frame>div{display:flex;justify-content:space-between}.hm-app-frame iframe{width:100%;height:100%;border:0}';document.head.append(style);return()=>style.remove();},'hanamesh-app-host:style');
     ctx.effect(()=>ctx.slots.inject('settings.section',()=>ctx.slots.register({name:'settings.section',id:'hanamesh-providers',order:18,label:'供应商'},ProvidersSection)),'hanamesh-app-host:providers');
     ctx.effect(()=>ctx.slots.inject('settings.section',()=>ctx.slots.register({name:'settings.section',id:'hanamesh-library-sources',order:19,label:'市场目录源'},LibrarySourcesSection)),'hanamesh-app-host:library-sources');
+    ctx.effect(()=>ctx.slots.inject('settings.section',()=>ctx.slots.register({name:'settings.section',id:'hanamesh-library-handoff',order:20,label:'网站安装交接'},HandoffSettingsSection)),'hanamesh-app-host:library-handoff');
     ctx.effect(()=>ctx.slots.inject('sidebar.footer.action',()=>ctx.slots.register({name:'sidebar.footer.action',id:'hanamesh-library',order:30},LibraryAction)),'hanamesh-app-host:library-action');
     ctx.effect(()=>ctx.slots.inject('shell.overlay',()=>ctx.slots.register({name:'shell.overlay',id:'hanamesh-library-overlay',order:30},verification===true?()=>h(LibraryOverlay,{verification:true}):LibraryOverlay)),'hanamesh-app-host:library-overlay');
     ctx.effect(()=>claimMarketSeat(ctx,{verification}),'hanamesh-app-host:market-seat');
+    ctx.effect(()=>{let stopped=false,timer;const tick=async()=>{try{await pollHandoffs();}catch{}if(!stopped)timer=setTimeout(()=>void tick(),HANDOFF_POLL_MS);};void tick();return()=>{stopped=true;clearTimeout(timer);};},'hanamesh-app-host:website-handoff');
     ctx.effect(()=>{globalThis.addEventListener?.('hashchange',consumeInstallTargetHash);consumeInstallTargetHash();return()=>globalThis.removeEventListener?.('hashchange',consumeInstallTargetHash);},'hanamesh-app-host:install-target-navigation');}
-  return{name,inject,apply,ProvidersSection,LibrarySourcesSection,LibraryAction,LibraryOverlay,MarketConflictNotice,createMarketSeat,openInstallTarget,
+  return{name,inject,apply,ProvidersSection,LibrarySourcesSection,HandoffSettingsSection,LibraryAction,LibraryOverlay,MarketConflictNotice,createMarketSeat,openInstallTarget,
     MARKET_SEAT,MARKET_CONFLICT_TEXT,INSTALL_TARGET_HASH,INSTALL_TARGET_CONTRACT_VERSION,marketState:()=>({conflict:marketConflict,entryVisible})};
 }});

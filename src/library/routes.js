@@ -3,8 +3,8 @@ import { AppHostError, requireCondition } from '../errors.js';
 import { controlOrigins } from '../control-origin.js';
 
 // Keep older route order; dsh.js registers each exact path on the public host API.
-export const LIBRARY_ROUTES=['/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/install','/hanamesh/library/provision','/hanamesh/library/uninstall','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/plugins/install','/hanamesh/library/plugins/uninstall','/hanamesh/library/target','/hanamesh/library/install-target'];
-const READ_ROUTES=new Set(['/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/target']);
+export const LIBRARY_ROUTES=['/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/install','/hanamesh/library/provision','/hanamesh/library/uninstall','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/plugins/install','/hanamesh/library/plugins/uninstall','/hanamesh/library/target','/hanamesh/library/install-target','/hanamesh/library/handoffs','/hanamesh/library/handoffs/state','/hanamesh/library/handoff-settings'];
+const READ_ROUTES=new Set(['/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/target','/hanamesh/library/handoffs','/hanamesh/library/handoff-settings']);
 async function jsonBody(req){
   requireCondition(req.headers['content-type']?.split(';')[0].trim()==='application/json','CONTENT_TYPE_REQUIRED','Expected application/json.',{},415);
   const chunks=[];let total=0;for await(const chunk of req){total+=chunk.length;requireCondition(total<=65_536,'BODY_TOO_LARGE','Request body is too large.',{},413);chunks.push(chunk);}
@@ -13,7 +13,8 @@ async function jsonBody(req){
 function send(res,status,value,publicProbe=false){
   res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'; frame-ancestors 'none'",...(publicProbe?{'access-control-allow-origin':'*'}:{})});res.end(JSON.stringify(value));
 }
-export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,authenticate,authorize}){
+/** `handoff` (optional): {queue, listener, restart} of the website handoff (handoff.js); the client window reads and reports through these authenticated routes. */
+export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,authenticate,authorize,handoff}){
   const origins=controlOrigins(parentOrigin,transportOrigin);parentOrigin=origins.parent;
   requireCondition(typeof authenticate==='function'&&typeof authorize==='function','AUTH_BINDING_REQUIRED','Host authentication and per-operation authorization callbacks are mandatory.');
   const parent=new URL(origins.transport),hosts=new Set(origins.forwarded?[parent.host]:[parent.host,`localhost:${parent.port}`]);
@@ -29,7 +30,7 @@ export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,a
       send(res,200,{...library.installTarget(),traceId},true);return;
     }
     const readOnly=req.method==='GET'&&READ_ROUTES.has(path);
-    requireCondition(readOnly||(req.method==='POST'&&!['/hanamesh/library/installedPlugins','/hanamesh/library/target'].includes(path)),'METHOD_NOT_ALLOWED','Unsupported library method.',{},405);
+    requireCondition(readOnly||(req.method==='POST'&&!['/hanamesh/library/installedPlugins','/hanamesh/library/target','/hanamesh/library/handoffs'].includes(path)),'METHOD_NOT_ALLOWED','Unsupported library method.',{},405);
     requireCondition(!req.headers.origin||(origins.forwarded?origins.acceptsOrigin(req.headers.origin):req.headers.origin===requestOrigin),'ORIGIN_DENIED','Unapproved browser origin.',{},403);
     if(!readOnly)requireCondition((origins.forwarded?origins.acceptsOrigin(req.headers.origin):req.headers.origin===requestOrigin)&&req.headers['x-hanamesh-client']==='workspace-v1','CSRF_DENIED','Workspace origin and explicit client header are required.',{},403);
     const subject=await authenticate(req);
@@ -38,7 +39,12 @@ export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,a
     const input=readOnly?Object.fromEntries(url.searchParams):await jsonBody(req);
     requireCondition(await authorize(subject,path,input)===true,'FORBIDDEN','Operation is not authorized.',{},403);
     let result;
-    if(path==='/hanamesh/library/target')result=await library.resolveTarget(input);
+    if(path.startsWith('/hanamesh/library/handoff'))requireCondition(handoff,'HANDOFF_UNAVAILABLE','Website handoff is not wired in this host.',{},503);
+    if(path==='/hanamesh/library/handoffs'){requireCondition(Object.keys(input).length===0,'UNKNOWN_FIELDS','handoffs takes no parameters.');result={handoffs:handoff.queue.open(),listener:handoff.listener.state(),live:library.live,client:library.installTarget().client};}
+    else if(path==='/hanamesh/library/handoffs/state'){send(res,200,{...handoff.queue.report(input),traceId});return;}
+    else if(path==='/hanamesh/library/handoff-settings'&&readOnly){requireCondition(Object.keys(input).length===0,'UNKNOWN_FIELDS','handoff-settings takes no parameters.');result={settings:library.handoffSettings(),listener:handoff.listener.state()};}
+    else if(path==='/hanamesh/library/handoff-settings'){const settings=await library.replaceHandoffSettings(input);send(res,200,{settings,listener:await handoff.restart(),traceId});return;}
+    else if(path==='/hanamesh/library/target')result=await library.resolveTarget(input);
     else if(path==='/hanamesh/library'&&readOnly){requireCondition(Object.keys(input).every(key=>['q','category','cursor'].includes(key)),'UNKNOWN_FIELDS','Unknown library parameters.');result=await library.list(input);}
     else if(path==='/hanamesh/library/sources'&&readOnly)result=library.sources();
     else if(path==='/hanamesh/library/sources')result=await library.replaceSources(input);

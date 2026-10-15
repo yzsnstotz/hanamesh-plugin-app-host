@@ -39,7 +39,8 @@ async function boot(t, { token = 'browser-session', withPlugin = true, applicati
   const origin = `http://127.0.0.1:${ctx.get('webServer').port}`;
   let fiber;
   if (withPlugin) {
-    fiber = ctx.plugin(appHost, { dataRoot: join(root, 'app-data'), applications, ...config });
+    // Tests never bind the real handoff ports (39317…); handoff routes are covered in handoff.test.mjs on random ports.
+    fiber = ctx.plugin(appHost, { dataRoot: join(root, 'app-data'), applications, ...config, library: { handoff: { enabled: false }, ...config.library } });
     await until(() => ctx.get('hanameshApps') !== undefined);
   }
   const headers = { origin, authorization: `Bearer ${token}`, 'content-type': 'application/json', 'x-hanamesh-client': 'workspace-v1' };
@@ -112,7 +113,7 @@ test('H09/dispose: unloading the plugin removes its routes, stops owned instance
   assert.equal(h.ctx.get('hanameshApps'), undefined);
   assert.equal((await h.get('/hanamesh/apps')).status, 404, 'route must be gone after unload');
   // The domain is closed: a fresh plugin instance can open it again (single-open per name).
-  h.fiber = h.ctx.plugin(appHost, { dataRoot: join(h.root, 'app-data'), applications: [definition()] });
+  h.fiber = h.ctx.plugin(appHost, { dataRoot: join(h.root, 'app-data'), applications: [definition()], library: { handoff: { enabled: false } } });
   await until(() => h.ctx.get('hanameshApps') !== undefined);
   assert.equal((await h.get('/hanamesh/apps')).status, 200);
 });
@@ -124,7 +125,7 @@ test('AC-26 shape: without the connection service the plugin never activates, so
   ctx.plugin(WebServer, { host: '127.0.0.1', port: 0 });
   await ctx.start?.(); await until(() => ctx.get('webServer')?.port > 0);
   t.after(async () => { await ctx.fiber?.dispose?.(); await rm(root, { recursive: true, force: true }); });
-  ctx.plugin(appHost, { dataRoot: join(root, 'app-data'), applications: [definition()] });
+  ctx.plugin(appHost, { dataRoot: join(root, 'app-data'), applications: [definition()], library: { handoff: { enabled: false } } });
   await new Promise(r => setTimeout(r, 300));
   assert.equal(ctx.get('hanameshApps'), undefined);
   assert.equal((await http(`http://127.0.0.1:${ctx.get('webServer').port}/hanamesh/apps`)).status, 404);
@@ -150,7 +151,7 @@ test('AH-L07 (plugin): an unconfigured library seeds the HanaMesh catalog source
   const plain = await boot(t, { withPlugin: false });
   const logged = [];
   plain.ctx.logger.exporter({ export: message => logged.push(message) });
-  plain.fiber = plain.ctx.plugin(appHost, { dataRoot: join(plain.root, 'app-data'), applications: [definition()] });
+  plain.fiber = plain.ctx.plugin(appHost, { dataRoot: join(plain.root, 'app-data'), applications: [definition()], library: { handoff: { enabled: false } } });
   await until(() => plain.ctx.get('hanameshApps') !== undefined);
   const seeded = await plain.get('/hanamesh/library/sources');
   assert.equal(seeded.status, 200, JSON.stringify(seeded.json));
@@ -178,7 +179,7 @@ test('AH-U07 (plugin): real Cordis early/absent/late Usage services never turn r
   const logged = [];
   first.ctx.logger.exporter({ levels: { default: 3 }, export: message => logged.push(message) });
   first.ctx.provide('hanameshUsage', seat);
-  first.fiber = first.ctx.plugin(appHost, { dataRoot: join(first.root, 'app-data'), applications: [app] });
+  first.fiber = first.ctx.plugin(appHost, { dataRoot: join(first.root, 'app-data'), applications: [app], library: { handoff: { enabled: false } } });
   await until(() => first.ctx.get('hanameshApps') !== undefined);
   const diagnosticMessages = logged.filter(message => String(message.args[0]).startsWith('USAGE_FACT_UNAVAILABLE'));
   assert.deepEqual(diagnosticMessages.map(message => message.args), [[diagnostic]], 'fixed bounded source-unavailable diagnostic, without app data or credentials');
@@ -220,7 +221,7 @@ test('AH-U07 (plugin): real Cordis early/absent/late Usage services never turn r
   alone.ctx.logger.exporter({ levels: { default: 3 }, export: message => {
     if (message.args[0] === diagnostic) { loggerFailures++; throw new Error('fixture diagnostic sink failure'); }
   } });
-  alone.fiber = alone.ctx.plugin(appHost, { dataRoot: join(alone.root, 'app-data'), applications: [app] });
+  alone.fiber = alone.ctx.plugin(appHost, { dataRoot: join(alone.root, 'app-data'), applications: [app], library: { handoff: { enabled: false } } });
   await until(() => alone.ctx.get('hanameshApps') !== undefined);
   assert.equal(loggerFailures, 1, 'the throwing sink was actually reached during real plugin apply');
   assert.equal(alone.ctx.get('hanameshUsage'), undefined);
@@ -299,7 +300,7 @@ test('AH-PG01: real Cordis loads the external provision package and preserves au
   // This exercises the actual public provision import and installer binding, not DSH installation.
   h.fiber=h.ctx.plugin(appHost,{dataRoot:join(h.root,'app-data'),applications:[],
     nodeBinary:process.execPath,library:{profileDir:join(h.root,'profile'),profileName:'contract-source',
-      dshBin:join(h.root,'unexecuted-dsh-command-seat.js'),sources:[]}});
+      dshBin:join(h.root,'unexecuted-dsh-command-seat.js'),sources:[],handoff:{enabled:false}}});
   await until(()=>h.ctx.get('hanameshApps')!==undefined);
   assert.equal((await h.get('/hanamesh/library/installedPlugins',{authorization:undefined})).status,401);
   const list=await h.get('/hanamesh/library/installedPlugins');

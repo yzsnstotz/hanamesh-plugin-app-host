@@ -5,6 +5,7 @@ export function apply(ctx:unknown,options?:{verification?:boolean}):void;
 export function ProvidersSection():unknown;
 /** Settings section「市场目录源」(rc.28 name; the export keeps its rc.11 identifier). */
 export function LibrarySourcesSection():unknown;
+export function HandoffSettingsSection():unknown;
 /** Sidebar entry「市场」; hidden while the `market` seat owner renders the market itself. */
 export function LibraryAction():unknown;
 /** The HanaMesh market page (applications + plugins; install / upgrade / uninstall / restart notice).

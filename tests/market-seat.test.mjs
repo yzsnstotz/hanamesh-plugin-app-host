@@ -10,7 +10,7 @@
  * The bundle is loaded the way DSH loads it (a `window.__ModuleLoader__.load({id,factory})` call), so these
  * are behaviour assertions on the real module object, not source greps.
  */
-import test from 'node:test';
+import test, {after} from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
@@ -45,8 +45,11 @@ async function loadClientModule({installedPlugins=[],fetchFailure=false}={}){
 }
 
 /** A cordis client context double: only the surfaces the bundle is allowed to touch. */
+// Cordis disposes every effect on unload; the double does the same once the file ends (timers such as the handoff poll stop).
+const contexts=[];
+after(()=>{for(const record of contexts)for(const effect of record.effects.reverse())try{effect.dispose?.();}catch{}});
 function contextDouble({seatHolder}={}){
-  const record={provided:[],disposed:0,effects:[],logs:[]};
+  const record={provided:[],disposed:0,effects:[],logs:[]};contexts.push(record);
   const ctx={
     logger:{warn:text=>record.logs.push(text),info:text=>record.logs.push(text)},
     reflect:{get:(name,strict)=>{record.reflectReads=[...(record.reflectReads??[]),[name,strict]];return name==='market'?seatHolder:undefined;}},

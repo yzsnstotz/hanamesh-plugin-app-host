@@ -33,6 +33,8 @@ import { createLibraryService } from './library/service.js';
 import { createLibraryInstaller } from './library/install.js';
 import { inferDesktopLayout, resolveLibraryLocations } from './library/locate.js';
 import { createLibraryHttpHandler, LIBRARY_ROUTES } from './library/routes.js';
+import { createHandoffQueue, createHandoffHandler, createHandoffListener } from './library/handoff.js';
+import { detectClient } from './library/client-identity.js';
 import { createUsageEvidence } from './usage-evidence.js';
 import { createReceiptLedger } from './router/receipts.js';
 import { receiptsDomainSpec } from './router/receipts-domain.js';
@@ -67,6 +69,10 @@ export const Config = z.object({
     registry:z.string(),allowPrerelease:z.boolean(),
     /** Publicly named event history capacity; a lost cursor reports resetRequired. */
     eventRetention:z.number().default(512),
+    /** Website → client handoff listener (library/handoff.js). Unset fields use the proposed defaults shown in the
+     *  library settings page, where they can also be changed (saved values win over this config). */
+    handoff:z.object({enabled:z.boolean(),ports:z.union([z.array(z.number()),z.const(undefined)]),
+      allowedOrigins:z.union([z.array(z.string()),z.const(undefined)]),ttlMs:z.number()}),
   }),
   applications: z.array(z.any()).default([]),
   leaseTtlMs: z.number(),
@@ -212,25 +218,46 @@ export async function apply(ctx, config) {
     const libraryConfig={...(config.library??{}),sources:locations.sources,profileDir:locations.profileDir,profileName:locations.profileName};
     if(locations.inferred.length&&typeof ctx.logger?.info==='function')ctx.logger.info('hanamesh-app-host library: inferred %s',JSON.stringify(Object.fromEntries(
       locations.inferred.map(key=>[key,key==='sources'?locations.sources.map(source=>source.manifestUrl):locations[key]]))));
+    // Plugin installs/removals go through the host's public plugin manager when it is present (loaded without a
+    // restart); applications and compensation use the official `dsh plugin` CLI.
+    let pluginManager;
+    optional('pluginManager', service => { pluginManager=service; });
+    let dshBin=locations.dshBin;
+    if(!dshBin&&locations.profileDir&&!desktop)try{dshBin=createRequire(join(locations.profileDir,'package.json')).resolve('@deepseek-ai/dsh/lib/bin.js');}catch{dshBin=undefined;}
+    const cliUsable=Boolean(locations.nodeBinary&&dshBin&&(!desktop||locations.desktopCli||config.library?.dshBin));
     let provisionApi,installer;
-    if(locations.profileDir&&locations.profileName&&locations.nodeBinary&&(!desktop||locations.desktopCli||config.library?.dshBin)){
-      let dshBin=locations.dshBin;
-      if(!dshBin)try{dshBin=createRequire(join(locations.profileDir,'package.json')).resolve('@deepseek-ai/dsh/lib/bin.js');}catch{dshBin=undefined;}
-      if(dshBin){
-        provisionApi=await import('@hanamesh/lib-provision');
-        installer=createLibraryInstaller({profileDir:locations.profileDir,profileName:locations.profileName,dataRoot,nodeBinary:locations.nodeBinary,
-          dshBin,desktopCli:locations.desktopCli,registry:libraryConfig.registry,allowPrerelease:libraryConfig.allowPrerelease,provision:provisionApi.provision,remove:provisionApi.remove,ledger:provisionApi.ledger,
-          emit:event=>library?.emit(event)});
-      }
+    if(locations.profileDir&&locations.profileName){
+      provisionApi=await import('@hanamesh/lib-provision');
+      installer=createLibraryInstaller({profileDir:locations.profileDir,profileName:locations.profileName,dataRoot,
+        ...(cliUsable?{nodeBinary:locations.nodeBinary,dshBin,desktopCli:locations.desktopCli}:{}),
+        registry:libraryConfig.registry,allowPrerelease:libraryConfig.allowPrerelease,provision:provisionApi.provision,remove:provisionApi.remove,ledger:provisionApi.ledger,
+        pluginManager:()=>pluginManager,emit:event=>library?.emit(event)});
     }
-    const library=createLibraryService({domain:{global:libraryDomain.global,close:closeLibraryDomain},host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer});
+    /** What a person must do so the library can install, in their words (C-MARKET probe `error.need`). */
+    const unavailable=()=>{
+      if(!locations.profileDir)return[{need:'找不到这个 DSH profile 的目录',how:'用 dsh plugin --profile <名字> add 安装 HanaMesh 应用库，或在插件设置 library.profileDir 里填 profile 目录'}];
+      if(pluginManager)return[];
+      const rows=[];
+      if(!locations.nodeBinary)rows.push({need:'找不到能运行 DSH 命令行的 Node',how:desktop?'桌面版的运行时缺少 Node：重新安装客户端':'在插件设置 nodeBinary 里填 Node 的绝对路径'});
+      if(!dshBin||(desktop&&!locations.desktopCli&&!config.library?.dshBin))rows.push({need:'找不到 DSH 的插件管理（宿主没有启用 pluginManager，也找不到 dsh 命令行）',how:'在 DSH 设置里启用插件管理，或在插件设置 library.dshBin 里填 dsh 的 lib/bin.js'});
+      return rows;
+    };
+    const identity=await detectClient({desktop});
+    if(typeof ctx.logger?.info==='function')ctx.logger.info('hanamesh-app-host library: client %s (%s)',identity.client,identity.evidence);
+    const library=createLibraryService({domain:{global:libraryDomain.global,close:closeLibraryDomain},host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer,client:identity.client,unavailable});
     own('library', () => library.close());
     await library.init();
     // rc.27: app bundles register plain `app.json` (no package name); the installed scan knows which npm package ships
     // which appId, and that package name is the usage-evidence `hanaRef`. Scan failure only costs evidence, never startup.
     try { for (const row of await library.installed()) if (row.appId && row.packageName) { try { host.bindPackageName(row.appId,row.packageName); } catch {} } }
     catch (error) { if (typeof ctx.logger?.debug === 'function') ctx.logger.debug('hanamesh-app-host usage: installed scan unavailable (%s)', error?.code ?? error?.message); }
-    const libraryHandler=createLibraryHttpHandler(library,auth);
+    const queue=createHandoffQueue({ttlMs:()=>library.handoffSettings().ttlMs});
+    own('handoff-observer', library.observe(event=>queue.observe(event)));
+    const listener=createHandoffListener({settings:()=>library.handoffSettings(),logger:ctx.logger,
+      handlerFor:port=>createHandoffHandler({library,queue,settings:()=>library.handoffSettings(),port})});
+    own('handoff-listener', () => listener.stop());
+    await listener.start();
+    const libraryHandler=createLibraryHttpHandler(library,{...auth,handoff:{queue,listener,restart:()=>listener.start()}});
     for (const path of LIBRARY_ROUTES) own(`route:${path}`, webServer.register({kind:'exact',path,handler:libraryHandler}));
     own('seat', ctx.provide('hanameshApps', host));
   } catch (error) {

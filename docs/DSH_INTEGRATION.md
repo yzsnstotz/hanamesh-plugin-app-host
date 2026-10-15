@@ -1,3 +1,7 @@
+## 0.6.0 (2026-10-15)
+
+Website handoff listener (library/handoff.js), plugin installs through the host's public `pluginManager` (applied without restart), real `client` identity from the containing app bundle id, and readable `need` when the library cannot install. See C-MARKET 2026-10-15 addition.
+
 ## Current D-230 candidate (0.5.9)
 
 The current target is the fixed upstream d743267388641bc76f17c45ce8b4c231aed1d32c and official DSH 0.2.1-alpha.2, with unchanged exact host peers. Older target/version notes below are historical. Normal plugin installation consumes this package root via profile/cordis.patch.yml; upstream client discovery then loads the ./client browser condition. The separately produced 0.5.9-verification.0 client factory calls apply(ctx,{verification:true}); production calls apply(ctx) and defaults off. Both use the existing market/sidebar overlay and 11 editable contract calls, with normal installation confirmation. Config has no verification switch.
