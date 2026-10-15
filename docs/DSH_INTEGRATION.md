@@ -1,3 +1,13 @@
+## 0.6.1 (2026-10-15)
+
+Review fixes. The install-target probe on the handoff listener answers only origins in `library.handoff.allowedOrigins`
+(others: 403, no CORS grant, no body content); requests without an Origin are still answered. New setting
+`library.handoff.pollMs` (default 1500). Removed hidden caps (port count, origin count, ttl range, preflight max-age,
+plutil timeout); the remaining fixed rules are served as `rules` by `/hanamesh/library/handoff-settings` and listed on
+the settings page. Expiry codes: `HANDOFF_NOT_PICKED_UP` (window never fetched it / fetched but no outcome) and
+`HANDOFF_EXPIRED` (shown or confirmed, no answer); the client reports `failed` with `error.code` when the confirmation
+cannot open (`HANDOFF_OPEN_FAILED`, `cause`). Live install results carry `restartBaseline`. `hanamesh-brand` is protected.
+
 ## 0.6.0 (2026-10-15)
 
 Website handoff listener (library/handoff.js), plugin installs through the host's public `pluginManager` (applied without restart), real `client` identity from the containing app bundle id, and readable `need` when the library cannot install. See C-MARKET 2026-10-15 addition.

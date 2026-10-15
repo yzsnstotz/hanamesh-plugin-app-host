@@ -59,17 +59,32 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   }
   // Website handoff (C-MARKET 2026-10-15): the library's own loopback listener queued a target from an allowed website;
   // this window shows it with the normal confirmation. Only the person's 「确认安装」 installs.
-  const HANDOFF_POLL_MS=1500;const handled=new Set();
-  const reportHandoff=(handoffId,state)=>{if(!handoffId)return;void request('/hanamesh/library/handoffs/state',{method:'POST',body:JSON.stringify({handoffId,state})}).catch(()=>{});};
+  // Failures on this path are shown (market + settings, `handoffIssue`) and logged; the website gets the real reason from
+  // the handoff state (HANDOFF_OPEN_FAILED / HANDOFF_NOT_PICKED_UP / HANDOFF_EXPIRED), never a made-up 「已取消」.
+  // The poll interval is the setting library.handoff.pollMs, delivered with every poll.
+  // Until the first poll delivers the saved value, the setting's default (HANDOFF_DEFAULTS.pollMs; a test keeps them equal).
+  const HANDOFF_DEFAULT_POLL_MS=1500;
+  const handled=new Set(),issueListeners=new Set();let handoffIssue=null,handoffPollMs=HANDOFF_DEFAULT_POLL_MS;
+  const errorCode=error=>{const text=String(error?.message??error);return /^[A-Z][A-Z0-9_]{0,63}$/.test(text)?text:'CLIENT_ERROR';};
+  const setHandoffIssue=value=>{handoffIssue=value;for(const listener of issueListeners)listener(value);};
+  const noteHandoffIssue=(text,error)=>{const line='网站交接：'+text+'（'+String(error?.message??error)+'）';try{globalThis.console?.warn?.('hanamesh-app-host '+line);}catch{}setHandoffIssue({text:line,at:Date.now()});};
+  const reportHandoff=async(handoffId,state,error)=>{if(!handoffId)return;
+    try{await request('/hanamesh/library/handoffs/state',{method:'POST',body:JSON.stringify({handoffId,state,...(error?{error}:{})})});}
+    catch(failure){noteHandoffIssue({shown:'没能告诉网站「确认框已弹出」',cancelled:'没能告诉网站「已取消」，网站会在作废时间到后显示过期',failed:'没能告诉网站「确认框打不开」'}[state],failure);}};
   async function pollHandoffs(){
-    const value=await request('/hanamesh/library/handoffs');
+    const value=await request('/hanamesh/library/handoffs');handoffPollMs=value.pollMs;
+    if(handoffIssue?.poll)setHandoffIssue(null);
     for(const row of value.handoffs??[]){
       if(row.state!=='pending'||handled.has(row.handoffId))continue;handled.add(row.handoffId);
       const input={...(row.itemId?{itemId:row.itemId}:{}),...(row.packageName?{packageName:row.packageName}:{}),contractVersion:INSTALL_TARGET_CONTRACT_VERSION};
-      try{await openInstallTarget(input,{handoffId:row.handoffId});reportHandoff(row.handoffId,'shown');}catch{reportHandoff(row.handoffId,'cancelled');}
+      let opened=false;
+      try{await openInstallTarget(input,{handoffId:row.handoffId});opened=true;}
+      catch(error){noteHandoffIssue('确认框打不开',error);await reportHandoff(row.handoffId,'failed',{code:errorCode(error)});}
+      if(opened)await reportHandoff(row.handoffId,'shown');
       return;
     }
   }
+  const pollHandoffsVisibly=async()=>{try{await pollHandoffs();}catch(error){const line='网站交接：读取交接失败，网站上的「安装」会一直等到过期（'+String(error?.message??error)+'）';try{globalThis.console?.warn?.('hanamesh-app-host '+line);}catch{}setHandoffIssue({text:line,poll:true,at:Date.now()});}};
   function consumeInstallTargetHash(){
     const hash=globalThis.location?.hash;if(!hash?.startsWith(INSTALL_TARGET_HASH))return;
     const params=new URLSearchParams(hash.slice(INSTALL_TARGET_HASH.length));
@@ -87,6 +102,11 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   // The seat owner asks us to stand down our own entry points while it renders the market itself.
   let entryVisible=true;const entryListeners=new Set();
   const setEntryVisible=value=>{entryVisible=value;if(!value)setLibraryVisible(false);for(const listener of entryListeners)listener(value);};
+  function HandoffIssueNotice(){
+    const[issue,setIssue]=React.useState(handoffIssue);
+    React.useEffect(()=>{issueListeners.add(setIssue);return()=>issueListeners.delete(setIssue);},[]);
+    return issue?h('p',{role:'alert',className:'hm-library-failed','data-hanamesh-handoff-issue':''},issue.text):null;
+  }
   function MarketConflictNotice(){
     const[text,setText]=React.useState(marketConflict);
     React.useEffect(()=>{conflictListeners.add(setText);return()=>conflictListeners.delete(setText);},[]);
@@ -109,27 +129,31 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       ...sources.map((source,index)=>h('div',{className:'hm-source-row',key:source.manifestUrl},h('code',null,source.manifestUrl),h('button',{type:'button',disabled:source.enabled,onClick:()=>void save(sources.map((row,i)=>({...row,enabled:i===index})))},source.enabled?'已启用':'启用'),h('button',{type:'button',onClick:()=>move(index,-1)},'上移'),h('button',{type:'button',onClick:()=>move(index,1)},'下移'),h('button',{type:'button',onClick:()=>void save(sources.filter((_,i)=>i!==index))},'删除'))),
       h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://…/catalog-source.json',onChange:event=>setDraft(event.target.value)}),h('button',{type:'button',onClick:()=>{if(draft)void save([...sources.map(row=>({...row,enabled:false})),{manifestUrl:draft,enabled:true}]);setDraft('');}},'添加并启用')));
   }
-  /** Website handoff settings (all named, visible and editable; defaults are proposals for the owner). */
+  /** Website handoff settings: every setting named with its default and editable; the fixed rules listed with their reason. */
   function HandoffSettingsSection(){
     const[value,setValue]=React.useState(null),[draft,setDraft]=React.useState(null),[error,setError]=React.useState('');
     const load=React.useCallback(async()=>{try{const next=await request('/hanamesh/library/handoff-settings');setValue(next);setDraft({...next.settings,ports:next.settings.ports.join(', '),allowedOrigins:next.settings.allowedOrigins.join('\n')});setError('');}catch(e){setError(String(e.message??e));}},[]);
     React.useEffect(()=>{void load();},[load]);
-    const save=async()=>{try{const next=await request('/hanamesh/library/handoff-settings',{method:'POST',body:JSON.stringify({enabled:draft.enabled,ttlMs:Number(draft.ttlMs),
+    const save=async()=>{try{const next=await request('/hanamesh/library/handoff-settings',{method:'POST',body:JSON.stringify({enabled:draft.enabled,ttlMs:Number(draft.ttlMs),pollMs:Number(draft.pollMs),
       ports:draft.ports.split(/[\s,，]+/).filter(Boolean).map(Number),allowedOrigins:draft.allowedOrigins.split(/\s+/).filter(Boolean)})});setValue(next);setError('');}catch(e){setError(String(e.message??e)+(e.response?.error?.message?'：'+e.response.error.message:''));}};
-    const listener=value?.listener;
+    const listener=value?.listener,defaults=value?.defaults,names=value?.names;
     const status=!listener?'读取中…':listener.status==='listening'?'正在 '+listener.origin+' 接收网站交接':listener.status==='disabled'?'已关闭：网站上的「安装」按钮找不到本客户端':listener.status==='unavailable'?listener.need:'未启动';
     return h('section',{className:'hm-library-sources'},h('h2',null,'网站安装交接'),
       h('p',null,'网站（如 market.hanamesh.com）点「安装」时，会在下列本机端口上找到本客户端，把要装的插件交给应用库；应用库在这里弹出确认，你确认后才安装。'),
-      h('p',{role:'status'},status),error?h('p',{role:'alert'},error):null,
-      draft?h('div',{className:'hm-handoff-settings'},
-        h('label',null,h('input',{type:'checkbox',checked:draft.enabled,onChange:event=>setDraft({...draft,enabled:event.target.checked})}),' 启用（library.handoff.enabled，默认 开）'),
-        h('label',null,'端口（library.handoff.ports，默认 39317, 39318, 39319；按顺序取第一个空闲的）',h('input',{value:draft.ports,onChange:event=>setDraft({...draft,ports:event.target.value})})),
-        h('label',null,'允许交接的网站（library.handoff.allowedOrigins，每行一个，默认 https://market.hanamesh.com）',h('textarea',{rows:3,value:draft.allowedOrigins,onChange:event=>setDraft({...draft,allowedOrigins:event.target.value})})),
-        h('label',null,'未确认多久后作废，毫秒（library.handoff.ttlMs，默认 600000 = 10 分钟）',h('input',{value:String(draft.ttlMs),onChange:event=>setDraft({...draft,ttlMs:event.target.value})})),
-        h('button',{type:'button',onClick:()=>void save()},'保存并重新监听')):null);
+      h('p',{role:'status'},status),error?h('p',{role:'alert'},error):null,h(HandoffIssueNotice,null),
+      draft&&defaults?h('div',{className:'hm-handoff-settings'},
+        h('label',null,h('input',{type:'checkbox',checked:draft.enabled,onChange:event=>setDraft({...draft,enabled:event.target.checked})}),' 启用（'+names.enabled+'，默认 '+(defaults.enabled?'开':'关')+'）'),
+        h('label',null,'端口（'+names.ports+'，默认 '+defaults.ports.join(', ')+'；按顺序取第一个空闲的）',h('input',{value:draft.ports,onChange:event=>setDraft({...draft,ports:event.target.value})})),
+        h('label',null,'允许交接的网站（'+names.allowedOrigins+'，每行一个，默认 '+defaults.allowedOrigins.join('、')+'）',h('textarea',{rows:3,value:draft.allowedOrigins,onChange:event=>setDraft({...draft,allowedOrigins:event.target.value})})),
+        h('label',null,'未确认多久后作废，毫秒（'+names.ttlMs+'，默认 '+defaults.ttlMs+' = '+defaults.ttlMs/60000+' 分钟）',h('input',{value:String(draft.ttlMs),onChange:event=>setDraft({...draft,ttlMs:event.target.value})})),
+        h('label',null,'应用库多久查一次新的交接，毫秒（'+names.pollMs+'，默认 '+defaults.pollMs+'）',h('input',{value:String(draft.pollMs),onChange:event=>setDraft({...draft,pollMs:event.target.value})})),
+        h('button',{type:'button',onClick:()=>void save()},'保存并重新监听')):null,
+      value?.rules?h('div',{className:'hm-handoff-rules'},h('h3',null,'固定规则（不能关）'),h('ul',null,...value.rules.map(row=>h('li',{key:row.rule},row.rule,h('br',null),h('small',null,'为什么：'+row.why))))):null);
   }
   const FAILURE_REASONS={INSTALL_READBACK_MISMATCH:'安装命令返回成功，但 profile 读回的版本与固定版本不一致',REGISTRY_LOOKUP_FAILED:'包不在当前 registry 上——尚未发布到 npm，或客户端 registry 设置不对',DSH_PLUGIN_FAILED:'DSH 安装命令失败，查看宿主日志',LIBRARY_INSTALL_UNAVAILABLE:'当前宿主未提供安装参数（profile / node 路径）',CATALOG_ITEM_MISSING:'目录里已没有这一项，刷新后重试',UNSTABLE_VERSION:'registry 上的最新版是预发布版（rc），客户端未允许安装预发布版',RUNTIME_ARCHIVE_UNAVAILABLE:'运行时归档下载失败，检查网络或来源',OPERATION_TIMEOUT:'10 分钟内没有结果，可稍后重试',PACKAGE_DENIED:'HanaMesh 套件自身不能从市场安装或卸载',INSTANCE_IN_USE:'先关闭该应用的所有视图再卸载'};
   const failureReason=code=>FAILURE_REASONS[code]??'详细原因见宿主日志';
+  /** pluginManager applied it, but the profile could not be read back: the installed list may still say 「需重启」. */
+  const baselineText=result=>result?.restartBaseline?.updated===false?'；但应用库没能读回 profile（'+result.restartBaseline.code+'），已安装列表可能仍显示「需重启」':'';
   /** rc.10 install recovery result: only an item-by-item readback that matched the baseline is shown as restored. */
   const recoveryText=recovery=>{if(!recovery)return'';
     if(recovery.status==='not-needed')return'；安装前状态未被改动（已逐项读回）';
@@ -150,7 +174,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   // the OS-level entry (an external browser or `open hanamesh://restart`), handled in the shell's deep_link.rs.
   const requestRestart=()=>{try{globalThis.window.parent.postMessage({type:RESTART_LINK},'*');}catch{}};
   // Mirrors PROTECTED_PACKAGES on the host: the suite is never offered an uninstall button (the host answers 403 anyway).
-  const PROTECTED=new Set(['@hanamesh/dsh-app-host','hanamesh-core','hanamesh-usage']);
+  const PROTECTED=new Set(['@hanamesh/dsh-app-host','hanamesh-core','hanamesh-usage','hanamesh-brand','@hanamesh/dsh-core','@hanamesh/dsh-usage']);
   function RestartNotice({reason}){
     const shell=inShell();
     return h('p',{role:'status',className:'hm-restart-notice','data-hanamesh-restart':'required'},h('strong',null,'需重启 DSH'),' ',reason??'插件更改在 DSH 重启后生效。',' ',
@@ -270,7 +294,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       if(!outcome)outcome={ok:false,code:'OPERATION_TIMEOUT'};
       const liveLoaded=outcome.ok&&outcome.result?.status==='applied';
       if(outcome.ok&&!awaitReadback&&!liveLoaded)setChanged(true);
-      setPending(p=>({...p,[key]:outcome.ok?(awaitReadback?{label,text:label+'读回中…',busy:true}:{label,text:liveLoaded?label+'完成，已生效，可以直接使用':label+'完成，重启 DSH 后生效'}):{label,text:outcome.unknown?label+'结果不可追溯，请查看已安装列表后再明确操作':label+'失败：'+outcome.code+'（'+failureReason(outcome.code)+'）'+recoveryText(outcome.recovery),failed:true}}));
+      setPending(p=>({...p,[key]:outcome.ok?(awaitReadback?{label,text:label+'读回中…',busy:true}:{label,text:liveLoaded?label+'完成，已生效，可以直接使用'+baselineText(outcome.result):label+'完成，重启 DSH 后生效'}):{label,text:outcome.unknown?label+'结果不可追溯，请查看已安装列表后再明确操作':label+'失败：'+outcome.code+'（'+failureReason(outcome.code)+'）'+recoveryText(outcome.recovery),failed:true}}));
       await load();return outcome;}catch(e){const code=String(e.message??e);setPending(p=>({...p,[key]:{label,text:label+'失败：'+code,failed:true}}));return{ok:false,code};}};
     const confirmTarget=async()=>{
       const selected=targetSelection;if(selected?.status!=='confirmation-required'||pendingOperations[selected.item.id]?.busy)return;
@@ -281,7 +305,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
         try{const fresh=await request('/hanamesh/library/target?'+new URLSearchParams({itemId:selected.item.id,packageName:selected.item.package.name}));
           const row=fresh.item?.installed;
           if(row?.packageName!==selected.item.package.name||!['registered','installed','installed-not-loaded'].includes(row.state)||(outcome.result?.version&&row.version!==outcome.result.version))throw new Error('INSTALL_READBACK_MISMATCH');
-          const live=outcome.result?.status==='applied';setPending(p=>({...p,[selected.item.id]:{label:'安装',text:live?'安装完成，已加载，可以直接使用（已按精确版本读回）':'安装完成，已按精确版本读回'}}));if(!live)setChanged(true);
+          const live=outcome.result?.status==='applied';setPending(p=>({...p,[selected.item.id]:{label:'安装',text:live?'安装完成，已加载，可以直接使用（已按精确版本读回）'+baselineText(outcome.result):'安装完成，已按精确版本读回'}}));if(!live)setChanged(true);
           if(targetSelection?.item?.id===selected.item.id)setTarget({...fresh,status:live?'installed-live':'installed'});
         }catch(error){const text='安装读回失败：'+String(error.message??error);setPending(p=>({...p,[selected.item.id]:{label:'安装',text,failed:true}}));if(targetSelection?.item?.id===selected.item.id)setTarget({...targetSelection,status:'readback-failed',error:'安装操作已完成，但目录读回失败：'+String(error.message??error)});}
       }
@@ -354,7 +378,8 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     const body=preferredSubsectionId==='installed'?[installedSection,catalogSection,moreButton]:[catalogSection,moreButton,installedSection];
     return h('section',{className:embedded?'hm-market hm-market-embedded':'hm-library-overlay hm-market'},
       h('header',null,h('div',null,h('h1',null,'HanaMesh 市场')),embedded?null:h('button',{type:'button',onClick:()=>setLibraryVisible(false)},'关闭')),
-      h(MarketConflictNotice,null),
+      h(MarketConflictNotice,null),h(HandoffIssueNotice,null),
+      snapshot?.restartBaseline?.known===false?h('p',{role:'alert',className:'hm-library-failed'},'启动时没能读取 profile（'+snapshot.restartBaseline.code+'），「需重启」状态无法判断，下面的状态都按已加载显示'):null,
       verification===true?h('section',{className:'hm-install-target','aria-label':'安装目标开发小界面'},h('h2',null,'安装目标'),
         h('p',null,'输入目录条目 ID 或包名，市场查询当前目录后确认安装。'),
         h('form',{onSubmit:event=>{event.preventDefault();void openInstallTarget({...(targetItemId.trim()?{itemId:targetItemId.trim()}:{}),...(targetPackageName.trim()?{packageName:targetPackageName.trim()}:{} )}).catch(()=>{});}},
@@ -362,7 +387,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
           h('input',{'aria-label':'包名',value:targetPackageName,placeholder:'packageName（可选）',onChange:event=>setTargetPackageName(event.target.value)}),h('button',{type:'submit'},'查看安装目标'))):null,
         target?h('div',{role:target.status==='confirmation-required'?'dialog':'status','aria-label':'市场安装确认'},
           target.item?h('dl',null,h('dt',null,'插件名'),h('dd',null,target.item.displayName),h('dt',null,'包名'),h('dd',null,target.item.package.name),h('dt',null,'版本'),h('dd',null,target.item.latestVersion??'目录未提供版本'),h('dt',null,'来源'),h('dd',null,target.source?.kind==='fixture'?'测试目录（fixture）':target.source?.manifestUrl??'当前市场目录')):null,
-          target.status==='confirmation-required'?h('div',null,h('button',{type:'button',onClick:()=>void confirmTarget()},'确认安装'),h('button',{type:'button',onClick:()=>{targetSequence++;reportHandoff(targetSelection?.handoffId,'cancelled');setTarget({...targetSelection,status:'cancelled'});}},'取消')):
+          target.status==='confirmation-required'?h('div',null,h('button',{type:'button',onClick:()=>void confirmTarget()},'确认安装'),h('button',{type:'button',onClick:()=>{targetSequence++;void reportHandoff(targetSelection?.handoffId,'cancelled');setTarget({...targetSelection,status:'cancelled'});}},'取消')):
           h('p',{role:['failed','readback-failed'].includes(target.status)?'alert':'status'},({resolving:'正在查询市场目录…',installing:'安装中…',installed:'安装完成，请查看已安装列表','installed-live':'安装完成，已加载，可以直接使用',cancelled:'已取消，未安装','result-unavailable':'安装结果不可追溯，请查看已安装列表；不会自动重试','already-installed':'已安装，无需重复安装',failed:'未安装：'+(target.error??pending[target.item?.id]?.text??'安装失败'),'readback-failed':target.error})[target.status]),
           target.item?.source?h('div',{'aria-label':'目录条目来源'},h('p',null,target.item.source.sourceId+' · '+target.item.source.sourceRef),...(target.item.source.sourceLinks??[]).map((link,index)=>h('p',{key:index},h('a',{href:link.sourceUrl,target:'_blank',rel:'noopener noreferrer'},link.sourceId+' · '+link.sourceRef),h('small',null,' '+link.firstSeenAt+' / '+link.lastSeenAt)))):null,
           target.item&&pending[target.item.id]?h('p',{role:pending[target.item.id].failed?'alert':'status'},pending[target.item.id].text):null,
@@ -422,7 +447,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     ctx.effect(()=>ctx.slots.inject('sidebar.footer.action',()=>ctx.slots.register({name:'sidebar.footer.action',id:'hanamesh-library',order:30},LibraryAction)),'hanamesh-app-host:library-action');
     ctx.effect(()=>ctx.slots.inject('shell.overlay',()=>ctx.slots.register({name:'shell.overlay',id:'hanamesh-library-overlay',order:30},verification===true?()=>h(LibraryOverlay,{verification:true}):LibraryOverlay)),'hanamesh-app-host:library-overlay');
     ctx.effect(()=>claimMarketSeat(ctx,{verification}),'hanamesh-app-host:market-seat');
-    ctx.effect(()=>{let stopped=false,timer;const tick=async()=>{try{await pollHandoffs();}catch{}if(!stopped)timer=setTimeout(()=>void tick(),HANDOFF_POLL_MS);};void tick();return()=>{stopped=true;clearTimeout(timer);};},'hanamesh-app-host:website-handoff');
+    ctx.effect(()=>{let stopped=false,timer;const tick=async()=>{await pollHandoffsVisibly();if(!stopped)timer=setTimeout(()=>void tick(),handoffPollMs);};void tick();return()=>{stopped=true;clearTimeout(timer);};},'hanamesh-app-host:website-handoff');
     ctx.effect(()=>{globalThis.addEventListener?.('hashchange',consumeInstallTargetHash);consumeInstallTargetHash();return()=>globalThis.removeEventListener?.('hashchange',consumeInstallTargetHash);},'hanamesh-app-host:install-target-navigation');}
   return{name,inject,apply,ProvidersSection,LibrarySourcesSection,HandoffSettingsSection,LibraryAction,LibraryOverlay,MarketConflictNotice,createMarketSeat,openInstallTarget,
     MARKET_SEAT,MARKET_CONFLICT_TEXT,INSTALL_TARGET_HASH,INSTALL_TARGET_CONTRACT_VERSION,marketState:()=>({conflict:marketConflict,entryVisible})};

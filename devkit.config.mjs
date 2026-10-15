@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {readFile, mkdir, realpath, writeFile} from 'node:fs/promises';
+import {readFile, mkdir, mkdtemp, realpath, rm, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
 import {runMutations, verifyPack} from '@hanamesh/devkit';
@@ -27,6 +27,13 @@ async function validateDevelopmentPolicy(){
 // Per-case name filters and failure reasons are AppHost policy. Execution/copy/cleanup is devkit-owned.
 export async function runAppHostMutations(runner=runMutations){
   await mkdir(evidenceDir,{recursive:true});
+  // Mutants may break cleanup on purpose (M57); every mutant and its copy live in one TMPDIR removed afterwards.
+  const runTmp=await mkdtemp(join(await realpath(tmpdir()),'hm-app-host-mutations-')),priorTmp=process.env.TMPDIR;
+  process.env.TMPDIR=runTmp;
+  try{return await mutateAll(runner);}
+  finally{if(priorTmp===undefined)delete process.env.TMPDIR;else process.env.TMPDIR=priorTmp;await rm(runTmp,{recursive:true,force:true});}
+}
+async function mutateAll(runner){
   const results=[];
   for(const item of cases){
     const caseDir=join(evidenceDir,item.id);

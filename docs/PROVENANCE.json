@@ -1,6 +1,6 @@
 {
   "currentCandidate": {
-    "version": "0.6.0",
+    "version": "0.6.1",
     "dshTarget": "0.2.1-alpha.2",
     "vendorSha256VerifiedAtBuild": false,
     "libProvisionDistribution": "随包分发、源仓不变; bundleDependencies; original LICENSE retained, no relicensing",

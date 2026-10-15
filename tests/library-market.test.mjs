@@ -64,8 +64,8 @@ test('AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite
   const result=await installer.uninstallPlugin({packageName:'dsh-plugin-tether'});
   assert.deepEqual(result,{status:'restart-required',kind:'plugin',packageName:'dsh-plugin-tether'});
   assert.deepEqual(calls[0].args,['/opt/dsh/lib/bin.js','plugin','--profile','web','remove','dsh-plugin-tether']);
-  assert.deepEqual([...PROTECTED_PACKAGES].sort(),['@hanamesh/dsh-app-host','@hanamesh/dsh-core','@hanamesh/dsh-usage','hanamesh-core','hanamesh-usage']);
-  for(const name of ['hanamesh-core','hanamesh-usage','@hanamesh/dsh-app-host']){
+  assert.deepEqual([...PROTECTED_PACKAGES].sort(),['@hanamesh/dsh-app-host','@hanamesh/dsh-core','@hanamesh/dsh-usage','hanamesh-brand','hanamesh-core','hanamesh-usage']);
+  for(const name of ['hanamesh-core','hanamesh-usage','@hanamesh/dsh-app-host','hanamesh-brand']){
     await assert.rejects(installer.uninstallPlugin({packageName:name}),{code:'PACKAGE_DENIED'});
     await assert.rejects(installer.installPlugin({packageName:name}),{code:'PACKAGE_DENIED'});
     await assert.rejects(installer.install({...plugin,package:{registry:'npm',name}}),{code:'PACKAGE_DENIED'});
@@ -193,6 +193,7 @@ test('AH-M07 (client source): the entry is 「市场」, cards carry kind/state/
   assert.match(source,/item\.upgradeAvailable\)action=/,'upgrade action');
   assert.match(source,/'升级到 '\+item\.latestVersion/);
   assert.match(source,/'installed-not-loaded':'需重启'/);
-  assert.match(source,/const PROTECTED=new Set\(\['@hanamesh\/dsh-app-host','hanamesh-core','hanamesh-usage'\]\)/,'no uninstall button for the suite');
+  const clientProtected=JSON.parse(source.match(/const PROTECTED=new Set\((\[[^\]]*\])\)/)[1].replaceAll("'",'"'));
+  assert.deepEqual(clientProtected.sort(),[...PROTECTED_PACKAGES].sort(),'no uninstall button for the suite (brand included), same list as the host');
   assert.doesNotMatch(source,/ctx\.get\(/,'the browser bundle never reads host services');
 });

@@ -69,10 +69,10 @@ export const Config = z.object({
     registry:z.string(),allowPrerelease:z.boolean(),
     /** Publicly named event history capacity; a lost cursor reports resetRequired. */
     eventRetention:z.number().default(512),
-    /** Website → client handoff listener (library/handoff.js). Unset fields use the proposed defaults shown in the
-     *  library settings page, where they can also be changed (saved values win over this config). */
+    /** Website → client handoff listener (library/handoff.js). Unset fields use the defaults shown in the library
+     *  settings page, where they can also be changed (saved values win over this config). */
     handoff:z.object({enabled:z.boolean(),ports:z.union([z.array(z.number()),z.const(undefined)]),
-      allowedOrigins:z.union([z.array(z.string()),z.const(undefined)]),ttlMs:z.number()}),
+      allowedOrigins:z.union([z.array(z.string()),z.const(undefined)]),ttlMs:z.number(),pollMs:z.number()}),
   }),
   applications: z.array(z.any()).default([]),
   leaseTtlMs: z.number(),
@@ -244,14 +244,14 @@ export async function apply(ctx, config) {
     };
     const identity=await detectClient({desktop});
     if(typeof ctx.logger?.info==='function')ctx.logger.info('hanamesh-app-host library: client %s (%s)',identity.client,identity.evidence);
-    const library=createLibraryService({domain:{global:libraryDomain.global,close:closeLibraryDomain},host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer,client:identity.client,unavailable});
+    const library=createLibraryService({domain:{global:libraryDomain.global,close:closeLibraryDomain},host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer,client:identity.client,unavailable,logger:ctx.logger});
     own('library', () => library.close());
     await library.init();
     // rc.27: app bundles register plain `app.json` (no package name); the installed scan knows which npm package ships
     // which appId, and that package name is the usage-evidence `hanaRef`. Scan failure only costs evidence, never startup.
-    try { for (const row of await library.installed()) if (row.appId && row.packageName) { try { host.bindPackageName(row.appId,row.packageName); } catch {} } }
+    try { for (const row of await library.installed()) if (row.appId && row.packageName) { try { host.bindPackageName(row.appId,row.packageName); } catch (error) { ctx.logger?.warn?.('hanamesh-app-host usage: %s not bound to %s (%s)', row.appId, row.packageName, error?.code ?? error?.message); } } }
     catch (error) { if (typeof ctx.logger?.debug === 'function') ctx.logger.debug('hanamesh-app-host usage: installed scan unavailable (%s)', error?.code ?? error?.message); }
-    const queue=createHandoffQueue({ttlMs:()=>library.handoffSettings().ttlMs});
+    const queue=createHandoffQueue({ttlMs:()=>library.handoffSettings().ttlMs,onError:(message,error)=>ctx.logger?.warn?.('%s: %s',message,error?.message??error)});
     own('handoff-observer', library.observe(event=>queue.observe(event)));
     const listener=createHandoffListener({settings:()=>library.handoffSettings(),logger:ctx.logger,
       handlerFor:port=>createHandoffHandler({library,queue,settings:()=>library.handoffSettings(),port})});
