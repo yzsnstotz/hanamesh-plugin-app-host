@@ -85,7 +85,8 @@ export async function ownsLoopbackPort(pid, port) {
     if (!binary) throw new AppHostError('PORT_OWNERSHIP_UNAVAILABLE', 'lsof is required to verify socket ownership on macOS.');
     let stdout;
     try {
-      const args = ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN', '-FpgLn'];
+      // Select the already-required owned group before Darwin inspects file descriptors of unrelated processes.
+      const args = ['-nP', '-a', '-g', String(pid), `-iTCP:${port}`, '-sTCP:LISTEN', '-FpgLn'];
       const pending = exec(binary, args, { timeout: 1_000 });
       if (process.env.HANAMESH_APPHOST_RUN_DIR) {
         try { observeOwnedProbe(pending.child, {port, args, source:'readiness/socket-ownership',

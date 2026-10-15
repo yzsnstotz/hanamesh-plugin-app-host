@@ -51,3 +51,17 @@ rc.10：add 之后的读回、定义校验或 provision 失败按基线补偿（
 Catalog `manifestVersion` / `schemaVersion` accept valid SemVer with major 1, including additive minor/patch inputs; different majors and malformed versions remain refused. Schema field checks and HTTPS/same-origin controls remain enforced. Known optional additions (attribution notice / item updatedAt) are preserved; arbitrary unknown fields remain invalid. Install-target `contractVersion: "1"`, storage schema numbers and installed-package exact readback are distinct fields and retain their original grammar. This does not claim that a 0.x package caret includes every minor.
 
 Both SOURCE fixture sets and suites ship as `@hanamesh/dsh-app-host/catalog/suite` (`runCatalogProviderSuite`, `runCatalogConsumerSuite`) with schema exports under `catalog/schema/`. The default consumer suite drives this package's actual catalog loader against labelled transport fixtures; it is not a live market or product acceptance gate. Version grammar follows [SemVer 2.0.0](https://semver.org/).
+
+## HanaMesh 套件
+
+市场只显示一张官方、不计分的「HanaMesh 套件」卡。其组件版本来自当前 profile 实际包与启用清单；Core、使用记录、应用库不再分别作为普通可安装卡。品牌插件只属于 HanaMesh 自有客户端。
+
+DSH 首次安装或缺组件时，完全退出客户端后执行同一行，再重新打开：
+
+```sh
+dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#main' 'github:yzsnstotz/hanamesh-usage#main' 'github:yzsnstotz/hanamesh-plugin-app-host#main'
+```
+
+已完整安装时，「检查兼容升级」会列出三个固定官方组件的当前和目标版本。只有本人确认当前计划才执行一次官方 CLI；网站只能经允许名单交接此意图。客户端先检查全部候选来源、版本及宿主兼容性，禁止降级；npm 候选仍旧或无法核实时保持现有套件。普通安装/卸载接口继续拒绝套件包。
+
+成功须读回三个精确保存的版本、实际解析版本与启用状态，随后完全退出并重新打开客户端。安装命令失败或读回不符时，界面显示实际组件状态、错误与同一行补齐命令；部分变更不冒充成功或未安装，不自动静默重试。

@@ -7,6 +7,7 @@ import { AppHostError, requireCondition, SerialQueue } from '../errors.js';
 import { validateDefinition } from '../descriptor.js';
 import { itemKind } from './catalog.js';
 import { profileSnapshot, runtimeSnapshot, profileChecks, runtimeChecks, packageRestoreArgs, keepOriginals } from './recovery.js';
+import {prepareSuiteUpgrade,readSuiteStatus,SUITE_INSTALL_COMMAND} from './suite.js';
 import {managerSupportsExactSave} from '../dsh-compat.js';
 
 /** The HanaMesh suite itself (real names + the historical scoped spellings) is never installed or removed through the market. */
@@ -150,7 +151,32 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
     try{const result=await profileWriter.run(()=>transaction(item,kind,context));emit({type:'library.install-done',...result});return result;}
     catch(error){emit({type:'library.install-failed',...(item.id?{itemId:item.id}:{}),packageName:name,kind,code:error.code??'INSTALL_FAILED',...(error.recovery?{recovery:error.recovery}:{})});throw error;}
   }
+  let suitePlan;
+  async function previewSuite(){
+    const next=await prepareSuiteUpgrade({profileDir,registry,fetchImpl});
+    suitePlan={...next,planId:randomUUID()};return structuredClone(suitePlan);
+  }
   return{
+    prepareSuiteUpgrade:previewSuite,
+    async upgradeSuite({planId}={}){return await profileWriter.run(async()=>{
+      requireCondition(suitePlan?.planId===planId,'SUITE_PLAN_CHANGED','升级确认已变化，请重新查看并确认。',{},409);
+      const confirmed=suitePlan;suitePlan=undefined;
+      const fresh=await prepareSuiteUpgrade({profileDir,registry,fetchImpl});
+      requireCondition(JSON.stringify(fresh.components)===JSON.stringify(confirmed.components),'SUITE_PLAN_CHANGED','套件版本已变化，请重新查看并确认。',{},409);
+      requireCondition(fresh.available,'SUITE_NO_UPDATE','当前没有兼容新版。',{},409);
+      requireCondition(cliAvailable,'DSH_CLI_UNAVAILABLE','套件升级需客户端随附的官方 CLI；请恢复后重试。',{},503);
+      emit({type:'library.install-started',itemId:'hanamesh:suite-upgrade',packageName:'hanamesh-core',kind:'suite-upgrade'});
+      try{
+        await run(['add','--save-exact','--registry',registry,...fresh.components.map(c=>`${c.name}@${c.to}`)]);
+        const actual=await readSuiteStatus(profileDir);
+        const saved=await json(join(profileDir,'package.json'));
+        requireCondition(actual.status==='installed'&&fresh.components.every((c,i)=>actual.components[i]?.version===c.to&&saved.dependencies?.[c.name]===c.to),'INSTALL_READBACK_MISMATCH','套件升级后的版本或启用状态不符，请完全退出后按补齐命令修复。',{},502);
+        return{status:'restart-required',kind:'suite-upgrade',packageName:'hanamesh-core',components:fresh.components,version:actual.version};
+      }catch(error){
+        error.details={...error.details,stage:'suite-upgrade',actual:await readSuiteStatus(profileDir),command:SUITE_INSTALL_COMMAND};
+        emit({type:'library.install-failed',packageName:'hanamesh-core',code:error.code??'SUITE_UPGRADE_FAILED'});throw error;
+      }
+    });},
     async install(item,context){
       const kind=itemKind(item);
       requireCondition(kind!=='listing','NOT_INSTALLABLE','Catalog item has no npm package to install.');

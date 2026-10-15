@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { AppHostError, requireCondition } from '../errors.js';
 import { loadCatalog, isApplication, itemKind, upgradeAvailable, validateManifestUrl } from './catalog.js';
 import { scanInstalled, scanInstalledPlugins, snapshotProfileDependencies } from './installed.js';
+import {SUITE_TARGET,SUITE_PACKAGES,readSuiteStatus,SUITE_INSTALL_COMMAND} from './suite.js';
 import { PROTECTED_PACKAGES } from './install.js';
 import { handoffSettings } from './handoff.js';
 
@@ -20,6 +21,7 @@ const present=row=>row&&['registered','installed','installed-not-loaded'].includ
 export function createLibraryService({domain,host,config={},dataRoot,ledgerReader,installer,client='dsh',unavailable=()=>[],logger}){
   const warn=(message,...args)=>{if(typeof logger?.warn==='function')logger.warn(message,...args);else console.warn(message,...args);};
   const ready=()=>typeof installer?.install==='function'&&installer.ready!==false;
+  let suiteStatus={status:'unknown',version:null,components:[]};
   const events=[];let sequence=0;let state;const running=new Map(),installing=new Map();let bootDependencies;
   const eventRetention=config.eventRetention??512;
   requireCondition(Number.isSafeInteger(eventRetention)&&eventRetention>0,'INVALID_INPUT','library.eventRetention must be a positive safe integer.');
@@ -31,7 +33,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   async function installed(){return config.profileDir?await scanInstalled({profileDir:config.profileDir,host,ledgerReader,dataRoot}):[];}
   async function installedPlugins(){return config.profileDir?await scanInstalledPlugins({profileDir:config.profileDir,bootDependencies}):[];}
   async function persist(next){next.revision=state.revision+1;await domain.global.set(next);state=next;}
-  async function operation(type,task){const operationId=randomUUID();emit({type:`library.${type}-started`,operationId});const work=Promise.resolve().then(()=>task(operationId)).then(result=>{emit({type:`library.${type}-done`,operationId,result});return result;},error=>{emit({type:`library.${type}-failed`,operationId,code:error.code??'LIBRARY_OPERATION_FAILED',...(error.recovery?{recovery:error.recovery}:{})});throw error;}).finally(()=>running.delete(operationId));running.set(operationId,work);work.catch(()=>{});return{operationId,status:'started'};}
+  async function operation(type,task){const operationId=randomUUID();emit({type:`library.${type}-started`,operationId});const work=Promise.resolve().then(()=>task(operationId)).then(result=>{emit({type:`library.${type}-done`,operationId,result});return result;},error=>{emit({type:`library.${type}-failed`,operationId,code:error.code??'LIBRARY_OPERATION_FAILED',...(error.recovery?{recovery:error.recovery}:{}),...(error.details?.stage==='suite-upgrade'?{details:{stage:'suite-upgrade',actual:error.details.actual,command:SUITE_INSTALL_COMMAND}}:{})});throw error;}).finally(()=>running.delete(operationId));running.set(operationId,work);work.catch(()=>{});return{operationId,status:'started'};}
   const requireInstaller=(message)=>requireCondition(ready(),'LIBRARY_INSTALL_UNAVAILABLE',message,{need:unavailable()},503);
   /**
    * The host itself loaded/unloaded a plugin (pluginManager `applied`): it no longer waits for a restart. When the profile
@@ -53,6 +55,12 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
     requireCondition(input.contractVersion===undefined||input.contractVersion===INSTALL_TARGET_CONTRACT_VERSION,'CONTRACT_VERSION_UNSUPPORTED','This market does not implement the requested install-target contract version.',{supported:[INSTALL_TARGET_CONTRACT_VERSION]});
     requireCondition(Object.keys(input).every(key=>['itemId','packageName','contractVersion'].includes(key)),'INVALID_INPUT','Only itemId and packageName are accepted.');
     const{itemId,packageName}=input;
+    if(itemId===SUITE_TARGET){
+      requireCondition(packageName===undefined,'INVALID_INPUT','套件升级不接受包名或任意替换参数。');
+      requireCondition(typeof installer?.prepareSuiteUpgrade==='function','SUITE_UPGRADE_UNAVAILABLE','当前客户端还不支持安全套件升级，请使用补齐命令。',{},503);
+      const plan=await installer.prepareSuiteUpgrade();
+      return{contractVersion:'1',source:{kind:'suite',manifestUrl:'https://github.com/yzsnstotz'},item:{id:SUITE_TARGET,displayName:'HanaMesh 套件',kind:'suite-upgrade',package:{registry:'npm',name:'hanamesh-core'},latestVersion:plan.components[0].to,installed:{state:'installed',version:suiteStatus.version},upgradeAvailable:plan.available,suiteUpgrade:plan}};
+    }
     requireCondition(itemId!==undefined||packageName!==undefined,'INVALID_INPUT','itemId or packageName is required.');
     requireCondition(itemId===undefined||(text(itemId,160)&&!/[\u0000-\u001f\u007f]/.test(itemId)),'INVALID_INPUT','itemId is invalid.');
     requireCondition(packageName===undefined||(text(packageName,214)&&PACKAGE_NAME.test(packageName)),'INVALID_INPUT','packageName is invalid.');
@@ -96,12 +104,13 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       // rc.28: the dependency set at boot is the "loaded" baseline for plugin restart states; unreadable → everything counts as
       // loaded, logged and reported as `restartBaseline` on list() so the market can say restart states are unknown.
       if(config.profileDir){try{bootDependencies=await snapshotProfileDependencies(config.profileDir);}catch(error){bootDependencies=undefined;bootSnapshotError=error?.code??'PROFILE_READ_FAILED';warn('hanamesh-app-host library: boot profile snapshot unreadable (%s); restart states cannot be told',bootSnapshotError);}}
-      return this;},
+      suiteStatus=await readSuiteStatus(config.profileDir);return this;},
     async list({q='',category,cursor}={}){requireCondition(typeof q==='string'&&q.length<=200,'INVALID_QUERY','q must be a string of at most 200 characters.');requireCondition(category===undefined||(typeof category==='string'&&category.length<=64&&/^[a-z0-9._:-]*$/.test(category)),'INVALID_QUERY','category is invalid.');requireCondition(cursor===undefined||(typeof cursor==='string'&&cursor.length>0&&cursor.length<=2048),'INVALID_CURSOR','cursor is invalid.');
       const page=await catalog({q,category,cursor});const installedRows=await installed();const pluginRows=await installedPlugins();
       const byPackage=new Map([...pluginRows,...installedRows].map(row=>[row.packageName,row]));
-      const items=page.items.map(item=>{const row=byPackage.get(item.package?.name)??null;const kind=itemKind(item);
+      let items=page.items.filter(item=>!protectedPackage(item.package?.name)).map(item=>{const row=byPackage.get(item.package?.name)??null;const kind=itemKind(item);
         return{...item,kind,application:isApplication(item),installed:row,upgradeAvailable:Boolean(row&&row.version&&row.state!=='uninstalled-not-unloaded'&&upgradeAvailable(item.latestVersion,row.version))};});
+      if(config.profileDir&&!cursor&&(!category||category==='plugin')&&(!q||'hanamesh 套件'.includes(q.toLowerCase())))items.unshift({id:'hanamesh:suite',displayName:'HanaMesh 套件',summary:'官方 · 不计分。Core、使用记录与应用库一次装齐。',kind:'suite',official:true,latestVersion:suiteStatus.version,installed:suiteStatus.status==='installed'?{state:'installed',version:suiteStatus.version}:null,suite:suiteStatus});
       const categories=[...new Set(page.items.flatMap(item=>item.categories??[]))].sort();
       return{source:page.source,items,categories,installed:installedRows,plugins:pluginRows,restartRequired:[...pluginRows,...installedRows].some(row=>RESTART_STATES.has(row.state)),...(bootSnapshotError?{restartBaseline:{known:false,code:bootSnapshotError}}:{}),page:page.page};},
     sources(){return{sources:structuredClone(state.sources),revision:state.revision};},
@@ -113,11 +122,15 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
     /** `{itemId, packageName?}`: applications and plugins take the same path (`dsh plugin add --save-exact`); also the upgrade path. */
     resolveTarget,
     /** Public discovery is metadata only: no profile, authentication or installed rows. */
-    installTarget(){const need=ready()?[]:unavailable();return{client,ready:ready(),installTarget:{contract:'hanamesh.install-target',contractVersion:INSTALL_TARGET_CONTRACT_VERSION,supported:[INSTALL_TARGET_CONTRACT_VERSION],fragmentPrefix:'#hanamesh-install?'},
+    installTarget(){const need=ready()?[]:unavailable();return{client,ready:ready(),...(suiteStatus.status!=='unknown'?{suite:structuredClone(suiteStatus)}:{}),installTarget:{contract:'hanamesh.install-target',contractVersion:INSTALL_TARGET_CONTRACT_VERSION,supported:[INSTALL_TARGET_CONTRACT_VERSION],fragmentPrefix:'#hanamesh-install?'},
       ...(!ready()?{error:{code:'INSTALL_TARGET_UNAVAILABLE',message:need.length?'应用库还不能安装：'+need.map(row=>row.need).join('；'):'Controlled installer is unavailable.',need}}:{})};},
     /** Plugin changes load without a restart (the host's public plugin manager is present). */
     get live(){return Boolean(installer?.live);},
-    async install(input){requireInstaller('Install requires absolute profileDir, nodeBinary, dshBin and profileName.');const{item}=await resolveTarget(input??{});if(present(item.installed)&&!item.upgradeAvailable)return{status:'already-installed',itemId:item.id,packageName:item.package.name};return await installItem(item);},
+    async upgradeSuite(input){requireInstaller('Suite upgrade is unavailable.');
+      requireCondition(input&&Object.keys(input).length===1&&typeof input.planId==='string','INVALID_INPUT','Only the current planId is accepted.');
+      return await operation('install',async()=>{try{const result=await installer.upgradeSuite(input);suiteStatus={...await readSuiteStatus(config.profileDir),restartRequired:true};return result;}catch(error){suiteStatus={...await readSuiteStatus(config.profileDir),restartRequired:true,upgradeError:error.code??'SUITE_UPGRADE_FAILED'};error.details={...error.details,stage:'suite-upgrade',actual:suiteStatus,command:SUITE_INSTALL_COMMAND};emit({type:'library.install-failed',packageName:'hanamesh-core',code:error.code??'SUITE_UPGRADE_FAILED',details:{stage:'suite-upgrade',actual:suiteStatus,command:SUITE_INSTALL_COMMAND}});throw error;}});
+    },
+    async install(input){requireCondition(input?.itemId!==SUITE_TARGET,'SUITE_CONFIRMATION_REQUIRED','请在客户端确认完整升级计划。',{},403);requireInstaller('Install requires absolute profileDir, nodeBinary, dshBin and profileName.');const{item}=await resolveTarget(input??{});if(present(item.installed)&&!item.upgradeAvailable)return{status:'already-installed',itemId:item.id,packageName:item.package.name};return await installItem(item);},
     async provision(input){requireInstaller('Runtime provision is unavailable.');
       // LIB-PROVISION-INPUT: a missing field is the caller's error (400), not an internal TypeError inside the operation.
       requireCondition(text(input?.appId,160),'INVALID_INPUT','appId is required.');requireCondition(text(input?.packageName,214)&&PACKAGE_NAME.test(input.packageName),'INVALID_INPUT','packageName is required.');requireCondition(text(input?.runtimeItem,160),'INVALID_INPUT','runtimeItem is required.');

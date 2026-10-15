@@ -115,7 +115,12 @@ for (const available of [true, false]) test(`CM01/${available}: public website d
     assert.equal(reply.headers['set-cookie'], undefined);
     assert.equal(reply.headers['cache-control'], 'no-store');
     assert.equal(reply.json.error?.code, available ? undefined : 'INSTALL_TARGET_UNAVAILABLE');
-    assert.deepEqual(Object.keys(reply.json).sort(), (available ? ['client', 'ready', 'installTarget', 'traceId'] : ['client', 'ready', 'installTarget', 'error', 'traceId']).sort());
+    assert.deepEqual(reply.json.suite, {status:'incomplete',version:null,components:[
+      {name:'hanamesh-core',label:'Core',version:null,active:false},
+      {name:'hanamesh-usage',label:'使用记录',version:null,active:false},
+      {name:'@hanamesh/dsh-app-host',label:'应用库',version:null,active:false},
+    ]}, 'discovery reports the actual empty profile without claiming an installed suite');
+    assert.deepEqual(Object.keys(reply.json).sort(), (available ? ['client', 'ready', 'installTarget', 'suite', 'traceId'] : ['client', 'ready', 'installTarget', 'suite', 'error', 'traceId']).sort());
   }
   assert.equal(h.calls.length, 0);
   assert.deepEqual(h.service.events().events, []);
