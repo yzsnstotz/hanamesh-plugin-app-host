@@ -7,8 +7,11 @@ concurrency:
   cancel-in-progress: true
 jobs:
   core:
-    runs-on: ubuntu-latest
+    # The existing native preparation contract requires macOS arm64.
+    # macos-15 is a standard public/free runner, not a larger runner.
+    runs-on: macos-15
     env:
+      HM_CHROMIUM: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
       npm_config_manage_package_manager_versions: 'false'
       pnpm_config_manage_package_manager_versions: 'false'
       npm_config_update_notifier: 'false'
@@ -26,7 +29,8 @@ jobs:
           python3 - <<'PYTHON'
           import os
           from pathlib import Path
-          root = Path(os.environ['RUNNER_TEMP']) / 'app-host-ci'
+          # Existing native/producer fixtures require an owned root within this card.
+          root = Path(os.environ['GITHUB_WORKSPACE']).parent / 'app-host-ci'
           settings = {'CI_ISOLATION_ROOT': root, 'HOME': root/'home', 'CFFIXED_USER_HOME': root/'home',
             'DSH_HOME': root/'dsh', 'CLAUDE_CONFIG_DIR': root/'claude', 'CODEX_HOME': root/'codex',
             'GH_CONFIG_DIR': root/'gh', 'XDG_CONFIG_HOME': root/'config', 'XDG_DATA_HOME': root/'data',
@@ -56,8 +60,9 @@ jobs:
           run_install: false
       - name: Verify fixed packages and toolchain
         run: |
-          sha256sum --check vendor/SHA256SUMS
-          node -e "if(process.version !== 'v24.13.1') process.exit(1)"
+          shasum -a 256 --check vendor/SHA256SUMS
+          node -e "if(process.version !== 'v24.13.1' || process.platform !== 'darwin' || process.arch !== 'arm64') process.exit(1)"
+          test -x "$HM_CHROMIUM"
           test "$(pnpm --version)" = '10.33.0'
       - name: Install with the frozen pnpm lockfile
         run: node scripts/safe-git.mjs pnpm install --frozen-lockfile

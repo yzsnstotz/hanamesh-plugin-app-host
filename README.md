@@ -184,4 +184,4 @@ commands use the existing monitored Git boundary. No repository/environment
 secret, checkout credential, private dependency fetch, paid runner, deployment or
 publishing action is configured. Isolated HOME/DSH/agent/cache/store/temp paths
 are cleaned even after failure. Local full checks remain the delivery authority;
-Actions is an additional Linux check, not native-client or owner acceptance.
+Actions runs on the standard public/free `macos-15` arm64 runner because the existing native preparation fixture requires that platform. The preinstalled Chrome runs with an isolated profile, mock keychain and basic password store. It is an additional macOS check, not native-client or owner acceptance; this does not establish Linux support.
