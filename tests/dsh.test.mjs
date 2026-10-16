@@ -18,11 +18,21 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection';
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl';
 import * as appHost from '../src/dsh.js';
 import { definition, temporary, http, until, pidAlive } from './helpers.mjs';
+import {declaration as coreDeclaration,core as suiteCore,names as suiteNames,versions as suiteVersions} from './fixtures/core-suite-declaration.mjs';
 
 /** AUTH_DOUBLE for ctx.connection: accepts exactly one bearer, rejects everything else. */
 function connectionDouble(token) {
   return { requestRejection: request => request.headers?.authorization === `Bearer ${token}` ? undefined : { status: 401 } };
 }
+test('Core suite public method arrives and unloads through real optional Cordis injection',async t=>{
+  const profileRoot=await temporary();for(const [i,name] of suiteNames.entries()){await mkdir(join(profileRoot,'node_modules',name),{recursive:true});await writeFile(join(profileRoot,'node_modules',name,'package.json'),JSON.stringify({name,version:suiteVersions[i]}));}await writeFile(join(profileRoot,'package.json'),JSON.stringify({dependencies:Object.fromEntries(suiteNames.map((name,i)=>[name,suiteVersions[i]])),dsh:{profile:{bundles:suiteNames}}}));t.after(()=>rm(profileRoot,{recursive:true,force:true}));
+  const h=await boot(t,{applications:[],config:{library:{profileDir:profileRoot,profileName:'isolated',fixture:join(import.meta.dirname,'fixtures/catalog/provider-page.json')}}});
+  const item=async()=>{const response=await h.get('/hanamesh/library?category=');assert.equal(response.status,200,JSON.stringify(response.json));return response.json.items.find(row=>row.kind==='suite');};
+  assert.equal((await item()).suiteUpgradeUnavailable,'Core 未提供套件声明');let requests=[];
+  const fiber=h.ctx.plugin(ctx=>{const value=suiteCore(coreDeclaration());ctx.provide('hanameshCore',{...value,getSuiteDeclaration:async(...args)=>{requests.push(args);return value.getSuiteDeclaration(...args);}});});
+  await until(async()=>(await item()).suite.completeness==='complete');assert.ok(requests.every(args=>args.length===0),'market fact reads never request registry candidates');
+  await fiber.dispose();await until(async()=>(await item()).suiteUpgradeUnavailable==='Core 未提供套件声明');assert.equal((await item()).suite.completeness,'unknown');
+});
 async function boot(t, { token = 'browser-session', withPlugin = true, applications = [definition()], config = {} } = {}) {
   const root = await temporary();
   const ctx = new Context();

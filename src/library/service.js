@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { AppHostError, requireCondition } from '../errors.js';
 import { loadCatalog, isApplication, itemKind, upgradeAvailable, validateManifestUrl } from './catalog.js';
 import { scanInstalled, scanInstalledPlugins, snapshotProfileDependencies } from './installed.js';
-import {SUITE_TARGET,SUITE_PACKAGES,readSuiteStatus,SUITE_INSTALL_COMMAND} from './suite.js';
+import {SUITE_TARGET,SUITE_PACKAGES,readSuiteStatus,SUITE_INSTALL_COMMAND,CORE_SUITE_DECLARATION_MISSING} from './suite.js';
 import { PROTECTED_PACKAGES } from './install.js';
 import { handoffSettings } from './handoff.js';
 
@@ -22,6 +22,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   const warn=(message,...args)=>{if(typeof logger?.warn==='function')logger.warn(message,...args);else console.warn(message,...args);};
   const ready=()=>typeof installer?.install==='function'&&installer.ready!==false;
   let suiteStatus={status:'unknown',version:null,components:[]};
+  const suiteFacts=async()=>installer?.suiteFacts?await installer.suiteFacts():{...await readSuiteStatus(config.profileDir),status:'unknown',completeness:'unknown',blocked:[{code:'CORE_SUITE_DECLARATION_MISSING'}],suiteUpgradeUnavailable:CORE_SUITE_DECLARATION_MISSING};
   const events=[];let sequence=0;let state;const running=new Map(),installing=new Map();let bootDependencies;
   const eventRetention=config.eventRetention??512;
   requireCondition(Number.isSafeInteger(eventRetention)&&eventRetention>0,'INVALID_INPUT','library.eventRetention must be a positive safe integer.');
@@ -104,13 +105,14 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       // rc.28: the dependency set at boot is the "loaded" baseline for plugin restart states; unreadable → everything counts as
       // loaded, logged and reported as `restartBaseline` on list() so the market can say restart states are unknown.
       if(config.profileDir){try{bootDependencies=await snapshotProfileDependencies(config.profileDir);}catch(error){bootDependencies=undefined;bootSnapshotError=error?.code??'PROFILE_READ_FAILED';warn('hanamesh-app-host library: boot profile snapshot unreadable (%s); restart states cannot be told',bootSnapshotError);}}
-      suiteStatus=await readSuiteStatus(config.profileDir);return this;},
+      suiteStatus=await suiteFacts();return this;},
     async list({q='',category,cursor}={}){requireCondition(typeof q==='string'&&q.length<=200,'INVALID_QUERY','q must be a string of at most 200 characters.');requireCondition(category===undefined||(typeof category==='string'&&category.length<=64&&/^[a-z0-9._:-]*$/.test(category)),'INVALID_QUERY','category is invalid.');requireCondition(cursor===undefined||(typeof cursor==='string'&&cursor.length>0&&cursor.length<=2048),'INVALID_CURSOR','cursor is invalid.');
       const page=await catalog({q,category,cursor});const installedRows=await installed();const pluginRows=await installedPlugins();
+      suiteStatus={...await suiteFacts(),...(suiteStatus.restartRequired?{restartRequired:true}:{}),...(suiteStatus.upgradeError?{upgradeError:suiteStatus.upgradeError}:{})};
       const byPackage=new Map([...pluginRows,...installedRows].map(row=>[row.packageName,row]));
       let items=page.items.filter(item=>!protectedPackage(item.package?.name)).map(item=>{const row=byPackage.get(item.package?.name)??null;const kind=itemKind(item);
         return{...item,kind,application:isApplication(item),installed:row,upgradeAvailable:Boolean(row&&row.version&&row.state!=='uninstalled-not-unloaded'&&upgradeAvailable(item.latestVersion,row.version))};});
-      if(config.profileDir&&!cursor&&(!category||category==='plugin')&&(!q||'hanamesh 套件'.includes(q.toLowerCase())))items.unshift({id:'hanamesh:suite',displayName:'HanaMesh 套件',summary:'官方 · 不计分。Core、使用记录与应用库一次装齐。',kind:'suite',official:true,latestVersion:suiteStatus.version,installed:suiteStatus.status==='installed'?{state:'installed',version:suiteStatus.version}:null,suite:suiteStatus,...(installer?.suiteUpgradeUnavailable?{suiteUpgradeUnavailable:installer.suiteUpgradeUnavailable}:{})});
+      if(config.profileDir&&!cursor&&(!category||category==='plugin')&&(!q||'hanamesh 套件'.includes(q.toLowerCase())))items.unshift({id:'hanamesh:suite',displayName:'HanaMesh 套件',summary:'官方 · 不计分。Core、使用记录与应用库一次装齐。',kind:'suite',official:true,latestVersion:suiteStatus.version,installed:suiteStatus.status==='installed'?{state:'installed',version:suiteStatus.version}:null,suite:suiteStatus,...((installer?.suiteUpgradeUnavailable??suiteStatus.suiteUpgradeUnavailable)?{suiteUpgradeUnavailable:installer?.suiteUpgradeUnavailable??suiteStatus.suiteUpgradeUnavailable}:{})});
       const categories=[...new Set(page.items.flatMap(item=>item.categories??[]))].sort();
       return{source:page.source,items,categories,installed:installedRows,plugins:pluginRows,restartRequired:[...pluginRows,...installedRows].some(row=>RESTART_STATES.has(row.state)),...(bootSnapshotError?{restartBaseline:{known:false,code:bootSnapshotError}}:{}),page:page.page};},
     sources(){return{sources:structuredClone(state.sources),revision:state.revision};},

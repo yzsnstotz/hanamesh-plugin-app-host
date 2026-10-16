@@ -185,10 +185,11 @@ export async function apply(ctx, config) {
     const auth = { parentOrigin, transportOrigin, ...browserAuthentication(connection) };
     const handler = createHttpHandler(host, auth);
     for (const path of ROUTES) own(`route:${path}`, webServer.register({ kind:'exact', path, handler }));
-    let credentialService, llmService, oauthService, usageService;
+    let credentialService, llmService, oauthService, usageService, coreService;
     optional('credentials', service => { credentialService=service; });
     // Optional Usage service presence does not provide original application success facts.
     optional('hanameshUsage', service => { usageService=service; });
+    optional('hanameshCore', service => { coreService=service; });
     // Router hourly counts remain local diagnostics, never synthesized Usage open/use facts.
     const receiptsDomain = await facility.open(receiptsDomainSpec);
     own('receipts-domain', () => receiptsDomain.close());
@@ -232,7 +233,7 @@ export async function apply(ctx, config) {
       installer=createLibraryInstaller({profileDir:locations.profileDir,profileName:locations.profileName,dataRoot,
         ...(cliUsable?{nodeBinary:locations.nodeBinary,dshBin,desktopCli:locations.desktopCli,desktopLauncher:locations.desktopLauncher}:{}),pluginManagerVersion:locations.pluginManagerVersion,
         registry:libraryConfig.registry,allowPrerelease:libraryConfig.allowPrerelease,provision:provisionApi.provision,remove:provisionApi.remove,ledger:provisionApi.ledger,
-        pluginManager:()=>pluginManager,emit:event=>library?.emit(event)});
+        coreService:()=>coreService,pluginManager:()=>pluginManager,emit:event=>library?.emit(event)});
     }
     /** What a person must do so the library can install, in their words (C-MARKET probe `error.need`). */
     const unavailable=()=>{

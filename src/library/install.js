@@ -7,7 +7,7 @@ import { AppHostError, requireCondition, SerialQueue } from '../errors.js';
 import { validateDefinition } from '../descriptor.js';
 import { itemKind } from './catalog.js';
 import { profileSnapshot, runtimeSnapshot, profileChecks, runtimeChecks, packageRestoreArgs, keepOriginals } from './recovery.js';
-import {prepareSuiteUpgrade,readSuiteStatus,SUITE_INSTALL_COMMAND,CORE_SUITE_DECLARATION_MISSING} from './suite.js';
+import {prepareSuiteUpgrade,readSuiteStatus,createCoreSuiteAdapter,SUITE_INSTALL_COMMAND} from './suite.js';
 
 /** The HanaMesh suite itself (real names + the historical scoped spellings) is never installed or removed through the market. */
 export const PROTECTED_PACKAGES=Object.freeze(['@hanamesh/dsh-app-host','hanamesh-core','hanamesh-usage','hanamesh-brand','@hanamesh/dsh-core','@hanamesh/dsh-usage']);
@@ -43,7 +43,7 @@ async function clearGeneratedRuntimeCache(result,runtimeRoot){
 
 /** Package mutations use the public CLI in an owned monitored process; upstream's in-process manager has no scoped env/monitor port. */
 export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBinary,dshBin,desktopCli,desktopLauncher,pluginManagerVersion,registry='https://registry.npmjs.org',allowPrerelease=false,
-  fetchImpl=globalThis.fetch,spawn=defaultSpawn,provision,remove,ledger,coreSuitePlan,pluginManager=()=>undefined,emit=()=>{}}){
+  fetchImpl=globalThis.fetch,spawn=defaultSpawn,provision,remove,ledger,coreSuitePlan,coreService=()=>undefined,pluginManager=()=>undefined,emit=()=>{}}){
   requireCondition(typeof profileDir==='string'&&resolve(profileDir)===profileDir,'PROFILE_DIR_REQUIRED','library.profileDir must be an absolute path.');
   requireCondition(typeof dataRoot==='string'&&resolve(dataRoot)===dataRoot,'INVALID_ROOT','dataRoot must be absolute.');
   const launcherAvailable=typeof desktopLauncher?.command==='string'&&resolve(desktopLauncher.command)===desktopLauncher.command&&typeof desktopLauncher.home==='string'&&join(desktopLauncher.home,'profiles',profileName)===profileDir;
@@ -137,26 +137,31 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
     catch(error){emit({type:'library.install-failed',...(item.id?{itemId:item.id}:{}),packageName:name,kind,code:error.code??'INSTALL_FAILED',...(error.recovery?{recovery:error.recovery}:{})});throw error;}
   }
   let suitePlan;
+  const suiteProvider=coreSuitePlan??createCoreSuiteAdapter({core:coreService,registry});
   async function previewSuite(){
-    const next=await prepareSuiteUpgrade({coreSuitePlan});
+    const next=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider});
     suitePlan={...next,planId:randomUUID()};return structuredClone(suitePlan);
   }
   return{
-    // No production Core adapter is guessed. G must first publish its documented read-only API.
-    get suiteUpgradeUnavailable(){return typeof coreSuitePlan==='function'?null:CORE_SUITE_DECLARATION_MISSING;},
+    get suiteUpgradeUnavailable(){return suiteProvider.unavailable??null;},
+    async suiteFacts(){
+      if(!suiteProvider.readFacts)return await readSuiteStatus(profileDir);
+      try{return await suiteProvider.readFacts();}catch(error){return{...await readSuiteStatus(profileDir),status:'unknown',completeness:'unknown',blocked:[{code:error.code??'CORE_SUITE_DECLARATION_UNAVAILABLE'}],suiteUpgradeUnavailable:error.code==='CORE_SUITE_DECLARATION_MISSING'?suiteProvider.unavailable:'Core 套件声明读取失败（'+(error.code??'CORE_SUITE_DECLARATION_UNAVAILABLE')+'）'};}
+    },
     prepareSuiteUpgrade:previewSuite,
     async upgradeSuite({planId}={}){return await profileWriter.run(async()=>{
       requireCondition(suitePlan?.planId===planId,'SUITE_PLAN_CHANGED','升级确认已变化，请重新查看并确认。',{},409);
       const confirmed=suitePlan;suitePlan=undefined;
-      const fresh=await prepareSuiteUpgrade({coreSuitePlan});
-      requireCondition(JSON.stringify(fresh.components)===JSON.stringify(confirmed.components),'SUITE_PLAN_CHANGED','套件版本已变化，请重新查看并确认。',{},409);
+      const fresh=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider});
+      const identity=plan=>JSON.stringify({components:plan.components,declarationId:plan.declarationId,registry:plan.registry,selectedUpgrade:plan.selectedUpgrade,physicalBaseline:plan.physicalBaseline});
+      requireCondition(identity(fresh)===identity(confirmed),'SUITE_PLAN_CHANGED','套件声明或版本已变化，请重新查看并确认。',{},409);
       requireCondition(fresh.available,'SUITE_NO_UPDATE','当前没有兼容新版。',{},409);
       const before=await readSuiteStatus(profileDir);
-      requireCondition(fresh.components.every((c,i)=>before.components[i]?.version===c.from),'SUITE_PLAN_CHANGED','已装版本已变化，请重新查看并确认。',{},409);
+      requireCondition(before.status==='installed'&&fresh.components.every((c,i)=>before.components[i]?.version===c.from),'SUITE_PLAN_CHANGED','已装版本或启用状态已变化，请重新查看并确认。',{},409);
       requireCondition(cliAvailable,'DSH_CLI_UNAVAILABLE','套件升级需客户端随附的官方 CLI；请恢复后重试。',{},503);
       emit({type:'library.install-started',itemId:'hanamesh:suite-upgrade',packageName:'hanamesh-core',kind:'suite-upgrade'});
       try{
-        await run(['add','--save-exact','--registry',registry,...fresh.components.map(c=>`${c.name}@${c.to}`)]);
+        await run(['add','--save-exact','--strict-peer-dependencies',`--registry=${fresh.registry??registry}`,...fresh.components.map(c=>`${c.name}@${c.to}`)]);
         const actual=await readSuiteStatus(profileDir);
         const saved=await json(join(profileDir,'package.json'));
         requireCondition(actual.status==='installed'&&fresh.components.every((c,i)=>actual.components[i]?.version===c.to&&saved.dependencies?.[c.name]===c.to),'INSTALL_READBACK_MISMATCH','套件升级后的版本或启用状态不符，请完全退出后按补齐命令修复。',{},502);

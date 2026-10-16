@@ -54,7 +54,7 @@ Both SOURCE fixture sets and suites ship as `@hanamesh/dsh-app-host/catalog/suit
 
 ## HanaMesh 套件
 
-市场只显示一张官方、不计分的「HanaMesh 套件」卡。其组件版本来自当前 profile 实际包与启用清单；Core、使用记录、应用库不再分别作为普通可安装卡。品牌插件只属于 HanaMesh 自有客户端。
+市场只显示一张官方、不计分的「HanaMesh 套件」卡。完整性只显示 Core 的 `completeness`，同时展示 `installed` 的要求范围、实际版本、状态和 `blocked` 的具名原因；Core 缺席或读取失败时完整性为 unknown，并保留物理包版本供诊断。Core、使用记录、应用库不再分别作为普通可安装卡。品牌插件只属于 HanaMesh 自有客户端。
 
 DSH 首次安装或缺组件时，完全退出客户端后执行同一行，再重新打开：
 
@@ -64,10 +64,10 @@ dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#ma
 
 套件版本范围、是否完整、候选来源及兼容/升级规则唯一属于 Core。App-host 只读物理安装版本，不能用它们推导兼容或安装许可；不自行读取 npm latest、计算组件组合、校验候选宿主 peers 或持有 Core 的版本范围副本。普通安装/卸载接口继续拒绝套件包。
 
-当前消费者候选尚未接通生产 Core 声明：Core 公开方法与数据版本由 G 在 C-CORE 提供后，才在 DSH 入口适配。缺源时套件卡明确显示 **Core 未提供套件声明**，「检查兼容升级」不可点；直接查询升级目标返回503 `CORE_SUITE_DECLARATION_MISSING`，不回退到旧范围或 registry latest。无效执行计划返回 `CORE_SUITE_DECLARATION_INVALID`；内部回调错误向上传播且不回退；HTTP沿现有AppHostError/未知错误边界处理，真实适配需按C-CORE映射公开具名错误。真实已装版本和普通应用安装仍可展示/使用。
+DSH 入口通过既有 optional injection 监听 `hanameshCore` 出现/卸载，仅消费字符串 protocol `'1'` 的可选 `getSuiteDeclaration`（C-CORE D）。市场事实读取不传 request，不触发候选 registry 网络；查询升级时传入实际执行 `registry`。缺方法、旧 Core 或卸载后明确显示 **Core 未提供套件声明**，「检查兼容升级」不可点；直接查询升级目标返回503 `CORE_SUITE_DECLARATION_MISSING`，不回退 getHealth、内部 profile、旧范围或 registry latest。DTO 形状无效返回 `CORE_SUITE_DECLARATION_INVALID`；具名 Core 错误保持传播，事实读取失败为 unknown。
 
-`createLibraryInstaller({coreSuitePlan})` 的可选回调是 **App-host 内部执行接线槽**，不是 Core 的方法名或 wire DTO，也不是浏览器/config 权限。将来的适配器必须只经已文档化的 Core 公开接口，返回既有 App-host 执行计划 `{available:boolean,components:[{name,label?,from,to}]}`。三项必须是固定套件包、`from/to` 必须是精确版本；这只是执行范围/格式检查，不是兼容规则。Core 决定 `available`，App-host 不重算。当前 `src/dsh.js` 没有绑定猜测的 Core getter，生产默认缺源；正向测试使用明确的端口替身，不能证明真实 Core 接通。
+公开 adapter 仅检查 DTO/精确命令的形状与固定三包边界，不重算范围、Node、peer、来源或升级排序。默认展示 `upgrades` 的第一条组合，保留完整 `declarationId`、规范 registry、目标身份/来源/摘要/版本及物理基线；其他候选的 blocked 行不会否决这条 Core 已提供的有效组合。`completeness` 非 complete、来源不符或没有组合分别明确拒绝。`createLibraryInstaller({coreSuitePlan})` 仍是内部归一化执行测试接缝，不是公开 Core DTO、配置项或浏览器权限；替身测试不能证明真实 Core 包接通。
 
-接通后仍须本人确认当前计划才执行一次官方 CLI；执行前重读 Core 计划及物理安装版本，改变/撤回即拒绝，不静默重试。安装后按精确 profile/module 版本读回，不以 Core 回执冒充实际安装结果。网站只能经允许名单交接此意图。
+本人确认当前计划才执行一次官方 CLI；执行前重读并比较 declarationId、registry、选中组合和 Core 物理基线（checkedAt 不参与比较），再检查磁盘版本及启用清单；改变/撤回即拒绝，不静默重试。安装后按精确 profile/module 版本和启用状态读回，不以 Core 回执冒充实际安装结果。网站只能经允许名单交接此意图。
 
 成功须读回三个精确保存的版本、实际解析版本与启用状态，随后完全退出并重新打开客户端。安装命令失败或读回不符时，界面显示实际组件状态、错误与同一行补齐命令；部分变更不冒充成功或未安装，不自动静默重试。

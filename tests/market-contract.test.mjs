@@ -115,15 +115,29 @@ for (const available of [true, false]) test(`CM01/${available}: public website d
     assert.equal(reply.headers['set-cookie'], undefined);
     assert.equal(reply.headers['cache-control'], 'no-store');
     assert.equal(reply.json.error?.code, available ? undefined : 'INSTALL_TARGET_UNAVAILABLE');
-    assert.deepEqual(reply.json.suite, {status:'incomplete',version:null,components:[
-      {name:'hanamesh-core',label:'Core',version:null,active:false},
-      {name:'hanamesh-usage',label:'使用记录',version:null,active:false},
-      {name:'@hanamesh/dsh-app-host',label:'应用库',version:null,active:false},
-    ]}, 'discovery reports the actual empty profile without claiming an installed suite');
-    assert.deepEqual(Object.keys(reply.json).sort(), (available ? ['client', 'ready', 'installTarget', 'suite', 'traceId'] : ['client', 'ready', 'installTarget', 'suite', 'error', 'traceId']).sort());
+    assert.equal(reply.json.suite, undefined, 'Core completeness is unknown: public discovery omits the suite instead of inferring it from an empty physical profile');
+    assert.deepEqual(Object.keys(reply.json).sort(), (available ? ['client', 'ready', 'installTarget', 'traceId'] : ['client', 'ready', 'installTarget', 'error', 'traceId']).sort());
+    assert.ok(!JSON.stringify(reply.json).includes(h.profile));
   }
   assert.equal(h.calls.length, 0);
   assert.deepEqual(h.service.events().events, []);
+});
+
+for (const available of [true, false]) test(`CM01-facts/${available}: authenticated suite card preserves physical inventory while Core completeness remains unknown`, async t => {
+  const h = await provider(t, { available });
+  const names=['hanamesh-core','hanamesh-usage','@hanamesh/dsh-app-host'],versions=['0.3.12','0.2.0-rc.34','0.6.5'];
+  for(const physicallyInstalled of [false,true]){
+    if(physicallyInstalled){for(const [i,name] of names.entries()){await mkdir(join(h.profile,'node_modules',name),{recursive:true});await writeFile(join(h.profile,'node_modules',name,'package.json'),JSON.stringify({name,version:versions[i]}));}await writeFile(join(h.profile,'package.json'),JSON.stringify({dependencies:Object.fromEntries(names.map((name,i)=>[name,versions[i]])),dsh:{profile:{bundles:names}}}));}
+    const denied=await h.get('/hanamesh/library?category=',{'x-test-auth':undefined});assert.equal(denied.status,401);
+    const reply=await h.get('/hanamesh/library?category=');assert.equal(reply.status,200);
+    const item=reply.json.items.find(row=>row.kind==='suite');assert.ok(item);
+    assert.equal(item.suite.completeness,'unknown');assert.equal(item.suite.status,'unknown');assert.equal(item.suiteUpgradeUnavailable,'Core 未提供套件声明');assert.equal(item.installed,null);
+    assert.deepEqual(item.suite.blocked,[{code:'CORE_SUITE_DECLARATION_MISSING'}]);
+    assert.deepEqual(item.suite.components.map(row=>({name:row.name,version:row.version,active:row.active})),names.map((name,i)=>({name,version:physicallyInstalled?versions[i]:null,active:physicallyInstalled})));
+    assert.equal(item.suite.version,physicallyInstalled?versions[0]:null);
+    const discovery=await h.get(probePath,{origin:'https://market.example','x-test-auth':undefined});assert.equal(discovery.status,200);assert.equal(discovery.json.suite,undefined);assert.deepEqual(Object.keys(discovery.json).sort(),(available?['client','ready','installTarget','traceId']:['client','ready','installTarget','error','traceId']).sort());assert.ok(!JSON.stringify(discovery.json).includes(h.profile));
+  }
+  assert.equal(h.calls.length,0);assert.deepEqual(h.service.events().events,[]);
 });
 
 test('CM02: discovery denies unknown hosts, iframe callers and mutation methods without starting an operation', async t => {

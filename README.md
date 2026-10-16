@@ -1,6 +1,6 @@
 CLI-8：未配置来源的新用户默认请求 HanaMesh 视图（`https://market.hanamesh.com/catalog-source.json?view=hanamesh`）。已保存的旧 URL、自定义来源或手动清空列表均保持原样；显式 `sources: []` 仍不播种。
 
-> 消费者分支候选（尚未合 main / 未接真实 Core）：套件兼容声明与升级规则唯一归 Core。App-host 已移除重复的固定范围及自行选候选逻辑；缺公开声明时显示「Core 未提供套件声明」并禁升级。当前仅有内部执行端口，待 G 提供 C-CORE 接口后接通；本地端口替身不算真实 Core 联调。详见 [应用库的套件边界](docs/LIBRARY.md)。
+> 消费者分支候选（尚未合 main）：套件兼容声明与升级规则唯一归 Core。App-host 经可选 protocol `'1'` Cordis `hanameshCore.getSuiteDeclaration()` 消费 C-CORE D 的公开 DTO，展示完整性、要求范围、实际版本和具名阻断原因；缺可选方法时显示「Core 未提供套件声明」并禁升级。升级只采用 Core 返回的精确组合，确认时复核声明、来源、目标与物理版本。本地 DTO/注入测试不算真实 Core 包联调或原生验收。详见 [应用库的套件边界](docs/LIBRARY.md)。
 
 > 2026-10-15 · 0.6.2 compatibility candidate: public host peers admit official DSH `0.2.0-rc.2` and `0.2.1-alpha.2` with Cordis `4.0.4` / `4.0.5-alpha.1` and Schemastery `3.18.4` / `3.18.5-alpha.1`; development inputs stay exact. The rc.2 plugin manager has no public `saveExact` option. A proven packaged macOS Desktop uses its unchanged shipped `runtime/cli/bin/dsh` launcher for exact installs and reports `restart-required`; alpha.2 keeps the public live manager path. If neither a verified exact-save manager nor the supported public CLI is available, discovery reports `ready:false` and a concrete reason before installation mutates the profile. Existing browsing and application-view APIs remain available. See [the public API audit and validation limits](docs/DSH_COMPATIBILITY.md). Source checks and fixture results do not establish native or owner acceptance.
 
