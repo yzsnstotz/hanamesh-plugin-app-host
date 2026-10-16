@@ -1,6 +1,5 @@
 import {readFile} from 'node:fs/promises';
-import {join,dirname} from 'node:path';
-import {createRequire} from 'node:module';
+import {join} from 'node:path';
 import semver from 'semver';
 import {requireCondition} from '../errors.js';
 
@@ -12,7 +11,7 @@ export const SUITE_PACKAGES=Object.freeze([
 ].map(Object.freeze));
 export const SUITE_INSTALL_COMMAND="env -u GIT_CONFIG_PARAMETERS -u GIT_ASKPASS -u SSH_ASKPASS GIT_CONFIG_NOSYSTEM=1 GIT_TERMINAL_PROMPT=0 GIT_CONFIG_COUNT=2 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= GIT_CONFIG_KEY_1=credential.helper GIT_CONFIG_VALUE_1='!gh auth git-credential' dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#main' 'github:yzsnstotz/hanamesh-usage#main' 'github:yzsnstotz/hanamesh-plugin-app-host#main'";
 const json=async path=>JSON.parse(await readFile(path,'utf8'));
-/** Profile bytes, never guessed from a port or the presence of this listener. */
+/** Physical inventory only, never a compatibility declaration or permission to upgrade. */
 export async function readSuiteStatus(profileDir){
   if(!profileDir)return{status:'unknown',version:null,components:[]};
   try{
@@ -25,41 +24,23 @@ export async function readSuiteStatus(profileDir){
     return{status:components.every(c=>c.version&&c.active)?'installed':'incomplete',version:components[0].version,components};
   }catch{return{status:'unknown',version:null,components:[]};}
 }
-/** Resolve the host's actually loaded peer metadata; do not use client-supplied runtime versions. */
-export async function installedRuntimeVersion(name){
-  try{
-    let path=dirname(createRequire(import.meta.url).resolve(name));
-    for(;;){try{const pkg=await json(join(path,'package.json'));if(pkg.name===name)return semver.valid(pkg.version)?pkg.version:null;}catch{}
-      const parent=dirname(path);if(parent===path)return null;path=parent;}
-  }catch{return null;}
-}
-export async function prepareSuiteUpgrade({profileDir,registry,fetchImpl=globalThis.fetch,runtimeVersion=installedRuntimeVersion}){
-  const current=await readSuiteStatus(profileDir);
-  requireCondition(current.status==='installed','SUITE_INCOMPLETE','套件不完整，请先用补齐命令装齐并启用三个组件。',{command:SUITE_INSTALL_COMMAND},409);
-  const base=new URL(registry);
-  requireCondition(!base.username&&!base.password&&(base.protocol==='https:'||base.protocol==='http:'&&['127.0.0.1','localhost'].includes(base.hostname)),'SUITE_SOURCE_INVALID','套件升级需要可信 HTTPS registry。');
-  const components=[];
-  for(const [index,{name,label,repo}] of SUITE_PACKAGES.entries()){
-    const response=await fetchImpl(`${base.href.replace(/\/$/,'')}/${encodeURIComponent(name)}/latest`,{headers:{accept:'application/json'},redirect:'error'});
-    requireCondition(response.ok,'REGISTRY_LOOKUP_FAILED','读取套件新版失败。',{},502);
-    const metadata=await response.json(),to=metadata.version,from=current.components[index].version;
-    const repository=typeof metadata.repository==='string'?metadata.repository:metadata.repository?.url;
-    requireCondition(metadata.name===name&&repository?.replace(/^git\+/,'').replace(/\.git$/,'')===`https://github.com/yzsnstotz/${repo}`,'SUITE_SOURCE_INVALID','套件升级来源与固定官方包不一致。',{packageName:name},409);
-    requireCondition(metadata.dsh?.bundle?.patch,'SUITE_INCOMPATIBLE','候选没有官方 DSH bundle 声明。',{packageName:name},409);
-    if(metadata.engines?.node)requireCondition(semver.validRange(metadata.engines.node)&&semver.satisfies(process.version,metadata.engines.node),'SUITE_INCOMPATIBLE','套件候选不支持当前 Node 版本。',{packageName:name},409);
-    requireCondition(semver.valid(to),'SUITE_VERSION_INVALID','套件候选版本无效。',{packageName:name});
-    requireCondition(semver.gte(to,from),'SUITE_DOWNGRADE_REFUSED','Registry 候选旧于已安装版本；保持现有套件。',{packageName:name,installed:from,candidate:to},409);
-    requireCondition(metadata.peerDependencies&&typeof metadata.peerDependencies==='object','SUITE_INCOMPATIBLE','无法核实套件候选的宿主兼容要求。',{packageName:name},409);
-    for(const [peer,range] of Object.entries(metadata.peerDependencies)){
-      if(metadata.peerDependenciesMeta?.[peer]?.optional===true)continue;
-      const actual=await runtimeVersion(peer);
-      requireCondition(actual,'SUITE_RUNTIME_UNKNOWN','无法核实当前宿主依赖版本。',{peer},409);
-      requireCondition(typeof range==='string'&&semver.validRange(range)&&semver.satisfies(actual,range),'SUITE_INCOMPATIBLE','套件候选与当前宿主不兼容。',{packageName:name,peer,actual,required:range},409);
-    }
-    components.push({name,label,from,to});
+export const CORE_SUITE_DECLARATION_MISSING='Core 未提供套件声明';
+/**
+ * Internal App-host execution port, not a guessed Core getter or wire DTO. A future adapter must
+ * consume G's documented public declaration and return this existing execution-plan shape.
+ * Core owns candidate selection, completeness, ranges and compatibility; this module only checks
+ * that an exact execution plan is well formed and confined to our three protected packages.
+ */
+export async function prepareSuiteUpgrade({coreSuitePlan}={}){
+  requireCondition(typeof coreSuitePlan==='function','CORE_SUITE_DECLARATION_MISSING',CORE_SUITE_DECLARATION_MISSING,{},503);
+  const plan=await coreSuitePlan();
+  requireCondition(plan!==undefined&&plan!==null,'CORE_SUITE_DECLARATION_MISSING',CORE_SUITE_DECLARATION_MISSING,{},503);
+  const invalid=()=>requireCondition(false,'CORE_SUITE_DECLARATION_INVALID','Core 套件声明无法用于精确安装。',{},503);
+  if(typeof plan!=='object'||Array.isArray(plan)||typeof plan.available!=='boolean'||!Array.isArray(plan.components)||plan.components.length!==SUITE_PACKAGES.length)invalid();
+  const rows=new Map();
+  for(const row of plan.components){
+    if(!row||typeof row!=='object'||!SUITE_PACKAGES.some(p=>p.name===row.name)||rows.has(row.name)||typeof row.from!=='string'||semver.valid(row.from)!==row.from||typeof row.to!=='string'||semver.valid(row.to)!==row.to)invalid();
+    rows.set(row.name,row);
   }
-  // Current Core suite contract ranges are checked against the complete proposed combination, not individually.
-  const usage=components[1].to,appHost=components[2].to;
-  requireCondition(semver.satisfies(usage,'>=0.2.0-rc.26 <0.3.0')&&semver.satisfies(appHost,'>=0.5.9 <0.7.0'),'SUITE_INCOMPATIBLE','候选组件组合不满足当前套件要求。',{},409);
-  return{components,available:components.some(c=>c.from!==c.to)};
+  return{available:plan.available,components:SUITE_PACKAGES.map(({name,label})=>({name,label,from:rows.get(name).from,to:rows.get(name).to}))};
 }

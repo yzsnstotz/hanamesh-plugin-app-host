@@ -343,3 +343,17 @@ test('AH-D05: real Cordis apply infers the Desktop parent and profile without su
   assert.equal((await h.post('/hanamesh/library/sources',{sources:[]},{origin:undefined})).status,200);
   assert.equal((await h.post('/hanamesh/library/sources',{sources:[]},{origin:'dsh-app://shell'})).status,403);
 });
+
+
+test('Core declaration missing: real Cordis library exposes the exact reason and cannot produce an upgrade plan',async t=>{
+  const h=await boot(t,{withPlugin:false}),profile=join(h.root,'profile');
+  const dependencies={'hanamesh-core':'0.3.12','hanamesh-usage':'0.2.0-rc.34','@hanamesh/dsh-app-host':'0.6.5'};
+  for(const [name,version] of Object.entries(dependencies)){await mkdir(join(profile,'node_modules',name),{recursive:true});await writeFile(join(profile,'node_modules',name,'package.json'),JSON.stringify({name,version}));}
+  await writeFile(join(profile,'package.json'),JSON.stringify({dependencies,dsh:{profile:{bundles:Object.keys(dependencies)}}}));
+  h.fiber=h.ctx.plugin(appHost,{dataRoot:join(h.root,'app-data'),applications:[],nodeBinary:process.execPath,library:{profileDir:profile,profileName:'core-suite-fixture',dshBin:join(h.root,'unexecuted-dsh.js'),sources:[],fixture:new URL('./fixtures/catalog/provider-page.json',import.meta.url).pathname,handoff:{enabled:false}}});
+  await until(()=>h.ctx.get('hanameshApps')!==undefined);
+  const list=await h.get('/hanamesh/library?category=');assert.equal(list.status,200,JSON.stringify(list.json));
+  const item=list.json.items.find(i=>i.kind==='suite');assert.equal(item.suiteUpgradeUnavailable,'Core 未提供套件声明');assert.equal(item.suite.components[0].version,'0.3.12');
+  const target=await h.get('/hanamesh/library/target?itemId=hanamesh%3Asuite-upgrade');assert.equal(target.status,503,JSON.stringify(target.json));assert.equal(target.json.error.code,'CORE_SUITE_DECLARATION_MISSING');assert.equal(target.json.error.message,'Core 未提供套件声明');
+  assert.equal((await h.get('/hanamesh/library/target?itemId=hanamesh%3Asuite-upgrade',{authorization:undefined})).status,401);
+});

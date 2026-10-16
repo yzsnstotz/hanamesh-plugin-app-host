@@ -1,5 +1,7 @@
 // AppHost mutation targets, name filters and invariant-specific failure reasons.
 export const cases=[
+{id:'M60-core-availability-recomputed',file:'src/library/suite.js',from:'return{available:plan.available,components:',to:'return{available:true,components:',test:'tests/core-suite-consumer.test.mjs',pattern:'^provider decisions',reason:/Expected values to be strictly equal/},
+{id:'M61-core-plan-not-rechecked',file:'src/library/install.js',from:'const fresh=await prepareSuiteUpgrade({coreSuitePlan});',to:'const fresh=confirmed;',test:'tests/core-suite-consumer.test.mjs',pattern:'^confirmation rereads',reason:/Expected values to be strictly deep-equal|Missing expected rejection|Expected values to be strictly equal/},
 {id:"M38-bootstrap-origin-unchecked",file:"src/gateway.js",from:"event.origin==='dsh-app://app'&&",to:"",test:"tests/desktop-window-proof.test.mjs",pattern:"^D26 bootstrap:",reason:/Expected values to be strictly equal|Missing expected exception/},
 {id:"M39-bootstrap-window-unchecked",file:"src/gateway.js",from:"&&event.source===parent",to:"",test:"tests/desktop-window-proof.test.mjs",pattern:"^D26 bootstrap:",reason:/Expected values to be strictly equal|Missing expected exception/},
 {id:"M40-workspace-window-unchecked",file:"src/client-ui.js",from:"const exact=event.origin===url.origin&&event.source===frame.current?.contentWindow;",to:"const exact=event.origin===url.origin;",test:"tests/desktop-window-proof.test.mjs",pattern:"^D26 workspace:",reason:/Expected values to be strictly equal|Missing expected exception/},

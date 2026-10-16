@@ -62,6 +62,12 @@ DSH 首次安装或缺组件时，完全退出客户端后执行同一行，再�
 dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#main' 'github:yzsnstotz/hanamesh-usage#main' 'github:yzsnstotz/hanamesh-plugin-app-host#main'
 ```
 
-已完整安装时，「检查兼容升级」会列出三个固定官方组件的当前和目标版本。只有本人确认当前计划才执行一次官方 CLI；网站只能经允许名单交接此意图。客户端先检查全部候选来源、版本及宿主兼容性，禁止降级；npm 候选仍旧或无法核实时保持现有套件。普通安装/卸载接口继续拒绝套件包。
+套件版本范围、是否完整、候选来源及兼容/升级规则唯一属于 Core。App-host 只读物理安装版本，不能用它们推导兼容或安装许可；不自行读取 npm latest、计算组件组合、校验候选宿主 peers 或持有 Core 的版本范围副本。普通安装/卸载接口继续拒绝套件包。
+
+当前消费者候选尚未接通生产 Core 声明：Core 公开方法与数据版本由 G 在 C-CORE 提供后，才在 DSH 入口适配。缺源时套件卡明确显示 **Core 未提供套件声明**，「检查兼容升级」不可点；直接查询升级目标返回503 `CORE_SUITE_DECLARATION_MISSING`，不回退到旧范围或 registry latest。无效执行计划返回 `CORE_SUITE_DECLARATION_INVALID`；内部回调错误向上传播且不回退；HTTP沿现有AppHostError/未知错误边界处理，真实适配需按C-CORE映射公开具名错误。真实已装版本和普通应用安装仍可展示/使用。
+
+`createLibraryInstaller({coreSuitePlan})` 的可选回调是 **App-host 内部执行接线槽**，不是 Core 的方法名或 wire DTO，也不是浏览器/config 权限。将来的适配器必须只经已文档化的 Core 公开接口，返回既有 App-host 执行计划 `{available:boolean,components:[{name,label?,from,to}]}`。三项必须是固定套件包、`from/to` 必须是精确版本；这只是执行范围/格式检查，不是兼容规则。Core 决定 `available`，App-host 不重算。当前 `src/dsh.js` 没有绑定猜测的 Core getter，生产默认缺源；正向测试使用明确的端口替身，不能证明真实 Core 接通。
+
+接通后仍须本人确认当前计划才执行一次官方 CLI；执行前重读 Core 计划及物理安装版本，改变/撤回即拒绝，不静默重试。安装后按精确 profile/module 版本读回，不以 Core 回执冒充实际安装结果。网站只能经允许名单交接此意图。
 
 成功须读回三个精确保存的版本、实际解析版本与启用状态，随后完全退出并重新打开客户端。安装命令失败或读回不符时，界面显示实际组件状态、错误与同一行补齐命令；部分变更不冒充成功或未安装，不自动静默重试。

@@ -66,3 +66,8 @@ The workspace checks the precise control origin and the iframe Window; the contr
 Control serves only bootstrap/exchange, never application documents or resources. Data serves application bytes, never bootstrap authorization pages, so the application ServiceWorker cannot control the bootstrap origin. Only exact registered Host/Origin/Referer/WS origins are admitted; no wildcard localhost, null, aliases or unrelated live grants. Data CSP admits its exact data origin for nested application frames plus the approved workspace ancestor; control CSP does not admit data. Application bodies, SDK, auth/CSRF/CORS and other security headers are unchanged. Ordinary loopback workspace security and the separately specified public install-target endpoint retain their original boundaries.
 
 These are source invariants, not native browser evidence. Component synthetic-header requests, genuine natural native requests, third-party cookie policy, retained frame/worker/SW attacks, same-response bytes, restart and final-tarball U2 are recorded separately. A constructor rejection, skipped browser, draft package or older UI observation cannot close those gates.
+
+
+## 套件兼容声明边界（消费者候选，未接通 Core）
+
+兼容、完整性与可升级目标由 Core 公开声明唯一决定；App-host 不复制范围/候选规则、不读其内部文件。内部 `coreSuitePlan` 只由可信装配适配器提供，不进入浏览器参数或用户配置。当前没有猜测的 Core 方法绑定，缺源必须明确 `CORE_SUITE_DECLARATION_MISSING` 并禁止升级，不以 registry latest 代替。执行端只校验固定包/精确版本的计划结构、重读确认和物理安装结果；来源及宿主兼容性由 Core 提供方承担，尚未交付不能称安全升级已联通。
