@@ -19,10 +19,10 @@ test('NPM-APPHOST-01: published metadata admits official rc.2 and alpha.2 with b
   assert.equal(pkg.peerDependencies['@deepseek-ai/schemastery'], '>=3.18.4 <3.19.0-0 || >=3.18.5-alpha.1 <3.19.0-0');
   assert.equal(pkg.peerDependencies.react, '^18.3.1');
   assert.equal(pkg.peerDependencies['@hanamesh/lib-provision'], undefined);
-  assert.match(pkg.dependencies['@hanamesh/lib-provision'],/^git\+https:\/\/github\.com\/yzsnstotz\/hanamesh-lib-provision\.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a$/);
+  assert.equal(pkg.dependencies['@hanamesh/lib-provision'],'file:vendor/hanamesh-lib-provision-0.2.1.tgz');
 });
 
-test('NPM-APPHOST-01: actual packed manifest keeps devkit only as a development source range', async () => {
+test('NPM-APPHOST-01: actual packed manifest keeps devkit development-only and the fixed provision bundled', async () => {
   const dir = await scratch('hm-apphost-pack-');
   try {
     const cache = join(dir, 'npm-cache');
@@ -61,7 +61,8 @@ test('NPM-APPHOST-01: actual packed manifest keeps devkit only as a development 
     assert.equal(manifest.hanamesh?.deliveryStatus, undefined);
     for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies', 'devDependencies']) {
       for (const [name, spec] of Object.entries(manifest[field] ?? {})) {
-        if(field==='devDependencies'&&name==='@hanamesh/devkit')assert.equal(spec,'git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit');
+        if(field==='devDependencies'&&name==='@hanamesh/devkit')assert.equal(spec,'file:vendor/hanamesh-devkit-0.2.3.tgz');
+        else if(field==='dependencies'&&name==='@hanamesh/lib-provision')assert.equal(spec,'file:vendor/hanamesh-lib-provision-0.2.1.tgz');
         else assert.doesNotMatch(spec, /^(?:file:|link:)/, `${field}.${name}`);
       }
     }

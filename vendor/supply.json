@@ -1,0 +1,33 @@
+{
+  "packages": [
+    {
+      "name": "@hanamesh/devkit",
+      "version": "0.2.3",
+      "path": "vendor/hanamesh-devkit-0.2.3.tgz",
+      "sha256": "40d7ad33b2802677d12111943f3472aa6e4564ba000d48074a32de33ff51c7bb",
+      "repository": "https://github.com/yzsnstotz/hanamesh-server-shared",
+      "sourceCommit": "e6ccf710369a77c5fbf9ce4810b182727e4f2aa8",
+      "sourceSubdirectory": "packages/devkit",
+      "license": "SEE LICENSE IN LICENSE",
+      "distributionAuthority": [
+        "D-2026-10-05-02",
+        "D-2026-10-05-16"
+      ],
+      "publishedFilesMatchInstalledBaseline": true
+    },
+    {
+      "name": "@hanamesh/lib-provision",
+      "version": "0.2.1",
+      "path": "vendor/hanamesh-lib-provision-0.2.1.tgz",
+      "sha256": "4217b9fe1be98f6e82437539d1c4c43166ed1f5c292efff100733e0cb09530e9",
+      "repository": "https://github.com/yzsnstotz/hanamesh-lib-provision",
+      "sourceCommit": "575d63fb70e08c47e980dbf25f07921a7ba5aa2a",
+      "sourceSubdirectory": ".",
+      "license": "SEE LICENSE IN LICENSE",
+      "distributionAuthority": [
+        "D-2026-10-05-02"
+      ],
+      "publishedFilesMatchInstalledBaseline": true
+    }
+  ]
+}

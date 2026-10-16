@@ -62,31 +62,34 @@
   "developmentArtifacts": {
     "@hanamesh/devkit": {
       "version": "0.2.3",
-      "source": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit",
+      "source": "file:vendor/hanamesh-devkit-0.2.3.tgz",
       "sourceCommit": "e6ccf710369a77c5fbf9ce4810b182727e4f2aa8",
-      "mode": "development-only pnpm normal Git source range; no public peer, runtime dependency or packed code",
+      "mode": "Fixed provider package archive; unchanged published files at sourceCommit; development-only, excluded from runtime tarball",
       "license": "SEE LICENSE IN LICENSE",
       "distributionNotice": "Canonical LICENSE and LICENSE_RECORD.md copied verbatim to docs/LICENSES.json; no new MIT or relicensing grant",
       "lockfile": {
         "path": "pnpm-lock.yaml",
-        "resolution": "normal Git tag range; installed commit recorded in lock"
+        "resolution": "fixed file archive with integrity, no Git credentials"
       },
       "licenseSha256": "242b0b71d3a4a91899ccf38fb70f06d151f3f005c3d7ac7d1e4a6c0461dc0e2d",
       "historicalArtifact": {
         "version": "0.2.0",
         "sha256": "de15f0913dd6de5ba9ce96b8d92ea862ec44489eb698628de963cbbead68bc25",
         "sourceCommit": "8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89"
-      }
+      },
+      "originalSource": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit",
+      "sha256": "40d7ad33b2802677d12111943f3472aa6e4564ba000d48074a32de33ff51c7bb"
     }
   },
   "externalArtifacts": {
     "@hanamesh/lib-provision": {
       "version": "0.2.1",
-      "source": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a",
+      "source": "file:vendor/hanamesh-lib-provision-0.2.1.tgz",
       "sha256": "4217b9fe1be98f6e82437539d1c4c43166ed1f5c292efff100733e0cb09530e9",
-      "mode": "Bundled runtime source dependency; original source repository and locked resolution preserved, no inlining",
+      "mode": "Fixed provider package archive; unchanged published files at sourceCommit; bundled runtime dependency",
       "sourceCommit": "575d63fb70e08c47e980dbf25f07921a7ba5aa2a",
-      "license": "SEE LICENSE IN LICENSE"
+      "license": "SEE LICENSE IN LICENSE",
+      "originalSource": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a"
     }
   },
   "historicalInputNotice": "Top-level legacy input/runtime/prototype fields below describe the original rc.12 intake only. Current candidate identity and verification are in currentCandidate; they do not inherit legacy host/UI evidence."

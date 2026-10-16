@@ -11,14 +11,16 @@
     "@hanamesh/lib-provision": {
       "version": "0.2.1",
       "license": "SEE LICENSE IN LICENSE",
-      "source": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a",
+      "source": "file:vendor/hanamesh-lib-provision-0.2.1.tgz",
       "purpose": "Runtime provision/remove/ledger API; 随包分发、源仓不变; no inlined copy",
       "sha256": "4217b9fe1be98f6e82437539d1c4c43166ed1f5c292efff100733e0cb09530e9",
       "specs": {
-        "dependencies": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a"
+        "dependencies": "file:vendor/hanamesh-lib-provision-0.2.1.tgz"
       },
       "sourceCommit": "575d63fb70e08c47e980dbf25f07921a7ba5aa2a",
-      "distribution": "bundleDependencies; original LICENSE at node_modules/@hanamesh/lib-provision/LICENSE"
+      "distribution": "bundleDependencies; original LICENSE at node_modules/@hanamesh/lib-provision/LICENSE",
+      "originalSource": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a",
+      "archiveSha256": "4217b9fe1be98f6e82437539d1c4c43166ed1f5c292efff100733e0cb09530e9"
     },
     "zod": {
       "version": "4.5.4",
@@ -247,13 +249,13 @@
     "@hanamesh/devkit": {
       "version": "0.2.3",
       "license": "SEE LICENSE IN LICENSE",
-      "source": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit",
+      "source": "file:vendor/hanamesh-devkit-0.2.3.tgz",
       "purpose": "Development-only centralized tool execution; never imported by runtime; no public peer",
       "usedAs": [
         "devDependencies"
       ],
       "specs": {
-        "devDependencies": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit"
+        "devDependencies": "file:vendor/hanamesh-devkit-0.2.3.tgz"
       },
       "sourceCommit": "e6ccf710369a77c5fbf9ce4810b182727e4f2aa8",
       "licenseNotice": "# HanaMesh distribution notice\n\nThis package contains HanaMesh-owned code. The project owner confirmed that its\nown code may be distributed (D-2026-10-05-02) and directed correction of outdated\nprivate / UNLICENSED package metadata (D-2026-10-05-16, 2026-10-05).\n\nThis notice records that distribution authorization. It does not assign an SPDX\nlicense identifier, adopt MIT or another standard license, or grant additional\nrelicensing rights. Rights not covered by the owner's recorded distribution\nauthorization remain reserved. See LICENSE_RECORD.md for the package name,\nversion, source, purpose and third-party boundaries.\n\nThird-party components retain their existing licenses. No third-party component\nis relicensed by this notice. This metadata change is not an npm publication or\na change to repository visibility.\n",
@@ -263,7 +265,9 @@
         "version": "0.2.0",
         "sha256": "de15f0913dd6de5ba9ce96b8d92ea862ec44489eb698628de963cbbead68bc25",
         "sourceCommit": "8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89"
-      }
+      },
+      "originalSource": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit",
+      "archiveSha256": "40d7ad33b2802677d12111943f3472aa6e4564ba000d48074a32de33ff51c7bb"
     },
     "semver": {
       "version": "7.8.5",
