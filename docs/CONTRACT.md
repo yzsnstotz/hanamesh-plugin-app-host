@@ -128,7 +128,7 @@ DSH 绑定必须提供同一个 `single` domain 的一次完整镜像 publish �
 
 ## 应用库配置（rc.26）
 
-`library.sources` **未配置**（undefined）→ 默认 `[{manifestUrl:"https://market.hanamesh.com/catalog-source.json",enabled:true}]`；显式 `[]` → 无来源（`CATALOG_SOURCE_REQUIRED`，由用户在「应用库来源」里添加）。默认只在存储为空的首启播种；已保存的来源永不被默认覆盖。
+`library.sources` **未配置**（undefined）→ 默认 `[{manifestUrl:"https://market.hanamesh.com/catalog-source.json?view=hanamesh",enabled:true}]`；显式 `[]` → 无来源（`CATALOG_SOURCE_REQUIRED`，由用户在「应用库来源」里添加）。默认只在初始 revision=0、来源为空的首启播种；已保存的旧来源、自定义来源或手动清空的列表保持原样，不自动迁移。
 
 `library.profileDir` / `profileName` / `dshBin` 与 `nodeBinary`：显式配置永远优先。缺省时按下列规则推断，推不出即留空（安装不可用 `LIBRARY_INSTALL_UNAVAILABLE`，浏览与已安装扫描仍照常）：
 

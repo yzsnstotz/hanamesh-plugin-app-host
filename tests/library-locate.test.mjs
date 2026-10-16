@@ -12,7 +12,7 @@ import { createLibraryService } from '../src/library/service.js';
 import { scanInstalled } from '../src/library/installed.js';
 import { scratch } from './helpers.mjs';
 
-const HANAMESH_SOURCE='https://market.hanamesh.com/catalog-source.json';
+const HANAMESH_SOURCE='https://market.hanamesh.com/catalog-source.json?view=hanamesh';
 const argvDsh=['/opt/node/bin/node','/home/u/.dsh/node_modules/@deepseek-ai/dsh/lib/bin.js','--profile','web'];
 
 /** A `dsh plugin add` profile: package.json written by `dsh plugin`, hoisted node_modules, this package inside. */
@@ -48,6 +48,18 @@ test('AH-L07: library.sources unset → the HanaMesh catalog source is seeded; a
   // A profile whose storage already holds sources is never re-seeded by the default.
   const kept=domainDouble({schema:1,revision:3,sources:own});await createLibraryService({domain:kept,host,config:{sources:unset.sources},dataRoot:'/tmp',ledgerReader:async()=>({schema:1,items:{}})}).init();
   assert.deepEqual(kept.state().sources,own);
+});
+
+test('CLI-8: changing the default preserves saved legacy, custom and explicitly cleared source lists',async()=>{
+  const host={list:()=>({apps:[]}),instanceList:()=>[]};
+  const resolved=await resolveLibraryLocations({},{moduleUrl:import.meta.url,argv:['node','x.js'],versions:{}});
+  for(const saved of [[{manifestUrl:'https://market.hanamesh.com/catalog-source.json',enabled:true}],[{manifestUrl:'https://catalog.example.com/catalog-source.json',enabled:true}],[]]){
+    const domain=domainDouble({schema:1,revision:3,sources:saved});
+    for(let restart=0;restart<2;restart++){
+      const library=await createLibraryService({domain,host,config:{sources:resolved.sources},dataRoot:'/tmp',ledgerReader:async()=>({schema:1,items:{}})}).init();
+      assert.deepEqual(library.sources(),{sources:saved,revision:3});await library.close();
+    }
+  }
 });
 
 test('AH-L08: profileDir/profileName are inferred from the package\'s own real location inside a `dsh plugin` profile',async t=>{

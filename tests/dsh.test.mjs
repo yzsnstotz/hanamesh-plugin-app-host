@@ -155,7 +155,7 @@ test('AH-L07 (plugin): an unconfigured library seeds the HanaMesh catalog source
   await until(() => plain.ctx.get('hanameshApps') !== undefined);
   const seeded = await plain.get('/hanamesh/library/sources');
   assert.equal(seeded.status, 200, JSON.stringify(seeded.json));
-  assert.deepEqual(seeded.json.sources, [{ manifestUrl: 'https://market.hanamesh.com/catalog-source.json', enabled: true }]);
+  assert.deepEqual(seeded.json.sources, [{ manifestUrl: 'https://market.hanamesh.com/catalog-source.json?view=hanamesh', enabled: true }]);
   const none = await boot(t, { config: { library: { sources: [] } } });
   const empty = await none.get('/hanamesh/library/sources');
   assert.equal(empty.status, 200, JSON.stringify(empty.json));
@@ -163,10 +163,20 @@ test('AH-L07 (plugin): an unconfigured library seeds the HanaMesh catalog source
   // One structured line names exactly what was inferred (this checkout has no profile above it, so no profileDir/dshBin).
   const line = logged.find(message => message.type === 'info' && String(message.args[0]).startsWith('hanamesh-app-host library: inferred'));
   assert.ok(line, JSON.stringify(logged.map(m => m.args[0])));
-  assert.deepEqual(JSON.parse(line.args[1]), { nodeBinary: process.execPath, sources: ['https://market.hanamesh.com/catalog-source.json'] });
+  assert.deepEqual(JSON.parse(line.args[1]), { nodeBinary: process.execPath, sources: ['https://market.hanamesh.com/catalog-source.json?view=hanamesh'] });
   // Plain DSH without a profile above this checkout: the installer stays unavailable, nothing is guessed from cwd or ~/.dsh.
   const install = await plain.post('/hanamesh/library/install', { itemId: 'x' });
   assert.equal(install.status, 503); assert.equal(install.json.error.code, 'LIBRARY_INSTALL_UNAVAILABLE');
+});
+
+test('CLI-8 (plugin): persisted old URLs, custom URLs and a saved empty list survive plugin reload without migration',async t=>{
+  const h=await boot(t,{config:{library:{sources:undefined}}});
+  for(const sources of [[{manifestUrl:'https://market.hanamesh.com/catalog-source.json',enabled:true}],[{manifestUrl:'https://catalog.example.com/catalog-source.json',enabled:true}],[]]){
+    const saved=await h.post('/hanamesh/library/sources',{sources});assert.equal(saved.status,200,JSON.stringify(saved.json));const revision=saved.json.revision;
+    await h.fiber.dispose();await until(()=>h.ctx.get('hanameshApps')===undefined);
+    h.fiber=h.ctx.plugin(appHost,{dataRoot:join(h.root,'app-data'),applications:[definition()],library:{handoff:{enabled:false}}});await until(()=>h.ctx.get('hanameshApps')!==undefined);
+    const reloaded=await h.get('/hanamesh/library/sources');assert.equal(reloaded.status,200);assert.deepEqual(reloaded.json.sources,sources);assert.equal(reloaded.json.revision,revision);
+  }
 });
 
 test('AH-U07 (plugin): real Cordis early/absent/late Usage services never turn readiness or traffic into original business facts', async t => {

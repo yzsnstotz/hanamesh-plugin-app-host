@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 
 export const PACKAGE_NAME='@hanamesh/dsh-app-host';
 /** Used when `library.sources` is undefined (not configured). An explicit `[]` means "no source". */
-export const DEFAULT_CATALOG_SOURCES=Object.freeze([Object.freeze({manifestUrl:'https://market.hanamesh.com/catalog-source.json',enabled:true})]);
+export const DEFAULT_CATALOG_SOURCES=Object.freeze([Object.freeze({manifestUrl:'https://market.hanamesh.com/catalog-source.json?view=hanamesh',enabled:true})]);
 const DSH_BIN_SUFFIX='/@deepseek-ai/dsh/lib/bin.js';
 
 async function json(path){try{return JSON.parse(await readFile(path,'utf8'));}catch{return undefined;}}
