@@ -10,7 +10,7 @@ import {typescript} from './scripts/package-probes.mjs';
 const root=import.meta.dirname;
 const pkg=JSON.parse(await readFile(join(root,'package.json'),'utf8'));
 const pins=JSON.parse(await readFile(join(root,'toolchain.json'),'utf8'));
-const devkitSpec='git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit';
+const devkitSpec='file:vendor/hanamesh-devkit-0.2.3.tgz';
 const digest=value=>createHash('sha256').update(value).digest('hex');
 const cardRun=process.env.HANAMESH_APPHOST_RUN_DIR;
 const evidenceDir=resolve(cardRun??join(root,'artifacts'),'mutations');

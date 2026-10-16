@@ -8,3 +8,6 @@ coverage/
 
 !docs/acceptance/*.log
 !docs/acceptance/**/*.log
+
+# Fixed provider packages for credential-free CI/source installs.
+!vendor/*.tgz

@@ -21,8 +21,8 @@ importers:
         specifier: '>=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0'
         version: 0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)
       '@hanamesh/lib-provision':
-        specifier: git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a
-        version: git+https://git@github.com:yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a
+        specifier: file:vendor/hanamesh-lib-provision-0.2.1.tgz
+        version: file:vendor/hanamesh-lib-provision-0.2.1.tgz
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -67,8 +67,8 @@ importers:
         specifier: 3.18.5-alpha.1
         version: 3.18.5-alpha.1
       '@hanamesh/devkit':
-        specifier: git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit
-        version: git+https://git@github.com:yzsnstotz/hanamesh-server-shared.git#e6ccf710369a77c5fbf9ce4810b182727e4f2aa8&path:/packages/devkit
+        specifier: file:vendor/hanamesh-devkit-0.2.3.tgz
+        version: file:vendor/hanamesh-devkit-0.2.3.tgz
       typescript:
         specifier: 5.8.3
         version: 5.8.3
@@ -321,14 +321,14 @@ packages:
   '@deepseek-ai/schemastery@3.18.5-alpha.1':
     resolution: {integrity: sha512-HojoBv1wMQn6N8nDgTgWbc/f4EFAlg/ZsIYN2AChnEDoFOmcWd3+MDzhozNffmywywzV7pcouHRR4x37YZfcjA==}
 
-  '@hanamesh/devkit@git+https://git@github.com:yzsnstotz/hanamesh-server-shared.git#e6ccf710369a77c5fbf9ce4810b182727e4f2aa8&path:/packages/devkit':
-    resolution: {commit: e6ccf710369a77c5fbf9ce4810b182727e4f2aa8, path: /packages/devkit, repo: git@github.com:yzsnstotz/hanamesh-server-shared.git, type: git}
+  '@hanamesh/devkit@file:vendor/hanamesh-devkit-0.2.3.tgz':
+    resolution: {integrity: sha512-sqVYE+tWCCAbSjt1PwF0eZfknvXWIKWdIcWRYA6evrE1ghqhNvuUDiamFnuzwVC01Cf6s08MlaAHYWE/8s/a3w==, tarball: file:vendor/hanamesh-devkit-0.2.3.tgz}
     version: 0.2.3
     engines: {node: '>=22'}
     hasBin: true
 
-  '@hanamesh/lib-provision@git+https://git@github.com:yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a':
-    resolution: {commit: 575d63fb70e08c47e980dbf25f07921a7ba5aa2a, repo: git@github.com:yzsnstotz/hanamesh-lib-provision.git, type: git}
+  '@hanamesh/lib-provision@file:vendor/hanamesh-lib-provision-0.2.1.tgz':
+    resolution: {integrity: sha512-LvCdIeB9Wq5hIW8plirAa6l1AL8FJN/cd8YKqeF1XrxEVTIbaJZxF5+kyCPddZ3zWd4wKZbUK5K/f363chC0OQ==, tarball: file:vendor/hanamesh-lib-provision-0.2.1.tgz}
     version: 0.2.1
     engines: {node: '>=24.13.1 <25'}
     hasBin: true
@@ -757,9 +757,9 @@ snapshots:
       '@deepseek-ai/cosmokit': 1.8.6-alpha.1
       '@standard-schema/spec': 1.1.0
 
-  '@hanamesh/devkit@git+https://git@github.com:yzsnstotz/hanamesh-server-shared.git#e6ccf710369a77c5fbf9ce4810b182727e4f2aa8&path:/packages/devkit': {}
+  '@hanamesh/devkit@file:vendor/hanamesh-devkit-0.2.3.tgz': {}
 
-  '@hanamesh/lib-provision@git+https://git@github.com:yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a': {}
+  '@hanamesh/lib-provision@file:vendor/hanamesh-lib-provision-0.2.1.tgz': {}
 
   '@koromix/koffi-darwin-arm64@3.1.1':
     optional: true
