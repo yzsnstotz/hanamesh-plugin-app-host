@@ -58,6 +58,7 @@ async function boot(t, options = {}) {
   ctx.plugin(WebServer, { host: '127.0.0.1', port: 0 });
   ctx.provide('connection', { requestRejection: request => request.headers?.authorization === `Bearer ${TOKEN}` ? undefined : { status: 401 } });
   ctx.provide('pluginManager', manager.value);
+  if(options.core)ctx.provide('hanameshCore',options.core);
   await ctx.start?.();
   await until(() => ctx.get('webServer')?.port > 0);
   const origin = `http://127.0.0.1:${ctx.get('webServer').port}`, port = await freePort();
@@ -162,4 +163,20 @@ test('N16-7: real DSH JSON storage preserves pollMs after unloading and reopenin
   function removePoll(value){if(!value||typeof value!=='object')return;if(Object.hasOwn(value,'pollMs')){delete value.pollMs;removed++;}for(const child of Object.values(value))removePoll(child);}
   removePoll(legacy);assert.equal(removed,1,'seed the actual legacy saved-handoff shape without pollMs');await writeFile(file,JSON.stringify(legacy));
   const third=await boot(t,{root:first.root});assert.equal((await third.get('/hanamesh/library/handoffs')).json.pollMs,1500,'old saved settings reopen with the documented default');
+});
+
+test('IS-CORDIS: the real plugin advertises a consented fresh Core reader on both listeners without install auth or side effects',async t=>{
+ const{declaration}=await import('./fixtures/core-suite-declaration.mjs');let value=declaration(),calls=0;
+ const service={protocolVersion:'1',getSuiteDeclaration:async(...args)=>{assert.deepEqual(args,[],'status facts never request a registry plan');calls++;return value}};
+ const h=await boot(t,{core:service});const before=calls;
+ for(const base of [h.listener,h.origin]){
+  const probe=await(await site(base+'/hanamesh/library/install-target')).json();assert.equal(probe.installationStatus?.contract,'hanamesh.installation-status','real DSH entry wires the advertised bridge');assert.equal(calls,before);
+ }
+ for(const base of [h.listener,h.origin]){
+  const res=await site(base+'/hanamesh/library/installation-status',{method:'POST',body:JSON.stringify({contractVersion:'1',consent:'read-installations'})});assert.equal(res.status,200);
+  const status=await res.json();assert.equal(status.observations.find(x=>x.channel==='dsh').status,'installed');assert.equal(status.observations.find(x=>x.channel==='hanamesh').status,'unknown');
+ }
+ assert.equal(calls,before+2);assert.deepEqual(h.manager.calls,[]);
+ value={...value,completeness:'unknown',blocked:[{code:'CORE_SUITE_PEER_UNKNOWN'}]};const detect=async()=>(await(await site(h.listener+'/hanamesh/library/installation-status',{method:'POST',body:JSON.stringify({contractVersion:'1',consent:'read-installations'})})).json()).observations.find(x=>x.channel==='dsh');
+ assert.equal((await detect()).status,'unknown');delete service.getSuiteDeclaration;assert.equal((await detect()).reason.code,'CORE_SUITE_DECLARATION_MISSING');
 });

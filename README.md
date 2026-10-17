@@ -1,3 +1,5 @@
+> 0.6.7 四渠道只读状态桥：允许的网站本人点击后，使用能力广告指向的严格 POST 读取当前 Core 声明和显式配置的官方 CLI 清单；缺供给、失败与未覆盖作用域均具名 unknown，不跨 runtime / CLI / 桌面 App 推断已装。协议、必填设置、支持版本与取消规则见 [Installation status](docs/INSTALLATION_STATUS.md)。
+
 CLI-8：未配置来源的新用户默认请求 HanaMesh 视图（`https://market.hanamesh.com/catalog-source.json?view=hanamesh`）。已保存的旧 URL、自定义来源或手动清空列表均保持原样；显式 `sources: []` 仍不播种。
 
 > 0.6.6 套件定稿：兼容声明与升级规则唯一归 Core，App-host 只消费可选 protocol `1` 的公开 `getSuiteDeclaration()`。本地单卡显示官方、不计分、Core 与每个组件的实际版本；未知完整性与未执行的升级检查明确区分。agent 套件 0.1.0 是渠道分发版本，不作为 DSH 三组件版本。网站单卡、四渠道平铺面板与 agent 本机状态由网站及渠道提供方提供；App-host 的回环探测仅证明本监听对应的 DSH / HanaMesh 客户端。详见 [套件边界](docs/LIBRARY.md)。

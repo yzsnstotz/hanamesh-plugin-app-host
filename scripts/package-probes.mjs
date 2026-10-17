@@ -1,4 +1,7 @@
 export const javascript = `
+import {INSTALLATION_STATUS_CAPABILITY} from '@hanamesh/dsh-app-host/installation-status';
+if(INSTALLATION_STATUS_CAPABILITY.contract!=='hanamesh.installation-status')throw new Error('installation status public capability missing');
+
 import {runCatalogProviderSuite,runCatalogConsumerSuite} from '@hanamesh/dsh-app-host/catalog/suite';
 import assertCatalog from 'node:assert/strict';
 for(const report of [await runCatalogProviderSuite(),await runCatalogConsumerSuite()]){assertCatalog.equal(report.fail,0,JSON.stringify(report));console.log(JSON.stringify(report));}
@@ -28,6 +31,12 @@ for(const report of installTargetReports)assertInstallTarget.equal(report.fail,0
 console.log(JSON.stringify({check:'INSTALL_TARGET_CONTRACT',status:'PASS',reports:installTargetReports.map(({suite,consumer,total,pass,fail,skipped})=>({suite,consumer,total,pass,fail,skipped}))}));
 `;
 export const typescript = `
+import {INSTALLATION_STATUS_CAPABILITY,type InstallationStatus,type InstallationStatusRequest} from '@hanamesh/dsh-app-host/installation-status';
+const installationRequest:InstallationStatusRequest={contractVersion:'1',consent:'read-installations'};
+declare const installationStatus:InstallationStatus;
+installationStatus.observations[0]?.version satisfies string|null|undefined;
+INSTALLATION_STATUS_CAPABILITY.contract satisfies 'hanamesh.installation-status';void installationRequest;
+
 import {runCatalogProviderSuite,runCatalogConsumerSuite,type CatalogSuiteReport} from '@hanamesh/dsh-app-host/catalog/suite';
 const catalogReports:Promise<CatalogSuiteReport>[]=[runCatalogProviderSuite(),runCatalogConsumerSuite()];void catalogReports;
 

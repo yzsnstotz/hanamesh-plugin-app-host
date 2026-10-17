@@ -33,3 +33,9 @@ void [dshConfig,binding,authentication,dshEntry]; // Type-only exercise, not evi
 
 import {runCatalogProviderSuite,runCatalogConsumerSuite,type CatalogSuiteReport} from '../src/catalog/suite.js';
 const catalogReports:Promise<CatalogSuiteReport>[]=[runCatalogProviderSuite(),runCatalogConsumerSuite()];void catalogReports;
+
+import {INSTALLATION_STATUS_CAPABILITY,type InstallationStatus,type InstallationStatusRequest} from '../dist/installation-status.js';
+const statusRequest:InstallationStatusRequest={contractVersion:'1',consent:'read-installations'};
+declare const observations:InstallationStatus;
+observations.observations[0]?.version satisfies string|null|undefined;
+INSTALLATION_STATUS_CAPABILITY.contract satisfies 'hanamesh.installation-status';void statusRequest;

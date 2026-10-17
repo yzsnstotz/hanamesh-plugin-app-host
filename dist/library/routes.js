@@ -1,10 +1,11 @@
+import { installationStatusCors, serveInstallationStatus } from './installation-status-http.js';
 import { randomUUID } from 'node:crypto';
 import { AppHostError, requireCondition } from '../errors.js';
 import { controlOrigins } from '../control-origin.js';
-import { HANDOFF_DEFAULTS, HANDOFF_RULES, HANDOFF_SETTING_NAMES } from './handoff.js';
+import { HANDOFF_DEFAULTS, HANDOFF_RULES, HANDOFF_SETTING_NAMES, HANDOFF_BODY_MAX_BYTES } from './handoff.js';
 
 // Keep older route order; dsh.js registers each exact path on the public host API.
-export const LIBRARY_ROUTES=['/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/install','/hanamesh/library/provision','/hanamesh/library/uninstall','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/plugins/install','/hanamesh/library/plugins/uninstall','/hanamesh/library/target','/hanamesh/library/install-target','/hanamesh/library/handoffs','/hanamesh/library/handoffs/state','/hanamesh/library/handoff-settings','/hanamesh/library/suite/upgrade'];
+export const LIBRARY_ROUTES=['/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/install','/hanamesh/library/provision','/hanamesh/library/uninstall','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/plugins/install','/hanamesh/library/plugins/uninstall','/hanamesh/library/target','/hanamesh/library/install-target','/hanamesh/library/handoffs','/hanamesh/library/handoffs/state','/hanamesh/library/handoff-settings','/hanamesh/library/suite/upgrade','/hanamesh/library/installation-status'];
 const READ_ROUTES=new Set(['/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/target','/hanamesh/library/handoffs','/hanamesh/library/handoff-settings']);
 async function jsonBody(req){
   requireCondition(req.headers['content-type']?.split(';')[0].trim()==='application/json','CONTENT_TYPE_REQUIRED','Expected application/json.',{},415);
@@ -25,6 +26,10 @@ export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,a
     const requestOrigin=`${parent.protocol}//${req.headers.host}`,url=new URL(req.url,requestOrigin),path=url.pathname;
     requireCondition(LIBRARY_ROUTES.includes(path),'NOT_FOUND','Unknown library route.',{},404);
     requireCondition(req.headers['sec-fetch-dest']!=='iframe','FRAME_CONTROL_DENIED','An application frame cannot control the host.',{},403);
+    if(path==='/hanamesh/library/installation-status'){
+      cors=installationStatusCors(req,[requestOrigin,origins.parent,...library.handoffSettings().allowedOrigins]);
+      await serveInstallationStatus(req,res,{read:library.installationStatus,maxBodyBytes:HANDOFF_BODY_MAX_BYTES,traceId,cors,send});return;
+    }
     if(path==='/hanamesh/library/install-target'){
       // Match the website handoff policy; same-origin workspace and non-browser local reads remain available.
       const origin=req.headers.origin;

@@ -1,3 +1,4 @@
+import { installationStatusCors, serveInstallationStatus } from './installation-status-http.js';
 /**
  * Website → client install handoff (C-MARKET, 2026-10-15 E/F). Upstream Desktop listens on an OS-assigned port that
  * nothing records, and a browser tab without the launch token gets 401, so a website can neither find nor enter the
@@ -174,6 +175,10 @@ export function createHandoffHandler({ library, queue, settings, port }) {
         requireCondition(req.method === 'GET', 'METHOD_NOT_ALLOWED', 'Discovery requires GET.', {}, 405);
         requireCondition(!url.search, 'UNKNOWN_FIELDS', 'Discovery takes no parameters.');
         send(res, 200, { ...library.installTarget(), traceId }, cors); return;
+      }
+      if(path === '/hanamesh/library/installation-status'){
+        cors=installationStatusCors(req,settings().allowedOrigins);
+        await serveInstallationStatus(req,res,{read:library.installationStatus,maxBodyBytes:HANDOFF_BODY_MAX_BYTES,traceId,cors,send});return;
       }
       requireCondition(path === '/hanamesh/library/handoff', 'NOT_FOUND', 'Unknown handoff route.', {}, 404);
       requireCondition(typeof origin === 'string' && settings().allowedOrigins.includes(origin), 'ORIGIN_DENIED',

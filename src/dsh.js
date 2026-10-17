@@ -1,3 +1,4 @@
+import { createInstallationStatusReader } from './library/installation-status.js';
 /**
  * DSH plugin entry for @hanamesh/dsh-app-host, using the public APIs audited in
  * official DSH 0.2.0-rc.2 and 0.2.1-alpha.2:
@@ -70,6 +71,8 @@ export const Config = z.object({
     registry:z.string(),allowPrerelease:z.boolean(),
     /** Publicly named event history capacity; a lost cursor reports resetRequired. */
     eventRetention:z.number().default(512),
+    /** Explicit official CLI readers; unset means unknown, never inferred from PATH or private files. */
+    installationReaders:z.union([z.any(),z.const(undefined)]),
     /** Website → client handoff listener (library/handoff.js). Unset fields use the defaults shown in the library
      *  settings page, where they can also be changed (saved values win over this config). */
     handoff:z.object({enabled:z.boolean(),ports:z.union([z.array(z.number()),z.const(undefined)]),
@@ -247,7 +250,7 @@ export async function apply(ctx, config) {
     };
     const identity=await detectClient({desktop});
     if(typeof ctx.logger?.info==='function')ctx.logger.info('hanamesh-app-host library: client %s (%s)',identity.client,identity.evidence);
-    const library=createLibraryService({domain:{global:libraryDomain.global,close:closeLibraryDomain},host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer,client:identity.client,unavailable,logger:ctx.logger});
+    const library=createLibraryService({domain:{global:libraryDomain.global,close:closeLibraryDomain},host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer,client:identity.client,unavailable,installationStatus:createInstallationStatusReader({client:identity.client,core:()=>coreService,workerNode:locations.nodeBinary,readers:libraryConfig.installationReaders}),logger:ctx.logger});
     own('library', () => library.close());
     await library.init();
     // rc.27: app bundles register plain `app.json` (no package name); the installed scan knows which npm package ships

@@ -5,6 +5,7 @@ import { scanInstalled, scanInstalledPlugins, snapshotProfileDependencies } from
 import {SUITE_TARGET,SUITE_PACKAGES,readSuiteStatus,SUITE_INSTALL_COMMAND,CORE_SUITE_DECLARATION_MISSING} from './suite.js';
 import { PROTECTED_PACKAGES } from './install.js';
 import { handoffSettings } from './handoff.js';
+import { INSTALLATION_STATUS_CAPABILITY } from '../installation-status.js';
 
 /** Install-target contract version this market implements (schemas/install-target.schema.json). */
 export const INSTALL_TARGET_CONTRACT_VERSION='1';
@@ -18,7 +19,7 @@ const present=row=>row&&['registered','installed','installed-not-loaded'].includ
  * `client`: which client this host is ('dsh' | 'hanamesh', see client-identity.js). `unavailable`: when there is no
  * installer, the facts that are missing, in words a person can act on (`[{need, how}]`); probes and 503s carry them.
  */
-export function createLibraryService({domain,host,config={},dataRoot,ledgerReader,installer,client='dsh',unavailable=()=>[],logger}){
+export function createLibraryService({domain,host,config={},dataRoot,ledgerReader,installer,client='dsh',unavailable=()=>[],installationStatus,logger}){
   const warn=(message,...args)=>{if(typeof logger?.warn==='function')logger.warn(message,...args);else console.warn(message,...args);};
   const ready=()=>typeof installer?.install==='function'&&installer.ready!==false;
   let suiteStatus={status:'unknown',version:null,components:[]};
@@ -124,7 +125,8 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
     /** `{itemId, packageName?}`: applications and plugins take the same path (`dsh plugin add --save-exact`); also the upgrade path. */
     resolveTarget,
     /** Public discovery is metadata only: no profile, authentication or installed rows. */
-    installTarget(){const need=ready()?[]:unavailable();return{client,ready:ready(),...((suiteStatus.status!=='unknown'||suiteStatus.restartRequired)&&!installer?.suiteUpgradeUnavailable?{suite:structuredClone(suiteStatus)}:{}),installTarget:{contract:'hanamesh.install-target',contractVersion:INSTALL_TARGET_CONTRACT_VERSION,supported:[INSTALL_TARGET_CONTRACT_VERSION],fragmentPrefix:'#hanamesh-install?'},
+    installationStatus,
+    installTarget(){const need=ready()?[]:unavailable();return{client,ready:ready(),...(typeof installationStatus==='function'?{installationStatus:INSTALLATION_STATUS_CAPABILITY}:{}),...((suiteStatus.status!=='unknown'||suiteStatus.restartRequired)&&!installer?.suiteUpgradeUnavailable?{suite:structuredClone(suiteStatus)}:{}),installTarget:{contract:'hanamesh.install-target',contractVersion:INSTALL_TARGET_CONTRACT_VERSION,supported:[INSTALL_TARGET_CONTRACT_VERSION],fragmentPrefix:'#hanamesh-install?'},
       ...(!ready()?{error:{code:'INSTALL_TARGET_UNAVAILABLE',message:need.length?'应用库还不能安装：'+need.map(row=>row.need).join('；'):'Controlled installer is unavailable.',need}}:{})};},
     /** Plugin changes load without a restart (the host's public plugin manager is present). */
     get live(){return Boolean(installer?.live);},
@@ -153,6 +155,6 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
     installedPlugins,
     async installedSnapshot(){const plugins=await installedPlugins(),apps=await installed();return{plugins,apps,restartRequired:[...plugins,...apps].some(row=>RESTART_STATES.has(row.state))};},
     events(after=0){requireCondition(Number.isSafeInteger(after)&&after>=0,'INVALID_CURSOR','Invalid library event cursor.');return{events:events.filter(event=>event.sequence>after),sequence,operations:[...running.keys()],resetRequired:after>sequence||(events.length>0&&after<events[0].sequence-1)};},
-    async close(){await Promise.allSettled([...running.values()]);await domain.close();},emit,
+    async close(){installationStatus?.close?.();await Promise.allSettled([...running.values()]);await domain.close();},emit,
   };
 }
