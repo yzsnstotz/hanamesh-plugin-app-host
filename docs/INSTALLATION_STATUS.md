@@ -20,7 +20,7 @@ Only after the person's explicit “检测本机安装状态” click, send `POS
 
 The owning listener enforces its existing exact loopback Host. Origin is required: handoff allows only `library.handoff.allowedOrigins`; the DSH library additionally permits its actual workspace/transport origins. Null/unlisted/missing Origin is rejected, with no CORS grant for the rejected origin. Cookie or Authorization, query fields, iframe control, absolute/protocol-relative/backslash targets, wrong method/content type, invalid JSON, extra fields, unsupported contract or missing exact consent are rejected **before** any directory/CLI/Core read. The body limit is the existing `HANDOFF_BODY_MAX_BYTES` (4096), not a new configurable default. OPTIONS returns 204 with exact approved Origin, POST/content-type and Private Network Access; it performs no read. No credentials or persistent consent are accepted.
 
-Responses use JSON, `Cache-Control:no-store`, nosniff and frame-denying CSP. Allowed origins receive CORS on named refusals. Errors use `{error:{code,message,details?},traceId}`; messages never include raw reader output, paths or exceptions.
+Responses use JSON, `Cache-Control:no-store`, nosniff and frame-denying CSP. After the listener's preliminary Host/target/frame checks and successful allowed-Origin admission, subsequent named refusals carry CORS; preliminary safety refusals can omit CORS. Errors use `{error:{code,message,details?},traceId}`; messages never include raw reader output, paths or exceptions.
 
 ## Response
 
