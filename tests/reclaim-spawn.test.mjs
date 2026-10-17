@@ -25,7 +25,8 @@ test('AH-L07: proven orphan reclamation gets its declared grace before the launc
     assert(claimed.children.some(child=>child.role==='app'&&child.pid===runner.pid),'new app must be annotated before the spawn acknowledgement');
     console.log(JSON.stringify({evidence:'REAL_PROCESS_ISOLATED',result:'spawned',elapsedMs:Date.now()-started,oldOrphanPid:orphan.pid,newGuardianPid:runner.guardianPid,newAppPid:runner.pid,lockOwner:claimed.pid,trace}));
   }catch(error){
-    console.log(JSON.stringify({evidence:'REAL_PROCESS_ISOLATED',result:error.code,elapsedMs:Date.now()-started,orphanAlive:pidAlive(orphan.pid),lockOwnerUnchanged:JSON.parse(await readFile(join(dir,'.runtime.lock'),'utf8')).id===record.id,trace}));
+    let lock;try{lock=JSON.parse(await readFile(join(dir,'.runtime.lock'),'utf8'));}catch(readError){if(readError.code!=='ENOENT')throw readError;}
+    console.log(JSON.stringify({evidence:'REAL_PROCESS_ISOLATED',result:error.code,elapsedMs:Date.now()-started,orphanAlive:pidAlive(orphan.pid),lockOwnerUnchanged:lock?.id===record.id,lockMissing:lock===undefined,trace}));
     assert.fail(`proven orphan reclaim followed by launch must succeed, got ${error.code}`);
   }finally{if(runner)await runner.stop();}
 });

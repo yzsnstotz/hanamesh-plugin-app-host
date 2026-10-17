@@ -68,6 +68,6 @@ Control serves only bootstrap/exchange, never application documents or resources
 These are source invariants, not native browser evidence. Component synthetic-header requests, genuine natural native requests, third-party cookie policy, retained frame/worker/SW attacks, same-response bytes, restart and final-tarball U2 are recorded separately. A constructor rejection, skipped browser, draft package or older UI observation cannot close those gates.
 
 
-## 套件兼容声明边界（消费者候选，未接通 Core）
+## 套件兼容声明边界
 
-兼容、完整性与可升级目标由 Core 公开声明唯一决定；App-host 不复制范围/候选规则、不读其内部文件。内部 `coreSuitePlan` 只由可信装配适配器提供，不进入浏览器参数或用户配置。当前没有猜测的 Core 方法绑定，缺源必须明确 `CORE_SUITE_DECLARATION_MISSING` 并禁止升级，不以 registry latest 代替。执行端只校验固定包/精确版本的计划结构、重读确认和物理安装结果；来源及宿主兼容性由 Core 提供方承担，尚未交付不能称安全升级已联通。
+兼容、完整性与可升级目标由 Core 公开声明唯一决定；App-host 不复制范围/候选规则、不读其内部文件。内部 `coreSuitePlan` 只由可信装配适配器提供，不进入浏览器参数或用户配置。生产装配仅绑定可选 protocol `1` 的 `hanameshCore.getSuiteDeclaration()`，缺源必须明确 `CORE_SUITE_DECLARATION_MISSING` 并禁止升级，不以 registry latest 代替。执行端只校验固定包/精确版本的计划结构、重读确认和物理安装结果；来源及宿主兼容性由 Core 提供方承担，真实包联调、原生运行与 owner 验收仍须各自证据；物理三包齐全不能替代 Core 完整性。升级后的公开状态继续读 Core，物理读回只用于执行确认与失败诊断；Core 服务消失时不再公开缓存的完整已装状态。

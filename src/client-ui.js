@@ -38,7 +38,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   const targetListeners=new Set(),pendingListeners=new Set();
   const INSTALL_TARGET_HASH='#hanamesh-install?',INSTALL_TARGET_CONTRACT_VERSION='1';
   const CORE_SUITE_FAILURES={CORE_SUITE_DECLARATION_MISSING:'Core 未提供套件声明',CORE_SUITE_DECLARATION_INVALID:'Core 套件声明无法用于精确安装。'};
-  const suiteTargetFailure=target=>CORE_SUITE_FAILURES[target.error]??(target.details?.stage==='suite-upgrade'?'套件升级未完成：'+(target.error??'检测不到结果')+'。请核对当前版本；完全退出后可使用 HanaMesh 设置中的补齐命令修复并重新打开。':'套件升级未完成或结果尚未确认：'+(target.error??'检测不到结果')+'。请核对已装版本；不会自动重试。');
+  const suiteTargetFailure=target=>target.previewFailed?'兼容升级检查未通过，尚未执行安装：'+(CORE_SUITE_FAILURES[target.error]??target.error??'检测不到结果'):CORE_SUITE_FAILURES[target.error]??(target.details?.stage==='suite-upgrade'?'套件升级未完成：'+(target.error??'检测不到结果')+'。请核对当前版本；完全退出后可使用 HanaMesh 设置中的补齐命令修复并重新打开。':'套件升级未完成或结果尚未确认：'+(target.error??'检测不到结果')+'。请核对已装版本；不会自动重试。');
   const setTarget=value=>{targetSelection=value;for(const listener of targetListeners)listener(value);};
   const setPending=update=>{pendingOperations=typeof update==='function'?update(pendingOperations):update;for(const listener of pendingListeners)listener(pendingOperations);};
   /** Public client entry: identifiers only; the market fetches its own catalog and owns confirmation. */
@@ -57,7 +57,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       const item=resolved.item,op=pendingOperations[item.id];
       const status=op?.busy?'installing':['registered','installed','installed-not-loaded'].includes(item.installed?.state)&&!item.upgradeAvailable?'already-installed':'confirmation-required';
       setTarget({...resolved,status,...(handoffId?{handoffId}:{})});return{status,itemId:item.id,packageName:item.package.name};
-    }catch(error){if(sequence===targetSequence)setTarget({status:input.itemId==='hanamesh:suite-upgrade'?'suite-upgrade-failed':'failed',error:String(error.message??error),...(input.itemId==='hanamesh:suite-upgrade'?{details:error.response?.error?.details}:{})});throw error;}
+    }catch(error){if(sequence===targetSequence)setTarget({status:input.itemId==='hanamesh:suite-upgrade'?'suite-upgrade-failed':'failed',error:String(error.message??error),...(input.itemId==='hanamesh:suite-upgrade'?{previewFailed:true,details:error.response?.error?.details}:{})});throw error;}
   }
   // Website handoff (C-MARKET 2026-10-15): the library's own loopback listener queued a target from an allowed website;
   // this window shows it with the normal confirmation. Only the person's 「确认安装」 installs.
@@ -357,14 +357,14 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     };
     const close=async()=>{if(closing)return;setClosing(true);try{await heldView.current?.close();setReceipt(null);setError('');}catch(e){setError(String(e.message??e));}finally{if(mounted.current)setClosing(false);}};
     if(!visible)return null;
-    const pages=[snapshot,...extra].filter(Boolean),all=pages.flatMap(page=>page.items??[]),items=filter==='plugin'?all.filter(item=>item.kind==='plugin'):all,installed=snapshot?.installed??[],plugins=snapshot?.plugins??[],nextCursor=(extra.at(-1)??snapshot)?.page?.nextCursor??null;
+    const pages=[snapshot,...extra].filter(Boolean),all=pages.flatMap(page=>page.items??[]),items=filter==='plugin'?all.filter(item=>item.kind==='plugin'||item.kind==='suite'):all,installed=snapshot?.installed??[],plugins=snapshot?.plugins??[],nextCursor=(extra.at(-1)??snapshot)?.page?.nextCursor??null;
     const restartRequired=changed||Boolean(snapshot?.restartRequired);
     const filters=[...BASE_FILTERS,...seenCategories.filter(c=>c!=='hanamesh-app').map(c=>[c,c])];
     const openButton=row=>h('button',{type:'button',disabled:Boolean(openingAppId),onClick:()=>void open(row)},openingAppId===row.appId?'打开中…':'打开');
     const card=item=>{const row=item.installed,op=pending[item.id],busy=op&&!op.failed&&op.text.endsWith('中…');const installBody={itemId:item.id,...(item.package?.name?{packageName:item.package.name}:{})};
       let action=h('span',null,'仅收录，不可安装'),state=null;
       if(row)state=h('span',{className:'hm-market-state','data-hanamesh-state':row.state},(STATE_TEXT[row.state]??row.state)+(row.version?' '+row.version:''));
-      if(item.kind==='suite')return h('article',{key:item.id,'data-hanamesh-library-item':item.id,'data-hanamesh-kind':'suite'},h('h3',null,'HanaMesh 套件'),h('p',null,item.summary),h('p',null,item.suite?.status==='installed'?'已安装 · '+item.suite.version:'套件不完整或版本检测不到'),item.suite?.completeness?h('p',null,'Core 完整性：'+item.suite.completeness):null,...(item.suite?.components??[]).map(c=>h('p',{key:c.name},c.requiredRange?c.label+' · 要求 '+c.requiredRange+' · 实际 '+(c.actualVersion??'检测不到')+' · '+c.status:c.label+' · '+(c.version??'检测不到')+(c.active?'':' · 未启用'))),...(item.suite?.blocked??[]).map((row,i)=>h('p',{key:'blocked-'+i,role:'status'},row.code+(row.moduleName?' · '+row.moduleName:'')+(row.coreVersion?' · '+row.coreVersion:''))),item.suiteUpgradeUnavailable?h('p',{role:'status'},item.suiteUpgradeUnavailable):null,h('button',{type:'button',disabled:Boolean(item.suiteUpgradeUnavailable),onClick:()=>void openInstallTarget({itemId:'hanamesh:suite-upgrade'}).catch(()=>{})},'检查兼容升级'));
+      if(item.kind==='suite')return h('article',{key:item.id,'data-hanamesh-library-item':item.id,'data-hanamesh-kind':'suite'},h('h3',null,'HanaMesh 套件'),h('p',null,item.summary),h('p',null,item.suite?.status==='installed'?'已安装 · Core '+item.suite.version:item.suite?.status==='incomplete'?'套件不完整，请查看组件状态':'套件状态未知，请查看 Core 声明与阻断原因'),item.suite?.completeness?h('p',null,'Core 完整性：'+item.suite.completeness):null,...(item.suite?.components??[]).map(c=>h('p',{key:c.name},c.requiredRange?c.label+' · 要求 '+c.requiredRange+' · 实际 '+(c.actualVersion??'检测不到')+' · '+c.status:c.label+' · '+(c.version??'检测不到')+(c.active?'':' · 未启用'))),...(item.suite?.blocked??[]).map((row,i)=>h('p',{key:'blocked-'+i,role:'status'},row.code+(row.moduleName?' · '+row.moduleName:'')+(row.coreVersion?' · '+row.coreVersion:''))),item.suiteUpgradeUnavailable?h('p',{role:'status'},item.suiteUpgradeUnavailable):null,h('button',{type:'button',disabled:Boolean(item.suiteUpgradeUnavailable),onClick:()=>void openInstallTarget({itemId:'hanamesh:suite-upgrade'}).catch(()=>{})},'检查兼容升级'));
       if(busy)action=h('button',{type:'button',disabled:true},op.text);
       else if(item.kind!=='listing'&&!row)action=h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/install',installBody,item.id,'安装')},op?.failed?'重试安装':'安装');
       else if(row&&item.upgradeAvailable)action=h('span',{className:'hm-market-actions'},h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/install',installBody,item.id,'升级')},'升级到 '+item.latestVersion),row.state==='registered'?openButton(row):null);
