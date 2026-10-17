@@ -48,7 +48,7 @@ function parseInventory(channel,plugins,marketplaces,target){
  return{status:failed?'incomplete':'installed',version,components:[{name:target.pluginName,version,active:row.enabled}],
   reason:failed?reason(channel==='claude'?'AGENT_PLUGIN_LOAD_FAILED':'AGENT_PLUGIN_PAYLOAD_MISSING','官方清单报告插件负载或加载问题。','在该官方客户端的插件详情中检查并修复。'):version===null?reason('AGENT_VERSION_UNAVAILABLE','已确认该作用域的安装记录，但实际版本未知。','在该官方客户端插件详情中核对实际版本。'):null};
 }
-const failureCodes=new Set(['AGENT_READER_UNAVAILABLE','AGENT_READER_PERMISSION_DENIED','AGENT_READER_PLATFORM_UNSUPPORTED','AGENT_READER_NODE_REQUIRED','AGENT_PROFILE_UNAVAILABLE','AGENT_READER_TIMEOUT','AGENT_READER_OUTPUT_LIMIT','AGENT_READER_DIAGNOSTIC','AGENT_READER_FAILED','AGENT_INVENTORY_INVALID','AGENT_INVENTORY_CONFLICT','AGENT_MARKETPLACE_SOURCE_MISMATCH','AGENT_MARKETPLACE_SOURCE_UNAVAILABLE','AGENT_SCOPE_UNOBSERVABLE']);
+const failureCodes=new Set(['AGENT_READER_UNAVAILABLE','AGENT_READER_PERMISSION_DENIED','AGENT_READER_PLATFORM_UNSUPPORTED','AGENT_READER_NODE_REQUIRED','AGENT_PROFILE_UNAVAILABLE','AGENT_READER_TIMEOUT','AGENT_READER_OUTPUT_LIMIT','AGENT_READER_CLEANUP_FAILED','AGENT_READER_DIAGNOSTIC','AGENT_READER_FAILED','AGENT_INVENTORY_INVALID','AGENT_INVENTORY_CONFLICT','AGENT_MARKETPLACE_SOURCE_MISMATCH','AGENT_MARKETPLACE_SOURCE_UNAVAILABLE','AGENT_SCOPE_UNOBSERVABLE']);
 /** Trusted static configuration only; `core` is the optional public protocol-1 Cordis service accessor. */
 export function createInstallationStatusReader({client='dsh',core=()=>undefined,readers={},workerNode,runCommand=runOfficialInstallationCommand}={}){
  if(!['dsh','hanamesh'].includes(client))throw new TypeError('client must be dsh or hanamesh');
