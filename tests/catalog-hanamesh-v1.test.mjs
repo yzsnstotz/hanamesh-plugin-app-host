@@ -42,3 +42,33 @@ test('HC22 C-MARKET target missing is concluded only after complete traversal',a
 test('HC23 C-MARKET cyclic cursor is refused without a third page or retry',async t=>{const cursor=randomUUID(),mock=provider([page([],{nextCursor:cursor,total:0}),page([],{nextCursor:cursor,total:0})]),service=await library(mock);t.after(()=>service.close());await assert.rejects(service.resolveTarget({itemId:'not-in-directory'}),{code:'INVALID_CURSOR'});assert.equal(mock.calls.length,4);});
 test('HC24 C-MARKET package-only lookup never accepts partial results across CATALOG_CHANGED',async t=>{const mock=provider([page([item()],{nextCursor:randomUUID(),total:2}),Response.json({error:{code:'CATALOG_CHANGED'}},{status:409})]),service=await library(mock);t.after(()=>service.close());await assert.rejects(service.resolveTarget({packageName:item().packageName}),{code:'CATALOG_CHANGED'});assert.equal(mock.calls.length,4);});
 test('HC25 C-MARKET public listing retains its own cursor boundary without truncating a provider cursor',async t=>{const mock=provider([]),service=await library(mock);t.after(()=>service.close());await assert.rejects(service.list({cursor:'x'.repeat(2049)}),{code:'INVALID_CURSOR'});assert.equal(mock.calls.length,0);});
+
+// C-WEB-CATALOG 2026-10-18 / C-INDEXER-CATALOG SuitePresentationDTO.
+// SOURCE examples; official/suite metadata grants no installation authority.
+const presentation=()=>({schemaVersion:1,id:'hanamesh',role:'suite',component:'usage',canonicalHanaId:item().id,installable:true,
+  distributionVersion:'0.1.0',components:[{component:'core',npmPackageName:'hanamesh-core',githubRepo:'yzsnstotz/hanamesh-core',version:'0.3.17'}],
+  installTargets:[{component:'core',npmPackageName:'hanamesh-core',githubRepo:'yzsnstotz/hanamesh-core',version:'0.3.17',source:{source:'github',repo:'yzsnstotz/hanamesh-core',ref:'a'.repeat(40)}}]});
+test('HC26 HanaMesh official true/false/absent survives exact page readback',()=>{
+  for(const official of [true,false,undefined]){const p=page();if(official!==undefined)p.items[0].official=official;
+    assert.doesNotThrow(()=>validateProviderPage(p));assert.deepEqual(validateProviderPage(p),p);}
+  for(const official of [null,0,'true',{}])assert.throws(()=>validateProviderPage(page([{...item(),official}])),{code:'INVALID_CATALOG_PAGE'});
+});
+test('HC27 public suite presentation preserves each role and optional historical version facts',()=>{
+  for(const role of ['suite','component','client-only']){const p=page();p.items[0].suite=presentation();p.items[0].suite.role=role;
+    assert.doesNotThrow(()=>validateProviderPage(p));assert.deepEqual(validateProviderPage(p),p);}
+  const p=page();p.items[0].suite={schemaVersion:1,id:'hanamesh',role:'component',component:'app-host',canonicalHanaId:null,installable:false};
+  assert.deepEqual(validateProviderPage(p),p);
+  const legacy=presentation();delete legacy.distributionVersion;delete legacy.components;delete legacy.installTargets[0].version;
+  assert.deepEqual(validateProviderPage(page([{...item(),suite:legacy}])).items[0].suite,legacy);
+});
+test('HC28 unknown or malformed suite fields remain fail closed at every public boundary',()=>{
+  const mutations=[s=>{s.schemaVersion=2;},s=>{s.id='other';},s=>{s.role='administrator';},s=>{s.component='wallet';},
+    s=>{s.canonicalHanaId=42;},s=>{s.installable='yes';},s=>{s.privateToken='private';},s=>{s.distributionVersion=null;},
+    s=>{s.components={};},s=>{s.components[0].component='wallet';},s=>{s.components[0].version=42;},s=>{s.components[0].secret='private';},
+    s=>{s.installTargets={};},s=>{s.installTargets[0].component='brand';},s=>{s.installTargets[0].npmPackageName='https://evil.example';},
+    s=>{s.installTargets[0].githubRepo=null;},s=>{s.installTargets[0].version=1;},s=>{s.installTargets[0].privateToken='private';},
+    s=>{s.installTargets[0].source.ref='main';},s=>{s.installTargets[0].source.source='npm';},s=>{s.installTargets[0].source.secret='private';}];
+  for(const mutate of mutations){const s=presentation();mutate(s);assert.throws(()=>validateProviderPage(page([{...item(),suite:s}])),{code:'INVALID_CATALOG_PAGE'});}
+  for(const key of ['unknown','ownerPrincipalId'])assert.throws(()=>validateProviderPage(page([{...item(),official:true,suite:presentation(),[key]:'private'}])),{code:'INVALID_CATALOG_PAGE'});
+  for(const extra of [{official:false},{suite:presentation()}])assert.throws(()=>validateProviderPage({schemaVersion:'1.0.0',items:[{id:'legacy',name:'legacy',displayName:'legacy',summary:'legacy',...extra}],page:{}}),{code:'INVALID_CATALOG_PAGE'});
+});

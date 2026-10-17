@@ -58,10 +58,27 @@ function timestamp(value,utc=false){
   const date=new Date(`${match[1]}-${match[2]}-${match[3]}T00:00:00Z`);
   return Number.isFinite(date.getTime())&&date.toISOString().slice(0,10)===value.slice(0,10);
 }
+// Display-only C-INDEXER-CATALOG SuitePresentationDTO; never an install/upgrade decision.
+const suiteComponent=value=>['core','usage','app-host','brand'].includes(value);
+function suitePresentation(value){
+  const packageFact=fact=>fact&&npmName(fact.npmPackageName)&&plain(fact.githubRepo);
+  return own(value,['schemaVersion','id','role','component','canonicalHanaId','installable','installTargets','components','distributionVersion'])&&
+    value.schemaVersion===1&&value.id==='hanamesh'&&['suite','component','client-only'].includes(value.role)&&suiteComponent(value.component)&&
+    (value.canonicalHanaId===null||plain(value.canonicalHanaId))&&typeof value.installable==='boolean'&&
+    (value.distributionVersion===undefined||plain(value.distributionVersion))&&
+    (value.components===undefined||(Array.isArray(value.components)&&value.components.every(fact=>
+      own(fact,['component','npmPackageName','githubRepo','version'])&&suiteComponent(fact.component)&&packageFact(fact)&&plain(fact.version))))&&
+    (value.installTargets===undefined||(Array.isArray(value.installTargets)&&value.installTargets.every(target=>
+      own(target,['component','npmPackageName','githubRepo','version','source'])&&['core','usage','app-host'].includes(target.component)&&packageFact(target)&&
+      (target.version===undefined||plain(target.version))&&own(target.source,['source','repo','ref'])&&target.source.source==='github'&&
+      plain(target.source.repo)&&typeof target.source.ref==='string'&&/^[0-9a-f]{40}$/i.test(target.source.ref))));
+}
+
 function validateHanaItem(item,maxSourceLinks){
   const optionalText={description:5000,latestVersion:64,license:80};
   const source=item?.source;
-  requireCondition(own(item,['id','itemId','packageName','name','displayName','summary','catalogKind','source','description','homepage','latestVersion','license','categories','keywords','repository','package','publisher','updatedAt'])&&
+  requireCondition(own(item,['id','itemId','packageName','name','displayName','summary','catalogKind','source','description','homepage','latestVersion','license','categories','keywords','repository','package','publisher','updatedAt','official','suite'])&&
+    (item.official===undefined||typeof item.official==='boolean')&&(item.suite===undefined||suitePresentation(item.suite))&&
     plain(item.id)&&item.id===item.itemId&&
     textWithin(item.name,160,true)&&textWithin(item.displayName,120,true)&&textWithin(item.summary,1000)&&
     ['application','plugin','entry'].includes(item.catalogKind)&&

@@ -73,3 +73,7 @@ DSH 入口通过既有 optional injection 监听 `hanameshCore` 出现/卸载，
 成功须读回三个精确保存的版本、实际解析版本与启用状态，随后完全退出并重新打开客户端。安装命令失败或读回不符时，界面显示实际组件状态、错误与同一行补齐命令；部分变更不冒充成功或未安装，不自动静默重试。
 
 套件卡不把 Core 版本当作 agent 套件分发版本：`suite.version` 保持为 Core 实际版本，界面明确标为 Core，组件逐项显示。`unknown` 表示 Core 无法确认事实，不等于组件缺失。预览阶段被 Core 拒绝时说明尚未执行安装，保留具名 blocked 原因；已执行失败仍显示物理读回及修复步骤。网站四渠道面板和 Claude/Codex 安装状态不从 App-host 监听是否存在推断。
+
+### 0.6.8 · HanaMesh 目录展示字段
+
+HanaMesh 视图原样保留可选 `official:boolean`（包括 false）与 C-INDEXER-CATALOG 的 `SuitePresentationDTO`；suite 的角色、组件、版本事实及 GitHub 精确 ref 按公开形状逐层校验，未知字段和畸形字段仍拒绝。历史可选版本事实缺省时不补猜。旧 major-1 视图不增加这些字段。该展示信息不构成安装权限；兼容与升级仍只读取公开 Core 声明。
