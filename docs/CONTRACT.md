@@ -223,3 +223,18 @@ Public install-target remains read-only and unchanged. Preparation never weakens
 Support implementation: macOS13.5+ arm64/x64, known Node24.13.1 or24.22.0 (default24.22.0). Windows is explicitly unsupported: POSIX-owned process supervision, cancellation and reader chain need separate implementation and real-host proof. No Windows ready claim. mac x64 native proof is tracked separately from its signed archive integrity. No client or upstream files change. No npm lifecycle download.
 
 Storage space budget is archive bytes + twice measured regular-file payload (new tree + staging); never delete another version or unknown files to make space. lib-provision alone owns staging/ledger/manifests; interrupted or cancelled downloads may leave its resumable owned cache. Another attempt requires a new visible confirmation. Existing versions remain until an explicit owned cleanup is designed; no automatic deletion or implied rollback. Offline startup verifies an existing active tree/ledger and standalone executable; failures are visible and never trigger a download.
+
+
+## B17 套件安装包来源（2026-10-21 候选）
+
+AppHost 自有设置页「套件安装包来源」，公开同源端点 `GET|POST /hanamesh/library/suite-source`。GET 无参数，返回 `{mode, configuredRegistry, observation, traceId}`；`mode` 为 `configured|core`。`configured` 是唯一新增默认：继续使用原 `library.registry`（未设仍为 `https://registry.npmjs.org`）。市场目录 `library.sources` 的未设播种、显式空数组、自定义及已保存值均独立保持；目录 manifest URL 不是 npm registry。
+
+POST 严格只接受 `{mode:'configured'}` 或 `{mode:'core'}`，不接受 registry、版本或其他字段/查询参数。沿用精确 Host、同源 Origin、workspace-v1、Connection admission、逐操作 authorization、JSON/65536 字节及 no-store 规则。选择存自己的 `hanamesh_library` 单镜像可选 `suiteSource:{mode}`；未存值不改旧记录。来源、目录和网站交接设置按接收顺序串行读改写整个镜像，成功持久化后才发布新内存状态；保存失败 `500/SUITE_SOURCE_SAVE_FAILED`，旧选择和其他字段保持；关闭等待已排队写入。
+
+GET 的 `observation` 为 `{observable:false,code}` 或 `{observable:true,state}`。后者仅转发公开 Core `hanameshSuiteSource` protocol `'1'` 同步 `getState()` 的六个字段：`protocolVersion/status/selection/registry/archiveCount/lastError`。status 为 `disabled|ready|failed|disposed`，selection 为 `configured|custom|disabled`。服务缺失（含尚未 provide）为 `CORE_SUITE_SOURCE_MISSING`，不杜撰 starting/ready；旧协议、读取异常或无效 DTO 为 `CORE_SUITE_SOURCE_INVALID`。GET 仅观察，保存不触发安装或授权。
+
+明确选择 core 后，预览、确认、紧接执行之前各自重新读取当前 source 和 Core `getSuiteDeclaration({registry})`，并在异步声明返回后复核来源。`ready` 仅表示来源可读；兼容性仍唯一由 Core declaration 决定。disabled/failed/disposed 或无有效 registry 为 `409/CORE_SUITE_SOURCE_NOT_READY`；不缓存 ready、不回退配置 registry、不挑最新、不重试。沿用 declarationId、精确 tuple/metadata digest/repository、物理已装 baseline 和本人 planId。URL、selection、选择模式或提供服务的对象身份变化均终止原确认；新预览仍须本人确认。服务对象身份是 AppHost 内存内 opaque token，**不是 Core 的 generation/revision**；protocol 1 没有该事实或 watch，不能声称观察到两次读取间完全消失又恢复原状的事件。
+
+最后执行仍调用现有官方 CLI `add --save-exact --strict-peer-dependencies --registry=<声明原址>`，精确三组件；正常市场外部包路径不变。正在执行时源连接丢失由实际 CLI/输运终态报告，不靠重试/退出屏障维持源。Core B17 服务只来自候选 `c5e1a7373b9896c385f14f79a64bb277f43bde5c` 的公开能力；无 Core 运行时 import，无 Desktop hook/bootstrap、三锁或先于插件加载的服务。源码/真实 Cordis+JSON domain（AUTH_DOUBLE）与正常包验证不等同真实原生安装或 owner 验收。
+
+公开类型位于 `@hanamesh/dsh-app-host/dsh` 的 `SuiteSourceMode/CoreSuiteSourceState/SuiteSourceSettings/SuiteSourceSettingsInput`；页面导出 `SuiteSourceSettingsSection`。回归：`suite-source.test.mjs`、`handoff-integration.test.mjs` B17-CORDIS，变异 M84–M89（M61 检查全部后续读取被错误缓存）。

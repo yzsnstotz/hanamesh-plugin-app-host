@@ -48,6 +48,19 @@
       "medium": "single-snapshot:hanamesh_router_receipts",
       "why": "同一(app,路由,小时)诊断行的count/injections/firstAt和遗留reported兼容位在一次去抖global.set整体发布；强杀可丢最后窗口计数，不新增表。不自动发业务Usage或设置reported，遗留位不证明Usage确认。",
       "test": "tests/usage-evidence.test.mjs:AH-U09"
+    },
+    {
+      "id": "suite-source-selection",
+      "name": "套件来源与目录交接配置整体发布",
+      "facts": [
+        "library:suiteSource",
+        "library:sources",
+        "library:handoff",
+        "library:revision"
+      ],
+      "medium": "single-snapshot:hanamesh_library",
+      "why": "设置写入串行读取最新完整镜像；持久成功后才发布内存，失败保持旧选择，不覆盖并发目录或交接字段。",
+      "test": "tests/suite-source.test.mjs:B17 concurrent saves"
     }
   ],
   "boundaries": [
@@ -105,6 +118,17 @@
       "safeDirection": "provision:verified-owned-tree-and-ledger",
       "why": "确认后单源 SHA 下载，文件与精确平台版本检查通过后再发布 active；强杀可留下未绑定的受管文件，不能先宣称 ready。重开只离线复核，绝不自动下载。",
       "test": "tests/managed-node.test.mjs:MN08 X03 real SIGKILL"
+    },
+    {
+      "id": "suite-source-confirmation",
+      "name": "复读公开来源与精确声明 → 官方CLI执行",
+      "sides": [
+        "current-source-and-core-declaration",
+        "official-exact-suite-cli"
+      ],
+      "safeDirection": "current-source-and-core-declaration",
+      "why": "预览、确认、执行前和异步声明返回时复读；URL/selection/服务身份或精确tuple/物理baseline变化终止旧确认。Core无generation/watch，不虚构观察能力。",
+      "test": "tests/suite-source.test.mjs:B17 execution re-reads"
     }
   ],
   "scope": "REAL_PROCESS + LOCAL_ATOMIC_FILE；不是 DSH 加载、真实浏览器、整机断电或 macOS 验收。",

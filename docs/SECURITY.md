@@ -78,3 +78,6 @@ These are source invariants, not native browser evidence. Component synthetic-he
 ## Managed Node trust boundary
 
 The authenticated browser supplies settings or opaque plan/operation identifiers, never an executable manifest, arbitrary verification arguments or launch command. Only pinned official signed release digests enter the static manifest. Changing an HTTPS mirror changes transport, not the accepted digest. No user-info/query/hash URL or symlinked storage path is accepted. No download before current-plan confirmation. A per-runtime FileLock serializes lib-provision writes; SHA, ownership/ledger and clean-environment standalone platform/version checks precede publication. Host guardian remains unchanged and rejects Electron independently. Source or verification failure never silently falls back to system Node, another mirror or a retry.
+
+
+B17 候选的套件来源选择仅在 AppHost 自有同源已准入设置端点写入。Core 来源状态是公开只读事实，不授予安装权限；预览/确认/执行及异步声明返回时复读来源，沿用原 planId/精确 tuple/物理 baseline，来源丢失或替换即拒绝原确认。设置保存只串行持久化选择，不触发下载/安装或改写 Core 配置；持久失败保持旧选择。无 service/watch/generation 时保持不可观察边界，不缓存 ready 或回退 registry。详见 CONTRACT.md B17 段。

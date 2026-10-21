@@ -7,8 +7,8 @@ import { HANDOFF_DEFAULTS, HANDOFF_RULES, HANDOFF_SETTING_NAMES, HANDOFF_BODY_MA
 // Keep older route order; dsh.js registers each exact path on the public host API.
 export const LIBRARY_ROUTES=['/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/install','/hanamesh/library/provision','/hanamesh/library/uninstall','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/plugins/install','/hanamesh/library/plugins/uninstall','/hanamesh/library/target','/hanamesh/library/install-target','/hanamesh/library/handoffs','/hanamesh/library/handoffs/state','/hanamesh/library/handoff-settings','/hanamesh/library/suite/upgrade','/hanamesh/library/installation-status'];
 export const NODE_RUNTIME_ROUTES=['/hanamesh/library/node-runtime','/hanamesh/library/node-runtime/settings','/hanamesh/library/node-runtime/plan','/hanamesh/library/node-runtime/prepare','/hanamesh/library/node-runtime/cancel'];
-LIBRARY_ROUTES.push(...NODE_RUNTIME_ROUTES);
-const READ_ROUTES=new Set(['/hanamesh/library/node-runtime','/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/target','/hanamesh/library/handoffs','/hanamesh/library/handoff-settings']);
+LIBRARY_ROUTES.push(...NODE_RUNTIME_ROUTES,'/hanamesh/library/suite-source');
+const READ_ROUTES=new Set(['/hanamesh/library/suite-source','/hanamesh/library/node-runtime','/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/target','/hanamesh/library/handoffs','/hanamesh/library/handoff-settings']);
 async function jsonBody(req){
   requireCondition(req.headers['content-type']?.split(';')[0].trim()==='application/json','CONTENT_TYPE_REQUIRED','Expected application/json.',{},415);
   const chunks=[];let total=0;for await(const chunk of req){total+=chunk.length;requireCondition(total<=65_536,'BODY_TOO_LARGE','Request body is too large.',{},413);chunks.push(chunk);}
@@ -64,6 +64,12 @@ export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,a
       else result=nodeRuntime.cancel(input);
       }catch(error){if(error instanceof AppHostError)throw error;throw new AppHostError('NODE_ENVIRONMENT_FAILED','无法读取或保存安装环境：'+String(error?.message??error).slice(0,1500),{cause:error?.code??'NODE_CHECK_FAILED'},500);}
       send(res,path.endsWith('/prepare')?202:200,{...result,traceId});return;
+    }
+    if(path==='/hanamesh/library/suite-source'){
+      requireCondition(!url.search,'UNKNOWN_FIELDS','套件安装包来源不接受查询参数。');
+      requireCondition(!readOnly||Object.keys(input).length===0,'UNKNOWN_FIELDS','套件安装包来源读取不接受参数。');
+      const result=readOnly?library.suiteSourceSettings():await library.replaceSuiteSourceSettings(input);
+      send(res,200,{...result,traceId});return;
     }
     if(path==='/hanamesh/library/suite/upgrade'){send(res,202,{...await library.upgradeSuite(input),traceId});return;}
     if(path.startsWith('/hanamesh/library/handoff'))requireCondition(handoff,'HANDOFF_UNAVAILABLE','Website handoff is not wired in this host.',{},503);

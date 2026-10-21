@@ -25,3 +25,18 @@ export function browserAuthentication(connection: { requestRejection(request: { 
 };
 /** Cordis plugin entry; activates once webServer, storageDomain and connection are provided. */
 export function apply(ctx: unknown, config: DshPluginConfig): Promise<void>;
+
+/** AppHost-owned HTTP settings on GET/POST /hanamesh/library/suite-source. Catalog sources stay independent. */
+export type SuiteSourceMode='configured'|'core';
+/** Public Core protocol-1 observation; no provider revision, generation or watch is supplied. */
+export interface CoreSuiteSourceState {
+  readonly protocolVersion:'1';readonly status:'disabled'|'ready'|'failed'|'disposed';
+  readonly selection:'configured'|'custom'|'disabled';readonly registry:string|null;
+  readonly archiveCount:number;readonly lastError:string|null;
+}
+export interface SuiteSourceSettings {
+  readonly mode:SuiteSourceMode;readonly configuredRegistry:string;
+  readonly observation:{readonly observable:true;readonly state:CoreSuiteSourceState}|{readonly observable:false;readonly code:string};
+}
+/** POST accepts exactly this shape; saving selects a source and does not authorize installation. */
+export interface SuiteSourceSettingsInput {mode:SuiteSourceMode;}

@@ -1,6 +1,7 @@
 import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import semver from 'semver';
+import {randomUUID} from 'node:crypto';
 import {requireCondition} from '../errors.js';
 
 export const SUITE_TARGET='hanamesh:suite-upgrade';
@@ -53,9 +54,31 @@ function validateDeclaration(value){
   }
   return structuredClone(value);
 }
+/** Read only the optional protocol-1 public state; absence is unobservable, never starting/ready. */
+export function readSuiteSourceState(source){
+
+  requireCondition(source?.protocolVersion==='1'&&typeof source.getState==='function','CORE_SUITE_SOURCE_MISSING','Core 本机套件来源尚不可观察；请检查 Core 插件及其来源设置。',{},503);
+  let state;try{state=source.getState();}catch{requireCondition(false,'CORE_SUITE_SOURCE_INVALID','Core 本机套件来源读取失败。',{},503);}
+  requireCondition(object(state)&&state.protocolVersion==='1'&&['disabled','ready','failed','disposed'].includes(state.status)&&['configured','custom','disabled'].includes(state.selection)&&(state.registry===null||text(state.registry))&&Number.isSafeInteger(state.archiveCount)&&state.archiveCount>=0&&(state.lastError===null||typeof state.lastError==='string'),'CORE_SUITE_SOURCE_INVALID','Core 本机套件来源状态无效。',{},503);
+  return{protocolVersion:state.protocolVersion,status:state.status,selection:state.selection,registry:state.registry,archiveCount:state.archiveCount,lastError:state.lastError};
+}
 /** Consume only the optional protocol-1 Cordis method and the public C-CORE section D DTO. */
-export function createCoreSuiteAdapter({core=()=>undefined,registry}={}){
+export function createCoreSuiteAdapter({core=()=>undefined,registry,suiteSourceMode=()=>'configured',suiteSourceService=()=>undefined}={}){
   const current=()=>{const value=core();return value?.protocolVersion==='1'&&typeof value.getSuiteDeclaration==='function'?value:undefined;};
+  // AppHost-local service identity only: Core protocol 1 supplies no revision/generation.
+  const instances=new WeakMap();
+  function sourceBinding(){
+    const mode=suiteSourceMode();
+    requireCondition(['configured','core'].includes(mode),'INVALID_SUITE_SOURCE_SETTINGS','套件安装包来源选择无效。');
+    if(mode==='configured')return{mode,registry};
+    const source=suiteSourceService();
+    const state=readSuiteSourceState(source);
+    requireCondition(state.status==='ready'&&state.selection!=='disabled'&&text(state.registry),'CORE_SUITE_SOURCE_NOT_READY','Core 本机套件来源未就绪（'+state.status+'）。',{status:state.status,selection:state.selection,lastError:state.lastError},409);
+    let url;try{url=new URL(state.registry);}catch{}
+    requireCondition(url&&['http:','https:'].includes(url.protocol)&&!url.username&&!url.password&&!url.search&&!url.hash,'CORE_SUITE_SOURCE_INVALID','Core 本机套件来源 registry 无效。',{},503);
+    if(!instances.has(source))instances.set(source,randomUUID());
+    return{mode,registry:state.registry,selection:state.selection,serviceInstance:instances.get(source)};
+  }
   async function read(request){
     const service=current();
     requireCondition(service,'CORE_SUITE_DECLARATION_MISSING',CORE_SUITE_DECLARATION_MISSING,{},503);
@@ -64,16 +87,18 @@ export function createCoreSuiteAdapter({core=()=>undefined,registry}={}){
     return validateDeclaration(result);
   }
   const get=async()=>{
-    const declaration=await read({registry});
+    const binding=sourceBinding();
+    const declaration=await read({registry:binding.registry});
+    requireCondition(JSON.stringify(sourceBinding())===JSON.stringify(binding),'SUITE_PLAN_CHANGED','套件安装包来源已变化，请重新查看并确认。',{},409);
     requireCondition(declaration.completeness==='complete','CORE_SUITE_CURRENT_INCOMPLETE','Core 套件完整性：'+declaration.completeness,{completeness:declaration.completeness,blocked:declaration.blocked},409);
-    let expected;try{const url=new URL(registry);url.pathname=url.pathname.replace(/\/$/,'')+'/';expected=url.href;}catch{}
+    let expected;try{const url=new URL(binding.registry);url.pathname=url.pathname.replace(/\/$/,'')+'/';expected=url.href;}catch{}
     requireCondition(expected&&declaration.registry===expected,'CORE_SUITE_SOURCE_MISMATCH','Core 声明来源与执行 registry 不符。',{blocked:declaration.blocked},409);
     requireCondition(declaration.upgrades.length>0,'CORE_SUITE_NO_COMPATIBLE_TUPLE','Core 未提供可执行升级组合。',{blocked:declaration.blocked},409);
     // The first displayed Core tuple is the presentation default; App-host never ranks versions.
     const selectedUpgrade=declaration.upgrades[0];
     requireCondition(selectedUpgrade.registry===declaration.registry,'CORE_SUITE_SOURCE_MISMATCH','Core 升级组合来源与执行 registry 不符。',{},409);
     const components=SUITE_PACKAGES.map(({name,label})=>{const from=declaration.installed.find(row=>row.moduleName===name).actualVersion;if(!exact(from))invalid();return{name,label,from,to:selectedUpgrade.targets.find(row=>row.moduleName===name).version};});
-    return{available:true,components,declarationId:declaration.declarationId,registry:declaration.registry,selectedUpgrade,physicalBaseline:declaration.installed,upgrades:declaration.upgrades,blocked:declaration.blocked};
+    return{available:true,components,sourceBinding:binding,declarationId:declaration.declarationId,registry:declaration.registry,selectedUpgrade,physicalBaseline:declaration.installed,upgrades:declaration.upgrades,blocked:declaration.blocked};
   };
   Object.defineProperty(get,'unavailable',{get:()=>current()?null:CORE_SUITE_DECLARATION_MISSING});
   get.readFacts=async()=>{
