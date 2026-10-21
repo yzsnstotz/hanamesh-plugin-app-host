@@ -135,11 +135,12 @@ test('AH-MS04: an unreachable host never blocks the seat, and disposing the plug
   assert.equal(failing.module.marketState().entryVisible,true);
 });
 
-test('AH-MS05: the in-shell restart goes through the shell postMessage bridge, not a blocked iframe scheme navigation',async()=>{
+test('AH-MS05: no carrier is given a private shell restart command',async()=>{
   const{module,calls}=await loadClientModule();
   const source=await readFile(new URL('../src/client-ui.js',import.meta.url),'utf8');
-  assert.doesNotMatch(source,/location\.assign\(RESTART_LINK\)/,'WKWebView drops a custom scheme started inside the iframe');
-  assert.match(source,/postMessage\(\{type:RESTART_LINK\},'\*'\)/,'the shell validates source and origin; the iframe cannot know tauri://localhost');
-  assert.match(source,/const RESTART_LINK='hanamesh:\/\/restart'/,'the deep link stays the OS-level entry point');
-  void[module,calls];
+  assert.doesNotMatch(source,/RESTART_LINK|requestRestart|hanamesh:\/\/restart/);
+  assert.doesNotMatch(source,/window\.parent\.postMessage/);
+  assert.match(source,/请完全退出 HanaMesh 客户端或 DSH 后重新打开/);
+  assert.equal(calls.post,undefined);
+  void module;
 });

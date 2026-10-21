@@ -167,22 +167,12 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   const BASE_FILTERS=[['','全部'],['hanamesh-app','应用'],['plugin','插件']];
   const KIND_TEXT={application:'应用',plugin:'插件',listing:'仅收录'};
   const STATE_TEXT={registered:'已安装',installed:'已安装','installed-not-loaded':'需重启','uninstalled-not-unloaded':'已卸载 · 需重启','runtime-missing':'缺运行时',invalid:'包无效'};
-  // The desktop shell hosts DSH inside its own webview frame and owns the `hanamesh://` scheme; official DSH in a plain browser has no frame.
-  const inShell=()=>{try{return globalThis.window.self!==globalThis.window.top;}catch{return true;}};
-  const RESTART_LINK='hanamesh://restart';
-  // rc.32: WKWebView never hands a custom-scheme navigation started inside the DSH iframe to the OS, so the
-  // deep link alone cannot reach the shell from here. The shell already listens for `hanamesh://…` messages on
-  // its inbound iframe bridge (the same namespace as `hanamesh://bound-refresh`), so in-shell we post
-  // `hanamesh://restart` to the parent and the shell calls its own restart. The `hanamesh://restart` URL stays
-  // the OS-level entry (an external browser or `open hanamesh://restart`), handled in the shell's deep_link.rs.
-  const requestRestart=()=>{try{globalThis.window.parent.postMessage({type:RESTART_LINK},'*');}catch{}};
   // Mirrors PROTECTED_PACKAGES on the host: the suite is never offered an uninstall button (the host answers 403 anyway).
   const PROTECTED=new Set(['@hanamesh/dsh-app-host','hanamesh-core','hanamesh-usage','hanamesh-brand','@hanamesh/dsh-core','@hanamesh/dsh-usage']);
   function RestartNotice({reason}){
-    const shell=inShell();
-    return h('p',{role:'status',className:'hm-restart-notice','data-hanamesh-restart':'required'},h('strong',null,'需重启 DSH'),' ',reason??'插件更改在 DSH 重启后生效。',' ',
-      shell?h('a',{href:RESTART_LINK,className:'hm-restart-link',onClick:event=>{event.preventDefault();requestRestart();}},'重启 DSH'):h('span',{className:'hm-restart-hint'},'请手动重启 DSH。'));
+    return h('p',{role:'status',className:'hm-restart-notice','data-hanamesh-restart':'required'},h('strong',null,'需重新打开客户端'),' ',reason??'插件更改需要重新打开客户端后生效。',' ',h('span',{className:'hm-restart-hint'},'请完全退出 HanaMesh 客户端或 DSH 后重新打开；关闭窗口不等于退出。'));
   }
+
   // rc.32: the same market page serves two surfaces — the shell overlay behind the sidebar 「市场」 button
   // (`embedded` false) and the Extension Management 「市场」 tab through the `market` seat (`embedded` true,
   // always visible, no close button, `preferredSubsectionId` decides which subsection comes first).
