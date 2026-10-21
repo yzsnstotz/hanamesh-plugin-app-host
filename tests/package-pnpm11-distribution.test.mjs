@@ -11,7 +11,7 @@ const cwd=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 test('DIST11 normal tarball installs into a supplied official rc.2 host with pnpm11 strict peers and exposes JS/types',async t=>{
  const root=await scratch('apphost-pnpm11-');t.after(()=>rm(root,{recursive:true,force:true}));
  const home=join(root,'home'),cache=join(root,'cache'),temp=join(root,'tmp'),consumer=join(root,'consumer');for(const p of [home,cache,temp,consumer])await mkdir(p);
- const env={pnpm_config_manage_package_manager_versions:"false",npm_config_manage_package_manager_versions:"false",PATH:process.env.PATH,HOME:home,DSH_HOME:join(home,'dsh'),TMPDIR:temp,XDG_CACHE_HOME:cache,XDG_CONFIG_HOME:join(home,'config'),npm_config_cache:join(cache,'npm'),npm_config_store_dir:join(cache,'pnpm-store')};
+ const env={CI:'true',pnpm_config_manage_package_manager_versions:"false",npm_config_manage_package_manager_versions:"false",PATH:process.env.PATH,HOME:home,DSH_HOME:join(home,'dsh'),TMPDIR:temp,XDG_CACHE_HOME:cache,XDG_CONFIG_HOME:join(home,'config'),npm_config_cache:join(cache,'npm'),npm_config_store_dir:join(cache,'pnpm-store')};
  const run=(file,args,dir)=>spawn(file,args,{cwd:dir,env,encoding:'utf8'});
  let artifact=process.env.AH_TEST_TARBALL;
  if(!artifact){const result=await run('pnpm',['pack','--pack-destination',root],cwd);assert.equal(result.status,0,result.stdout+result.stderr);const archives=(await readdir(root)).filter(name=>name.endsWith('.tgz'));assert.equal(archives.length,1,'normal pnpm pack must produce one real tarball');artifact=join(root,archives[0]);}
