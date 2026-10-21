@@ -1,6 +1,6 @@
 {
   "currentCandidate": {
-    "version": "0.6.8",
+    "version": "0.6.9",
     "dshTarget": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0",
     "vendorSha256VerifiedAtBuild": false,
     "libProvisionDistribution": "随包分发、源仓不变; bundleDependencies; original LICENSE retained, no relicensing",
@@ -11,7 +11,14 @@
     "fixedUpstream": "d743267388641bc76f17c45ce8b4c231aed1d32c",
     "devkit": "0.2.3",
     "libProvision": "0.2.1",
-    "compatibility": "SOURCE: official installed rc.2 public API audit; separate runtime, browser, package and owner gates pending"
+    "compatibility": "SOURCE: official installed rc.2 public API audit; separate runtime, browser, package and owner gates pending",
+    "reviewedInputs": {
+      "managedNode": "4c2d5bf63aa11b84dbfb4851a9da35e538ac47b1",
+      "manualRestart": "dd76828",
+      "hostThemeTokens": "0d6b533"
+    },
+    "excludedPendingCandidate": "B17 plugin migration; separate review required",
+    "knownBaselineLimitation": "src/manager.js runtimeLedgerReader dynamically imports missing ./provision/index.js; application runtime operations reaching this reader may fail. Managed Node readiness is not full application operation acceptance."
   },
   "module": "app-host",
   "version": "0.1.0-rc.12",

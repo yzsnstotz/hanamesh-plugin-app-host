@@ -1,3 +1,7 @@
+> 2026-10-21 · 0.6.9 release preparation: combines C-reviewed standalone Node preparation, manual quit-and-reopen guidance, and the market overlay using public host theme tokens. No client changes. macOS arm64 native prerequisite evidence does not establish full application installation, macOS x64 host acceptance, Windows support, or owner acceptance. This release excludes the still-separate B17 migration candidates.
+>
+> Known baseline limitation: the runtime ledger reader in `src/manager.js` still refers to `./provision/index.js`, which is not shipped. Application runtime operations that reach this reader can fail; managed Node preparation/readiness does not prove these operations work. Its fix is in a separate B17 candidate awaiting independent acceptance. No silent fallback is added here.
+
 > 2026-10-21 · Managed Node candidate: plugin Settings → 安装环境 → review and confirm one-source SHA-verified preparation → later operations automatically use standalone Node without restarting DSH. macOS arm64/x64 implementation only; Windows unsupported. Editable named settings and evidence boundaries: [contract](docs/CONTRACT.md#plugin-managed-standalone-node-2026-10-21-candidate). No silent acquisition, Electron guardian or client change.
 
 > 2026-10-21候选：所有客户端均按「完全退出后重新打开」指引处理需重启状态；移除旧壳专用重启深链及parent消息，不改客户端、不自动重启。下方rc.28/rc.32重启桥是已被本候选取代的历史记录，市场席位其它行为不变。
