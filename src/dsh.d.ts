@@ -8,6 +8,7 @@ export const ROUTES: readonly string[];
 export const Config: unknown;
 export const appHostDomainSpec: { readonly name: 'hanamesh_app_host'; readonly version: 1; readonly layout: 'single' };
 export interface DshPluginConfig {
+  nodeRuntime?:{mode?:'managed'|'external';version?:string;sourceBase?:string;storageRoot?:string;externalBinary?:string};
   dataRoot?: string; parentOrigin?: string; frameAncestors?: string[]; nodeBinary?: string; router?:{codingOauth?:{mode?:'http'|'file'}};
   /** `sources` undefined → the HanaMesh catalog source; explicit `[]` → none. `profileDir`/`profileName`/`dshBin` (and
    *  `nodeBinary`) are inferred from the proven Desktop layout or plain DSH when undefined — see docs/CONTRACT.md 「应用库配置」; explicit values win. */

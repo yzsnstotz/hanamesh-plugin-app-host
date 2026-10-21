@@ -6,6 +6,8 @@ export function ProvidersSection():unknown;
 /** Settings section「市场目录源」(rc.28 name; the export keeps its rc.11 identifier). */
 export function LibrarySourcesSection():unknown;
 export function HandoffSettingsSection():unknown;
+/** Plugin-local named settings and explicitly confirmed standalone Node preparation. */
+export function NodeRuntimeSection():unknown;
 /** Sidebar entry「市场」; hidden while the `market` seat owner renders the market itself. */
 export function LibraryAction():unknown;
 /** The HanaMesh market page (applications + plugins; install / upgrade / uninstall / restart notice).

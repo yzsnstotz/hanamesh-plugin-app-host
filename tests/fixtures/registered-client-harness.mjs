@@ -93,6 +93,7 @@ export async function registeredClient({file, fetch, href}) {
   // A real test packaging must supply its own trusted verification configuration.
   module.apply(ctx);
   return {module, slots, seats, rendered, find: predicate => find(predicate, tree), get tree() {return tree;},
+    mountSettings(id){clearRoot();const slot=slots.get(id);assert.ok(slot,'registered settings slot '+id);root=()=>React.createElement(slot.component);render();},
     mountSidebar() {
       clearRoot();
       const action = slots.get('hanamesh-library'), overlay = slots.get('hanamesh-library-overlay');

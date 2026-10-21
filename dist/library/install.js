@@ -43,7 +43,7 @@ async function clearGeneratedRuntimeCache(result,runtimeRoot){
 
 /** Package mutations use the public CLI in an owned monitored process; upstream's in-process manager has no scoped env/monitor port. */
 export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBinary,dshBin,desktopCli,desktopLauncher,pluginManagerVersion,registry='https://registry.npmjs.org',allowPrerelease=false,
-  fetchImpl=globalThis.fetch,spawn=defaultSpawn,provision,remove,ledger,coreSuitePlan,coreService=()=>undefined,pluginManager=()=>undefined,emit=()=>{}}){
+  fetchImpl=globalThis.fetch,spawn=defaultSpawn,provision,remove,ledger,coreSuitePlan,coreService=()=>undefined,pluginManager=()=>undefined,emit=()=>{},profileWriter=new SerialQueue()}){
   requireCondition(typeof profileDir==='string'&&resolve(profileDir)===profileDir,'PROFILE_DIR_REQUIRED','library.profileDir must be an absolute path.');
   requireCondition(typeof dataRoot==='string'&&resolve(dataRoot)===dataRoot,'INVALID_ROOT','dataRoot must be absolute.');
   const launcherAvailable=typeof desktopLauncher?.command==='string'&&resolve(desktopLauncher.command)===desktopLauncher.command&&typeof desktopLauncher.home==='string'&&join(desktopLauncher.home,'profiles',profileName)===profileDir;
@@ -52,11 +52,11 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
   requireCondition(nodeBinary===undefined||(typeof nodeBinary==='string'&&resolve(nodeBinary)===nodeBinary),'NODE_RUNTIME_REQUIRED','nodeBinary must be an absolute path.');
   requireCondition(dshBin===undefined||(typeof dshBin==='string'&&resolve(dshBin)===dshBin),'DSH_BIN_REQUIRED','dshBin must be an absolute DSH bin.js path.');
   requireCondition(typeof profileName==='string'&&/^[A-Za-z0-9_.-]+$/.test(profileName),'PROFILE_NAME_REQUIRED','library.profileName is required.');
-  const unavailable=()=>!supervisorNode?[{need:'找不到能运行安装监测的独立 Node，不能用 Electron 宿主代替',how:'恢复客户端随附的独立 Node 运行时，或配置已验证的 nodeBinary。'}]:cliAvailable?[]:[{need:'缺少能固定精确版本、隔离 Git 凭据并监测钥匙串调用的公开 DSH 命令行',how:'恢复客户端随附的公开 dsh 命令启动器后重试。'}];
+  const unavailable=()=>!supervisorNode?[{need:'找不到能运行安装监测的独立 Node，不能用 Electron 宿主代替',how:'在 AppHost 插件配置中，将 nodeBinary 填为独立 Node.js 24 的绝对路径（24.13.1 或更新的 24.x）；完全退出后重开。Electron 的 Node 包装脚本不能代替独立 Node。'}]:cliAvailable?[]:[{need:'缺少能固定精确版本、隔离 Git 凭据并监测钥匙串调用的公开 DSH 命令行',how:'恢复客户端随附的公开 dsh 命令启动器后重试。'}];
   const runtimeRoot=appId=>join(dataRoot,'runtimes',appId);
   const permitted=name=>requireCondition(packageName(name)&&!blocked.has(name),'PACKAGE_DENIED','Package name is not permitted.',{packageName:name});
   /** rc.10: one profile writer at a time inside this host; `dsh plugin` itself serialises against other writers per command. */
-  const profileWriter=new SerialQueue();
+  requireCondition(profileWriter&&typeof profileWriter.run==='function','INVALID_PROFILE_WRITER','A shared profile writer queue is required.');
   const injected={provision,remove,ledger};
   /** Injected runtime functions (tests, suites) or the vendored lib-provision export of the same name. */
   const runtimeApi=async name=>injected[name]??(await defaults())[name];

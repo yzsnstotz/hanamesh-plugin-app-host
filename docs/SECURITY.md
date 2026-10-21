@@ -73,3 +73,8 @@ These are source invariants, not native browser evidence. Component synthetic-he
 ## 套件兼容声明边界
 
 兼容、完整性与可升级目标由 Core 公开声明唯一决定；App-host 不复制范围/候选规则、不读其内部文件。内部 `coreSuitePlan` 只由可信装配适配器提供，不进入浏览器参数或用户配置。生产装配仅绑定可选 protocol `1` 的 `hanameshCore.getSuiteDeclaration()`，缺源必须明确 `CORE_SUITE_DECLARATION_MISSING` 并禁止升级，不以 registry latest 代替。执行端只校验固定包/精确版本的计划结构、重读确认和物理安装结果；来源及宿主兼容性由 Core 提供方承担，真实包联调、原生运行与 owner 验收仍须各自证据；物理三包齐全不能替代 Core 完整性。升级后的公开状态继续读 Core，物理读回只用于执行确认与失败诊断；Core 服务消失时不再公开缓存的完整已装状态。
+
+
+## Managed Node trust boundary
+
+The authenticated browser supplies settings or opaque plan/operation identifiers, never an executable manifest, arbitrary verification arguments or launch command. Only pinned official signed release digests enter the static manifest. Changing an HTTPS mirror changes transport, not the accepted digest. No user-info/query/hash URL or symlinked storage path is accepted. No download before current-plan confirmation. A per-runtime FileLock serializes lib-provision writes; SHA, ownership/ledger and clean-environment standalone platform/version checks precede publication. Host guardian remains unchanged and rejects Electron independently. Source or verification failure never silently falls back to system Node, another mirror or a retry.

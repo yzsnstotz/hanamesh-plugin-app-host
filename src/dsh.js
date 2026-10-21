@@ -24,7 +24,7 @@ import { defineDomain } from '@deepseek-ai/dsh-storage-domain';
 import { AppHost } from './manager.js';
 import { DshDomainSnapshotStore, emptySnapshot } from './store.js';
 import { createHttpHandler } from './routes.js';
-import { requireCondition } from './errors.js';
+import { requireCondition,SerialQueue } from './errors.js';
 import { routerDomainSpec } from './router/domain.js';
 import { createProviderSources } from './router/sources.js';
 import { createRouter } from './router/broker.js';
@@ -39,6 +39,9 @@ import { detectClient } from './library/client-identity.js';
 import { createUsageEvidence } from './usage-evidence.js';
 import { createReceiptLedger } from './router/receipts.js';
 import { receiptsDomainSpec } from './router/receipts-domain.js';
+import {createNodeRuntime} from './node-runtime/service.js';
+import {nodeRuntimeDomainSpec} from './node-runtime/domain.js';
+import {nodeBinding,nodeStatusBinding} from './library/node-binding.js';
 import {DSH_RANGE} from './dsh-compat.js';
 
 export const name = 'hanamesh-app-host';
@@ -60,6 +63,7 @@ export const Config = z.object({
   frameAncestors: z.union([z.array(z.string()),z.const(undefined)]),
   /** Standalone Node executable used for guardian/launcher processes; required under Electron. */
   nodeBinary: z.string(),
+  nodeRuntime:z.object({mode:z.string(),version:z.string(),sourceBase:z.string(),storageRoot:z.string(),externalBinary:z.string()}),
   router: z.object({ codingOauth: z.object({ mode:z.string() }) }),
   library: z.object({
     fixture:z.string(),
@@ -172,14 +176,19 @@ export async function apply(ctx, config) {
     });
     own(`listener:${name}`, () => listener.dispose());
   };
-  let host, store;
+  let host, store, nodeRuntime, library;
   let initialized = false;
   try {
+    const nodeDomain=await facility.open(nodeRuntimeDomainSpec);
+    own('node-runtime-domain',()=>nodeDomain.close());
+    nodeRuntime=createNodeRuntime({domain:nodeDomain,dataRoot,config:config.nodeRuntime,initialBinary:locations.nodeBinary,
+      busy:()=>Boolean(library?.events().operations.length)||Boolean(host?.instanceList(BROWSER_PRINCIPAL).some(i=>!['stopped','failed','interrupted'].includes(i.status)))});
+    own('node-runtime',()=>nodeRuntime.close());await nodeRuntime.init();
     const domain = await facility.open(appHostDomainSpec);
     const closeDomain = own('app-domain', () => domain.close());
     store = new DshDomainSnapshotStore(domainBinding({ global:domain.global, close:closeDomain }));
     host = new AppHost({ store, dataRoot, parentOrigin, frameAncestors,
-      ...(locations.nodeBinary === undefined ? {} : { nodeBinary: locations.nodeBinary }),
+      nodeBinaryProvider:()=>nodeRuntime.executable,
       ...(config.leaseTtlMs === undefined ? {} : { leaseTtlMs: config.leaseTtlMs }),
       ...(config.sweepIntervalMs === undefined ? {} : { sweepIntervalMs: config.sweepIntervalMs }) });
     own('host', () => initialized ? host.dispose() : store.close());
@@ -229,28 +238,29 @@ export async function apply(ctx, config) {
     optional('pluginManager', service => { pluginManager=service; });
     let dshBin=locations.dshBin;
     if(!dshBin&&locations.profileDir&&!desktop)try{dshBin=createRequire(join(locations.profileDir,'package.json')).resolve('@deepseek-ai/dsh/lib/bin.js');}catch{dshBin=undefined;}
-    const cliUsable=Boolean(locations.desktopLauncher||locations.nodeBinary&&dshBin&&(!desktop||locations.desktopCli||config.library?.dshBin));
-    let provisionApi,installer;
+    const cliUsable=Boolean(locations.desktopLauncher||dshBin&&(!desktop||locations.desktopCli||config.library?.dshBin));
+    let provisionApi,installer;const profileWriter=new SerialQueue();
     if(locations.profileDir&&locations.profileName){
       provisionApi=await import('@hanamesh/lib-provision');
-      installer=createLibraryInstaller({profileDir:locations.profileDir,profileName:locations.profileName,dataRoot,
-        ...(cliUsable?{nodeBinary:locations.nodeBinary,dshBin,desktopCli:locations.desktopCli,desktopLauncher:locations.desktopLauncher}:{}),pluginManagerVersion:locations.pluginManagerVersion,
+      installer=nodeBinding(()=>nodeRuntime.executable,nodeBinary=>createLibraryInstaller({profileDir:locations.profileDir,profileName:locations.profileName,dataRoot,
+        ...(cliUsable?{nodeBinary,dshBin,desktopCli:locations.desktopCli,desktopLauncher:locations.desktopLauncher}:{}),pluginManagerVersion:locations.pluginManagerVersion,profileWriter,
         registry:libraryConfig.registry,allowPrerelease:libraryConfig.allowPrerelease,provision:provisionApi.provision,remove:provisionApi.remove,ledger:provisionApi.ledger,
-        coreService:()=>coreService,pluginManager:()=>pluginManager,emit:event=>library?.emit(event)});
+        coreService:()=>coreService,pluginManager:()=>pluginManager,emit:event=>library?.emit(event)}));
     }
     /** What a person must do so the library can install, in their words (C-MARKET probe `error.need`). */
     const unavailable=()=>{
       if(!locations.profileDir)return[{need:'找不到这个 DSH profile 的目录',how:'用 dsh plugin --profile <名字> add 安装 HanaMesh 应用库，或在插件设置 library.profileDir 里填 profile 目录'}];
       if(installer?.ready)return[];
+      if(!nodeRuntime.executable)return[{need:'安装环境尚未准备',how:'打开 AppHost「安装环境」，点击「准备安装环境」，核对来源、版本与体积后确认；完成后自动可用，无需重启或填写路径。'}];
       if(installer?.unavailable?.length)return installer.unavailable;
       const rows=[];
-      if(!locations.nodeBinary)rows.push({need:'找不到能运行 DSH 命令行的 Node',how:desktop?'桌面版的运行时缺少 Node：重新安装客户端':'在插件设置 nodeBinary 里填 Node 的绝对路径'});
+      if(!locations.nodeBinary)rows.push({need:'找不到能运行 DSH 命令行的 Node',how:'在 AppHost 插件配置中，将 nodeBinary 填为独立 Node.js 24 的绝对路径（24.13.1 或更新的 24.x）；完全退出后重开。'});
       if(!dshBin||(desktop&&!locations.desktopCli&&!config.library?.dshBin))rows.push({need:'找不到可在受控进程中运行的 DSH 命令行',how:'恢复客户端随附的公开 dsh 命令启动器，或在插件设置 library.dshBin 里填 dsh 的 lib/bin.js'});
       return rows;
     };
     const identity=await detectClient({desktop});
     if(typeof ctx.logger?.info==='function')ctx.logger.info('hanamesh-app-host library: client %s (%s)',identity.client,identity.evidence);
-    const library=createLibraryService({domain:{global:libraryDomain.global,close:closeLibraryDomain},host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer,client:identity.client,unavailable,installationStatus:createInstallationStatusReader({client:identity.client,core:()=>coreService,workerNode:locations.nodeBinary,readers:libraryConfig.installationReaders}),logger:ctx.logger});
+    library=createLibraryService({domain:{global:libraryDomain.global,close:closeLibraryDomain},host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer,client:identity.client,unavailable,installationStatus:nodeStatusBinding(()=>nodeRuntime.executable,workerNode=>createInstallationStatusReader({client:identity.client,core:()=>coreService,workerNode,readers:libraryConfig.installationReaders})),logger:ctx.logger});
     own('library', () => library.close());
     await library.init();
     // rc.27: app bundles register plain `app.json` (no package name); the installed scan knows which npm package ships
@@ -263,7 +273,7 @@ export async function apply(ctx, config) {
       handlerFor:port=>createHandoffHandler({library,queue,settings:()=>library.handoffSettings(),port})});
     own('handoff-listener', () => listener.stop());
     await listener.start();
-    const libraryHandler=createLibraryHttpHandler(library,{...auth,handoff:{queue,listener,restart:()=>listener.start()}});
+    const libraryHandler=createLibraryHttpHandler(library,{...auth,nodeRuntime,handoff:{queue,listener,restart:()=>listener.start()}});
     for (const path of LIBRARY_ROUTES) own(`route:${path}`, webServer.register({kind:'exact',path,handler:libraryHandler}));
     own('seat', ctx.provide('hanameshApps', host));
   } catch (error) {

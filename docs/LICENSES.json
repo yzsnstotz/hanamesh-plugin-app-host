@@ -278,5 +278,20 @@
         "dependencies": "7.8.5"
       }
     }
+  },
+  "downloadedRuntimes": {
+    "Node.js": {
+      "versions": [
+        "24.13.1",
+        "24.22.0"
+      ],
+      "license": "MIT for Node.js; original archive LICENSE retains bundled third-party notices and licenses",
+      "source": "https://nodejs.org/dist/",
+      "purpose": "Plugin-managed standalone guardian/CLI supervisor runtime, acquired only after explicit plugin-page confirmation",
+      "distribution": "Not bundled in npm package; complete official tar.gz retained under lib-provision ownership, including LICENSE",
+      "pinnedAssets": "dist/node-runtime/releases.json",
+      "releaseKeyringCommit": "481637f813e912c4aa3622d7964ab426c97b8e8d",
+      "sourceProof": "Official clear-signed SHASUMS256.txt.asc verified by gpgv; each full mac archive SHA matched; byte/payload/license hashes recorded in release catalog"
+    }
   }
 }

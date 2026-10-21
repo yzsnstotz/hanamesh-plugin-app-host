@@ -48,7 +48,7 @@ export interface AppListing {
 export interface EventPage { events:HostEvent[]; sequence:number; resetRequired:boolean; }
 export interface HostOptions {
   store:SnapshotStore; dataRoot:string; parentOrigin:string; frameAncestors?:string[]; leaseTtlMs?:number; sweepIntervalMs?:number;
-  nodeBinary?:string; clock?:()=>number; checkpoint?:(point:string,details:Record<string,unknown>)=>Awaitable<void>; credentialResolver?:CredentialResolver|null;
+  nodeBinary?:string; nodeBinaryProvider?:()=>string|undefined; clock?:()=>number; checkpoint?:(point:string,details:Record<string,unknown>)=>Awaitable<void>; credentialResolver?:CredentialResolver|null;
   runtimeLedgerReader?:(root:string)=>Awaitable<{schema:1;items:Record<string,{version:string}>}>;
 }
 export class AppHost {

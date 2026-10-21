@@ -24,9 +24,9 @@ export class AppHost {
   #queue = new SerialQueue(); #definitions = new Map(); #controls = new Map(); #listeners = new Set();
   #packageNames = new Map(); #activityListeners = new Set();
   #logs = new Map(); #state; #initialized = false; #closing = false; #poisoned = false; #timer; #disposing;
-  #credentialResolver = null; #nodeBinary; #runtimeLedgerReader;
+  #credentialResolver = null; #nodeBinary; #nodeBinaryProvider; #runtimeLedgerReader;
   constructor({ store, dataRoot, parentOrigin, frameAncestors = [], leaseTtlMs = 90_000, sweepIntervalMs = 15_000,
-    checkpoint = async () => {}, clock = () => Date.now(), credentialResolver = null, nodeBinary,
+    checkpoint = async () => {}, clock = () => Date.now(), credentialResolver = null, nodeBinary, nodeBinaryProvider,
     runtimeLedgerReader = async root => (await import('./provision/index.js')).ledger(root) }) {
     requireCondition(store && ['init','load','save','close'].every(k => typeof store[k] === 'function'),
       'INVALID_STORE','A durable snapshot store is required.');
@@ -37,6 +37,8 @@ export class AppHost {
     this.store = store; this.dataRoot = dataRoot; this.parentOrigin = workspaceOrigin(parentOrigin); this.frameAncestors = frameAncestors.map(ancestorOrigin);
     this.leaseTtlMs = leaseTtlMs; this.sweepIntervalMs = sweepIntervalMs; this.checkpoint = checkpoint; this.clock = clock;
     this.#nodeBinary = nodeBinary;
+    requireCondition(nodeBinaryProvider===undefined||typeof nodeBinaryProvider==='function','INVALID_RUNTIME','nodeBinaryProvider must be a function.');
+    this.#nodeBinaryProvider=nodeBinaryProvider;
     requireCondition(typeof runtimeLedgerReader === 'function','INVALID_RUNTIME','runtimeLedgerReader must be a function.');
     this.#runtimeLedgerReader = runtimeLedgerReader;
     this.setCredentialResolver(credentialResolver);
@@ -399,7 +401,7 @@ export class AppHost {
       XDG_STATE_HOME:join(instance.dataDir,'state'),XDG_DATA_HOME:instance.dataDir,
     };
     control.origin=`http://127.0.0.1:${port}`;
-    control.runner=await spawnOwned({ nodeBinary:this.#nodeBinary,command,args:deployment.args.map(value => expand(value,values)),
+    control.runner=await spawnOwned({ nodeBinary:this.#nodeBinaryProvider?this.#nodeBinaryProvider():this.#nodeBinary,command,args:deployment.args.map(value => expand(value,values)),
       cwd:deployment.cwd ?? instance.dataDir,dataDir:instance.dataDir,port,env,stopGraceMs:deployment.stopGraceMs,secrets:credentials.secrets },{
       onLog:(stream,text) => {
         const records=this.#logs.get(instance.id) ?? [];
