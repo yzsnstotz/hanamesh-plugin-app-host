@@ -26,3 +26,34 @@ test('website handoff failure follows a later locale switch and retains its raw 
 test('normal installation target resolution preserves detailed refusal in localized failure surface',async t=>{
  const locale=localeRuntime();const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async path=>({ok:!path.startsWith('/hanamesh/library/target?'),json:async()=>path.startsWith('/hanamesh/library/target?')?{error:{code:'CATALOG_ITEM_MISSING',message:'Exact target unavailable',details:{itemId:'example'}}}:path.endsWith('installedPlugins')?{plugins:[]}:{handoffs:[],pollMs:1500}})});t.after(()=>h.dispose());await flush();h.mountMarket();await assert.rejects(h.module.openInstallTarget({itemId:'example'}));await flush();assert.ok(h.find(n=>n.type==='summary'&&n.children.includes('Technical details')));assert.match(JSON.stringify(h.tree),/Exact target unavailable/);assert.match(JSON.stringify(h.tree),/CATALOG_ITEM_MISSING/);
 });
+
+function visibleText(node){if(Array.isArray(node))return node.map(visibleText).join(' ');if(!node||typeof node!=='object')return typeof node==='string'?node:'';return node.type==='details'?'':visibleText(node.children);}
+for(const language of ['zh','en'])test(`provider source and state use readable ${language} labels while exact records stay folded`,async t=>{
+ const locale=localeRuntime();locale.set(language);
+ const providers=[['configured','dsh-models'],['absent','dsh-models'],['unreachable','coding-oauth-gateway'],['gateway-off','coding-oauth-gateway'],['future-state','future-source']].map(([state,source],i)=>({id:'provider-'+i,displayName:'Provider '+i,source,state,models:['model-A'],value:'must-not-render-secret'}));
+ const calls=[];const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async(path,init)=>{calls.push({path,init});return{ok:true,json:async()=>path.endsWith('/providers')?{providers}:path.endsWith('/apps')?{apps:[]}:{handoffs:[],pollMs:1500}};}});t.after(()=>h.dispose());h.mountSettings('hanamesh-providers');await flush();
+ const shown=visibleText(h.tree);
+ for(const raw of ['dsh-models','absent','gateway-off','unreachable','future-state','future-source'])assert.ok(!shown.includes(raw),raw+' is not primary copy');
+ for(const text of language==='zh'?['已配置','尚未配置','暂时无法连接','网关已关闭','状态暂不可用','DSH 模型设置']:['Configured','Not configured','Cannot connect right now','Gateway is off','Status unavailable','DSH model settings'])assert.ok(shown.includes(text),text);
+ const exact=h.find(n=>n.type==='details'&&JSON.stringify(n).includes('future-state'));assert.ok(exact&&!exact.props.open);assert.match(JSON.stringify(exact),/future-source/);assert.doesNotMatch(JSON.stringify(h.tree),/must-not-render-secret/);
+ assert.ok(h.find(n=>n.type==='td'&&n.props['data-label']===(language==='zh'?'来源':'Source')),'stacked cells retain their own field label');
+ assert.equal(calls.filter(c=>c.init?.method==='POST').length,0);
+ locale.set(language==='zh'?'en':'zh');await flush();assert.ok(visibleText(h.tree).includes(language==='zh'?'Not configured':'尚未配置'));
+});
+
+test('future provider routing state is unknown without exposing its code or offering a grant action',async t=>{
+ const locale=localeRuntime();const calls=[];
+ const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async(path,init)=>{calls.push({path,init});return{ok:true,json:async()=>path.endsWith('/providers')?{providers:[]}:path.endsWith('/apps')?{apps:[{id:'app-one',name:'Test App'}]}:path.includes('/plan?')?{items:[{state:'future-routing-state',entry:{env:'APP_API_KEY',purpose:'Application access'}}]}:{handoffs:[],pollMs:1500}};}});t.after(()=>h.dispose());h.mountSettings('hanamesh-providers');await flush();
+ assert.match(visibleText(h.tree),/Status unavailable/);assert.doesNotMatch(visibleText(h.tree),/future-routing-state/);
+ assert.ok(h.find(n=>n.type==='details'&&!n.props.open&&JSON.stringify(n).includes('future-routing-state')));
+ assert.ok(!h.find(n=>n.type==='button'&&visibleText(n).match(/Restore|Revoke/)));
+ assert.equal(calls.filter(c=>c.init?.method==='POST').length,0);
+});
+
+for(const unknown of ['constructor','toString','__proto__'])test(`inherited key ${unknown} remains unknown in source, provider state and route state`,async t=>{
+ const locale=localeRuntime();const calls=[];
+ const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async(path,init)=>{calls.push({path,init});return{ok:true,json:async()=>path.endsWith('/providers')?{providers:[{id:'provider-unknown',displayName:'Unknown Provider',source:unknown,state:unknown,models:[]}]}:path.endsWith('/apps')?{apps:[{id:'app-one',name:'Test App'}]}:path.includes('/plan?')?{items:[{state:unknown,entry:{env:'APP_API_KEY',purpose:'Application access'}}]}:{handoffs:[],pollMs:1500}};}});t.after(()=>h.dispose());h.mountSettings('hanamesh-providers');await flush();
+ assert.match(visibleText(h.tree),/Source unavailable/);assert.equal(visibleText(h.tree).split('Status unavailable').length-1,2);
+ assert.ok(h.find(n=>n.type==='details'&&!n.props.open&&JSON.stringify(n).includes(unknown)));
+ assert.ok(!h.find(n=>n.type==='button'&&visibleText(n).match(/Restore|Revoke/)));assert.equal(calls.filter(c=>c.init?.method==='POST').length,0);
+});
