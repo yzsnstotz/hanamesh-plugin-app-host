@@ -86,3 +86,16 @@ test('AH-P04: missing, stale or non-executable runtime fails closed as RUNTIME_M
     });
   }
 });
+
+test('AH-P05: default reader launches a real runtime from the public provision ledger without injection',async t=>{
+ const root=await temporary(),dataRoot=join(root,'data'),runtimeRoot=join(dataRoot,'runtimes','vibe'),target=join(runtimeRoot,'vibe-runtime');
+ await mkdir(join(target,'bin'),{recursive:true});await mkdir(join(runtimeRoot,'.provision'),{recursive:true});
+ const launcher=join(target,'bin','vibe'),fixture=new URL('./fixtures/app.mjs',import.meta.url).pathname;
+ await writeFile(launcher,`#!/bin/sh\nexec ${JSON.stringify(process.execPath)} ${JSON.stringify(fixture)} "$@"\n`);await chmod(launcher,0o755);
+ const entry={version:'0.1.15',sha256:'a'.repeat(64),platform:`${process.platform}-${process.arch}`,installedAt:new Date().toISOString(),target,installTo:'vibe-runtime',source:'local'};
+ await writeFile(join(runtimeRoot,'.provision','ledger.json'),JSON.stringify({schema:1,items:{'vibe-runtime':entry}}));
+ const {ledger}=await import('@hanamesh/lib-provision');assert.deepEqual((await ledger(runtimeRoot)).items['vibe-runtime'],entry,'the provider public reader sees the valid physical ledger');
+ const host=new AppHost({store:new AtomicFileStore(join(root,'sidecar')),dataRoot,parentOrigin:'http://127.0.0.1:49123',sweepIntervalMs:0});t.after(()=>host.dispose());host.register(runtimeDefinition());await host.init();
+ let opened;await assert.doesNotReject(async()=>{opened=await host.open(input('default-runtime-reader','vibe'));},'default public ledger reader must launch the real runtime');assert.equal(opened.instance.status,'ready','default public ledger reader must allow actual runtime startup');assert.equal((await identity(opened.uiUrl)).dataDir,opened.instance.dataDir);
+ console.log(JSON.stringify({check:'DEFAULT_RUNTIME_LEDGER_READER',status:'PASS',realOwnedPid:opened.instance.pid,ledgerReaderInjected:false}));
+});

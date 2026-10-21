@@ -78,3 +78,20 @@ const authentication=browserAuthentication({requestRejection:()=>undefined});
 const dshEntry:(ctx:unknown,config:DshPluginConfig)=>Promise<void>=apply;
 void [dshConfig,binding,authentication,dshEntry]; // Type-only exercise, not evidence of real DSH integration.
 `;
+
+/** Executed only from the normally installed tarball consumer, never from producer source paths. */
+export const runtimeLedgerJavascript=String.raw`
+import assertRuntimeLedger from 'node:assert/strict';
+import * as runtimeFs from 'node:fs/promises';
+import {join as runtimeJoin} from 'node:path';
+import {AppHost as RuntimeLedgerHost,AtomicFileStore as RuntimeLedgerStore} from '@hanamesh/dsh-app-host';
+const runtimeData=runtimeJoin(import.meta.dirname,'default-ledger-data'),runtimeRoot=runtimeJoin(runtimeData,'runtimes','ledger-app'),runtimeTarget=runtimeJoin(runtimeRoot,'runtime');
+await runtimeFs.mkdir(runtimeJoin(runtimeTarget,'bin'),{recursive:true});await runtimeFs.mkdir(runtimeJoin(runtimeRoot,'.provision'),{recursive:true});
+const executable=runtimeJoin(runtimeTarget,'bin','app');
+await runtimeFs.writeFile(executable,'#!'+process.execPath+'\n'+"import {createServer} from 'node:http';import{writeFile}from'node:fs/promises';import{join}from'node:path';const[port,data]=process.argv.slice(2);await writeFile(join(data,'default-ledger-open.txt'),'real default reader startup');createServer((_req,res)=>res.end('DEFAULT_LEDGER_RUNTIME')).listen(Number(port),'127.0.0.1');\n");await runtimeFs.chmod(executable,0o755);
+const runtimeVersion='1.0.0',runtimeSha='a'.repeat(64),runtimePlatform=process.platform+'-'+process.arch;
+await runtimeFs.writeFile(runtimeJoin(runtimeRoot,'.provision','ledger.json'),JSON.stringify({schema:1,items:{runtime:{version:runtimeVersion,sha256:runtimeSha,platform:runtimePlatform,installedAt:new Date().toISOString(),target:runtimeTarget,installTo:'runtime',source:'local'}}}));
+const runtimeHost=new RuntimeLedgerHost({store:new RuntimeLedgerStore(runtimeJoin(import.meta.dirname,'default-ledger-sidecar')),dataRoot:runtimeData,parentOrigin:'http://127.0.0.1:49123',sweepIntervalMs:0});
+runtimeHost.register({id:'ledger-app',name:'Default ledger runtime',deployments:[{id:'local',dataId:'data-v1',mode:'owned',args:['{{port}}','{{dataDir}}'],runtime:{manifest:{schema:1,sources:[],items:[{id:'runtime',version:runtimeVersion,kind:'tar.gz',installTo:'runtime',platforms:{[runtimePlatform]:{asset:'runtime.tgz',sha256:runtimeSha}}}]},item:'runtime',exec:'bin/app'},readiness:{path:'/',status:200,bodyIncludes:'DEFAULT_LEDGER_RUNTIME'},stopGraceMs:60}]});
+try{await runtimeHost.init();const result=await runtimeHost.open({appId:'ledger-app',deploymentId:'local',viewId:'default-reader'});assertRuntimeLedger.equal(result.instance.status,'ready');assertRuntimeLedger.equal(await runtimeFs.readFile(runtimeJoin(result.instance.dataDir,'default-ledger-open.txt'),'utf8'),'real default reader startup');assertRuntimeLedger.match(await(await fetch(result.uiUrl)).text(),/DEFAULT_LEDGER_RUNTIME/);console.log(JSON.stringify({check:'NORMAL_PACKAGE_DEFAULT_RUNTIME_LEDGER',status:'PASS',ledgerReaderInjected:false,realOwnedPid:result.instance.pid,actualAppData:true}));}finally{await runtimeHost.dispose();}
+`;

@@ -238,3 +238,6 @@ GET 的 `observation` 为 `{observable:false,code}` 或 `{observable:true,state}
 最后执行仍调用现有官方 CLI `add --save-exact --strict-peer-dependencies --registry=<声明原址>`，精确三组件；正常市场外部包路径不变。正在执行时源连接丢失由实际 CLI/输运终态报告，不靠重试/退出屏障维持源。Core B17 服务只来自候选 `c5e1a7373b9896c385f14f79a64bb277f43bde5c` 的公开能力；无 Core 运行时 import，无 Desktop hook/bootstrap、三锁或先于插件加载的服务。源码/真实 Cordis+JSON domain（AUTH_DOUBLE）与正常包验证不等同真实原生安装或 owner 验收。
 
 公开类型位于 `@hanamesh/dsh-app-host/dsh` 的 `SuiteSourceMode/CoreSuiteSourceState/SuiteSourceSettings/SuiteSourceSettingsInput`；页面导出 `SuiteSourceSettingsSection`。回归：`suite-source.test.mjs`、`handoff-integration.test.mjs` B17-CORDIS，变异 M84–M89（M61 检查全部后续读取被错误缓存）。
+
+
+B17 review repair（同0.6.8候选）：`AppHost` 未注入 `runtimeLedgerReader` 时，默认经正常依赖 `@hanamesh/lib-provision` 的公开 `ledger(root)` 读取 `<dataRoot>/runtimes/<appId>/.provision/ledger.json`。不存在的历史 `./provision/index.js` 导入已撤除；不复制账本实现或回退其它根。匹配版本与可执行检查仍 fail-closed。`AH-P05` 与正常tgz消费者均不注入 reader，使用有效真实账本启动实际 runtime、读回就绪响应与应用数据；M90检验错误导入不能回归。这仍不等于真实桌面应用的 owner 验收。
