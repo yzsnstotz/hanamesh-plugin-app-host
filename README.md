@@ -1,6 +1,7 @@
 > 2026-10-21 B17 candidate: AppHost「套件安装包来源」选择现有 registry（默认）或明确消费 Core 当前公开本机来源；目录清单设置独立。来源在预览、确认和执行前复读，变更终止旧确认。正常插件加载后生效，未覆盖初装/首 profile 或真实原生验收。见 [公开合约](docs/CONTRACT.md#b17-套件安装包来源2026-10-21-候选)。
 
 > 2026-10-21 · Managed Node candidate: plugin Settings → 安装环境 → review and confirm one-source SHA-verified preparation → later operations automatically use standalone Node without restarting DSH. macOS arm64/x64 implementation only; Windows unsupported. Editable named settings and evidence boundaries: [contract](docs/CONTRACT.md#plugin-managed-standalone-node-2026-10-21-candidate). No silent acquisition, Electron guardian or client change.
+> 2026-10-21候选：所有客户端均按「完全退出后重新打开」指引处理需重启状态；移除旧壳专用重启深链及parent消息，不改客户端、不自动重启。下方rc.28/rc.32重启桥是已被本候选取代的历史记录，市场席位其它行为不变。
 
 > 0.6.7 四渠道只读状态桥：允许的网站本人点击后，使用能力广告指向的严格 POST 读取当前 Core 声明和显式配置的官方 CLI 清单；缺供给、失败与未覆盖作用域均具名 unknown，不跨 runtime / CLI / 桌面 App 推断已装。协议、必填设置、支持版本与取消规则见 [Installation status](docs/INSTALLATION_STATUS.md)。
 
