@@ -244,7 +244,7 @@ export async function apply(ctx, config) {
       if(installer?.ready)return[];
       if(installer?.unavailable?.length)return installer.unavailable;
       const rows=[];
-      if(!locations.nodeBinary)rows.push({need:'找不到能运行 DSH 命令行的 Node',how:desktop?'桌面版的运行时缺少 Node：重新安装客户端':'在插件设置 nodeBinary 里填 Node 的绝对路径'});
+      if(!locations.nodeBinary)rows.push({need:'找不到能运行 DSH 命令行的 Node',how:'在 AppHost 插件配置中，将 nodeBinary 填为独立 Node.js 24 的绝对路径（24.13.1 或更新的 24.x）；完全退出后重开。'});
       if(!dshBin||(desktop&&!locations.desktopCli&&!config.library?.dshBin))rows.push({need:'找不到可在受控进程中运行的 DSH 命令行',how:'恢复客户端随附的公开 dsh 命令启动器，或在插件设置 library.dshBin 里填 dsh 的 lib/bin.js'});
       return rows;
     };

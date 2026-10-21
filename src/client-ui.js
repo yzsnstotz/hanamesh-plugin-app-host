@@ -142,6 +142,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     const status=!listener?'读取中…':listener.status==='listening'?'正在 '+listener.origin+' 接收网站交接':listener.status==='disabled'?'已关闭：网站上的「安装」按钮找不到本客户端':listener.status==='unavailable'?listener.need:'未启动';
     return h('section',{className:'hm-library-sources'},h('h2',null,'网站安装交接'),
       h('p',null,'网站（如 market.hanamesh.com）点「安装」时，会在下列本机端口上找到本客户端，把要装的插件交给应用库；应用库在这里弹出确认，你确认后才安装。'),
+      h('p',null,'安装前需要独立 Node.js 24（24.13.1 或更新的 24.x）。如提示缺少 Node，在 AppHost 插件配置的 nodeBinary 填入可执行文件绝对路径，完全退出后重开。当前不支持 Electron 的 Node 包装脚本。'),
       h('p',{role:'status'},status),error?h('p',{role:'alert'},error):null,h(HandoffIssueNotice,null),
       draft&&defaults?h('div',{className:'hm-handoff-settings'},
         h('label',null,h('input',{type:'checkbox',checked:draft.enabled,onChange:event=>setDraft({...draft,enabled:event.target.checked})}),' 启用（'+names.enabled+'，默认 '+(defaults.enabled?'开':'关')+'）'),

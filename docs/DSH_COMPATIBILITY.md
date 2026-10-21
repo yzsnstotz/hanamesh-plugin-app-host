@@ -69,3 +69,17 @@ Cordis `4.0.4` alongside newly available DSH `0.2.1-alpha.3` packages that requi
 `pnpm peers check` output are retained in the session run's `apphost-full-test-2.log` and
 `apphost-package-regression.log`. This candidate does not claim a bare package can automatically assemble an arbitrary
 new DSH host. Official Desktop supplies its own coherent runtime and disables automatic peer installation.
+
+## I27 官方 rc.2：独立 Node 的公开配置
+
+官方 macOS rc.2 的 Electron-as-Node 包装脚本不等于本模块的独立 Node 监督运行时。现 guardian 明确拒绝 `process.versions.electron`，受控子进程环境也不继承宿主 Electron 启动变量；不移除该拒绝、不猜应用路径或增加客户端 hook。
+
+有独立 Node.js 24（24.13.1或更新24.x）时，在官方 profile 的公开插件用户配置层设置 AppHost **顶层** `nodeBinary` 为其实际绝对可执行路径；不是 library.nodeBinary，也不从PATH自动猜测。用户填写自己的真实安装路径，完全退出再重开。在网站安装交接设置和公开 install-target readback 看 ready/缺件；ready=true只代表安装前置具备，不是已安装或完整网站闭环。
+
+```yaml
+- id: hanamesh-app-host
+  config:
+    nodeBinary: <独立Node的实际绝对路径>
+```
+
+这是配置示意，尖括号不是可执行路径。保留原有其他AppHost配置；不改客户端、原生品牌、其他插件设置或凭据。当前支持范围仅独立Node，未声明官方Electron-as-Node安全监督兼容。
