@@ -97,3 +97,8 @@ test('public peers admit official rc.2 and supported alpha peers while developme
   assert.equal(pkg.peerDependencies.react,'^18.3.1');
   assert.equal(pkg.devDependencies['@deepseek-ai/dsh-storage-domain'],'0.2.1-alpha.2');
 });
+
+test('R1 required slots provider is the public renderer package, never the obsolete ui-slots package',async()=>{
+ const {readFile}=await import('node:fs/promises');const pkg=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
+ assert.equal(pkg.peerDependencies['@deepseek-ai/dsh-client-ui-slots'],undefined);assert.ok(pkg.peerDependencies['@deepseek-ai/dsh-client-ui-renderer']);assert.ok(pkg.dsh.client.inject.includes('@deepseek-ai/dsh-client-ui-renderer'));assert.ok(!pkg.dsh.client.inject.includes('@deepseek-ai/dsh-client-ui-slots'));
+});

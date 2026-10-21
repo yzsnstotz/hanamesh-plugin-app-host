@@ -13,7 +13,7 @@ test('NPM-APPHOST-01: published metadata admits official rc.2 and alpha.2 with b
   assert.equal(pkg.hanamesh.deliveryStatus, undefined);
   assert.equal(pkg.peerDependencies['@deepseek-ai/dsh-storage-domain'], DSH_TARGET);
   for (const name of ['@deepseek-ai/dsh-host-webserver', '@deepseek-ai/dsh-client-connection',
-    '@deepseek-ai/dsh-client-ui-slots', '@deepseek-ai/dsh-client-ui-settings', '@deepseek-ai/dsh-client-locale'])
+    '@deepseek-ai/dsh-client-ui-renderer', '@deepseek-ai/dsh-client-ui-settings', '@deepseek-ai/dsh-client-locale'])
     assert.equal(pkg.peerDependencies[name], DSH_TARGET, name);
   assert.equal(pkg.peerDependencies['@deepseek-ai/cordis'], '>=4.0.4 <4.1.0-0 || >=4.0.5-alpha.1 <4.1.0-0');
   assert.equal(pkg.peerDependencies['@deepseek-ai/schemastery'], '>=3.18.4 <3.19.0-0 || >=3.18.5-alpha.1 <3.19.0-0');

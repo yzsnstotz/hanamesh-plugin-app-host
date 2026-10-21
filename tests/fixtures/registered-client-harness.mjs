@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {fakeClock} from './client-ui-harness.mjs';
 
-export async function registeredClient({file, fetch, href}) {
+export async function registeredClient({file, fetch, href, locale}) {
   const clock = fakeClock(), listeners = new Map(), slots = new Map(), seats = new Map();
   const effects = [], instances = new Map(), rendered = [];
   let registration, module, active, cursor = 0, tree, root, dead = false, scheduled = false;
@@ -82,6 +82,7 @@ export async function registeredClient({file, fetch, href}) {
   assert.equal(registration.id, '@hanamesh/dsh-app-host', 'normal client Loader identity');
   module = registration.factory(id => {assert.equal(id, 'react'); return React;});
   const ctx = {
+    ...(locale ? {locale} : {}),
     effect(run) {const dispose = run(); effects.push(dispose); return dispose;},
     slots: {inject: (_name, run) => run(), register(descriptor, component) {
       slots.set(descriptor.id, {descriptor, component}); return () => slots.delete(descriptor.id);

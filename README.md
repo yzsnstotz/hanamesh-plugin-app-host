@@ -1,3 +1,5 @@
+> R1 返修候选：AppHost 页面通过宿主公开 locale 服务随中英切换，错误主面说明下一步、原始原因保留在技术详情。只收紧插件自有布局；官方设置侧栏的390限制单列。不改变 profile peer 策略；旧 ui-slots 声明纠正为公开 renderer provider。
+
 # 0.6.10 · B17 已审合拢
 
 C 复审 Docs `2d95591d` 已关闭 `b13e60a` 两项P3；本版合入普通插件内的 Core 套件安装包来源选择、持久设置和复读失效保护，并通过 lib-provision 公开 ledger 修正默认 runtime 账本读取。保留0.6.9的独立Node准备、完全退出后重开指引、宿主公开主题token和F02严格拒绝旧目录；不改客户端。原生适用证据属于各固定候选，合拢后的源码/正常包另验，不冒完整安装、mac x64/Windows或owner验收。PKG/PRE/静态种子仍开。

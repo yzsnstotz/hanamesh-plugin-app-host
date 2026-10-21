@@ -182,18 +182,18 @@ test('AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall /
 
 test('AH-M07 (client source): the entry is 「市场」, cards carry kind/state/upgrade, and a plugin change keeps a manual complete-exit/reopen notice in every carrier',async()=>{
   const source=await readFile(new URL('../src/client-ui.js',import.meta.url),'utf8');
-  assert.match(source,/onClick:\(\)=>setLibraryVisible\(true\)},'市场'\)/,'sidebar entry');
-  assert.match(source,/h\('h1',null,'HanaMesh 市场'\)/,'overlay title');
-  assert.match(source,/label:'市场目录源'/,'settings section');
+  assert.match(source,/onClick:\(\)=>setLibraryVisible\(true\)},t\('市场'\)\)/,'sidebar entry');
+  assert.match(source,/h\('h1',null,t\('HanaMesh 市场'\)\)/,'overlay title');
+  assert.match(source,/localizedSection\(ctx,'hanamesh-library-sources',19,"市场目录源"/,'settings section');
   assert.doesNotMatch(source,/hanamesh:\/\/restart|requestRestart|window\.parent\.postMessage/);
   assert.match(source,/请完全退出 HanaMesh 客户端或 DSH 后重新打开/);
   assert.match(source,/'data-hanamesh-restart':'required'/);
-  assert.match(source,/\['','全部'\],\['hanamesh-app','应用'\],\['plugin','插件'\]/,'fixed filters');
+  assert.match(source,/\['',t\('全部'\)\],\['hanamesh-app',t\('应用'\)\],\['plugin',t\('插件'\)\]/,'fixed filters');
   assert.match(source,/seenCategories/,'catalog categories join the filter');
   assert.match(source,/'\/hanamesh\/library\/plugins\/uninstall'/);
   assert.match(source,/item\.upgradeAvailable\)action=/,'upgrade action');
-  assert.match(source,/'升级到 '\+item\.latestVersion/);
-  assert.match(source,/'installed-not-loaded':'需重启'/);
+  assert.match(source,/t\('升级到 '\)\+item\.latestVersion/);
+  assert.match(source,/'installed-not-loaded':t\('需重启'\)/);
   const clientProtected=JSON.parse(source.match(/const PROTECTED=new Set\((\[[^\]]*\])\)/)[1].replaceAll("'",'"'));
   assert.deepEqual(clientProtected.sort(),[...PROTECTED_PACKAGES].sort(),'no uninstall button for the suite (brand included), same list as the host');
   assert.doesNotMatch(source,/ctx\.get\(/,'the browser bundle never reads host services');

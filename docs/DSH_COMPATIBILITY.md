@@ -83,3 +83,12 @@ new DSH host. Official Desktop supplies its own coherent runtime and disables au
 ```
 
 这是配置示意，尖括号不是可执行路径。保留原有其他AppHost配置；不改客户端、原生品牌、其他插件设置或凭据。当前支持范围仅独立Node，未声明官方Electron-as-Node安全监督兼容。
+
+
+## R1 profile peers check (2026-10-21 candidate)
+
+Official rc.2 supplies `ctx.slots` through `@deepseek-ai/dsh-client-ui-renderer`; the removed `dsh-client-ui-slots` peer/inject name does not exist in the official 0.2.1-rc.2 package tree. This candidate declares the actual public renderer instead, preserving the existing supported version range and exact alpha.2 development input.
+
+The official pnpm 11.28.5 `peers check` reads the profile lock graph, which excludes installation-owned Host/Renderer supplies under the default `autoInstallPeers:false` policy. Missing lock edges are distinct from runtime injection. Its bundled range intersection also reports AppHost/Brand locale ranges as conflicting although both admit the actual 0.2.1-rc.2. The original static check remains RED, not waived; neither profile policy nor package presence is faked. Brand's finite supported ranges remain unchanged.
+
+All client copy is registrant-owned through `ctx.locale.register/bind/subscribe`; settings labels are localized strings re-registered on change, as specified by the public settings slot contract. Styles remain within AppHost classes. The host settings column may still be clipped at390; no host selectors or client patches are used to conceal that restriction. Original provider errors retain their code/message/details under collapsed diagnostics, separate from localized explanations.

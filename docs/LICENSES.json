@@ -102,18 +102,6 @@
         "peerDependencies": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0"
       }
     },
-    "@deepseek-ai/dsh-client-ui-slots": {
-      "version": "0.2.1-alpha.2",
-      "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-slots/-/dsh-client-ui-slots-0.2.1-alpha.2.tgz",
-      "purpose": "Official DSH client UI placement",
-      "usedAs": [
-        "peerDependencies"
-      ],
-      "specs": {
-        "peerDependencies": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0"
-      }
-    },
     "@deepseek-ai/dsh-client-ui-settings": {
       "version": "0.2.1-alpha.2",
       "license": "MIT",
@@ -276,6 +264,20 @@
       "purpose": "Public host compatibility ranges and PluginManager exact-save capability version check",
       "specs": {
         "dependencies": "7.8.5"
+      }
+    },
+    "@deepseek-ai/dsh-client-ui-renderer": {
+      "version": "0.2.1-alpha.2",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-renderer/-/dsh-client-ui-renderer-0.2.1-alpha.2.tgz",
+      "purpose": "Public DSH renderer slots service; official client placement without client changes",
+      "usedAs": [
+        "peerDependencies",
+        "devDependencies"
+      ],
+      "specs": {
+        "peerDependencies": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0",
+        "devDependencies": "0.2.1-alpha.2"
       }
     }
   },
