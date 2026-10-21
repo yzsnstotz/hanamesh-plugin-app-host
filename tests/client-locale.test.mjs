@@ -57,3 +57,24 @@ for(const unknown of ['constructor','toString','__proto__'])test(`inherited key 
  assert.ok(h.find(n=>n.type==='details'&&!n.props.open&&JSON.stringify(n).includes(unknown)));
  assert.ok(!h.find(n=>n.type==='button'&&visibleText(n).match(/Restore|Revoke/)));assert.equal(calls.filter(c=>c.init?.method==='POST').length,0);
 });
+
+for(const language of ['zh','en'])test(`R1 provider guidance uses host ${language} menu and keeps implementation in technical details`,async t=>{
+ const locale=localeRuntime();locale.set(language);
+ const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async path=>({ok:true,json:async()=>path.endsWith('/providers')?{providers:[]}:{apps:[]}})});t.after(()=>h.dispose());h.mountSettings('hanamesh-providers');await flush();
+ const shown=visibleText(h.tree);assert.doesNotMatch(shown,/profile|注入|槽位|injection|slots/i);
+ assert.ok(shown.includes(language==='zh'?'DSH「模型」':'DSH Models'));
+ assert.ok(h.find(n=>n.type==='details'&&!n.props.open&&visibleText(n.children).includes(language==='zh'?'技术详情':'Technical details')));
+ if(language==='zh')assert.doesNotMatch(shown,/Models/);
+});
+for(const language of ['zh','en'])test(`R1 handoff ${language} controls precede folded implementation and preserve saved values`,async t=>{
+ const locale=localeRuntime();locale.set(language);const calls=[];
+ const settings={enabled:true,ports:[39317,39318],allowedOrigins:['https://market.hanamesh.com'],ttlMs:300000,pollMs:1500};
+ const names=Object.fromEntries(Object.keys(settings).map(k=>[k,'library.handoff.'+k]));
+ const rules=[{rule:'只在本机 127.0.0.1 上监听，请求的 Host 必须是 127.0.0.1 或 localhost 加监听端口',why:'防止别的机器或 DNS 重绑定的网页冒充本机'},{rule:'交接请求体不超过 4096 字节',why:'合法请求只有插件 id、包名、合约版本三项，最长不到 500 字节；更大的一定不是交接'}];
+ const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async(path,init)=>{calls.push({path,init});return{ok:true,json:async()=>path.endsWith('/handoff-settings')?{settings,defaults:settings,names,rules,listener:{status:'disabled'}}:{handoffs:[]}};}});t.after(()=>h.dispose());h.mountSettings('hanamesh-library-handoff');await flush();
+ const shown=visibleText(h.tree);assert.doesNotMatch(shown,/DNS|4096|字节|request body|Host must|library\.handoff/i);
+ const children=h.tree.children.flat(Infinity);assert.ok(children.findIndex(n=>n?.props?.className==='hm-handoff-settings')<children.findIndex(n=>n?.type==='details'));
+ assert.ok(h.find(n=>n.type==='details'&&!n.props.open&&JSON.stringify(n).includes('4096')));
+ await h.find(n=>n.type==='button'&&visibleText(n)===(language==='zh'?'保存并重新监听':'Save and restart listener')).props.onClick();await flush();
+ const write=calls.find(c=>c.init?.method==='POST');assert.deepEqual(JSON.parse(write.init.body),settings);
+});

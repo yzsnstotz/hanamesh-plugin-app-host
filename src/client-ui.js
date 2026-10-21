@@ -15,19 +15,19 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy7": "恢复",
     "copy8": "停用",
     "copy9": "供应商",
-    "copy10": "这里只显示来源、状态、提示与模型，不读取或展示密钥值。",
+    "copy10": "查看可用的模型服务并选择应用使用的模型。密钥值不会显示。",
     "copy11": "名称",
     "copy12": "来源",
     "copy13": "状态",
-    "copy14": "Key 提示",
+    "copy14": "密钥提示",
     "copy15": "模型",
-    "copy16": "来源的开关在各自的地方：API key 在 DSH「Models」，Coding OAuth 本地网关在该插件自己的设置页（DSH 对话不需要它，只有按 OpenAI API 说话的应用需要）。",
-    "copy17": "路由",
-    "copy18": "自动：profile 里已配置、且应用声明接受的供应商在应用启动时直接注入；模型随路由一起在这里选（留「应用默认」则用应用清单里的默认值）。「停用」让某一槽位退出自动路由。",
+    "copy16": "在 DSH「模型」中管理模型服务；Coding OAuth 的开关在该插件的设置页。",
+    "copy17": "应用使用的服务",
+    "copy18": "应用会自动使用已配置且支持的供应商。可在下方选择模型；保留「应用默认」则使用应用的默认模型。「停用」会停止向该应用提供此服务。",
     "copy19": "应用",
     "copy20": "槽位",
     "copy21": "用途",
-    "copy22": "还没有安装任何声明了供应商槽位的应用。",
+    "copy22": "尚无需要模型服务的已安装应用。",
     "copy23": "Core 未提供套件声明",
     "copy24": "Core 套件声明无法用于精确安装。",
     "copy25": "兼容升级检查未通过，尚未执行安装：",
@@ -105,7 +105,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy97": "取消准备",
     "copy98": "诊断详情",
     "copy99": "当前自动绑定的路径",
-    "copy100": "支持 macOS 13.5+（Apple Silicon / Intel）。Windows 的安装、守护与取消验证尚未接通，本流程不声称支持 Windows。",
+    "copy100": "支持 macOS 13.5+（Apple Silicon / Intel）；Windows 暂不支持。",
     "copy101": "读取中…",
     "copy102": "正在 ",
     "copy103": " 接收网站交接",
@@ -293,7 +293,19 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy285": "状态暂不可用",
     "copy286": "来源暂不可用",
     "copy287": "原始记录",
-    "copy288": "操作"
+    "copy288": "操作",
+    "copy289": "应用启动时按当前配置与应用声明匹配供应商并注入；这里只选择模型或撤回、恢复该连接的授权，不改变来源开关。",
+    "copy290": "网站点「安装」后，本客户端会请你确认；确认后才安装。",
+    "copy291": "安装前请先在「安装环境」准备所需环境。",
+    "copy292": "启用网站安装交接",
+    "copy293": "本机端口",
+    "copy294": "允许的网站（每行一个）",
+    "copy295": "确认等待时间（毫秒）",
+    "copy296": "检查新交接的间隔（毫秒）",
+    "copy297": "设置名称与默认值",
+    "copy298": "使用说明",
+    "copy300": "高级设置",
+    "copy301": "支持 macOS 13.5+（Apple Silicon / Intel）。Windows 的安装、守护与取消验证尚未接通，本流程不声称支持 Windows。"
   },
   "en": {
     "copy0": "Automatic",
@@ -306,19 +318,19 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy7": "Restore",
     "copy8": "Disable",
     "copy9": "Providers",
-    "copy10": "Only sources, status, hints and models are shown. Secret values are never read or displayed.",
+    "copy10": "View available model services and choose a model for each app. Key values are never shown.",
     "copy11": "Name",
     "copy12": "Source",
     "copy13": "Status",
     "copy14": "Key hint",
     "copy15": "Models",
-    "copy16": "Manage each source in its own settings: API keys in DSH Models, Coding OAuth local gateway in that plugin. DSH conversations do not need this gateway; only apps using the OpenAI API do.",
-    "copy17": "Routing",
-    "copy18": "Automatic: configured providers accepted by the app are supplied when it starts. Choose a model here, or keep App default to use the app manifest. Disable removes a slot from automatic routing.",
+    "copy16": "Manage model services in DSH Models. Manage Coding OAuth in its own plugin settings.",
+    "copy17": "Services used by apps",
+    "copy18": "Apps automatically use configured providers they support. Choose a model below, or keep App default to use the app’s default model. Revoke stops this service from being supplied to the app.",
     "copy19": "App",
     "copy20": "Slot",
     "copy21": "Purpose",
-    "copy22": "No installed app declares provider slots yet.",
+    "copy22": "No installed apps need a model service yet.",
     "copy23": "Core has not provided a suite declaration",
     "copy24": "Core’s suite declaration cannot be used for an exact installation.",
     "copy25": "Compatibility check failed; nothing was installed: ",
@@ -396,7 +408,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy97": "Cancel preparation",
     "copy98": "Technical details",
     "copy99": "Automatically selected executable",
-    "copy100": "Supports macOS 13.5+ (Apple Silicon / Intel). Windows installation, guardian and cancellation verification are not connected; this flow does not support Windows.",
+    "copy100": "Supports macOS 13.5+ (Apple Silicon / Intel). Windows is not supported.",
     "copy101": "Reading…",
     "copy102": "Receiving website handoffs at ",
     "copy103": " ",
@@ -584,7 +596,19 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy285": "Status unavailable",
     "copy286": "Source unavailable",
     "copy287": "Original record",
-    "copy288": "Actions"
+    "copy288": "Actions",
+    "copy289": "At app startup, providers are matched to current configuration and the app declaration and injected. This page only selects models or revokes/restores authorization for that connection; source switches are unchanged.",
+    "copy290": "When you select Install on a website, this client asks you to confirm before installing.",
+    "copy291": "Before installing, prepare the required environment in Installation environment.",
+    "copy292": "Enable website installation handoff",
+    "copy293": "Local ports",
+    "copy294": "Allowed websites (one per line)",
+    "copy295": "Confirmation wait (milliseconds)",
+    "copy296": "Check for new handoffs (milliseconds)",
+    "copy297": "Setting names and defaults",
+    "copy298": "How it works",
+    "copy300": "Advanced settings",
+    "copy301": "Supports macOS 13.5+ (Apple Silicon / Intel). Windows installation, guardian and cancellation verification are not connected; this flow does not support Windows."
   }
 };
   const COPY_KEYS=new Map(Object.entries(COPY.zh).map(([key,text])=>[text,key]));
@@ -607,7 +631,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     const knownLabel=(labels,key,unknown)=>typeof key==='string'&&Object.hasOwn(labels,key)?labels[key]:unknown;
     const providerStates={configured:t('已配置'),absent:t('尚未配置'),unreachable:t('暂时无法连接'),'gateway-off':t('网关已关闭')};
     const providerSources={'dsh-models':t('DSH 模型设置'),'coding-oauth-gateway':t('Coding OAuth 本地网关')};
-    const sourceRows=providers.map(provider=>h('tr',{key:provider.id},h('td',{'data-label':t('名称')},provider.displayName),h('td',{'data-label':t('来源')},knownLabel(providerSources,provider.source,t('来源暂不可用')),h('details',null,h('summary',null,t('原始记录')),h('pre',null,JSON.stringify({id:provider.id,source:provider.source,state:provider.state},null,2)))),h('td',{'data-label':t('状态')},knownLabel(providerStates,provider.state,t('状态暂不可用'))),h('td',{'data-label':t('Key 提示')},provider.keyHint??'—'),h('td',{'data-label':t('模型')},(provider.models??[]).join('、')||'—')));
+    const sourceRows=providers.map(provider=>h('tr',{key:provider.id},h('td',{'data-label':t('名称')},provider.displayName),h('td',{'data-label':t('来源')},knownLabel(providerSources,provider.source,t('来源暂不可用')),h('details',null,h('summary',null,t('原始记录')),h('pre',null,JSON.stringify({id:provider.id,source:provider.source,state:provider.state},null,2)))),h('td',{'data-label':t('状态')},knownLabel(providerStates,provider.state,t('状态暂不可用'))),h('td',{'data-label':t('密钥提示')},provider.keyHint??'—'),h('td',{'data-label':t('模型')},(provider.models??[]).join('、')||'—')));
     const stateText={auto:t('自动'),granted:t('手动指定'),missing:t('无可用供应商'),revoked:t('已停用'),'app-owned':t('应用自管')};
     const subjectText=item=>item.granted?(item.granted.kind==='provider'?item.granted.providerId:item.granted.ref??item.granted.key):'—';
     const acceptable=entry=>providers.find(p=>p.state==='configured'&&(!entry.providers?.length||entry.providers.includes(p.id)||(p.id==='coding-oauth-gateway'&&entry.providers.includes('openai'))));
@@ -616,15 +640,16 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       const routed=item.state==='auto'||item.state==='granted',current=item.model??'',options=[...new Set([...(item.models??[]),...(current?[current]:[])])];
       const modelCell=!routed?'—':options.length?h('select',{value:current,onChange:e=>void mutate('/hanamesh/router/model',{appId:app.id,entryId:id,model:e.target.value})},h('option',{value:''},item.defaultModel?(t("应用默认（") + (item.defaultModel) + "）"):t('应用默认')),...options.map(m=>h('option',{key:m,value:m},m))):
         h('input',{type:'text',defaultValue:current,placeholder:item.defaultModel?(t("应用默认（") + (item.defaultModel) + "）"):t('应用默认'),onBlur:e=>{if(e.target.value.trim()!==current)void mutate('/hanamesh/router/model',{appId:app.id,entryId:id,model:e.target.value.trim()});}});
-      return h('tr',{key:`${app.id}:${id}`},h('td',{'data-label':t('应用')},app.name),h('td',{'data-label':t('槽位')},item.entry.env??item.entry.path),h('td',{'data-label':t('用途')},item.entry.purpose??'—'),h('td',{'data-label':t('供应商')},subjectText(item)),h('td',{'data-label':t('模型')},modelCell),h('td',{'data-label':t('状态')},knownLabel(stateText,item.state,t('状态暂不可用')),h('details',null,h('summary',null,t('原始记录')),h('code',null,item.state))),
+      return h('tr',{key:`${app.id}:${id}`},h('td',{'data-label':t('应用')},app.name),h('td',{'data-label':t('用途')},item.entry.purpose??'—'),h('td',{'data-label':t('供应商')},subjectText(item)),h('td',{'data-label':t('模型')},modelCell),h('td',{'data-label':t('状态')},knownLabel(stateText,item.state,t('状态暂不可用')),h('details',null,h('summary',null,t('原始记录')),h('pre',null,JSON.stringify({connection:item.entry.env??item.entry.path,state:item.state},null,2)))),
         h('td',{'data-label':t('操作')},item.state==='revoked'?h('button',{type:'button',onClick:()=>{const provider=acceptable(item.entry);if(provider)void mutate('/hanamesh/router/grant',{appId:app.id,entryId:id,subject:provider.ref?{kind:'api-key',ref:provider.ref}:{kind:'provider',providerId:provider.id}});}},t('恢复')):
           (item.state==='auto'||item.state==='granted')?h('button',{type:'button',onClick:()=>void mutate('/hanamesh/router/revoke',{appId:app.id,entryId:id})},t('停用')):null));});});
-    return h('section',{className:'hm-providers'},h('h2',null,t('供应商')),h('p',null,t('这里只显示来源、状态、提示与模型，不读取或展示密钥值。')),error?FailureNotice({error}):null,
-      h('table',{className:'hm-provider-records'},h('thead',null,h('tr',null,...[t('名称'),t('来源'),t('状态'),t('Key 提示'),t('模型')].map(label=>h('th',{key:label},label)))),h('tbody',null,...sourceRows)),
-      h('p',{className:'hm-provider-hint'},t('来源的开关在各自的地方：API key 在 DSH「Models」，Coding OAuth 本地网关在该插件自己的设置页（DSH 对话不需要它，只有按 OpenAI API 说话的应用需要）。')),
-      h('h3',null,t('路由')),
-      h('p',{className:'hm-provider-hint'},t('自动：profile 里已配置、且应用声明接受的供应商在应用启动时直接注入；模型随路由一起在这里选（留「应用默认」则用应用清单里的默认值）。「停用」让某一槽位退出自动路由。')),
-      routeRows.length?h('table',{className:'hm-provider-records'},h('thead',null,h('tr',null,...[t('应用'),t('槽位'),t('用途'),t('供应商'),t('模型'),t('状态'),''].map((label,index)=>h('th',{key:index},label)))),h('tbody',null,...routeRows)):h('p',{className:'hm-provider-hint'},t('还没有安装任何声明了供应商槽位的应用。')));
+    return h('section',{className:'hm-providers'},h('h2',null,t('供应商')),h('p',null,t('查看可用的模型服务并选择应用使用的模型。密钥值不会显示。')),error?FailureNotice({error}):null,
+      h('table',{className:'hm-provider-records'},h('thead',null,h('tr',null,...[t('名称'),t('来源'),t('状态'),t('密钥提示'),t('模型')].map(label=>h('th',{key:label},label)))),h('tbody',null,...sourceRows)),
+      h('p',{className:'hm-provider-hint'},t('在 DSH「模型」中管理模型服务；Coding OAuth 的开关在该插件的设置页。')),
+      h('h3',null,t('应用使用的服务')),
+      h('p',{className:'hm-provider-hint'},t('应用会自动使用已配置且支持的供应商。可在下方选择模型；保留「应用默认」则使用应用的默认模型。「停用」会停止向该应用提供此服务。')),
+      h('details',null,h('summary',null,t('技术详情')),h('p',null,t('应用启动时按当前配置与应用声明匹配供应商并注入；这里只选择模型或撤回、恢复该连接的授权，不改变来源开关。'))),
+      routeRows.length?h('table',{className:'hm-provider-records'},h('thead',null,h('tr',null,...[t('应用'),t('用途'),t('供应商'),t('模型'),t('状态'),''].map((label,index)=>h('th',{key:index},label)))),h('tbody',null,...routeRows)):h('p',{className:'hm-provider-hint'},t('尚无需要模型服务的已安装应用。')));
   }
   let libraryVisible=false;const libraryListeners=new Set();
   const setLibraryVisible=value=>{libraryVisible=value;for(const listener of libraryListeners)listener(value);};
@@ -721,9 +746,9 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     React.useEffect(()=>{void load();},[load]);
     const save=async next=>{try{await request('/hanamesh/library/sources',{method:'POST',body:JSON.stringify({sources:next})});await load();}catch(e){setError(e);}};
     const move=(index,delta)=>{const next=[...sources],target=index+delta;if(target<0||target>=next.length)return;[next[index],next[target]]=[next[target],next[index]];void save(next);};
-    return h('section',{className:'hm-library-sources'},h('h2',null,t('市场目录源')),h('p',null,t('可保存多个来源，但浏览时只启用一个。')),error?FailureNotice({error}):null,
-      ...sources.map((source,index)=>h('div',{className:'hm-source-row',key:source.manifestUrl},h('code',null,source.manifestUrl),h('button',{type:'button',disabled:source.enabled,onClick:()=>void save(sources.map((row,i)=>({...row,enabled:i===index})))},source.enabled?t('已启用'):t('启用')),h('button',{type:'button',onClick:()=>move(index,-1)},t('上移')),h('button',{type:'button',onClick:()=>move(index,1)},t('下移')),h('button',{type:'button',onClick:()=>void save(sources.filter((_,i)=>i!==index))},t('删除')))),
-      h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://…/catalog-source.json',onChange:event=>setDraft(event.target.value)}),h('button',{type:'button',onClick:()=>{if(draft)void save([...sources.map(row=>({...row,enabled:false})),{manifestUrl:draft,enabled:true}]);setDraft('');}},t('添加并启用'))));
+    return h('section',{className:'hm-library-sources'},h('h2',null,t('市场目录源')),
+h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://…/catalog-source.json',onChange:event=>setDraft(event.target.value)}),h('button',{type:'button',onClick:()=>{if(draft)void save([...sources.map(row=>({...row,enabled:false})),{manifestUrl:draft,enabled:true}]);setDraft('');}},t('添加并启用'))),h('p',null,t('可保存多个来源，但浏览时只启用一个。')),error?FailureNotice({error}):null,
+      ...sources.map((source,index)=>h('div',{className:'hm-source-row',key:source.manifestUrl},h('code',null,source.manifestUrl),h('button',{type:'button',disabled:source.enabled,onClick:()=>void save(sources.map((row,i)=>({...row,enabled:i===index})))},source.enabled?t('已启用'):t('启用')),h('button',{type:'button',onClick:()=>move(index,-1)},t('上移')),h('button',{type:'button',onClick:()=>move(index,1)},t('下移')),h('button',{type:'button',onClick:()=>void save(sources.filter((_,i)=>i!==index))},t('删除')))));
   }
   function SuiteSourceSettingsSection(){useLocale();
     const[value,setValue]=React.useState(null),[mode,setMode]=React.useState('configured'),[error,setError]=React.useState(''),[busy,setBusy]=React.useState(false);
@@ -733,14 +758,13 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     const save=async()=>{setBusy(true);try{const next=await request('/hanamesh/library/suite-source',{method:'POST',body:JSON.stringify({mode})});setValue(next);setMode(next.mode);setError('');}catch(e){setError(errorText(e));}finally{setBusy(false);}};
     const observation=value?.observation,state=observation?.state;
     return h('section',{className:'hm-node-runtime','data-hanamesh-suite-source':''},h('h2',null,t('套件安装包来源')),
-      h('p',null,t('选择三个官方套件组件的 npm 安装包 registry。市场目录源提供浏览清单，在「市场目录源」中单独设置。')),
       error?FailureNotice({error}):null,
-      value?h('div',null,h('label',null,t('安装包来源'),h('select',{value:mode,disabled:busy,onChange:e=>setMode(e.target.value)},h('option',{value:'configured'},t('现有配置（默认）')),h('option',{value:'core'},t('Core 当前本机来源')))),
+      value?h('div',{className:'hm-suite-fields'},h('label',null,t('安装包来源'),h('select',{value:mode,disabled:busy,onChange:e=>setMode(e.target.value)},h('option',{value:'configured'},t('现有配置（默认）')),h('option',{value:'core'},t('Core 当前本机来源')))),
+        h('button',{type:'button',disabled:busy||mode===value.mode,onClick:()=>void save()},busy?t('正在保存…'):t('保存套件安装包来源')),h('button',{type:'button',disabled:busy,onClick:()=>void load()},t('刷新来源状态')),
         h('p',null,t('现有 registry：'),h('code',null,value.configuredRegistry)),
         h('p',null,t('已保存选择：')+(value.mode==='core'?t('Core 当前本机来源'):t('现有配置'))),
         observation?.observable?h('div',null,h('p',{role:'status'},t('Core 来源：')+state.status+' · '+state.selection),state.registry?h('p',null,h('code',null,state.registry)):null,state.lastError?FailureNotice({error:state.lastError}):null):h('div',null,h('p',{role:'status'},t('Core 来源暂不可用。请检查 Core 插件及其来源设置。')),h('details',null,h('summary',null,t('技术详情')),h('code',null,observation?.code??'CORE_SUITE_SOURCE_MISSING'))),
-        h('p',null,t('保存选择不会安装。检查、确认和执行前都重新读取当前来源与 Core 兼容声明；来源变化后须重新查看并确认。')),
-        h('button',{type:'button',disabled:busy||mode===value.mode,onClick:()=>void save()},busy?t('正在保存…'):t('保存套件安装包来源')),h('button',{type:'button',disabled:busy,onClick:()=>void load()},t('刷新来源状态'))):h('p',null,t('正在读取套件安装包来源…')));
+        h('details',null,h('summary',null,t('使用说明')),h('p',null,t('选择三个官方套件组件的 npm 安装包 registry。市场目录源提供浏览清单，在「市场目录源」中单独设置。')),h('p',null,t('保存选择不会安装。检查、确认和执行前都重新读取当前来源与 Core 兼容声明；来源变化后须重新查看并确认。')))):h('p',null,t('正在读取套件安装包来源…')));
   }
   function NodeRuntimeSection(){useLocale();
     const[value,setValue]=React.useState(null),[draft,setDraft]=React.useState(null),[plan,setPlan]=React.useState(null),[error,setError]=React.useState(''),[working,setWorking]=React.useState(false);
@@ -758,14 +782,14 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     const phase={starting:t('检查位置与空间'),download:t('下载'),verify:t('校验 SHA-256'),extract:t('解压'),check:t('验证独立 Node'),promote:t('保存运行时'),bind:t('保存并启用（已完成校验，不能再取消）'),ready:t('环境已就绪'),restore:t('检查已有环境')};
     const op=value?.operation;
     return h('section',{className:'hm-node-runtime','data-hanamesh-node-runtime':''},h('h2',null,t('安装环境')),
+      draft&&value?h('div',{className:'hm-node-fields'},h('button',{type:'button',disabled:busy||dirty||!value.supported||draft.mode!=='managed',onClick:()=>void action('plan',{},setPlan)},t('准备安装环境')),h('button',{type:'button',disabled:working,onClick:()=>void load()},t('刷新状态'))):null,
       h('p',null,t('准备一次，后续安装自动使用。无需重启 DSH，也无需填写 Node 路径；不会改动客户端或系统 Node。')),
       error?FailureNotice({error}):null,
       value?h('p',{role:'status'},value.ready?t('环境已就绪 · 后续插件操作自动使用独立 Node'):value.supported?t('尚未准备安装环境；确认前不会下载。'):t(value.limitations)):h('p',null,t('正在读取安装环境…')),
-      draft&&value?h('div',{className:'hm-node-fields'},field('mode',t(value.names.mode),'select'),field('version',t(value.names.version),'select'),field('sourceBase',t(value.names.sourceBase)),field('storageRoot',t(value.names.storageRoot)),field('externalBinary',t(value.names.externalBinary)),
-        h('small',null,t('已有路径仅在高级方式生效。下载来源必须使用 HTTPS；版本只能选择已校验发行。修改设置后先保存，再重新确认。')),
+      draft&&value?h('div',{className:'hm-node-fields'},field('mode',t(value.names.mode),'select'),field('version',t(value.names.version),'select'),
         h('button',{type:'button',disabled:busy||!dirty,onClick:()=>void action('settings',{settings:draft},next=>{setValue(next);setDraft(next.settings);setPlan(null);})},t('保存环境设置')),
-        h('button',{type:'button',disabled:busy||dirty||!value.supported||draft.mode!=='managed',onClick:()=>void action('plan',{},setPlan)},t('准备安装环境')),
-        h('button',{type:'button',disabled:working,onClick:()=>void load()},t('刷新状态'))):null,
+        h('details',null,h('summary',null,t('高级设置')),field('sourceBase',t(value.names.sourceBase)),field('storageRoot',t(value.names.storageRoot)),field('externalBinary',t(value.names.externalBinary)),
+        h('small',null,t('已有路径仅在高级方式生效。下载来源必须使用 HTTPS；版本只能选择已校验发行。修改设置后先保存，再重新确认。')))):null,
       plan?h('div',{className:'hm-node-confirm',role:'region','aria-label':t('确认准备安装环境')},h('h3',null,t('确认下载并准备')),
         h('p',null,t('平台 ')+plan.platform+' · Node.js '+plan.version+t(' · 最低 ')+(plan.minimumOS??'macOS 13.5')),
         h('dl',null,h('dt',null,t('下载来源')),h('dd',null,plan.source),h('dt',null,t('下载体积')),h('dd',null,mb(plan.bytes)),h('dt',null,t('解压后文件')),h('dd',null,mb(plan.unpackedBytes)),h('dt',null,t('准备所需空间')),h('dd',null,mb(plan.requiredBytes)),h('dt',null,t('存放位置')),h('dd',null,plan.root)),
@@ -779,7 +803,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
         op.state==='preparing'?h('button',{type:'button',disabled:working,onClick:()=>void action('cancel',{operationId:op.id},()=>void load())},t('取消准备')):null,
         op.error?h('details',null,h('summary',null,t('诊断详情')),h('code',null,op.error.code)):null):null,
       value?.executable?h('details',null,h('summary',null,t('当前自动绑定的路径')),h('code',null,value.executable)):null,
-      h('p',null,t('支持 macOS 13.5+（Apple Silicon / Intel）。Windows 的安装、守护与取消验证尚未接通，本流程不声称支持 Windows。')));
+      h('p',null,t('支持 macOS 13.5+（Apple Silicon / Intel）；Windows 暂不支持。')),h('details',null,h('summary',null,t('技术详情')),h('p',null,t('支持 macOS 13.5+（Apple Silicon / Intel）。Windows 的安装、守护与取消验证尚未接通，本流程不声称支持 Windows。'))));
   }
 
   /** Website handoff settings: every setting named with its default and editable; the fixed rules listed with their reason. */
@@ -792,17 +816,20 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     const listener=value?.listener,defaults=value?.defaults,names=value?.names;
     const status=!listener?t('读取中…'):listener.status==='listening'?t('正在 ')+listener.origin+t(' 接收网站交接'):listener.status==='disabled'?t('已关闭：网站上的「安装」按钮找不到本客户端'):listener.status==='unavailable'?t('未启动'):t('未启动');
     return h('section',{className:'hm-library-sources'},h('h2',null,t('网站安装交接')),
-      h('p',null,t('网站（如 market.hanamesh.com）点「安装」时，会在下列本机端口上找到本客户端，把要装的插件交给应用库；应用库在这里弹出确认，你确认后才安装。')),
-      h('p',null,t('安装前需要独立 Node.js 24。请打开 AppHost「安装环境」点击「准备安装环境」，核对来源、版本和体积后确认；完成后自动可用，无需重启或填写路径。已有独立 Node 可在安装环境高级设置中指定，不支持 Electron 包装脚本。')),
-      h('p',{role:'status'},status),listener?.status==='unavailable'?FailureNotice({error:listener.need}):null,error?FailureNotice({error}):null,h(HandoffIssueNotice,null),
       draft&&defaults?h('div',{className:'hm-handoff-settings'},
-        h('label',null,h('input',{type:'checkbox',checked:draft.enabled,onChange:event=>setDraft({...draft,enabled:event.target.checked})}),t(' 启用（')+names.enabled+t('，默认 ')+(defaults.enabled?t('开'):t('关'))+'）'),
-        h('label',null,t('端口（')+names.ports+t('，默认 ')+defaults.ports.join(', ')+t('；按顺序取第一个空闲的）'),h('input',{value:draft.ports,onChange:event=>setDraft({...draft,ports:event.target.value})})),
-        h('label',null,t('允许交接的网站（')+names.allowedOrigins+t('，每行一个，默认 ')+defaults.allowedOrigins.join('、')+'）',h('textarea',{rows:3,value:draft.allowedOrigins,onChange:event=>setDraft({...draft,allowedOrigins:event.target.value})})),
-        h('label',null,t('未确认多久后作废，毫秒（')+names.ttlMs+t('，默认 ')+defaults.ttlMs+' = '+defaults.ttlMs/60000+t(' 分钟）'),h('input',{value:String(draft.ttlMs),onChange:event=>setDraft({...draft,ttlMs:event.target.value})})),
-        h('label',null,t('应用库多久查一次新的交接，毫秒（')+names.pollMs+t('，默认 ')+defaults.pollMs+'）',h('input',{value:String(draft.pollMs),onChange:event=>setDraft({...draft,pollMs:event.target.value})})),
-        h('button',{type:'button',onClick:()=>void save()},t('保存并重新监听'))):null,
-      value?.rules?h('div',{className:'hm-handoff-rules'},h('h3',null,t('固定规则（不能关）')),h('ul',null,...value.rules.map(row=>h('li',{key:row.rule},t(row.rule),h('br',null),h('small',null,t('为什么：')+t(row.why)))))):null);
+        h('label',null,h('input',{type:'checkbox',checked:draft.enabled,onChange:event=>setDraft({...draft,enabled:event.target.checked})}),t('启用网站安装交接')),
+        h('button',{type:'button',onClick:()=>void save()},t('保存并重新监听')),
+        h('label',null,t('本机端口'),h('input',{value:draft.ports,onChange:event=>setDraft({...draft,ports:event.target.value})})),
+        h('label',null,t('允许的网站（每行一个）'),h('textarea',{rows:3,value:draft.allowedOrigins,onChange:event=>setDraft({...draft,allowedOrigins:event.target.value})})),
+        h('label',null,t('确认等待时间（毫秒）'),h('input',{value:String(draft.ttlMs),onChange:event=>setDraft({...draft,ttlMs:event.target.value})})),
+        h('label',null,t('检查新交接的间隔（毫秒）'),h('input',{value:String(draft.pollMs),onChange:event=>setDraft({...draft,pollMs:event.target.value})}))):null,
+      h('p',{role:'status'},status),listener?.status==='unavailable'?FailureNotice({error:listener.need}):null,error?FailureNotice({error}):null,h(HandoffIssueNotice,null),
+      h('p',null,t('网站点「安装」后，本客户端会请你确认；确认后才安装。')),
+      h('p',null,t('安装前请先在「安装环境」准备所需环境。')),
+      h('details',null,h('summary',null,t('使用说明')),h('p',null,t('安装前需要独立 Node.js 24。请打开 AppHost「安装环境」点击「准备安装环境」，核对来源、版本和体积后确认；完成后自动可用，无需重启或填写路径。已有独立 Node 可在安装环境高级设置中指定，不支持 Electron 包装脚本。'))),
+      h('details',{className:'hm-handoff-rules'},h('summary',null,t('技术详情')),
+        defaults&&names?h('div',null,h('h3',null,t('设置名称与默认值')),h('dl',null,...['enabled','ports','allowedOrigins','ttlMs','pollMs'].flatMap(key=>[h('dt',{key:key+'-name'},names[key]),h('dd',{key:key+'-value'},Array.isArray(defaults[key])?defaults[key].join(', '):typeof defaults[key]==='boolean'?(defaults[key]?t('开'):t('关')):String(defaults[key]))]))):null,
+        value?.rules?h('div',null,h('h3',null,t('固定规则（不能关）')),h('ul',null,...value.rules.map(row=>h('li',{key:row.rule},t(row.rule),h('br',null),h('small',null,t('为什么：')+t(row.why)))))):null));
   }
   const FAILURE_REASONS={...CORE_SUITE_FAILURES,INSTALL_READBACK_MISMATCH:t('安装命令返回成功，但 profile 读回的版本与固定版本不一致'),REGISTRY_LOOKUP_FAILED:t('包不在当前 registry 上——尚未发布到 npm，或客户端 registry 设置不对'),DSH_PLUGIN_FAILED:t('DSH 安装命令失败，查看宿主日志'),LIBRARY_INSTALL_UNAVAILABLE:t('当前宿主未提供安装参数（profile / node 路径）'),CATALOG_ITEM_MISSING:t('目录里已没有这一项，刷新后重试'),UNSTABLE_VERSION:t('registry 上的最新版是预发布版（rc），客户端未允许安装预发布版'),RUNTIME_ARCHIVE_UNAVAILABLE:t('运行时归档下载失败，检查网络或来源'),OPERATION_TIMEOUT:t('10 分钟内没有结果，可稍后重试'),PACKAGE_DENIED:t('HanaMesh 套件自身不能从市场安装或卸载'),INSTANCE_IN_USE:t('先关闭该应用的所有视图再卸载')};
   const failureReason=code=>t(FAILURE_REASONS[code])??t('详细原因见宿主日志');
@@ -1095,7 +1122,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   // No cross-plugin reads here: the browser-side cordis context never carries host services such as hanameshCore
   // (dsh-client-modules boots its own root context); Core status lives in Core's own Settings section.
   function localizedSection(ctx,id,order,label,component){return ctx.slots.inject('settings.section',()=>{let dispose;const refresh=()=>{dispose?.();dispose=ctx.slots.register({name:'settings.section',id,order,label:t(label)},component);};refresh();const unsubscribe=localeService?.subscribe(refresh);return()=>{unsubscribe?.();dispose?.();};});}
-  function apply(ctx,{verification=false}={}){localeService=ctx.locale??null;if(localeService)ctx.effect(()=>localeService.register('hanamesh.apphost',COPY),'hanamesh-app-host:locale');ctx.effect(()=>{const style=document.createElement('style');style.textContent='.hm-node-runtime{display:grid;gap:12px;max-width:900px;color:inherit}.hm-node-fields{display:grid;gap:10px}.hm-node-fields label{display:grid;gap:6px}.hm-node-runtime input,.hm-node-runtime select,.hm-node-runtime button{font:inherit;color:inherit;background:transparent;border:1px solid color-mix(in srgb,currentColor 30%,transparent);border-radius:8px;min-height:44px;padding:8px 12px;box-sizing:border-box;max-width:100%}.hm-node-runtime button{cursor:pointer}.hm-node-runtime button:hover:not(:disabled){background:color-mix(in srgb,currentColor 9%,transparent)}.hm-node-runtime button:focus-visible{outline:2px solid currentColor;outline-offset:2px}.hm-node-runtime button:disabled{opacity:.5;cursor:default}.hm-node-confirm,.hm-node-progress{border:1px solid color-mix(in srgb,currentColor 25%,transparent);border-radius:12px;padding:16px}.hm-node-confirm dl{display:grid;grid-template-columns:100px minmax(0,1fr);gap:8px}.hm-node-runtime dd{margin:0}.hm-node-runtime code,.hm-node-runtime dd{overflow-wrap:anywhere}.hm-node-runtime progress{width:100%}.hm-node-runtime [role=alert]{border-left:3px solid currentColor;padding-left:10px}'+'.hm-providers,.hm-library-sources{display:grid;gap:16px}.hm-providers table{width:100%;border-collapse:collapse}.hm-providers th,.hm-providers td{padding:8px;text-align:left;border-bottom:1px solid color-mix(in srgb,currentColor 14%,transparent)}.hm-provider-card{padding:16px;border:1px solid color-mix(in srgb,currentColor 18%,transparent);border-radius:12px}.hm-provider-row{display:grid;grid-template-columns:minmax(120px,1fr) auto minmax(180px,1fr) auto;gap:8px;align-items:center;margin:8px 0}.hm-source-row{display:grid;grid-template-columns:minmax(0,1fr) repeat(4,auto);gap:8px}.hm-source-row code{overflow-wrap:anywhere}.hm-source-add{display:flex;gap:8px}.hm-source-add input{flex:1}.hm-library-overlay{position:absolute;inset:0;z-index:30;pointer-events:auto;overflow:auto;padding:24px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary)}.hm-library-overlay button,.hm-library-overlay input,.hm-library-overlay select,.hm-market-embedded button,.hm-market-embedded input,.hm-market-embedded select{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2);border-color:var(--dsw-alias-border-l2)}.hm-library-overlay>header{display:flex;justify-content:space-between;align-items:center}.hm-library-toolbar{display:flex;gap:8px;align-items:center;margin:8px 0}.hm-library-toolbar input[type=search]{flex:1;padding:6px 10px}.hm-library-more{margin:12px auto;display:block}.hm-library-failed{color:var(--dsw-alias-state-error-primary);margin:0}.hm-library-ok{color:var(--dsw-alias-state-success-primary);margin:0}.hm-restart-notice{padding:10px 12px;border:1px solid var(--dsw-alias-state-warn-primary);border-radius:8px;background:var(--dsw-alias-state-warn-tertiary);margin:8px 0}.hm-restart-link{margin-left:4px;font-weight:600}.hm-market-state{font-size:12px;color:var(--dsw-alias-label-secondary)}.hm-market-actions{display:flex;gap:8px;flex-wrap:wrap}.hm-market-embedded{display:block}.hm-market-embedded>header{display:flex;justify-content:space-between;align-items:center}.hm-market-conflict{padding:10px 12px;border:1px solid var(--dsw-alias-state-business-primary);border-radius:8px;background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 8%,transparent);margin:8px 0}.hm-install-target{display:grid;gap:8px;padding:16px;border:1px solid var(--dsw-alias-border-l2);border-radius:12px;margin:12px 0}.hm-install-target form{display:flex;gap:8px;flex-wrap:wrap}.hm-install-target input{flex:1;min-width:180px;padding:6px 10px}.hm-install-target dl{display:grid;grid-template-columns:80px 1fr;gap:6px}.hm-install-target dd{margin:0;overflow-wrap:anywhere}.hm-market-installed{margin-top:24px}.hm-market-installed ul{padding-left:18px;display:grid;gap:6px}.hm-library-toolbar select{padding:6px 10px}.hm-library-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}.hm-library-grid article{display:grid;gap:10px;padding:16px;border:1px solid color-mix(in srgb,currentColor 16%,transparent);border-radius:12px}.hm-app-frame{display:grid;grid-template-rows:auto 1fr;height:calc(100vh - 130px)}.hm-market-embedded>.hm-app-frame{position:fixed;inset:0;z-index:1001;height:100vh;box-sizing:border-box;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);padding:12px 16px}.hm-app-frame>div{display:flex;justify-content:space-between}.hm-app-frame iframe{width:100%;height:100%;border:0}';style.textContent+='/* Only AppHost surfaces: never resize the host settings shell. */\n.hm-node-runtime,.hm-library-sources,.hm-providers,.hm-market{min-width:0;width:100%;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere}\n.hm-node-runtime>*,.hm-library-sources>*,.hm-node-fields>*,.hm-handoff-settings>*,.hm-library-toolbar>*{min-width:0;max-width:100%;box-sizing:border-box}\n.hm-library-sources input,.hm-library-sources textarea,.hm-library-sources select,.hm-node-runtime input,.hm-node-runtime select{min-width:0;width:100%;max-width:100%;box-sizing:border-box;font:inherit;color:inherit;background:var(--dsw-alias-bg-layer-2)}\n.hm-library-sources button,.hm-market button{min-height:44px;max-width:100%;white-space:normal;font:inherit;color:inherit;background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l2);border-radius:8px;padding:8px 12px}\n.hm-library-sources button:focus-visible,.hm-market button:focus-visible{outline:2px solid currentColor;outline-offset:2px}\n.hm-handoff-settings{display:grid;gap:12px}.hm-handoff-settings label{display:grid;gap:6px}.hm-handoff-settings input[type=checkbox]{width:auto}\n.hm-node-confirm,.hm-node-progress{min-width:0;max-width:100%;box-sizing:border-box}\n.hm-failure pre{max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}.hm-failure summary{cursor:pointer}.hm-failure p{margin:8px 0}\n.hm-library-toolbar,.hm-source-add{flex-wrap:wrap}.hm-library-toolbar input[type=search]{min-width:0;width:100%;flex:1 1 180px}\n.hm-library-grid{grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),1fr))}\n.hm-providers{overflow-x:auto}.hm-source-row{grid-template-columns:minmax(0,1fr);gap:6px}\n@media(max-width:640px){.hm-library-overlay{padding:12px}.hm-node-confirm{padding:10px}.hm-node-confirm dl,.hm-install-target dl{grid-template-columns:minmax(0,1fr)}.hm-node-confirm dt{font-weight:600}.hm-node-confirm dd{margin-bottom:6px}.hm-library-toolbar select{width:100%}}\n';style.textContent+='\n.hm-provider-records td{overflow-wrap:anywhere}.hm-providers select,.hm-providers input{min-width:0;max-width:100%;width:100%;box-sizing:border-box}.hm-provider-records details>summary{cursor:pointer;min-height:44px;display:flex;align-items:center}.hm-provider-records pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}\n@media(max-width:640px){.hm-providers{overflow:visible}.hm-provider-records,.hm-provider-records tbody{display:block}.hm-provider-records thead{display:none}.hm-provider-records tr{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding:12px;border:1px solid var(--dsw-alias-border-l2);border-radius:8px;margin:10px 0}.hm-provider-records td{display:block;min-width:0;padding:0;border:0}.hm-provider-records td::before{content:attr(data-label);display:block;font-weight:600;margin-bottom:4px}.hm-provider-records td:empty{display:none}}\n';document.head.append(style);return()=>style.remove();},'hanamesh-app-host:style');
+  function apply(ctx,{verification=false}={}){localeService=ctx.locale??null;if(localeService)ctx.effect(()=>localeService.register('hanamesh.apphost',COPY),'hanamesh-app-host:locale');ctx.effect(()=>{const style=document.createElement('style');style.textContent='.hm-node-runtime{display:grid;gap:12px;max-width:900px;color:inherit}.hm-node-fields{display:grid;gap:10px}.hm-node-fields label{display:grid;gap:6px}.hm-node-runtime input,.hm-node-runtime select,.hm-node-runtime button{font:inherit;color:inherit;background:transparent;border:1px solid color-mix(in srgb,currentColor 30%,transparent);border-radius:8px;min-height:44px;padding:8px 12px;box-sizing:border-box;max-width:100%}.hm-node-runtime button{cursor:pointer}.hm-node-runtime button:hover:not(:disabled){background:color-mix(in srgb,currentColor 9%,transparent)}.hm-node-runtime button:focus-visible{outline:2px solid currentColor;outline-offset:2px}.hm-node-runtime button:disabled{opacity:.5;cursor:default}.hm-node-confirm,.hm-node-progress{border:1px solid color-mix(in srgb,currentColor 25%,transparent);border-radius:12px;padding:16px}.hm-node-confirm dl{display:grid;grid-template-columns:100px minmax(0,1fr);gap:8px}.hm-node-runtime dd{margin:0}.hm-node-runtime code,.hm-node-runtime dd{overflow-wrap:anywhere}.hm-node-runtime progress{width:100%}.hm-node-runtime [role=alert]{border-left:3px solid currentColor;padding-left:10px}'+'.hm-providers,.hm-library-sources{display:grid;gap:16px}.hm-providers table{width:100%;border-collapse:collapse}.hm-providers th,.hm-providers td{padding:8px;text-align:left;border-bottom:1px solid color-mix(in srgb,currentColor 14%,transparent)}.hm-provider-card{padding:16px;border:1px solid color-mix(in srgb,currentColor 18%,transparent);border-radius:12px}.hm-provider-row{display:grid;grid-template-columns:minmax(120px,1fr) auto minmax(180px,1fr) auto;gap:8px;align-items:center;margin:8px 0}.hm-source-row{display:grid;grid-template-columns:minmax(0,1fr) repeat(4,auto);gap:8px}.hm-source-row code{overflow-wrap:anywhere}.hm-source-add{display:flex;gap:8px}.hm-source-add input{flex:1}.hm-library-overlay{position:absolute;inset:0;z-index:30;pointer-events:auto;overflow:auto;padding:24px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary)}.hm-library-overlay button,.hm-library-overlay input,.hm-library-overlay select,.hm-market-embedded button,.hm-market-embedded input,.hm-market-embedded select{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2);border-color:var(--dsw-alias-border-l2)}.hm-library-overlay>header{display:flex;justify-content:space-between;align-items:center}.hm-library-toolbar{display:flex;gap:8px;align-items:center;margin:8px 0}.hm-library-toolbar input[type=search]{flex:1;padding:6px 10px}.hm-library-more{margin:12px auto;display:block}.hm-library-failed{color:var(--dsw-alias-state-error-primary);margin:0}.hm-library-ok{color:var(--dsw-alias-state-success-primary);margin:0}.hm-restart-notice{padding:10px 12px;border:1px solid var(--dsw-alias-state-warn-primary);border-radius:8px;background:var(--dsw-alias-state-warn-tertiary);margin:8px 0}.hm-restart-link{margin-left:4px;font-weight:600}.hm-market-state{font-size:12px;color:var(--dsw-alias-label-secondary)}.hm-market-actions{display:flex;gap:8px;flex-wrap:wrap}.hm-market-embedded{display:block}.hm-market-embedded>header{display:flex;justify-content:space-between;align-items:center}.hm-market-conflict{padding:10px 12px;border:1px solid var(--dsw-alias-state-business-primary);border-radius:8px;background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 8%,transparent);margin:8px 0}.hm-install-target{display:grid;gap:8px;padding:16px;border:1px solid var(--dsw-alias-border-l2);border-radius:12px;margin:12px 0}.hm-install-target form{display:flex;gap:8px;flex-wrap:wrap}.hm-install-target input{flex:1;min-width:180px;padding:6px 10px}.hm-install-target dl{display:grid;grid-template-columns:80px 1fr;gap:6px}.hm-install-target dd{margin:0;overflow-wrap:anywhere}.hm-market-installed{margin-top:24px}.hm-market-installed ul{padding-left:18px;display:grid;gap:6px}.hm-library-toolbar select{padding:6px 10px}.hm-library-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}.hm-library-grid article{display:grid;gap:10px;padding:16px;border:1px solid color-mix(in srgb,currentColor 16%,transparent);border-radius:12px}.hm-app-frame{display:grid;grid-template-rows:auto 1fr;height:calc(100vh - 130px)}.hm-market-embedded>.hm-app-frame{position:fixed;inset:0;z-index:1001;height:100vh;box-sizing:border-box;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);padding:12px 16px}.hm-app-frame>div{display:flex;justify-content:space-between}.hm-app-frame iframe{width:100%;height:100%;border:0}';style.textContent+='/* Only AppHost surfaces: never resize the host settings shell. */\n.hm-node-runtime,.hm-library-sources,.hm-providers,.hm-market{min-width:0;width:100%;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere}\n.hm-node-runtime>*,.hm-library-sources>*,.hm-node-fields>*,.hm-handoff-settings>*,.hm-library-toolbar>*{min-width:0;max-width:100%;box-sizing:border-box}\n.hm-library-sources input,.hm-library-sources textarea,.hm-library-sources select,.hm-node-runtime input,.hm-node-runtime select{min-width:0;width:100%;max-width:100%;box-sizing:border-box;font:inherit;color:inherit;background:var(--dsw-alias-bg-layer-2)}\n.hm-library-sources button,.hm-market button{min-height:44px;max-width:100%;white-space:normal;font:inherit;color:inherit;background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l2);border-radius:8px;padding:8px 12px}\n.hm-library-sources button:focus-visible,.hm-market button:focus-visible{outline:2px solid currentColor;outline-offset:2px}\n.hm-handoff-settings{display:grid;gap:12px}.hm-handoff-settings label{display:grid;gap:6px}.hm-handoff-settings input[type=checkbox]{width:auto}\n.hm-node-confirm,.hm-node-progress{min-width:0;max-width:100%;box-sizing:border-box}\n.hm-failure pre{max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}.hm-failure summary{cursor:pointer}.hm-failure p{margin:8px 0}\n.hm-library-toolbar,.hm-source-add{flex-wrap:wrap}.hm-library-toolbar input[type=search]{min-width:0;width:100%;flex:1 1 180px}\n.hm-library-grid{grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),1fr))}\n.hm-providers{overflow-x:auto}.hm-source-row{grid-template-columns:minmax(0,1fr);gap:6px}\n@media(max-width:640px){.hm-library-overlay{padding:12px}.hm-node-confirm{padding:10px}.hm-node-confirm dl,.hm-install-target dl{grid-template-columns:minmax(0,1fr)}.hm-node-confirm dt{font-weight:600}.hm-node-confirm dd{margin-bottom:6px}.hm-library-toolbar select{width:100%}}\n';style.textContent+='\n.hm-provider-records td{overflow-wrap:anywhere}.hm-providers select,.hm-providers input{min-width:0;max-width:100%;width:100%;box-sizing:border-box}.hm-provider-records details>summary{cursor:pointer;min-height:44px;display:flex;align-items:center}.hm-provider-records pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}\n@media(max-width:640px){.hm-providers{overflow:visible}.hm-provider-records,.hm-provider-records tbody{display:block}.hm-provider-records thead{display:none}.hm-provider-records tr{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding:12px;border:1px solid var(--dsw-alias-border-l2);border-radius:8px;margin:10px 0}.hm-provider-records td{display:block;min-width:0;padding:0;border:0}.hm-provider-records td::before{content:attr(data-label);display:block;font-weight:600;margin-bottom:4px}.hm-provider-records td:empty{display:none}}\n';style.textContent+="\n.hm-providers,.hm-library-sources,.hm-node-runtime{overflow-wrap:normal;word-break:normal}\n.hm-providers h2,.hm-library-sources h2,.hm-node-runtime h2{margin:0;font-weight:600;line-height:1.5}\n.hm-providers p,.hm-library-sources p,.hm-node-runtime p{margin:0;line-height:1.6}\n.hm-suite-fields,.hm-suite-fields>label,.hm-handoff-settings,.hm-source-add{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}\n.hm-suite-fields>*,.hm-source-add>*,.hm-providers>*,.hm-library-sources details,.hm-node-runtime details{min-width:0;max-width:100%;box-sizing:border-box}\n.hm-library-sources input,.hm-library-sources textarea,.hm-library-sources select,.hm-suite-fields select,.hm-providers select,.hm-providers input{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box;min-height:44px;padding:8px;font:inherit;border:1px solid var(--dsw-alias-border-l2);border-radius:8px}\n.hm-library-sources input[type=checkbox]{display:inline-block;width:20px;min-height:20px;max-width:20px}\n.hm-library-sources summary,.hm-providers summary,.hm-node-runtime summary{min-height:44px;display:flex;align-items:center;cursor:pointer}\n.hm-library-sources code,.hm-library-sources dd,.hm-providers pre{overflow-wrap:anywhere;white-space:pre-wrap}\n.hm-handoff-settings>button,.hm-suite-fields>button{width:100%}\n@media(max-width:640px){.hm-provider-records tr{padding:8px}.hm-node-fields{grid-template-columns:minmax(0,1fr)}}\n";document.head.append(style);return()=>style.remove();},'hanamesh-app-host:style');
     ctx.effect(()=>localizedSection(ctx,'hanamesh-providers',18,"供应商",ProvidersSection),'hanamesh-app-host:providers');
     ctx.effect(()=>localizedSection(ctx,'hanamesh-library-sources',19,"市场目录源",LibrarySourcesSection),'hanamesh-app-host:library-sources');
     ctx.effect(()=>localizedSection(ctx,'hanamesh-suite-source',19.5,"套件安装包来源",SuiteSourceSettingsSection),'hanamesh-app-host:suite-source');

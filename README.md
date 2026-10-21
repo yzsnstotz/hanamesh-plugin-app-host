@@ -1,3 +1,7 @@
+> I51 R1 返修（待复审）：供应商指引跟随宿主中英菜单，默认正文只写用途和结果；实现解释、交接固定规则及具名设置默认值保留在技术详情。交接的保存操作与套件来源选择前置，自有字段按单列排列；设置值、默认值、权限、读写协议均不变。
+>
+> 已知限制 / Known limitations：官方 DSH rc.2 设置页在 390 CSS px 下仍保留固定侧栏，插件内容可用宽度受宿主挤压；本插件不改变客户端或全局 CSS，不能保证该宿主窄屏下标题、原生下拉选项及输入值完整可见。完整设置操作建议使用宽窗口。At 390 CSS px, the official DSH rc.2 settings sidebar leaves limited room for plugin content; titles, native select options and input values may remain constrained. Use a wider window for full settings operations. AppHost only controls its own content and does not modify the client or global CSS. 此限制按编排本次裁定披露，不报告整页390通过。Brand M01既有错误可见性限制仍开；静态profile peers check红流不改写为通过。
+
 > I51 第二批候选：供应商来源和状态随宿主中英显示，原始 id/source/state 收在折叠记录；390供应商与路由逐项排列。未改读取、授权、密钥处理或宿主设置侧栏；宿主390列宽限制继续单列。
 
 > R1 返修候选：AppHost 页面通过宿主公开 locale 服务随中英切换，错误主面说明下一步、原始原因保留在技术详情。只收紧插件自有布局；官方设置侧栏的390限制单列。不改变 profile peer 策略；旧 ui-slots 声明纠正为公开 renderer provider。
