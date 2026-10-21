@@ -75,3 +75,10 @@ For isolated Desktop validation, supply an owned absolute DSH_HOME before activa
 peer 范围保留输入要求：`@deepseek-ai/cordis ^4.0.2` 与 `@deepseek-ai/schemastery ^3.18.2`。目前标 optional 仅为了核心独立安装不从网络拉未验证组件；不表示 DSH 集成可以不用它们。
 
 运行 `npm run preflight:dsh` 会输出当前缺失项并以代码2退出，这个预检是阻塞说明，不是安装器，也不是自动联网修复。
+
+
+## Plugin-local installation environment
+
+In Settings → 安装环境, save the named source/version/storage settings if desired, then click 准备安装环境. Review the platform, exact version, URL, archive/extracted sizes, disk budget and license. Only 确认下载并准备 begins acquisition. Progress exposes download, SHA verification, extraction, independent Node check and promotion; 取消准备 aborts that one operation. Refresh failure is visible and does not silently retry. Successful preparation automatically rebinds later plugin operations; no DSH restart or manually entered path is needed. Existing configured Node is kept as an explicit advanced external mode.
+
+New runtime acquisition is executed by the already-running plugin host using public lib-provision APIs; it does not require the missing standalone Node to bootstrap, and does not use Electron as a guardian. All native evidence must use an unchanged official rc2 app plus isolated HOME/DSH_HOME/user-data-dir. Source/component tests and signed assets alone do not establish real-host or x64 native acceptance.

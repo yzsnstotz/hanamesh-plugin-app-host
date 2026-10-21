@@ -43,7 +43,7 @@ async function clearGeneratedRuntimeCache(result,runtimeRoot){
 
 /** Package mutations use the public CLI in an owned monitored process; upstream's in-process manager has no scoped env/monitor port. */
 export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBinary,dshBin,desktopCli,desktopLauncher,pluginManagerVersion,registry='https://registry.npmjs.org',allowPrerelease=false,
-  fetchImpl=globalThis.fetch,spawn=defaultSpawn,provision,remove,ledger,coreSuitePlan,coreService=()=>undefined,pluginManager=()=>undefined,emit=()=>{}}){
+  fetchImpl=globalThis.fetch,spawn=defaultSpawn,provision,remove,ledger,coreSuitePlan,coreService=()=>undefined,pluginManager=()=>undefined,emit=()=>{},profileWriter=new SerialQueue()}){
   requireCondition(typeof profileDir==='string'&&resolve(profileDir)===profileDir,'PROFILE_DIR_REQUIRED','library.profileDir must be an absolute path.');
   requireCondition(typeof dataRoot==='string'&&resolve(dataRoot)===dataRoot,'INVALID_ROOT','dataRoot must be absolute.');
   const launcherAvailable=typeof desktopLauncher?.command==='string'&&resolve(desktopLauncher.command)===desktopLauncher.command&&typeof desktopLauncher.home==='string'&&join(desktopLauncher.home,'profiles',profileName)===profileDir;
@@ -56,7 +56,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
   const runtimeRoot=appId=>join(dataRoot,'runtimes',appId);
   const permitted=name=>requireCondition(packageName(name)&&!blocked.has(name),'PACKAGE_DENIED','Package name is not permitted.',{packageName:name});
   /** rc.10: one profile writer at a time inside this host; `dsh plugin` itself serialises against other writers per command. */
-  const profileWriter=new SerialQueue();
+  requireCondition(profileWriter&&typeof profileWriter.run==='function','INVALID_PROFILE_WRITER','A shared profile writer queue is required.');
   const injected={provision,remove,ledger};
   /** Injected runtime functions (tests, suites) or the vendored lib-provision export of the same name. */
   const runtimeApi=async name=>injected[name]??(await defaults())[name];

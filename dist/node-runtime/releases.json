@@ -1,0 +1,59 @@
+{
+  "keyringCommit": "481637f813e912c4aa3622d7964ab426c97b8e8d",
+  "archives": [
+    {
+      "version": "24.13.1",
+      "platform": "darwin-arm64",
+      "asset": "node-v24.13.1-darwin-arm64.tar.gz",
+      "sha256": "8c039d59f2fec6195e4281ad5b0d02b9a940897b4df7b849c6fb48be6787bba6",
+      "bytes": 51007946,
+      "unpackedBytes": 189519272,
+      "files": 4559,
+      "url": "https://nodejs.org/dist/v24.13.1/node-v24.13.1-darwin-arm64.tar.gz",
+      "licenseSha256": "9ef8d3fa97d90d93543ee9e2b71394de59c09d8057625fd355d45303243527a3",
+      "signatureVerified": true,
+      "keyringCommit": "481637f813e912c4aa3622d7964ab426c97b8e8d"
+    },
+    {
+      "version": "24.13.1",
+      "platform": "darwin-x64",
+      "asset": "node-v24.13.1-darwin-x64.tar.gz",
+      "sha256": "527f0578d9812e7dfa225121bda0b1546a6a0e4b5f556295fc8299c272de5fbf",
+      "bytes": 52182519,
+      "unpackedBytes": 191849205,
+      "files": 4559,
+      "url": "https://nodejs.org/dist/v24.13.1/node-v24.13.1-darwin-x64.tar.gz",
+      "licenseSha256": "9ef8d3fa97d90d93543ee9e2b71394de59c09d8057625fd355d45303243527a3",
+      "signatureVerified": true,
+      "keyringCommit": "481637f813e912c4aa3622d7964ab426c97b8e8d"
+    },
+    {
+      "version": "24.22.0",
+      "platform": "darwin-arm64",
+      "asset": "node-v24.22.0-darwin-arm64.tar.gz",
+      "sha256": "6a9724d9b50a5f22b4816cded441b5a8d9ddae546191a5e5b7efa5a5e2ee26d5",
+      "bytes": 53049576,
+      "unpackedBytes": 197365224,
+      "files": 4797,
+      "url": "https://nodejs.org/dist/v24.22.0/node-v24.22.0-darwin-arm64.tar.gz",
+      "licenseSha256": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace",
+      "signatureVerified": true,
+      "keyringCommit": "481637f813e912c4aa3622d7964ab426c97b8e8d"
+    },
+    {
+      "version": "24.22.0",
+      "platform": "darwin-x64",
+      "asset": "node-v24.22.0-darwin-x64.tar.gz",
+      "sha256": "495e3f273c645f3c4677d438304cdfc701729ea5dec5728f5c8e76a2dece4b91",
+      "bytes": 54356645,
+      "unpackedBytes": 200534581,
+      "files": 4797,
+      "url": "https://nodejs.org/dist/v24.22.0/node-v24.22.0-darwin-x64.tar.gz",
+      "licenseSha256": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace",
+      "signatureVerified": true,
+      "keyringCommit": "481637f813e912c4aa3622d7964ab426c97b8e8d"
+    }
+  ],
+  "verification": "official signed SHASUMS gpgv; SHA match; no runtime execution",
+  "defaultVersion": "24.22.0"
+}
