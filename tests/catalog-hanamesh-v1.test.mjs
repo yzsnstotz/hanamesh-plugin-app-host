@@ -72,3 +72,8 @@ test('HC28 unknown or malformed suite fields remain fail closed at every public 
   for(const key of ['unknown','ownerPrincipalId'])assert.throws(()=>validateProviderPage(page([{...item(),official:true,suite:presentation(),[key]:'private'}])),{code:'INVALID_CATALOG_PAGE'});
   for(const extra of [{official:false},{suite:presentation()}])assert.throws(()=>validateProviderPage({schemaVersion:'1.0.0',items:[{id:'legacy',name:'legacy',displayName:'legacy',summary:'legacy',...extra}],page:{}}),{code:'INVALID_CATALOG_PAGE'});
 });
+
+test('I27 F02 observed legacy manifest at the HanaMesh view is refused before a page request',async()=>{
+ const {readFile}=await import('node:fs/promises');const observed=JSON.parse(await readFile(new URL('./fixtures/i27-live-manifest.json',import.meta.url),'utf8'));
+ let calls=0;await assert.rejects(loadCatalog({sources:[{manifestUrl:'https://market.hanamesh.com/catalog-source.json?view=hanamesh',enabled:true}],fetchImpl:async()=>{calls++;return Response.json(observed);}}),error=>error.code==='INVALID_CATALOG_MANIFEST'&&error.message==='Catalog endpoint must retain the selected view.');assert.equal(calls,1,'no legacy page fetch, retry or fallback');
+});
