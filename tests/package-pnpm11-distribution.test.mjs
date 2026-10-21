@@ -12,16 +12,23 @@ test('DIST11 normal tarball installs into a supplied official rc.2 host with pnp
  const root=await scratch('apphost-pnpm11-');t.after(()=>rm(root,{recursive:true,force:true}));
  const home=join(root,'home'),cache=join(root,'cache'),temp=join(root,'tmp'),consumer=join(root,'consumer');for(const p of [home,cache,temp,consumer])await mkdir(p);
  const env={CI:'true',pnpm_config_manage_package_manager_versions:"false",npm_config_manage_package_manager_versions:"false",PATH:process.env.PATH,HOME:home,DSH_HOME:join(home,'dsh'),TMPDIR:temp,XDG_CACHE_HOME:cache,XDG_CONFIG_HOME:join(home,'config'),npm_config_cache:join(cache,'npm'),npm_config_store_dir:join(cache,'pnpm-store')};
+ // An explicit empty workspace seals the consumer even when TMPDIR is inside a producer checkout.
+ // No linker/peer/exotic-dependency policy is overridden: pnpm consumer defaults apply.
+ await writeFile(join(consumer,'pnpm-workspace.yaml'),'packages: []\n');
  const run=(file,args,dir)=>spawn(file,args,{cwd:dir,env,encoding:'utf8'});
  let artifact=process.env.AH_TEST_TARBALL;
  if(!artifact){const result=await run('pnpm',['pack','--pack-destination',root],cwd);assert.equal(result.status,0,result.stdout+result.stderr);const archives=(await readdir(root)).filter(name=>name.endsWith('.tgz'));assert.equal(archives.length,1,'normal pnpm pack must produce one real tarball');artifact=join(root,archives[0]);}
  const host=JSON.parse(await readFile(new URL('./fixtures/official-rc2-host.json',import.meta.url),'utf8'));
  artifact=resolve(artifact);console.log(JSON.stringify({case:'DIST11_ARTIFACT',sha256:createHash('sha256').update(await readFile(artifact)).digest('hex'),hostSource:host.source,hostDependencies:host.dependencies}));await writeFile(join(consumer,'package.json'),JSON.stringify({name:'isolated-apphost-consumer',private:true,type:'module',dependencies:{...host.dependencies,'@hanamesh/dsh-app-host':`file:${artifact}`},devDependencies:{typescript:'5.8.3'}}));
- const args=['--yes','--package=pnpm@11.0.0','pnpm','install','--strict-peer-dependencies'];
- const installed=process.env.AH_TEST_PNPM11?await run(process.execPath,[resolve(process.env.AH_TEST_PNPM11),'install','--strict-peer-dependencies'],consumer):await run('npx',args,consumer);
- console.log(JSON.stringify({case:'DIST11',artifact,command:process.env.AH_TEST_PNPM11?'node <official pnpm11> install --strict-peer-dependencies':'npx --yes --package=pnpm@11.0.0 pnpm install --strict-peer-dependencies',status:installed.status,signal:installed.signal,stdout:installed.stdout,stderr:installed.stderr}));
+ const args=['--yes','--package=pnpm@11.0.0','pnpm','install','--strict-peer-dependencies','--reporter','ndjson'];
+ const installed=process.env.AH_TEST_PNPM11?await run(process.execPath,[resolve(process.env.AH_TEST_PNPM11),'install','--strict-peer-dependencies','--reporter','ndjson'],consumer):await run('npx',args,consumer);
+ console.log(JSON.stringify({case:'DIST11',artifact,command:process.env.AH_TEST_PNPM11?'node <official pnpm11> install --strict-peer-dependencies --reporter ndjson':'npx --yes --package=pnpm@11.0.0 pnpm install --strict-peer-dependencies --reporter ndjson',status:installed.status,signal:installed.signal,stdout:installed.stdout,stderr:installed.stderr}));
  if(installed.status!==0){const diagnostics=process.env.AH_TEST_PNPM11?await run(process.execPath,[resolve(process.env.AH_TEST_PNPM11),'peers','check'],consumer):await run('npx',['--yes','--package=pnpm@11.0.0','pnpm','peers','check'],consumer);console.log(JSON.stringify({case:'DIST11_PEER_DIAGNOSTIC',status:diagnostics.status,stdout:diagnostics.stdout,stderr:diagnostics.stderr}));}
  assert.equal(installed.error,undefined,'consumer must actually execute');assert.equal(installed.signal,null,'consumer must exit normally');assert.equal(installed.status,0,'default strict consumer rejected real artifact; exotic subdependency denial is not a host-peer/Loader rejection\n'+installed.stdout+installed.stderr);
+ // A nested TMPDIR must never make this install target the producer workspace.
+ const scopes=installed.stdout.split('\n').flatMap(line=>{try{const event=JSON.parse(line);return event.name==='pnpm:scope'?[event]:[];}catch{return [];}});
+ assert.ok(scopes.length>0&&scopes.every(event=>event.workspacePrefix===consumer),'pnpm must install in the isolated consumer workspace, not an ancestor');
+ assert.equal(JSON.parse(await readFile(join(consumer,'node_modules/@hanamesh/dsh-app-host/package.json'),'utf8')).name,'@hanamesh/dsh-app-host','the consumer itself must own the installed package');
  const entries=['','/dsh','/client','/client-ui','/catalog/suite','/install-target/suite'];await writeFile(join(consumer,'consumer.mts'),entries.map((s,i)=>`import * as p${i} from '@hanamesh/dsh-app-host${s}'; void p${i};`).join('\n'));
  const types=await run(process.execPath,[join(consumer,'node_modules/typescript/bin/tsc'),'--noEmit','--strict','--target','ES2022','--module','NodeNext','--moduleResolution','NodeNext','consumer.mts'],consumer);assert.equal(types.status,0,types.stdout+types.stderr);
  // /client-ui is a browser Loader entry, not a Node runtime API. Resolve and
