@@ -77,3 +77,7 @@ DSH 入口通过既有 optional injection 监听 `hanameshCore` 出现/卸载，
 ### 0.6.8 · HanaMesh 目录展示字段
 
 HanaMesh 视图原样保留可选 `official:boolean`（包括 false）与 C-INDEXER-CATALOG 的 `SuitePresentationDTO`；suite 的角色、组件、版本事实及 GitHub 精确 ref 按公开形状逐层校验，未知字段和畸形字段仍拒绝。历史可选版本事实缺省时不补猜。旧 major-1 视图不增加这些字段。该展示信息不构成安装权限；兼容与升级仍只读取公开 Core 声明。
+
+### 宿主主题（2026-10-21候选）
+
+市场覆盖页、内嵌应用框、表单控件与状态提示消费正式 DSH ui-theme 的公开 `--dsw-alias-bg-layer-2`、`label-primary/secondary`、`border-l2`、`state-error/success/warn/business-*` token，不写白底黑字或新增全局色。主题值与切换仍归宿主；不修改客户端或覆盖其它插件。缺主题提供方时不能把本候选截图当正式宿主支持。
