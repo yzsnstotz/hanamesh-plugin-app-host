@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createCoreSuiteAdapter} from '../src/library/suite.js';
+import {readSuiteSourceState,createCoreSuiteAdapter} from '../src/library/suite.js';
 import {createLibraryService} from '../src/library/service.js';
 import {declaration,core,registry} from './fixtures/core-suite-declaration.mjs';
 const ready=()=>({protocolVersion:'1',status:'ready',selection:'custom',registry,archiveCount:3,lastError:null});
@@ -81,4 +81,13 @@ test('B17 failed queued source save preserves previous selection and the next ca
  let state={schema:1,revision:2,sources:[],suiteSource:{mode:'configured'}},refuse=true;
  const library=await createLibraryService({domain:{global:{get:async()=>state,set:async next=>{if(refuse){refuse=false;throw new Error('disk refused');}state=structuredClone(next);}},close:async()=>{}},host:{instanceList:()=>[]}}).init();
  const source=library.replaceSuiteSourceSettings({mode:'core'});const catalog=library.replaceSources({sources:[{manifestUrl:'https://catalog.example/source.json',enabled:true}]});await assert.rejects(source,{code:'SUITE_SOURCE_SAVE_FAILED'});await catalog;assert.equal(state.suiteSource.mode,'configured');assert.equal(state.revision,3);assert.equal(state.sources.length,1);
+});
+
+test('C-B17-AH-L01 absent source is missing but incompatible public service is invalid',async()=>{
+ for(const service of [undefined,null]) assert.throws(()=>readSuiteSourceState(service),{code:'CORE_SUITE_SOURCE_MISSING'});
+ for(const service of [{protocolVersion:'0',getState:()=>assert.fail('old protocol must not be called')},{protocolVersion:1,getState:ready},{protocolVersion:'1'},{protocolVersion:'1',getState:42}]){
+  assert.throws(()=>readSuiteSourceState(service),{code:'CORE_SUITE_SOURCE_INVALID'});
+  const stable=core(declaration());let reads=0;stable.getSuiteDeclaration=async()=>{reads++;return declaration();};
+  await assert.rejects(createCoreSuiteAdapter({core:()=>stable,registry,suiteSourceMode:()=> 'core',suiteSourceService:()=>service})(),{code:'CORE_SUITE_SOURCE_INVALID'});assert.equal(reads,0);
+ }
 });

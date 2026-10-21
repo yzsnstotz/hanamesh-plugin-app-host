@@ -57,7 +57,8 @@ function validateDeclaration(value){
 /** Read only the optional protocol-1 public state; absence is unobservable, never starting/ready. */
 export function readSuiteSourceState(source){
 
-  requireCondition(source?.protocolVersion==='1'&&typeof source.getState==='function','CORE_SUITE_SOURCE_MISSING','Core 本机套件来源尚不可观察；请检查 Core 插件及其来源设置。',{},503);
+  requireCondition(source!==undefined&&source!==null,'CORE_SUITE_SOURCE_MISSING','Core 本机套件来源尚不可观察；请检查 Core 插件及其来源设置。',{},503);
+  requireCondition(object(source)&&source.protocolVersion==='1'&&typeof source.getState==='function','CORE_SUITE_SOURCE_INVALID','Core 本机套件来源协议或读取接口无效。',{},503);
   let state;try{state=source.getState();}catch{requireCondition(false,'CORE_SUITE_SOURCE_INVALID','Core 本机套件来源读取失败。',{},503);}
   requireCondition(object(state)&&state.protocolVersion==='1'&&['disabled','ready','failed','disposed'].includes(state.status)&&['configured','custom','disabled'].includes(state.selection)&&(state.registry===null||text(state.registry))&&Number.isSafeInteger(state.archiveCount)&&state.archiveCount>=0&&(state.lastError===null||typeof state.lastError==='string'),'CORE_SUITE_SOURCE_INVALID','Core 本机套件来源状态无效。',{},503);
   return{protocolVersion:state.protocolVersion,status:state.status,selection:state.selection,registry:state.registry,archiveCount:state.archiveCount,lastError:state.lastError};
