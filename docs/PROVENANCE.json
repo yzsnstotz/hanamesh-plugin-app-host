@@ -1,6 +1,6 @@
 {
   "currentCandidate": {
-    "version": "0.6.9",
+    "version": "0.6.10",
     "dshTarget": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0",
     "vendorSha256VerifiedAtBuild": false,
     "libProvisionDistribution": "随包分发、源仓不变; bundleDependencies; original LICENSE retained, no relicensing",
@@ -15,10 +15,11 @@
     "reviewedInputs": {
       "managedNode": "4c2d5bf63aa11b84dbfb4851a9da35e538ac47b1",
       "manualRestart": "dd76828",
-      "hostThemeTokens": "0d6b533"
+      "hostThemeTokens": "0d6b533",
+      "b17": "b13e60a5e27fa011fd7a5904d5dd0e03e9229a4e"
     },
-    "excludedPendingCandidate": "B17 plugin migration; separate review required",
-    "knownBaselineLimitation": "src/manager.js runtimeLedgerReader dynamically imports missing ./provision/index.js; application runtime operations reaching this reader may fail. Managed Node readiness is not full application operation acceptance."
+    "excludedPendingCandidate": "PKG/PRE/first-profile seeds and complete application installation remain separate gates",
+    "knownBaselineLimitation": "0.6.9 historical missing relative ledger import is fixed by the C-reviewed B17 public lib-provision ledger reader; managed Node readiness still does not establish full application operation acceptance."
   },
   "module": "app-host",
   "version": "0.1.0-rc.12",

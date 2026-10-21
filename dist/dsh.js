@@ -197,11 +197,12 @@ export async function apply(ctx, config) {
     const auth = { parentOrigin, transportOrigin, ...browserAuthentication(connection) };
     const handler = createHttpHandler(host, auth);
     for (const path of ROUTES) own(`route:${path}`, webServer.register({ kind:'exact', path, handler }));
-    let credentialService, llmService, oauthService, usageService, coreService;
+    let credentialService, llmService, oauthService, usageService, coreService, suiteSourceService;
     optional('credentials', service => { credentialService=service; });
     // Optional Usage service presence does not provide original application success facts.
     optional('hanameshUsage', service => { usageService=service; });
     optional('hanameshCore', service => { coreService=service; });
+    optional('hanameshSuiteSource', service => { suiteSourceService=service; });
     // Router hourly counts remain local diagnostics, never synthesized Usage open/use facts.
     const receiptsDomain = await facility.open(receiptsDomainSpec);
     own('receipts-domain', () => receiptsDomain.close());
@@ -245,7 +246,7 @@ export async function apply(ctx, config) {
       installer=nodeBinding(()=>nodeRuntime.executable,nodeBinary=>createLibraryInstaller({profileDir:locations.profileDir,profileName:locations.profileName,dataRoot,
         ...(cliUsable?{nodeBinary,dshBin,desktopCli:locations.desktopCli,desktopLauncher:locations.desktopLauncher}:{}),pluginManagerVersion:locations.pluginManagerVersion,profileWriter,
         registry:libraryConfig.registry,allowPrerelease:libraryConfig.allowPrerelease,provision:provisionApi.provision,remove:provisionApi.remove,ledger:provisionApi.ledger,
-        coreService:()=>coreService,pluginManager:()=>pluginManager,emit:event=>library?.emit(event)}));
+        coreService:()=>coreService,suiteSourceService:()=>suiteSourceService,suiteSourceMode:()=>library?.suiteSourceSettings().mode??'configured',pluginManager:()=>pluginManager,emit:event=>library?.emit(event)}));
     }
     /** What a person must do so the library can install, in their words (C-MARKET probe `error.need`). */
     const unavailable=()=>{
@@ -260,7 +261,7 @@ export async function apply(ctx, config) {
     };
     const identity=await detectClient({desktop});
     if(typeof ctx.logger?.info==='function')ctx.logger.info('hanamesh-app-host library: client %s (%s)',identity.client,identity.evidence);
-    library=createLibraryService({domain:{global:libraryDomain.global,close:closeLibraryDomain},host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer,client:identity.client,unavailable,installationStatus:nodeStatusBinding(()=>nodeRuntime.executable,workerNode=>createInstallationStatusReader({client:identity.client,core:()=>coreService,workerNode,readers:libraryConfig.installationReaders})),logger:ctx.logger});
+    library=createLibraryService({domain:{global:libraryDomain.global,close:closeLibraryDomain},host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer,client:identity.client,unavailable,suiteSourceService:()=>suiteSourceService,installationStatus:nodeStatusBinding(()=>nodeRuntime.executable,workerNode=>createInstallationStatusReader({client:identity.client,core:()=>coreService,workerNode,readers:libraryConfig.installationReaders})),logger:ctx.logger});
     own('library', () => library.close());
     await library.init();
     // rc.27: app bundles register plain `app.json` (no package name); the installed scan knows which npm package ships

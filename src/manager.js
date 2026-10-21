@@ -27,7 +27,7 @@ export class AppHost {
   #credentialResolver = null; #nodeBinary; #nodeBinaryProvider; #runtimeLedgerReader;
   constructor({ store, dataRoot, parentOrigin, frameAncestors = [], leaseTtlMs = 90_000, sweepIntervalMs = 15_000,
     checkpoint = async () => {}, clock = () => Date.now(), credentialResolver = null, nodeBinary, nodeBinaryProvider,
-    runtimeLedgerReader = async root => (await import('./provision/index.js')).ledger(root) }) {
+    runtimeLedgerReader = async root => (await import('@hanamesh/lib-provision')).ledger(root) }) {
     requireCondition(store && ['init','load','save','close'].every(k => typeof store[k] === 'function'),
       'INVALID_STORE','A durable snapshot store is required.');
     requireCondition(typeof dataRoot === 'string' && resolve(dataRoot) === dataRoot,'INVALID_ROOT','dataRoot must be an absolute canonical path.');

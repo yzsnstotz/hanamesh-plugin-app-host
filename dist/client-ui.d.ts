@@ -32,3 +32,6 @@ export function marketState():{conflict:string,entryVisible:boolean};
 export const INSTALL_TARGET_HASH:'#hanamesh-install?';
 /** Install-target contract version this market implements; see schemas/install-target.schema.json. */
 export const INSTALL_TARGET_CONTRACT_VERSION:'1';
+
+/** AppHost-owned registry selection, independent of catalog manifest sources. */
+export function SuiteSourceSettingsSection():unknown;

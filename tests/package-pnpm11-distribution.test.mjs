@@ -7,6 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {spawnGitSafe as spawn} from '../src/git-process.js';
 import { scratch } from './helpers.mjs';
+import {runtimeLedgerJavascript} from '../scripts/package-probes.mjs';
 const cwd=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 test('DIST11 normal tarball installs into a supplied official rc.2 host with pnpm11 strict peers and exposes JS/types',async t=>{
  const root=await scratch('apphost-pnpm11-');t.after(()=>rm(root,{recursive:true,force:true}));
@@ -34,6 +35,7 @@ test('DIST11 normal tarball installs into a supplied official rc.2 host with pnp
  // /client-ui is a browser Loader entry, not a Node runtime API. Resolve and
  // parse it without inventing window/Loader; actual activation belongs to native U2.
  const js=await run(process.execPath,['--input-type=module','-e',entries.map(s=>`console.log(import.meta.resolve('@hanamesh/dsh-app-host${s}'));`).join('\n')+'\n'+entries.filter(s=>s!=='/client-ui').map(s=>`await import('@hanamesh/dsh-app-host${s}');`).join('\n')],consumer);assert.equal(js.status,0,js.stdout+js.stderr);
+ await writeFile(join(consumer,'default-ledger.mjs'),runtimeLedgerJavascript);const runtime=await run(process.execPath,[join(consumer,'default-ledger.mjs')],consumer);console.log(runtime.stdout);assert.equal(runtime.status,0,'normal package default reader must launch actual runtime\n'+runtime.stdout+runtime.stderr);
  const browser=await run(process.execPath,['--check',join(consumer,'node_modules/@hanamesh/dsh-app-host/dist/client-ui.js')],consumer);assert.equal(browser.status,0,browser.stdout+browser.stderr);
  const tree=process.env.AH_TEST_PNPM11?await run(process.execPath,[resolve(process.env.AH_TEST_PNPM11),'list','--depth','Infinity','--json'],consumer):await run('npx',['--yes','--package=pnpm@11.0.0','pnpm','list','--depth','Infinity','--json'],consumer);assert.equal(tree.status,0,tree.stdout+tree.stderr);console.log(JSON.stringify({case:'DIST11_RESOLVED',dependencyTree:JSON.parse(tree.stdout),node:process.version,jsNodeImports:5,browserEntryResolvedAndParsed:true,nativeBrowserActivation:'NOT_TESTED',declarationEntries:6}));
 });

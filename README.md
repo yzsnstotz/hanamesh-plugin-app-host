@@ -1,9 +1,13 @@
-> 2026-10-21 · 0.6.9 release preparation: combines C-reviewed standalone Node preparation, manual quit-and-reopen guidance, and the market overlay using public host theme tokens. No client changes. macOS arm64 native prerequisite evidence does not establish full application installation, macOS x64 host acceptance, Windows support, or owner acceptance. This release excludes the still-separate B17 migration candidates.
->
-> Known baseline limitation: the runtime ledger reader in `src/manager.js` still refers to `./provision/index.js`, which is not shipped. Application runtime operations that reach this reader can fail; managed Node preparation/readiness does not prove these operations work. Its fix is in a separate B17 candidate awaiting independent acceptance. No silent fallback is added here.
+# 0.6.10 · B17 已审合拢
+
+C 复审 Docs `2d95591d` 已关闭 `b13e60a` 两项P3；本版合入普通插件内的 Core 套件安装包来源选择、持久设置和复读失效保护，并通过 lib-provision 公开 ledger 修正默认 runtime 账本读取。保留0.6.9的独立Node准备、完全退出后重开指引、宿主公开主题token和F02严格拒绝旧目录；不改客户端。原生适用证据属于各固定候选，合拢后的源码/正常包另验，不冒完整安装、mac x64/Windows或owner验收。PKG/PRE/静态种子仍开。
+
+> B17：「套件安装包来源」默认现有 registry，也可明确消费 Core 当前公开本机来源；目录清单独立。预览、确认、执行前及异步声明后复读，来源变化终止旧确认，不回退。只在正常插件加载后生效，不承接初装/首 profile。见[公开合约](docs/CONTRACT.md#b17-套件安装包来源2026-10-21-候选)。
+
+> 0.6.9历史：该版不含B17，曾披露默认runtime ledger相对路径缺失；本版已合入已审公开provider修复。Node ready仍不代表完整应用运行验收。
+
 
 > 2026-10-21 · Managed Node candidate: plugin Settings → 安装环境 → review and confirm one-source SHA-verified preparation → later operations automatically use standalone Node without restarting DSH. macOS arm64/x64 implementation only; Windows unsupported. Editable named settings and evidence boundaries: [contract](docs/CONTRACT.md#plugin-managed-standalone-node-2026-10-21-candidate). No silent acquisition, Electron guardian or client change.
-
 > 2026-10-21候选：所有客户端均按「完全退出后重新打开」指引处理需重启状态；移除旧壳专用重启深链及parent消息，不改客户端、不自动重启。下方rc.28/rc.32重启桥是已被本候选取代的历史记录，市场席位其它行为不变。
 
 > 0.6.7 四渠道只读状态桥：允许的网站本人点击后，使用能力广告指向的严格 POST 读取当前 Core 声明和显式配置的官方 CLI 清单；缺供给、失败与未覆盖作用域均具名 unknown，不跨 runtime / CLI / 桌面 App 推断已装。协议、必填设置、支持版本与取消规则见 [Installation status](docs/INSTALLATION_STATUS.md)。

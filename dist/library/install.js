@@ -43,7 +43,7 @@ async function clearGeneratedRuntimeCache(result,runtimeRoot){
 
 /** Package mutations use the public CLI in an owned monitored process; upstream's in-process manager has no scoped env/monitor port. */
 export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBinary,dshBin,desktopCli,desktopLauncher,pluginManagerVersion,registry='https://registry.npmjs.org',allowPrerelease=false,
-  fetchImpl=globalThis.fetch,spawn=defaultSpawn,provision,remove,ledger,coreSuitePlan,coreService=()=>undefined,pluginManager=()=>undefined,emit=()=>{},profileWriter=new SerialQueue()}){
+  fetchImpl=globalThis.fetch,spawn=defaultSpawn,provision,remove,ledger,coreSuitePlan,coreService=()=>undefined,suiteSourceMode=()=>'configured',suiteSourceService=()=>undefined,pluginManager=()=>undefined,emit=()=>{},profileWriter=new SerialQueue()}){
   requireCondition(typeof profileDir==='string'&&resolve(profileDir)===profileDir,'PROFILE_DIR_REQUIRED','library.profileDir must be an absolute path.');
   requireCondition(typeof dataRoot==='string'&&resolve(dataRoot)===dataRoot,'INVALID_ROOT','dataRoot must be absolute.');
   const launcherAvailable=typeof desktopLauncher?.command==='string'&&resolve(desktopLauncher.command)===desktopLauncher.command&&typeof desktopLauncher.home==='string'&&join(desktopLauncher.home,'profiles',profileName)===profileDir;
@@ -137,7 +137,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
     catch(error){emit({type:'library.install-failed',...(item.id?{itemId:item.id}:{}),packageName:name,kind,code:error.code??'INSTALL_FAILED',...(error.recovery?{recovery:error.recovery}:{})});throw error;}
   }
   let suitePlan;
-  const suiteProvider=coreSuitePlan??createCoreSuiteAdapter({core:coreService,registry});
+  const suiteProvider=coreSuitePlan??createCoreSuiteAdapter({core:coreService,registry,suiteSourceMode,suiteSourceService});
   async function previewSuite(){
     const next=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider});
     suitePlan={...next,planId:randomUUID()};return structuredClone(suitePlan);
@@ -153,12 +153,14 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       requireCondition(suitePlan?.planId===planId,'SUITE_PLAN_CHANGED','升级确认已变化，请重新查看并确认。',{},409);
       const confirmed=suitePlan;suitePlan=undefined;
       const fresh=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider});
-      const identity=plan=>JSON.stringify({components:plan.components,declarationId:plan.declarationId,registry:plan.registry,selectedUpgrade:plan.selectedUpgrade,physicalBaseline:plan.physicalBaseline});
+      const identity=plan=>JSON.stringify({sourceBinding:plan.sourceBinding,components:plan.components,declarationId:plan.declarationId,registry:plan.registry,selectedUpgrade:plan.selectedUpgrade,physicalBaseline:plan.physicalBaseline});
       requireCondition(identity(fresh)===identity(confirmed),'SUITE_PLAN_CHANGED','套件声明或版本已变化，请重新查看并确认。',{},409);
       requireCondition(fresh.available,'SUITE_NO_UPDATE','当前没有兼容新版。',{},409);
       const before=await readSuiteStatus(profileDir);
       requireCondition(before.status==='installed'&&fresh.components.every((c,i)=>before.components[i]?.version===c.from),'SUITE_PLAN_CHANGED','已装版本或启用状态已变化，请重新查看并确认。',{},409);
       requireCondition(cliAvailable,'DSH_CLI_UNAVAILABLE','套件升级需客户端随附的官方 CLI；请恢复后重试。',{},503);
+      const executing=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider});
+      requireCondition(identity(executing)===identity(confirmed),'SUITE_PLAN_CHANGED','执行前套件安装包来源或声明已变化，请重新查看并确认。',{},409);
       emit({type:'library.install-started',itemId:'hanamesh:suite-upgrade',packageName:'hanamesh-core',kind:'suite-upgrade'});
       try{
         await run(['add','--save-exact','--strict-peer-dependencies',`--registry=${fresh.registry??registry}`,...fresh.components.map(c=>`${c.name}@${c.to}`)]);

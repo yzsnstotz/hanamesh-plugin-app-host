@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import { AppHostError, requireCondition } from '../errors.js';
+import { AppHostError, requireCondition, SerialQueue } from '../errors.js';
 import { loadCatalog, isApplication, itemKind, upgradeAvailable, validateManifestUrl } from './catalog.js';
 import { scanInstalled, scanInstalledPlugins, snapshotProfileDependencies } from './installed.js';
-import {SUITE_TARGET,SUITE_PACKAGES,readSuiteStatus,SUITE_INSTALL_COMMAND,CORE_SUITE_DECLARATION_MISSING} from './suite.js';
+import {SUITE_TARGET,SUITE_PACKAGES,readSuiteStatus,SUITE_INSTALL_COMMAND,CORE_SUITE_DECLARATION_MISSING,readSuiteSourceState} from './suite.js';
 import { PROTECTED_PACKAGES } from './install.js';
 import { handoffSettings } from './handoff.js';
 import { INSTALLATION_STATUS_CAPABILITY } from '../installation-status.js';
@@ -19,7 +19,7 @@ const present=row=>row&&['registered','installed','installed-not-loaded'].includ
  * `client`: which client this host is ('dsh' | 'hanamesh', see client-identity.js). `unavailable`: when there is no
  * installer, the facts that are missing, in words a person can act on (`[{need, how}]`); probes and 503s carry them.
  */
-export function createLibraryService({domain,host,config={},dataRoot,ledgerReader,installer,client='dsh',unavailable=()=>[],installationStatus,logger}){
+export function createLibraryService({domain,host,config={},dataRoot,ledgerReader,installer,client='dsh',unavailable=()=>[],installationStatus,suiteSourceService=()=>undefined,logger}){
   const warn=(message,...args)=>{if(typeof logger?.warn==='function')logger.warn(message,...args);else console.warn(message,...args);};
   const ready=()=>typeof installer?.install==='function'&&installer.ready!==false;
   let suiteStatus={status:'unknown',version:null,components:[]};
@@ -34,7 +34,8 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   const catalog=({q='',category='hanamesh-app',cursor}={})=>loadCatalog({fixture:config.fixture,sources:state.sources,fetchImpl:config.fetchImpl,query:q,category,cursor});
   async function installed(){return config.profileDir?await scanInstalled({profileDir:config.profileDir,host,ledgerReader,dataRoot}):[];}
   async function installedPlugins(){return config.profileDir?await scanInstalledPlugins({profileDir:config.profileDir,bootDependencies}):[];}
-  async function persist(next){next.revision=state.revision+1;await domain.global.set(next);state=next;}
+  const settingsWriter=new SerialQueue();
+  function persist(update){return settingsWriter.run(async()=>{const next={...update(state),revision:state.revision+1};await domain.global.set(next);state=next;});}
   async function operation(type,task){const operationId=randomUUID();emit({type:`library.${type}-started`,operationId});const work=Promise.resolve().then(()=>task(operationId)).then(result=>{emit({type:`library.${type}-done`,operationId,result});return result;},error=>{emit({type:`library.${type}-failed`,operationId,code:error.code??'LIBRARY_OPERATION_FAILED',...(error.recovery?{recovery:error.recovery}:{}),...(error.details?.stage==='suite-upgrade'?{details:{stage:'suite-upgrade',actual:error.details.actual,command:SUITE_INSTALL_COMMAND}}:{})});throw error;}).finally(()=>running.delete(operationId));running.set(operationId,work);work.catch(()=>{});return{operationId,status:'started'};}
   const requireInstaller=(message)=>requireCondition(ready(),'LIBRARY_INSTALL_UNAVAILABLE',message,{need:unavailable()},503);
   /**
@@ -102,7 +103,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   }
   const runningApp=appId=>host.instanceList().some(instance=>instance.appId===appId&&!['stopped','failed','interrupted'].includes(instance.status));
   return{
-    async init(){state=await domain.global.get();if(state.revision===0&&state.sources.length===0&&Array.isArray(config.sources)&&config.sources.length){const sources=config.sources.map((source,index)=>({manifestUrl:validateManifestUrl(source.manifestUrl).href,enabled:source.enabled===true||(source.enabled!==false&&index===0)}));requireCondition(sources.filter(source=>source.enabled).length===1,'CATALOG_SOURCE_REQUIRED','Exactly one catalog source must be enabled.');await persist({...state,sources});}
+    async init(){state=await domain.global.get();if(state.revision===0&&state.sources.length===0&&Array.isArray(config.sources)&&config.sources.length){const sources=config.sources.map((source,index)=>({manifestUrl:validateManifestUrl(source.manifestUrl).href,enabled:source.enabled===true||(source.enabled!==false&&index===0)}));requireCondition(sources.filter(source=>source.enabled).length===1,'CATALOG_SOURCE_REQUIRED','Exactly one catalog source must be enabled.');await persist(current=>({...current,sources}));}
       // rc.28: the dependency set at boot is the "loaded" baseline for plugin restart states; unreadable → everything counts as
       // loaded, logged and reported as `restartBaseline` on list() so the market can say restart states are unknown.
       if(config.profileDir){try{bootDependencies=await snapshotProfileDependencies(config.profileDir);}catch(error){bootDependencies=undefined;bootSnapshotError=error?.code??'PROFILE_READ_FAILED';warn('hanamesh-app-host library: boot profile snapshot unreadable (%s); restart states cannot be told',bootSnapshotError);}}
@@ -117,11 +118,22 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       const categories=[...new Set(page.items.flatMap(item=>item.categories??[]))].sort();
       return{source:page.source,items,categories,installed:installedRows,plugins:pluginRows,restartRequired:[...pluginRows,...installedRows].some(row=>RESTART_STATES.has(row.state)),...(bootSnapshotError?{restartBaseline:{known:false,code:bootSnapshotError}}:{}),page:page.page};},
     sources(){return{sources:structuredClone(state.sources),revision:state.revision};},
+    /** Suite package registry selection is independent of catalog manifest sources. */
+    suiteSourceSettings(){
+      let observation;try{observation={observable:true,state:readSuiteSourceState(suiteSourceService())};}catch(error){observation={observable:false,code:error.code??'CORE_SUITE_SOURCE_INVALID'};}
+      return{mode:state.suiteSource?.mode??'configured',configuredRegistry:config.registry??'https://registry.npmjs.org',observation};
+    },
+    async replaceSuiteSourceSettings(input){
+      requireCondition(input&&typeof input==='object'&&!Array.isArray(input)&&Object.keys(input).length===1&&['configured','core'].includes(input.mode),'INVALID_SUITE_SOURCE_SETTINGS','只接受 mode: configured 或 core。');
+      const selection={mode:input.mode};
+      try{await persist(current=>({...current,suiteSource:selection}));}catch(error){throw new AppHostError('SUITE_SOURCE_SAVE_FAILED','套件安装包来源保存失败；原选择保持。',{},500);}
+      return this.suiteSourceSettings();
+    },
     /** Effective website handoff settings: saved (library settings page) → plugin config `library.handoff` → proposed defaults. */
     handoffSettings(){return handoffSettings(state.handoff??config.handoff??{});},
-    async replaceHandoffSettings(input){const next=handoffSettings(input);await persist({...state,handoff:next});return next;},
+    async replaceHandoffSettings(input){const next=handoffSettings(input);await persist(current=>({...current,handoff:next}));return next;},
     observe(listener){observers.add(listener);return()=>observers.delete(listener);},
-    async replaceSources(input){requireCondition(Array.isArray(input?.sources)&&input.sources.length<=16,'INVALID_SOURCES','sources must be an array of at most 16 entries.');const sources=input.sources.map(source=>({manifestUrl:validateManifestUrl(source.manifestUrl).href,enabled:source.enabled===true}));requireCondition(sources.length===0||sources.filter(source=>source.enabled).length===1,'CATALOG_SOURCE_REQUIRED','Exactly one catalog source must be enabled.');await persist({...state,sources});return this.sources();},
+    async replaceSources(input){requireCondition(Array.isArray(input?.sources)&&input.sources.length<=16,'INVALID_SOURCES','sources must be an array of at most 16 entries.');const sources=input.sources.map(source=>({manifestUrl:validateManifestUrl(source.manifestUrl).href,enabled:source.enabled===true}));requireCondition(sources.length===0||sources.filter(source=>source.enabled).length===1,'CATALOG_SOURCE_REQUIRED','Exactly one catalog source must be enabled.');await persist(current=>({...current,sources}));return this.sources();},
     /** `{itemId, packageName?}`: applications and plugins take the same path (`dsh plugin add --save-exact`); also the upgrade path. */
     resolveTarget,
     /** Public discovery is metadata only: no profile, authentication or installed rows. */
@@ -155,6 +167,6 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
     installedPlugins,
     async installedSnapshot(){const plugins=await installedPlugins(),apps=await installed();return{plugins,apps,restartRequired:[...plugins,...apps].some(row=>RESTART_STATES.has(row.state))};},
     events(after=0){requireCondition(Number.isSafeInteger(after)&&after>=0,'INVALID_CURSOR','Invalid library event cursor.');return{events:events.filter(event=>event.sequence>after),sequence,operations:[...running.keys()],resetRequired:after>sequence||(events.length>0&&after<events[0].sequence-1)};},
-    async close(){installationStatus?.close?.();await Promise.allSettled([...running.values()]);await domain.close();},emit,
+    async close(){installationStatus?.close?.();await Promise.allSettled([...running.values()]);await settingsWriter.drained();await domain.close();},emit,
   };
 }

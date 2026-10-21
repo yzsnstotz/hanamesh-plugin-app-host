@@ -8,7 +8,7 @@ export function fakeClock(){
   return{now:()=>now,Date:{now:()=>now},setTimeout(fn,ms){const id=++sequence;timers.set(id,{fn,at:now+ms});return id;},clearTimeout(id){timers.delete(id);},
     async advance(ms){const end=now+ms;while(true){const next=[...timers].sort((a,b)=>a[1].at-b[1].at)[0];if(!next||next[1].at>end)break;now=next[1].at;timers.delete(next[0]);next[1].fn();await settle();}now=end;await settle();},get pending(){return timers.size;}};
 }
-export async function clientHarness({fetch,clock,embedded=true,verification=false,href,framed=true}={}){
+export async function clientHarness({fetch,clock,embedded=true,verification=false,href,framed=true,component='LibraryOverlay'}={}){
   const dom=createHostDom();
   const source=await readFile(new URL('../../src/client-ui.js',import.meta.url),'utf8');
   let loaded,tree,cursor=0,dead=false,scheduled=false,props={embedded,verification};const hooks=[],pendingEffects=[];
@@ -26,7 +26,7 @@ export async function clientHarness({fetch,clock,embedded=true,verification=fals
   const timer=clock??{Date,setTimeout,clearTimeout};scope.Date=timer.Date;scope.setTimeout=timer.setTimeout.bind(timer);scope.clearTimeout=timer.clearTimeout.bind(timer);
   new Function('window','document','globalThis','setTimeout','clearTimeout','Date',source)(window,document,scope,scope.setTimeout,scope.clearTimeout,timer.Date);
   const module=loaded.factory(id=>{assert.equal(id,'react');return React;});
-  function render(){cursor=0;tree=module.LibraryOverlay(props);dom.commit(tree);for(const effect of pendingEffects.splice(0))effect();return tree;}
+  function render(){cursor=0;tree=module[component](props);dom.commit(tree);for(const effect of pendingEffects.splice(0))effect();return tree;}
   function find(node,predicate){if(!node)return; if(Array.isArray(node)){for(const child of node){const match=find(child,predicate);if(match)return match;}return;}if(typeof node!=='object')return;if(predicate(node))return node;return find(node.children,predicate);}
   const api={module,render,dom,sentMessages,find:predicate=>find(tree,predicate),get tree(){return tree;},async click(label){const button=find(tree,node=>node.type==='button'&&node.children.includes(label));assert(button,'visible button '+label);button.props.onClick();await settle();},
     message(event){return listeners.get('message')?.(event);},

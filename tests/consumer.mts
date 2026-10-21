@@ -39,3 +39,11 @@ const statusRequest:InstallationStatusRequest={contractVersion:'1',consent:'read
 declare const observations:InstallationStatus;
 observations.observations[0]?.version satisfies string|null|undefined;
 INSTALLATION_STATUS_CAPABILITY.contract satisfies 'hanamesh.installation-status';void statusRequest;
+
+import type {SuiteSourceSettings,SuiteSourceSettingsInput} from '../dist/dsh.js';
+const sourceChoice:SuiteSourceSettingsInput={mode:'core'};
+// @ts-expect-error URLs are taken from the live Core service or existing plugin configuration.
+const arbitrarySource:SuiteSourceSettingsInput={mode:'core',registry:'https://other.example/'};
+declare const suiteSource:SuiteSourceSettings;
+if(suiteSource.observation.observable)suiteSource.observation.state.status satisfies 'disabled'|'ready'|'failed'|'disposed';
+void [sourceChoice,arbitrarySource];

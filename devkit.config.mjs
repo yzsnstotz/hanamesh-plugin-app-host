@@ -6,7 +6,7 @@ import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
 import {runMutations, verifyPack} from '@hanamesh/devkit';
 import {cases} from './scripts/mutation-cases.mjs';
-import {typescript} from './scripts/package-probes.mjs';
+import {typescript,runtimeLedgerJavascript} from './scripts/package-probes.mjs';
 const root=import.meta.dirname;
 const pkg=JSON.parse(await readFile(join(root,'package.json'),'utf8'));
 const pins=JSON.parse(await readFile(join(root,'toolchain.json'),'utf8'));
@@ -72,7 +72,7 @@ export function packOptions(tarball){
       assert.equal(packed.dependencies['@hanamesh/devkit'],undefined);
       assert.equal(packed.peerDependencies['@hanamesh/devkit'],undefined);
       assert.equal(packed.peerDependenciesMeta?.['@hanamesh/devkit'],undefined);
-      for(const path of ['library/installation-status.js','library/installation-status-http.js','library/installation-cli.js','library/installation-worker.js','library/installation-command-worker.js','git-process.js','git-worker.js','client-ui.js','client-ui.d.ts','library/routes.js','library/service.js','install-target/suite.js','install-target/harness.js','install-target/fixtures/provider-cases.json','install-target/fixtures/consumer-cases.json'])assert.deepEqual(read('dist/'+path),await readFile(join(root,'src',path)),'packed install-target bytes: '+path);
+      for(const path of ['manager.js','library/installation-status.js','library/installation-status-http.js','library/installation-cli.js','library/installation-worker.js','library/installation-command-worker.js','git-process.js','git-worker.js','client-ui.js','client-ui.d.ts','library/routes.js','library/service.js','install-target/suite.js','install-target/harness.js','install-target/fixtures/provider-cases.json','install-target/fixtures/consumer-cases.json'])assert.deepEqual(read('dist/'+path),await readFile(join(root,'src',path)),'packed install-target bytes: '+path);
     }};
 }
 
@@ -115,7 +115,7 @@ export async function verifyAppHostPack(tarball){
     '@deepseek-ai/dsh-scope':'0.2.1-alpha.2'});
   await verifyPack({...options,consumer:{packageJson:{private:true,type:'module',dependencies:{...peers,
     '@hanamesh/dsh-app-host':`file:${options.tarball}`}},
-    javascript:"import assert from 'node:assert/strict';import{createRequire}from'node:module';import{apply}from'@hanamesh/dsh-app-host/dsh';assert.equal(typeof apply,'function');const require=createRequire(import.meta.url);assert.throws(()=>require.resolve('@hanamesh/devkit'),{code:'MODULE_NOT_FOUND'});",
+    javascript:"import assert from 'node:assert/strict';import{createRequire}from'node:module';import{apply}from'@hanamesh/dsh-app-host/dsh';assert.equal(typeof apply,'function');const require=createRequire(import.meta.url);assert.throws(()=>require.resolve('@hanamesh/devkit'),{code:'MODULE_NOT_FOUND'});"+'\n'+runtimeLedgerJavascript,
     typescript}});
 }
 

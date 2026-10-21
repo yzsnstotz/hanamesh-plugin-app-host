@@ -59,6 +59,7 @@ async function boot(t, options = {}) {
   ctx.provide('connection', { requestRejection: request => request.headers?.authorization === `Bearer ${TOKEN}` ? undefined : { status: 401 } });
   ctx.provide('pluginManager', manager.value);
   if(options.core)ctx.provide('hanameshCore',options.core);
+  if(options.suiteSource)ctx.provide('hanameshSuiteSource',options.suiteSource);
   await ctx.start?.();
   await until(() => ctx.get('webServer')?.port > 0);
   const origin = `http://127.0.0.1:${ctx.get('webServer').port}`, port = await freePort();
@@ -179,4 +180,16 @@ test('IS-CORDIS: the real plugin advertises a consented fresh Core reader on bot
  assert.equal(calls,before+2);assert.deepEqual(h.manager.calls,[]);
  value={...value,completeness:'unknown',blocked:[{code:'CORE_SUITE_PEER_UNKNOWN'}]};const detect=async()=>(await(await site(h.listener+'/hanamesh/library/installation-status',{method:'POST',body:JSON.stringify({contractVersion:'1',consent:'read-installations'})})).json()).observations.find(x=>x.channel==='dsh');
  assert.equal((await detect()).status,'unknown');delete service.getSuiteDeclaration;assert.equal((await detect()).reason.code,'CORE_SUITE_DECLARATION_MISSING');
+});
+
+test('B17-CORDIS: source setting persists through real JSON domain reopen, catalogs/handoff survive, optional source arrives and disappears',async t=>{
+ const first=await boot(t);const path='/hanamesh/library/suite-source';const original=(await first.get('/hanamesh/library/handoff-settings')).json.settings;
+ assert.equal((await first.get(path)).json.mode,'configured');assert.equal((await first.post('/hanamesh/library/sources',{sources:[]})).status,200);
+ assert.equal((await first.post('/hanamesh/library/handoff-settings',{...original,pollMs:923})).status,200);
+ assert.equal((await first.post(path,{mode:'core'})).status,200);assert.equal((await first.get(path)).json.observation.code,'CORE_SUITE_SOURCE_MISSING');
+ let state={protocolVersion:'1',status:'ready',selection:'custom',registry:'http://127.0.0.1:43123/',archiveCount:3,lastError:null};
+ const sourceFork=first.ctx.plugin(ctx=>{ctx.provide('hanameshSuiteSource',{protocolVersion:'1',getState:()=>state});});
+ await until(async()=>(await first.get(path)).json.observation.observable===true);assert.deepEqual((await first.get(path)).json.observation.state,state);
+ state={...state,status:'disposed',registry:null};assert.equal((await first.get(path)).json.observation.state.status,'disposed');await sourceFork.dispose();await until(async()=>(await first.get(path)).json.observation.code==='CORE_SUITE_SOURCE_MISSING');
+ await first.ctx.fiber.dispose();const second=await boot(t,{root:first.root});assert.equal((await second.get(path)).json.mode,'core');assert.deepEqual((await second.get('/hanamesh/library/sources')).json.sources,[]);assert.equal((await second.get('/hanamesh/library/handoff-settings')).json.settings.pollMs,923);
 });

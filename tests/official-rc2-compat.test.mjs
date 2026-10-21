@@ -90,7 +90,7 @@ test('alpha.2 manager also uses monitored public CLI instead of an unscoped live
 
 test('public peers admit official rc.2 and supported alpha peers while development versions remain pinned',async()=>{
   const pkg=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
-  assert.equal(pkg.version,'0.6.9');
+  assert.equal(pkg.version,'0.6.10');
   assert.equal(pkg.peerDependencies['@deepseek-ai/dsh-storage-domain'],'>=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0');
   assert.equal(pkg.peerDependencies['@deepseek-ai/cordis'],'>=4.0.4 <4.1.0-0 || >=4.0.5-alpha.1 <4.1.0-0');
   assert.equal(pkg.peerDependencies['@deepseek-ai/schemastery'],'>=3.18.4 <3.19.0-0 || >=3.18.5-alpha.1 <3.19.0-0');
