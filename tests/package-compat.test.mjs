@@ -58,10 +58,13 @@ test('NPM-APPHOST-01: actual packed manifest keeps devkit development-only and t
         assert.ok(licenses.components[name]?.purpose, `${name} purpose`);
       }
     }
+    for (const field of ['dependencies','peerDependencies','optionalDependencies']) assert.equal(manifest[field]?.['@hanamesh/release-platform-gate'],undefined,`release gate must not be ${field}`);
+    assert.ok(files.every(file=>!file.path.includes('release-platform-gate')), 'shared development tool must not enter product bytes');
     assert.equal(manifest.hanamesh?.deliveryStatus, undefined);
     for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies', 'devDependencies']) {
       for (const [name, spec] of Object.entries(manifest[field] ?? {})) {
         if(field==='devDependencies'&&name==='@hanamesh/devkit')assert.equal(spec,'file:vendor/hanamesh-devkit-0.2.3.tgz');
+        else if(field==='devDependencies'&&name==='@hanamesh/release-platform-gate')assert.equal(spec,'file:vendor/hanamesh-release-platform-gate-0.1.0.tgz');
         else if(field==='dependencies'&&name==='@hanamesh/lib-provision')assert.equal(spec,'file:vendor/hanamesh-lib-provision-0.2.1.tgz');
         else assert.doesNotMatch(spec, /^(?:file:|link:)/, `${field}.${name}`);
       }

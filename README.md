@@ -209,3 +209,13 @@ secret, checkout credential, private dependency fetch, paid runner, deployment o
 publishing action is configured. Isolated HOME/DSH/agent/cache/store/temp paths
 are cleaned even after failure. Local full checks remain the delivery authority;
 Actions runs on the standard public/free `macos-15` arm64 runner because the existing native preparation fixture requires that platform. The preinstalled Chrome runs with an isolated profile, mock keychain and basic password store. It is an additional macOS check, not native-client or owner acceptance; this does not establish Linux support.
+
+## 发布检查：平台依赖闭包（不可关闭）
+
+`DSH_PNPM_PLATFORM_CLOSURE` 是正确性不变量，Mac/Windows/Linux 同样适用：DSH 自带 pnpm 11.7.0 处理不适用平台 optional 子包时可能安装完不退出，导致 DSH 持续等待。正常 tarball、bundled 包及完整锁定依赖闭包发现 os/cpu/libc 字段或平台子包 optionalDependencies 即拒绝，报具体包名/路径；缺闭包证据也拒绝。不能以开关、超时、重试、omit-optional 或静默兜底绕过；应改用单包内含多平台文件的中立依赖。
+
+运行 `npm run release:check` 正常打包并检查；发布仅用 `npm run release:publish`，发布已检查的同一 tarball。直接目录 npm publish 会被 prepublishOnly 明确拒绝。开发工具 `@hanamesh/release-platform-gate` 仅 devDependency，先按接线请求复制经 SHA 固定的正常工具包并更新冻结锁；CI 必须接入这个发布门。详细输出包含不可关闭的原因、正常包/锁 SHA 和扫描路径；absent optional peer 按 npm 定义列明，不等同 optionalDependencies。
+
+当前接线候选固定共享检查器94561328d；R1已退回R1-RPG-01至03，等待C最终版本与复审。以下接线与正常包检查通过也不能作为npm发布放行；本候选不执行发布。
+
+`verify:pack` 原有 tarball 参数保持；正常消费者验证之后通过共享公开 checkRelease 核对同一个归档，CI沿该入口必经硬门，不另打一个包代替原包。接线没有复制扫描实现。

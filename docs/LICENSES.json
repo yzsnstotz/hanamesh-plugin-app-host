@@ -279,6 +279,20 @@
         "peerDependencies": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0",
         "devDependencies": "0.2.1-alpha.2"
       }
+    },
+    "@hanamesh/release-platform-gate": {
+      "version": "0.1.0",
+      "license": "UNKNOWN: private development tool does not declare a license",
+      "source": "file:vendor/hanamesh-release-platform-gate-0.1.0.tgz",
+      "purpose": "Development-only shared platform dependency release gate; never runtime or bundled; R1 review of the tool remains FAIL pending C final version",
+      "usedAs": [
+        "devDependencies"
+      ],
+      "specs": {
+        "devDependencies": "file:vendor/hanamesh-release-platform-gate-0.1.0.tgz"
+      },
+      "sourceCommit": "94561328d7a5bb05deae6243bf6b6f3ba78517cf",
+      "archiveSha256": "21c61c4ec1b9679ac5540d5a861c92839b7ee54a56b4d60131886cc40ebff364"
     }
   },
   "downloadedRuntimes": {

@@ -85,7 +85,10 @@
     "verify:pack": "node scripts/safe-git.mjs node scripts/verify-package.mjs",
     "check:devkit-supply": "node scripts/check-devkit-consumption.mjs",
     "check:provision-supply": "node scripts/check-provision-consumption.mjs",
-    "install:safe": "node scripts/safe-git.mjs pnpm install --frozen-lockfile"
+    "install:safe": "node scripts/safe-git.mjs pnpm install --frozen-lockfile",
+    "release:check": "hanamesh-release check --lockfile pnpm-lock.yaml",
+    "release:publish": "hanamesh-release publish --lockfile pnpm-lock.yaml",
+    "prepublishOnly": "hanamesh-release source-guard"
   },
   "dsh": {
     "bundle": {
@@ -147,7 +150,8 @@
     "@deepseek-ai/schemastery": "3.18.5-alpha.1",
     "typescript": "5.8.3",
     "@hanamesh/devkit": "file:vendor/hanamesh-devkit-0.2.3.tgz",
-    "@deepseek-ai/dsh-client-ui-renderer": "0.2.1-alpha.2"
+    "@deepseek-ai/dsh-client-ui-renderer": "0.2.1-alpha.2",
+    "@hanamesh/release-platform-gate": "file:vendor/hanamesh-release-platform-gate-0.1.0.tgz"
   },
   "packageManager": "pnpm@10.33.0",
   "bundleDependencies": [
