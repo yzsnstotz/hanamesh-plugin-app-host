@@ -27,7 +27,7 @@ jobs:
       - name: Initialize isolated directories
         run: |
           python3 - <<'PYTHON'
-          import os
+          import os, json
           from pathlib import Path
           # Existing native/producer fixtures require an owned root within this card.
           root = Path(os.environ['GITHUB_WORKSPACE']).parent / 'app-host-ci'
@@ -39,6 +39,7 @@ jobs:
           with open(os.environ['GITHUB_ENV'], 'a') as out:
             for key, value in settings.items():
               value.mkdir(mode=0o700, parents=True, exist_ok=True)
+              (value/'.run-state.json').write_text(json.dumps({'state':'active','owner':'app-host-ci'}))
               out.write(f'{key}={value}\n')
           PYTHON
       - name: Fetch the public revision without credentials
@@ -48,7 +49,7 @@ jobs:
         run: |
           set -euo pipefail
           # No checkout token, persisted credentials, or Git helper is needed.
-          curl --disable --fail --location --retry 3 "https://codeload.github.com/$CI_REPOSITORY/tar.gz/$CI_REVISION" --output "$CI_ISOLATION_ROOT/source.tar.gz"
+          curl --disable --fail --location "https://codeload.github.com/$CI_REPOSITORY/tar.gz/$CI_REVISION" --output "$CI_ISOLATION_ROOT/source.tar.gz"
           tar -xzf "$CI_ISOLATION_ROOT/source.tar.gz" --strip-components=1
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -80,4 +81,4 @@ jobs:
       - name: Remove isolated runtime directories
         if: always()
         run: |
-          if [ -n "${CI_ISOLATION_ROOT:-}" ]; then rm -rf -- "$CI_ISOLATION_ROOT"; fi
+          if [ -n "${CI_ISOLATION_ROOT:-}" ]; then rm -rf -- "${CI_ISOLATION_ROOT:?}"; fi

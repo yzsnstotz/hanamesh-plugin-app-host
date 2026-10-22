@@ -216,6 +216,12 @@ Actions runs on the standard public/free `macos-15` arm64 runner because the exi
 
 运行 `npm run release:check` 正常打包并检查；发布仅用 `npm run release:publish`，发布已检查的同一 tarball。直接目录 npm publish 会被 prepublishOnly 明确拒绝。开发工具 `@hanamesh/release-platform-gate` 仅 devDependency，先按接线请求复制经 SHA 固定的正常工具包并更新冻结锁；CI 必须接入这个发布门。详细输出包含不可关闭的原因、正常包/锁 SHA 和扫描路径；absent optional peer 按 npm 定义列明，不等同 optionalDependencies。
 
-当前接线候选固定共享检查器94561328d；R1已退回R1-RPG-01至03，等待C最终版本与复审。以下接线与正常包检查通过也不能作为npm发布放行；本候选不执行发布。
+共享门已升级到 R2 PASS 的 0.1.9，原正常工具 tar SHA256 为 `c72010c96a5f22e36d65f6c1fd850e583dead7e843644eba1657b4416d9cbd0d`；最终 main 来源见 `vendor/release-platform-gate.json`。本仓接线仍须 R1 独审，不等于 npm 发布放行，本次不发布。
 
 `verify:pack` 原有 tarball 参数保持；正常消费者验证之后通过共享公开 checkRelease 核对同一个归档，CI沿该入口必经硬门，不另打一个包代替原包。接线没有复制扫描实现。
+
+有限依赖形态合同为正常开发工具包中的 `DEPENDENCY_SHAPES.md`（dependency-shapes-v1）：支持 registry/git/file/link/tarball/workspace/bundled/vendor 的明确子集，不能当作 npm/pnpm 的无限全集。合同外一律 `UNSUPPORTED_DEPENDENCY_SHAPE`，逐项公开 `package/path/shape/why/action/contract`；缓存、bundle、环境变量或额外 CLI 开关都不能绕过准入。已知缺证据、冻结漂移、完整性和平台违规仍各自具名拒绝，不能以“任意失败”代替正确理由。
+
+发布说明：DSH 内置 pnpm 11.7.0 处理不适用平台 optional 子包时可能安装后不退出，使 DSH 一直等安装结束；因此本门是正确性不变量（`disableable:false`），没有关闭开关。所有 OS/CPU/libc 都必须具备平台中立的完整安装依赖闭包，不能用本机已装、omit-optional、ignore-scripts、超时、重试、放宽断言或改客户端代替。每次 PASS/FAIL 的 JSON/receipt 都包含触发背景和不能关闭的 reason；release:check 正常 pack，release:publish 只发布同一已检查且再核 SHA 的 tar。源码目录发布由 prepublishOnly 拒绝，CI 的 verify:pack/preflight 必经该门；无可失败 job 或旁路入口。
+
+固定提供方 main 提交 `13ec0db3bc6aa6b6235f2105d3f0a6b998855ff5`，与 R2 审过的 0.1.9 正常包6载荷逐字一致；来源/归档摘要见 `vendor/release-platform-gate.json`。
