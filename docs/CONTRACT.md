@@ -225,6 +225,8 @@ Support implementation: macOS13.5+ arm64/x64, known Node24.13.1 or24.22.0 (defau
 Storage space budget is archive bytes + twice measured regular-file payload (new tree + staging); never delete another version or unknown files to make space. lib-provision alone owns staging/ledger/manifests; interrupted or cancelled downloads may leave its resumable owned cache. Another attempt requires a new visible confirmation. Existing versions remain until an explicit owned cleanup is designed; no automatic deletion or implied rollback. Offline startup verifies an existing active tree/ledger and standalone executable; failures are visible and never trigger a download.
 
 
+目录来源 URL 接受标准端口 HTTPS，另接受本机回环 `127.0.0.1`、`::1`、`localhost` 的任意端口 HTTP。使用 Node `URL` 解析后的主机名精确比较；其它来源保持原规则。凭据、fragment、查询和完整同源校验不变；不增加设置、映射或别名。目录来源自身 attribution 可使用该回环来源，普通条目展示链接仍按原 HTTPS 校验。
+
 ## B17 套件安装包来源（2026-10-21 候选）
 
 AppHost 自有设置页「套件安装包来源」，公开同源端点 `GET|POST /hanamesh/library/suite-source`。GET 无参数，返回 `{mode, configuredRegistry, observation, traceId}`；`mode` 为 `configured|core`。`configured` 是唯一新增默认：继续使用原 `library.registry`（未设仍为 `https://registry.npmjs.org`）。市场目录 `library.sources` 的未设播种、显式空数组、自定义及已保存值均独立保持；目录 manifest URL 不是 npm registry。
