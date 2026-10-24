@@ -52,7 +52,7 @@ const textWithin=(value,max,nonempty=false)=>typeof value==='string'&&value.leng
 const npmName=value=>textWithin(value,214,true)&&/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(value);
 function displayUrl(value,catalogSource=false){
   if(!textWithin(value,2048,true))return false;
-  try{const url=new URL(value);return (catalogSource?catalogOrigin(url):url.protocol==='https:'&&!url.port)&&!url.username&&!url.password&&!url.hash;}catch{return false;}
+  try{const url=new URL(value);return (catalogSource?catalogOrigin(url):url.protocol==='https:'&&!url.port)&&!url.username&&!url.password;}catch{return false;}
 }
 function timestamp(value,utc=false){
   if(typeof value!=='string')return false;

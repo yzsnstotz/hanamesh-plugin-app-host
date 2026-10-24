@@ -243,3 +243,6 @@ GET 的 `observation` 为 `{observable:false,code}` 或 `{observable:true,state}
 
 
 B17 review repair（同0.6.8候选）：`AppHost` 未注入 `runtimeLedgerReader` 时，默认经正常依赖 `@hanamesh/lib-provision` 的公开 `ledger(root)` 读取 `<dataRoot>/runtimes/<appId>/.provision/ledger.json`。不存在的历史 `./provision/index.js` 导入已撤除；不复制账本实现或回退其它根。匹配版本与可执行检查仍 fail-closed。`AH-P05` 与正常tgz消费者均不注入 reader，使用有效真实账本启动实际 runtime、读回就绪响应与应用数据；M90检验错误导入不能回归。这仍不等于真实桌面应用的 owner 验收。
+
+
+0.6.12：目录条目的展示/跳转链接（`sourceLinks.sourceUrl`、`homepage`、`repository.url`、`publisher.url`）接受 fragment 并原样保留；目录自身 attribution 展示链接亦保留 fragment。manifest 来源和 `transport.endpoint` 等请求 URL 校验不变。单条非法仍拒绝整个 provider page，不返回部分结果。
