@@ -81,3 +81,6 @@ HanaMesh 视图原样保留可选 `official:boolean`（包括 false）与 C-INDE
 ### 宿主主题（2026-10-21候选）
 
 市场覆盖页、内嵌应用框、表单控件与状态提示消费正式 DSH ui-theme 的公开 `--dsw-alias-bg-layer-2`、`label-primary/secondary`、`border-l2`、`state-error/success/warn/business-*` token，不写白底黑字或新增全局色。主题值与切换仍归宿主；不修改客户端或覆盖其它插件。缺主题提供方时不能把本候选截图当正式宿主支持。
+
+
+0.6.12：目录条目的展示/跳转链接（`sourceLinks.sourceUrl`、`homepage`、`repository.url`、`publisher.url`）接受 fragment 并原样保留；目录自身 attribution 展示链接亦保留 fragment。manifest 来源和 `transport.endpoint` 等请求 URL 校验不变。单条非法仍拒绝整个 provider page，不返回部分结果。
