@@ -6,11 +6,11 @@ import {requireCondition} from '../errors.js';
 
 export const SUITE_TARGET='hanamesh:suite-upgrade';
 export const SUITE_PACKAGES=Object.freeze([
-  {name:'hanamesh-core',label:'Core',repo:'hanamesh-core'},
-  {name:'hanamesh-usage',label:'使用记录',repo:'hanamesh-usage'},
+  {name:'@hanamesh/core',label:'Core',repo:'hanamesh-core'},
+  {name:'@hanamesh/usage',label:'使用记录',repo:'hanamesh-usage'},
   {name:'@hanamesh/dsh-app-host',label:'应用库',repo:'hanamesh-plugin-app-host'},
 ].map(Object.freeze));
-export const SUITE_INSTALL_COMMAND="env -u GIT_CONFIG_PARAMETERS -u GIT_ASKPASS -u SSH_ASKPASS GIT_CONFIG_NOSYSTEM=1 GIT_TERMINAL_PROMPT=0 GIT_CONFIG_COUNT=2 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= GIT_CONFIG_KEY_1=credential.helper GIT_CONFIG_VALUE_1='!gh auth git-credential' dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#main' 'github:yzsnstotz/hanamesh-usage#main' 'github:yzsnstotz/hanamesh-plugin-app-host#main'";
+export const SUITE_INSTALL_COMMAND="dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.21' '@hanamesh/usage@0.3.0-rc.6' '@hanamesh/dsh-app-host@0.6.14'";
 const json=async path=>JSON.parse(await readFile(path,'utf8'));
 /** Physical inventory only, never a compatibility declaration or permission to upgrade. */
 export async function readSuiteStatus(profileDir){
@@ -104,7 +104,7 @@ export function createCoreSuiteAdapter({core=()=>undefined,registry,suiteSourceM
   Object.defineProperty(get,'unavailable',{get:()=>current()?null:CORE_SUITE_DECLARATION_MISSING});
   get.readFacts=async()=>{
     const declaration=await read();
-    return{status:declaration.completeness==='complete'?'installed':declaration.completeness,completeness:declaration.completeness,version:declaration.installed.find(row=>row.moduleName==='hanamesh-core').actualVersion,
+    return{status:declaration.completeness==='complete'?'installed':declaration.completeness,completeness:declaration.completeness,version:declaration.installed.find(row=>row.moduleName==='@hanamesh/core').actualVersion,
       components:declaration.installed.map(row=>({...row,name:row.moduleName,label:SUITE_PACKAGES.find(p=>p.name===row.moduleName).label,version:row.actualVersion})),blocked:declaration.blocked};
   };
   return get;

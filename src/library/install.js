@@ -10,7 +10,7 @@ import { profileSnapshot, runtimeSnapshot, profileChecks, runtimeChecks, package
 import {prepareSuiteUpgrade,readSuiteStatus,createCoreSuiteAdapter,SUITE_INSTALL_COMMAND} from './suite.js';
 
 /** The HanaMesh suite itself (real names + the historical scoped spellings) is never installed or removed through the market. */
-export const PROTECTED_PACKAGES=Object.freeze(['@hanamesh/dsh-app-host','hanamesh-core','hanamesh-usage','hanamesh-brand','@hanamesh/dsh-core','@hanamesh/dsh-usage']);
+export const PROTECTED_PACKAGES=Object.freeze(['@hanamesh/core','@hanamesh/usage','@hanamesh/brand','@hanamesh/dsh-app-host','hanamesh-core','hanamesh-usage','hanamesh-brand','@hanamesh/dsh-core','@hanamesh/dsh-usage']);
 const blocked=new Set(PROTECTED_PACKAGES);
 const packageName=value=>typeof value==='string'&&/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(value);
 const versionText=value=>typeof value==='string'&&/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(value);
@@ -161,16 +161,16 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       requireCondition(cliAvailable,'DSH_CLI_UNAVAILABLE','套件升级需客户端随附的官方 CLI；请恢复后重试。',{},503);
       const executing=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider});
       requireCondition(identity(executing)===identity(confirmed),'SUITE_PLAN_CHANGED','执行前套件安装包来源或声明已变化，请重新查看并确认。',{},409);
-      emit({type:'library.install-started',itemId:'hanamesh:suite-upgrade',packageName:'hanamesh-core',kind:'suite-upgrade'});
+      emit({type:'library.install-started',itemId:'hanamesh:suite-upgrade',packageName:'@hanamesh/core',kind:'suite-upgrade'});
       try{
         await run(['add','--save-exact','--strict-peer-dependencies',`--registry=${fresh.registry??registry}`,...fresh.components.map(c=>`${c.name}@${c.to}`)]);
         const actual=await readSuiteStatus(profileDir);
         const saved=await json(join(profileDir,'package.json'));
         requireCondition(actual.status==='installed'&&fresh.components.every((c,i)=>actual.components[i]?.version===c.to&&saved.dependencies?.[c.name]===c.to),'INSTALL_READBACK_MISMATCH','套件升级后的版本或启用状态不符，请完全退出后按补齐命令修复。',{},502);
-        return{status:'restart-required',kind:'suite-upgrade',packageName:'hanamesh-core',components:fresh.components,version:actual.version};
+        return{status:'restart-required',kind:'suite-upgrade',packageName:'@hanamesh/core',components:fresh.components,version:actual.version};
       }catch(error){
         error.details={...error.details,stage:'suite-upgrade',actual:await readSuiteStatus(profileDir),command:SUITE_INSTALL_COMMAND};
-        emit({type:'library.install-failed',packageName:'hanamesh-core',code:error.code??'SUITE_UPGRADE_FAILED'});throw error;
+        emit({type:'library.install-failed',packageName:'@hanamesh/core',code:error.code??'SUITE_UPGRADE_FAILED'});throw error;
       }
     });},
     async install(item,context){

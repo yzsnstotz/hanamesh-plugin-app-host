@@ -86,7 +86,7 @@ test('a suite operation timeout does not claim that installation was never execu
   const clock=fakeClock();
   const h=await clientHarness({clock,fetch:async path=>{
     let value={items:[],installed:[],plugins:[],page:{}};
-    if(path.startsWith('/hanamesh/library/target?'))value={source:{kind:'suite'},item:{id:'hanamesh:suite-upgrade',kind:'suite-upgrade',displayName:'HanaMesh 套件',package:{name:'hanamesh-core'},upgradeAvailable:true,suiteUpgrade:{...approved(),planId:'fixture'}}};
+    if(path.startsWith('/hanamesh/library/target?'))value={source:{kind:'suite'},item:{id:'hanamesh:suite-upgrade',kind:'suite-upgrade',displayName:'HanaMesh 套件',package:{name:'@hanamesh/core'},upgradeAvailable:true,suiteUpgrade:{...approved(),planId:'fixture'}}};
     else if(path==='/hanamesh/library/suite/upgrade')value={operationId:'accepted',status:'started'};
     else if(path.startsWith('/hanamesh/library/events?'))value={sequence:0,events:[],operations:['accepted']};
     return{ok:true,json:async()=>value};

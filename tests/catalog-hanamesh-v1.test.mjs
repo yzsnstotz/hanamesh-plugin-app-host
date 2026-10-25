@@ -46,15 +46,15 @@ test('HC25 C-MARKET public listing retains its own cursor boundary without trunc
 // C-WEB-CATALOG 2026-10-18 / C-INDEXER-CATALOG SuitePresentationDTO.
 // SOURCE examples; official/suite metadata grants no installation authority.
 const presentation=()=>({schemaVersion:1,id:'hanamesh',role:'suite',component:'usage',canonicalHanaId:item().id,installable:true,
-  distributionVersion:'0.1.0',components:[{component:'core',npmPackageName:'hanamesh-core',githubRepo:'yzsnstotz/hanamesh-core',version:'0.3.17'}],
-  installTargets:[{component:'core',npmPackageName:'hanamesh-core',githubRepo:'yzsnstotz/hanamesh-core',version:'0.3.17',source:{source:'github',repo:'yzsnstotz/hanamesh-core',ref:'a'.repeat(40)}}]});
+  distributionVersion:'0.1.0',components:[['core','@hanamesh/core','hanamesh-core'],['usage','@hanamesh/usage','hanamesh-usage'],['app-host','@hanamesh/dsh-app-host','hanamesh-plugin-app-host'],['brand','@hanamesh/brand','hanamesh-brand']].map(([component,npmPackageName,repo])=>({component,npmPackageName,githubRepo:'yzsnstotz/'+repo,version:'0.3.17'})),
+  installTargets:[['core','@hanamesh/core','hanamesh-core'],['usage','@hanamesh/usage','hanamesh-usage'],['app-host','@hanamesh/dsh-app-host','hanamesh-plugin-app-host']].map(([component,npmPackageName,repo])=>({component,npmPackageName,githubRepo:'yzsnstotz/'+repo,version:'0.3.17',source:{source:'github',repo:'yzsnstotz/'+repo,ref:'a'.repeat(40)}}))});
 test('HC26 HanaMesh official true/false/absent survives exact page readback',()=>{
   for(const official of [true,false,undefined]){const p=page();if(official!==undefined)p.items[0].official=official;
     assert.doesNotThrow(()=>validateProviderPage(p));assert.deepEqual(validateProviderPage(p),p);}
   for(const official of [null,0,'true',{}])assert.throws(()=>validateProviderPage(page([{...item(),official}])),{code:'INVALID_CATALOG_PAGE'});
 });
 test('HC27 public suite presentation preserves each role and optional historical version facts',()=>{
-  for(const role of ['suite','component','client-only']){const p=page();p.items[0].suite=presentation();p.items[0].suite.role=role;
+  for(const role of ['suite','component','client-only']){const p=page();p.items[0].suite=presentation();if(role!=='suite')p.items[0].suite={schemaVersion:1,id:'hanamesh',role,component:role==='component'?'core':'brand',canonicalHanaId:null,installable:false};
     assert.doesNotThrow(()=>validateProviderPage(p));assert.deepEqual(validateProviderPage(p),p);}
   const p=page();p.items[0].suite={schemaVersion:1,id:'hanamesh',role:'component',component:'app-host',canonicalHanaId:null,installable:false};
   assert.deepEqual(validateProviderPage(p),p);

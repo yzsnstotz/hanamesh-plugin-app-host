@@ -125,7 +125,7 @@ for (const available of [true, false]) test(`CM01/${available}: public website d
 
 for (const available of [true, false]) test(`CM01-facts/${available}: authenticated suite card preserves physical inventory while Core completeness remains unknown`, async t => {
   const h = await provider(t, { available });
-  const names=['hanamesh-core','hanamesh-usage','@hanamesh/dsh-app-host'],versions=['0.3.12','0.2.0-rc.34','0.6.5'];
+  const names=['@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host'],versions=['0.3.12','0.2.0-rc.34','0.6.5'];
   for(const physicallyInstalled of [false,true]){
     if(physicallyInstalled){for(const [i,name] of names.entries()){await mkdir(join(h.profile,'node_modules',name),{recursive:true});await writeFile(join(h.profile,'node_modules',name,'package.json'),JSON.stringify({name,version:versions[i]}));}await writeFile(join(h.profile,'package.json'),JSON.stringify({dependencies:Object.fromEntries(names.map((name,i)=>[name,versions[i]])),dsh:{profile:{bundles:names}}}));}
     const denied=await h.get('/hanamesh/library?category=',{'x-test-auth':undefined});assert.equal(denied.status,401);

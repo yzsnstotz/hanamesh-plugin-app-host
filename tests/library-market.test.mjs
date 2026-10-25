@@ -66,8 +66,8 @@ test('AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite
   const result=await installer.uninstallPlugin({packageName:'dsh-plugin-tether'});
   assert.deepEqual(result,{status:'restart-required',kind:'plugin',packageName:'dsh-plugin-tether'});
   assert.deepEqual(calls[0].args,['/opt/dsh/lib/bin.js','plugin','--profile','web','remove','dsh-plugin-tether']);
-  assert.deepEqual([...PROTECTED_PACKAGES].sort(),['@hanamesh/dsh-app-host','@hanamesh/dsh-core','@hanamesh/dsh-usage','hanamesh-brand','hanamesh-core','hanamesh-usage']);
-  for(const name of ['hanamesh-core','hanamesh-usage','@hanamesh/dsh-app-host','hanamesh-brand']){
+  assert.deepEqual([...PROTECTED_PACKAGES].sort(),['@hanamesh/brand','@hanamesh/core','@hanamesh/dsh-app-host','@hanamesh/dsh-core','@hanamesh/dsh-usage','@hanamesh/usage','hanamesh-brand','hanamesh-core','hanamesh-usage']);
+  for(const name of PROTECTED_PACKAGES){
     await assert.rejects(installer.uninstallPlugin({packageName:name}),{code:'PACKAGE_DENIED'});
     await assert.rejects(installer.installPlugin({packageName:name}),{code:'PACKAGE_DENIED'});
     await assert.rejects(installer.install({...plugin,package:{registry:'npm',name}}),{code:'PACKAGE_DENIED'});

@@ -7,11 +7,11 @@ async function card(t,suite){
   t.after(()=>h.unmount());await settle();return JSON.stringify(h.tree);
 }
 test('suite card identifies the displayed version as Core, independently of the agent distribution version',async t=>{
-  const text=await card(t,{status:'installed',completeness:'complete',version:'0.3.14',components:[{name:'hanamesh-core',label:'Core',version:'0.3.14'},{name:'hanamesh-usage',label:'使用记录',version:'0.3.0-rc.2'}]});
+  const text=await card(t,{status:'installed',completeness:'complete',version:'0.3.14',components:[{name:'@hanamesh/core',label:'Core',version:'0.3.14'},{name:'@hanamesh/usage',label:'使用记录',version:'0.3.0-rc.2'}]});
   assert.match(text,/已安装 · Core 0.3.14/);assert.doesNotMatch(text,/已安装 · 0.3.14/);assert.match(text,/0.3.0-rc.2/);
 });
 test('unknown suite completeness does not claim missing components and keeps physical versions visible',async t=>{
-  const text=await card(t,{status:'unknown',completeness:'unknown',version:'0.3.14',components:[{name:'hanamesh-core',label:'Core',version:'0.3.14',active:true}],blocked:[{code:'CORE_SUITE_PEER_UNKNOWN'}]});
+  const text=await card(t,{status:'unknown',completeness:'unknown',version:'0.3.14',components:[{name:'@hanamesh/core',label:'Core',version:'0.3.14',active:true}],blocked:[{code:'CORE_SUITE_PEER_UNKNOWN'}]});
   assert.match(text,/套件状态未知/);assert.doesNotMatch(text,/套件不完整或版本检测不到/);assert.match(text,/CORE_SUITE_PEER_UNKNOWN/);assert.match(text,/0.3.14/);
 });
 test('a refused upgrade preview says installation has not started and preserves named Core causes',async t=>{
@@ -27,7 +27,7 @@ test('the plugin category keeps the single suite card visible',async t=>{
 
 for(const outcome of ['success','partial'])test(`a suite ${outcome} does not promote physical inventory into Core completeness on the next direct probe`,async t=>{
   const {createLibraryService}=await import('../src/library/service.js');const {scratch}=await import('./helpers.mjs');const {mkdir,writeFile}=await import('node:fs/promises');const {join}=await import('node:path');
-  const root=await scratch('suite-core-authority-'),names=['hanamesh-core','hanamesh-usage','@hanamesh/dsh-app-host'];
+  const root=await scratch('suite-core-authority-'),names=['@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host'];
   for(const name of names){await mkdir(join(root,'node_modules',name),{recursive:true});await writeFile(join(root,'node_modules',name,'package.json'),JSON.stringify({name,version:'1.0.0'}));}
   await writeFile(join(root,'package.json'),JSON.stringify({dependencies:Object.fromEntries(names.map(name=>[name,'1.0.0'])),dsh:{profile:{bundles:names}}}));
   const installer={ready:true,install:async()=>{},suiteFacts:async()=>({status:'unknown',completeness:'unknown',version:'1.0.0',components:[],blocked:[{code:'CORE_SUITE_RUNNING_PHYSICAL_MISMATCH'}]}),upgradeSuite:async()=>{if(outcome==='partial'){const e=new Error('partial');e.code='DSH_PLUGIN_FAILED';e.details={stage:'suite-upgrade'};throw e;}return{status:'restart-required'};}};

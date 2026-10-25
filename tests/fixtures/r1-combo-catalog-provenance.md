@@ -1,0 +1,5 @@
+# R1-COMBO-01 captured catalog response
+
+Both JSON files are byte-for-byte copies of R1 evidence at `~/.cache/hanamesh-runs/r1-combo-web-20261026/docs/prd/证据/R1-Combo-Web-20261026/candidate-catalog-{page,source}.json`. Indexer c1184b7 / 0.4.14, Web dc8d318 / rc.34; real isolated candidate assembly, no response substitutes. The page contains 26 items and AppHost 0.6.13 as a provider fact; do not rewrite it to this consumer version. STD01 pins the captured page SHA256. These are regression inputs, not fresh product acceptance or installation evidence.
+
+Standard-distribution authority: explicit I-0826 brief, approved proposal in `prd/2026-10-25-标准分发合约待审与发布停点-G.md` (R2 a2570c6), and Web dc8d318 public HanaMesh schema. Historical immutable Git DTOs remain readable per proposal item 1. Docs main 68dc961 still labels the proposal pending; reported to orchestration rather than rewriting another provider's contract. The shipped consumer schema follows this public shape, fixes the imported SemVer literal escaping, and preserves AppHost's existing empty-summary/fragment support. Cross-field tuple equality stays in the actual decoder.

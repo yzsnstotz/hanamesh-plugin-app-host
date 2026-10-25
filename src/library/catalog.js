@@ -1,3 +1,4 @@
+import semver from 'semver';
 import { readFile } from 'node:fs/promises';
 import { AppHostError, requireCondition } from '../errors.js';
 
@@ -62,26 +63,54 @@ function timestamp(value,utc=false){
   return Number.isFinite(date.getTime())&&date.toISOString().slice(0,10)===value.slice(0,10);
 }
 // Display-only C-INDEXER-CATALOG SuitePresentationDTO; never an install/upgrade decision.
-const suiteComponent=value=>['core','usage','app-host','brand'].includes(value);
-function suitePresentation(value){
-  const packageFact=fact=>fact&&npmName(fact.npmPackageName)&&plain(fact.githubRepo);
-  return own(value,['schemaVersion','id','role','component','canonicalHanaId','installable','installTargets','components','distributionVersion'])&&
+const suiteIdentities={
+  core:{names:['@hanamesh/core','hanamesh-core'],repo:'yzsnstotz/hanamesh-core'},
+  usage:{names:['@hanamesh/usage','hanamesh-usage'],repo:'yzsnstotz/hanamesh-usage'},
+  'app-host':{names:['@hanamesh/dsh-app-host'],repo:'yzsnstotz/hanamesh-plugin-app-host'},
+  brand:{names:['@hanamesh/brand','hanamesh-brand'],repo:'yzsnstotz/hanamesh-brand'},
+};
+const suiteComponent=value=>Object.hasOwn(suiteIdentities,value);
+const exactVersion=value=>textWithin(value,128,true)&&!value.startsWith('v')&&Boolean(semver.valid(value))&&value.trim()===value;
+const packageFact=fact=>fact&&suiteComponent(fact.component)&&suiteIdentities[fact.component].names.includes(fact.npmPackageName)&&suiteIdentities[fact.component].repo===fact.githubRepo;
+const distinctComponents=(facts,count)=>Array.isArray(facts)&&facts.length===count&&new Set(facts.map(fact=>fact?.component)).size===count;
+function suitePresentation(value,item){
+  if(!(own(value,['schemaVersion','id','role','component','canonicalHanaId','installable','installTargets','components','distributionVersion','agentPlugins'])&&
     value.schemaVersion===1&&value.id==='hanamesh'&&['suite','component','client-only'].includes(value.role)&&suiteComponent(value.component)&&
-    (value.canonicalHanaId===null||plain(value.canonicalHanaId))&&typeof value.installable==='boolean'&&
-    (value.distributionVersion===undefined||plain(value.distributionVersion))&&
-    (value.components===undefined||(Array.isArray(value.components)&&value.components.every(fact=>
-      own(fact,['component','npmPackageName','githubRepo','version'])&&suiteComponent(fact.component)&&packageFact(fact)&&plain(fact.version))))&&
-    (value.installTargets===undefined||(Array.isArray(value.installTargets)&&value.installTargets.every(target=>
-      own(target,['component','npmPackageName','githubRepo','version','source'])&&['core','usage','app-host'].includes(target.component)&&packageFact(target)&&
-      (target.version===undefined||plain(target.version))&&own(target.source,['source','repo','ref'])&&target.source.source==='github'&&
-      plain(target.source.repo)&&typeof target.source.ref==='string'&&/^[0-9a-f]{40}$/i.test(target.source.ref))));
+    (value.canonicalHanaId===null||plain(value.canonicalHanaId))&&typeof value.installable==='boolean'))return false;
+  const canonical=value.role==='suite'&&value.component==='usage'&&value.installable&&value.canonicalHanaId===item.id;
+  if(value.role!==(value.component==='usage'?'suite':value.component==='brand'?'client-only':'component')||value.installable!==canonical)return false;
+  if(value.distributionVersion!==undefined&&(!canonical||!exactVersion(value.distributionVersion)))return false;
+  if(value.components!==undefined&&(!canonical||!distinctComponents(value.components,4)||!value.components.every(fact=>
+    own(fact,['component','npmPackageName','githubRepo','version'])&&packageFact(fact)&&exactVersion(fact.version))))return false;
+  if(value.installTargets!==undefined){
+    if(!canonical||!distinctComponents(value.installTargets,3)||!value.installTargets.every(target=>{
+      if(!(own(target,['component','npmPackageName','githubRepo','version','source'])&&target.component!=='brand'&&packageFact(target)&&
+        (target.version===undefined||exactVersion(target.version))))return false;
+      const fact=value.components?.find(fact=>fact.component===target.component),source=target.source;
+      if(fact&&(fact.npmPackageName!==target.npmPackageName||fact.githubRepo!==target.githubRepo||
+        (target.version!==undefined&&fact.version!==target.version)))return false;
+      if(source?.source==='npm')return own(source,['source','name','version'])&&source.name===target.npmPackageName&&
+        exactVersion(source.version)&&source.version===target.version&&fact?.version===target.version;
+      // Approved standard distribution retains immutable historical Git DTOs, without choosing a fallback source.
+      return own(source,['source','repo','ref'])&&source.source==='github'&&source.repo===target.githubRepo&&
+        typeof source.ref==='string'&&/^[0-9a-f]{40}$/i.test(source.ref);
+    }))return false;
+  }
+  if(value.agentPlugins!==undefined){
+    const agents=value.agentPlugins;
+    if(!canonical||!Array.isArray(agents)||agents.length<1||agents.length>2||new Set(agents.map(agent=>agent?.host)).size!==agents.length||
+      !agents.every(agent=>own(agent,['host','pluginName','pluginId','marketplaceUrl','version'])&&['claude','codex'].includes(agent.host)&&
+        agent.pluginName==='hanamesh'&&agent.pluginId==='hanamesh@hanamesh'&&agent.marketplaceUrl==='https://github.com/yzsnstotz/hanamesh-plugins'&&
+        exactVersion(agent.version)&&agent.version===value.distributionVersion))return false;
+  }
+  return true;
 }
 
 function validateHanaItem(item,maxSourceLinks){
   const optionalText={description:5000,latestVersion:64,license:80};
   const source=item?.source;
   requireCondition(own(item,['id','itemId','packageName','name','displayName','summary','catalogKind','source','description','homepage','latestVersion','license','categories','keywords','repository','package','publisher','updatedAt','official','suite'])&&
-    (item.official===undefined||typeof item.official==='boolean')&&(item.suite===undefined||suitePresentation(item.suite))&&
+    (item.official===undefined||typeof item.official==='boolean')&&(item.suite===undefined||suitePresentation(item.suite,item))&&
     plain(item.id)&&item.id===item.itemId&&
     textWithin(item.name,160,true)&&textWithin(item.displayName,120,true)&&textWithin(item.summary,1000)&&
     ['application','plugin','entry'].includes(item.catalogKind)&&

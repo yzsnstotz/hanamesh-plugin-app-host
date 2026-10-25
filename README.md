@@ -1,4 +1,8 @@
+0.6.14 候选：严格读取标准分发目录的精确 npm 三目标与 agentPlugins，保留历史固定 GitHub DTO；目录事实仅展示，不决定兼容或升级。R1-COMBO-01 原始 26 条目响应已纳入回归。
+
 > I51 R1 返修（待复审）：供应商指引跟随宿主中英菜单，默认正文只写用途和结果；实现解释、交接固定规则及具名设置默认值保留在技术详情。交接的保存操作与套件来源选择前置，自有字段按单列排列；设置值、默认值、权限、读写协议均不变。
+
+0.6.13 候选只消费新 npm 三包身份；插件 id、服务与存储不变。新旧 Core/Usage/Brand 均受保护，Recommender 不属于套件。0.6.12 原件保持原行为。
 >
 > 已知限制 / Known limitations：官方 DSH rc.2 设置页在 390 CSS px 下仍保留固定侧栏，插件内容可用宽度受宿主挤压；本插件不改变客户端或全局 CSS，不能保证该宿主窄屏下标题、原生下拉选项及输入值完整可见。完整设置操作建议使用宽窗口。At 390 CSS px, the official DSH rc.2 settings sidebar leaves limited room for plugin content; titles, native select options and input values may remain constrained. Use a wider window for full settings operations. AppHost only controls its own content and does not modify the client or global CSS. 此限制按编排本次裁定披露，不报告整页390通过。Brand M01既有错误可见性限制仍开；静态profile peers check红流不改写为通过。
 

@@ -157,7 +157,9 @@ DSH 绑定必须提供同一个 `single` domain 的一次完整镜像 publish �
 | `/hanamesh/library/provision` | POST | `{appId, packageName, runtimeItem}` 三者必填 | 202；缺字段/非法 → 400 `INVALID_INPUT`（`LIB-PROVISION-INPUT`） |
 | `/hanamesh/library/uninstall` | POST | `{appId, packageName, runtimeItem?}` | 202；缺字段/非法 → 400 `INVALID_INPUT` |
 
-事件流 `library.install-*` 增加 `kind`；`install-done.result` 对插件为 `{status:'restart-required', kind:'plugin', packageName, version}`。受保护包（`hanamesh-core`、`hanamesh-usage`、`@hanamesh/dsh-app-host` 及旧写法 `@hanamesh/dsh-core`、`@hanamesh/dsh-usage`）任何路径都 `PACKAGE_DENIED`：`plugins/*` 在启动操作前同步答 403，目录条目路径在操作内以 `-failed` 事件给出。「需重启」判定只来自本进程启动时的 profile 依赖快照（钉版本内核不暴露已加载插件集合）；快照不可读时一切已装计为已加载。客户端在壳内（`window.self !== window.top`）给 `hanamesh://restart` 深链，官方 DSH 直开时只提示文字；本包不重启 DSH。
+事件流 `library.install-*` 增加 `kind`；`install-done.result` 对插件为 `{status:'restart-required', kind:'plugin', packageName, version}`。受保护包（`@hanamesh/core`、`@hanamesh/usage`、`@hanamesh/brand`、`hanamesh-brand`、`hanamesh-core`、`hanamesh-usage`、`@hanamesh/dsh-app-host` 及旧写法 `@hanamesh/dsh-core`、`@hanamesh/dsh-usage`）任何路径都 `PACKAGE_DENIED`：`plugins/*` 在启动操作前同步答 403，目录条目路径在操作内以 `-failed` 事件给出。「需重启」判定只来自本进程启动时的 profile 依赖快照（钉版本内核不暴露已加载插件集合）；快照不可读时一切已装计为已加载。客户端在壳内（`window.self !== window.top`）给 `hanamesh://restart` 深链，官方 DSH 直开时只提示文字；本包不重启 DSH。
+
+0.6.13 候选：套件 npm 身份为 `@hanamesh/core`、`@hanamesh/usage`、`@hanamesh/dsh-app-host`；Core 声明的 `core.name`、`moduleName`、升级目标和返回的 `packageName` 按这些新名精确比较，旧名声明不当作新三包。插件 id、`hanameshMarket` 服务、路由与存储键保持；普通 Recommender 不受保护、不加入套件。首装/补齐精确命令见 LIBRARY.md；已发布 0.6.12 原件不包含该适配。
 
 ## 市场席位（rc.32，设计定案 2026-09-22 §4，T5）
 
@@ -246,3 +248,7 @@ B17 review repair（同0.6.8候选）：`AppHost` 未注入 `runtimeLedgerReader
 
 
 0.6.12：目录条目的展示/跳转链接（`sourceLinks.sourceUrl`、`homepage`、`repository.url`、`publisher.url`）接受 fragment 并原样保留；目录自身 attribution 展示链接亦保留 fragment。manifest 来源和 `transport.endpoint` 等请求 URL 校验不变。单条非法仍拒绝整个 provider page，不返回部分结果。
+
+
+0.6.14 / R1-COMBO-01：HanaMesh view 的可选 suite.agentPlugins 接受 claude/codex 唯一渠道、hanamesh / hanamesh@hanamesh、公开 hanamesh-plugins HTTPS 市场及与 distributionVersion 相同的精确 SemVer。npm source 严格为 {source:'npm',name,version}，name=目标 npmPackageName，source.version=目标 version=对应 components.version；三个不同目标限 Core/Usage/AppHost，Brand 仅组件事实。公开组件的新旧 npm 名均绑定原 GitHub 仓库，不猜发布版本。未知字段、范围/tag、缺件、重复件及不一致整页拒绝 INVALID_CATALOG_PAGE。
+历史 GitHub DTO 按已审标准分发提议继续可读：source 只许 source/repo/ref，repo=目标 githubRepo，ref 为40位hex；可缺历史版本事实，不自动转换或选备用源。目录发布事实不作为 Core 兼容声明、安装授权或本机已装观察。随包 catalog/schema/page.json 同时描述默认和 HanaMesh 两视图，跨字段相等性由运行解码器检查。

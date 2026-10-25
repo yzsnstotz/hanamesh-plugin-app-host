@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:dsh-community-market:schema:catalog-provider-page:1.1.0",
   "title": "DSH Community Market standard provider page",
-  "description": "The untrusted page JSON returned by one standard HTTPS catalog endpoint. Only schemaVersion, items, and page are required. A page may contain at most 200 items and must also respect the effective requested or declared default limit. Host-observed provenance is intentionally absent and is injected only after validation.",
+  "description": "Default catalog-major-1 or explicit HanaMesh view. Both branches reject unknown fields; cross-field suite identity/version checks also run in the consumer.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -13,7 +13,7 @@
   "properties": {
     "schemaVersion": {
       "type": "string",
-      "pattern": "^1\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$(?![\\s\\S])",
+      "pattern": "^(?:hanamesh\\.catalog\\.v1|1\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?)$(?![\\s\\S])",
       "description": "Valid SemVer with major 1. Minor and patch additions preserve the validated shape; other majors are refused."
     },
     "generatedAt": {
@@ -28,9 +28,7 @@
     "items": {
       "type": "array",
       "maxItems": 200,
-      "items": {
-        "$ref": "#/$defs/item"
-      }
+      "items": {}
     },
     "page": {
       "$ref": "#/$defs/page"
@@ -373,6 +371,883 @@
           ]
         }
       ]
+    },
+    "legacyPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "items",
+        "page"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "pattern": "^1\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$(?![\\s\\S])",
+          "description": "Valid SemVer with major 1. Minor and patch additions preserve the validated shape; other majors are refused."
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/item"
+          }
+        },
+        "page": {
+          "$ref": "#/$defs/page"
+        }
+      }
+    },
+    "hana_identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+-]*$"
+    },
+    "hana_httpsUri": {
+      "type": "string",
+      "format": "uri",
+      "maxLength": 2048,
+      "pattern": "^https://(?![^/?#]*@)(?![^/?#]*:)[^/?#]+(?:[/?#].*)?$"
+    },
+    "hana_plainText": {
+      "type": "string",
+      "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F\\u202A-\\u202E\\u2066-\\u2069]*$"
+    },
+    "hana_page": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "maxProperties": 0
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "nextCursor",
+            "total"
+          ],
+          "properties": {
+            "nextCursor": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            },
+            "total": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "hana_repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "url"
+      ],
+      "properties": {
+        "url": {
+          "$ref": "#/$defs/hana_httpsUri",
+          "description": "GitHub repository only; runtime validates hostname and owner/repository path."
+        },
+        "subdirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$"
+        }
+      }
+    },
+    "hana_package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "registry",
+        "name"
+      ],
+      "properties": {
+        "registry": {
+          "const": "npm"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 214,
+          "pattern": "^(?:@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*$"
+        }
+      }
+    },
+    "hana_publisher": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/hana_plainText"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            }
+          ]
+        },
+        "url": {
+          "$ref": "#/$defs/hana_httpsUri"
+        }
+      }
+    },
+    "hana_categoryId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9][a-z0-9._:-]*$"
+    },
+    "hana_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "displayName",
+        "summary",
+        "itemId",
+        "packageName",
+        "catalogKind",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/hana_identifier"
+        },
+        "name": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/hana_plainText"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            }
+          ]
+        },
+        "displayName": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/hana_plainText"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            }
+          ]
+        },
+        "summary": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/hana_plainText"
+            },
+            {
+              "type": "string",
+              "maxLength": 1000
+            }
+          ]
+        },
+        "description": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/hana_plainText"
+            },
+            {
+              "type": "string",
+              "maxLength": 5000
+            }
+          ]
+        },
+        "homepage": {
+          "$ref": "#/$defs/hana_httpsUri"
+        },
+        "latestVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "categories": {
+          "type": "array",
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/hana_categoryId"
+          }
+        },
+        "keywords": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "repository": {
+          "$ref": "#/$defs/hana_repository"
+        },
+        "package": {
+          "$ref": "#/$defs/hana_package"
+        },
+        "publisher": {
+          "$ref": "#/$defs/hana_publisher"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "itemId": {
+          "$ref": "#/$defs/hana_identifier"
+        },
+        "packageName": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 214,
+              "pattern": "^(?:@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*$"
+            }
+          ]
+        },
+        "catalogKind": {
+          "enum": [
+            "application",
+            "plugin",
+            "entry"
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/hana_source"
+        },
+        "official": {
+          "type": "boolean",
+          "description": "Mirrored official marker from the source; absent when unknown. Does not grant authorization."
+        },
+        "suite": {
+          "$ref": "#/$defs/hana_suite"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "packageName": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "required": [
+                "package"
+              ]
+            }
+          },
+          "else": {
+            "required": [
+              "package"
+            ]
+          }
+        }
+      ]
+    },
+    "hana_sourceLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceId",
+        "sourceRef",
+        "sourceUrl",
+        "firstSeenAt",
+        "lastSeenAt"
+      ],
+      "properties": {
+        "sourceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F\\u202A-\\u202E\\u2066-\\u2069]*$"
+        },
+        "sourceRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F\\u202A-\\u202E\\u2066-\\u2069]*$"
+        },
+        "sourceUrl": {
+          "$ref": "#/$defs/hana_httpsUri"
+        },
+        "firstSeenAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastSeenAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "hana_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceId",
+        "sourceRef",
+        "sourceLinks"
+      ],
+      "properties": {
+        "sourceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F\\u202A-\\u202E\\u2066-\\u2069]*$"
+        },
+        "sourceRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F\\u202A-\\u202E\\u2066-\\u2069]*$"
+        },
+        "sourceLinks": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "$ref": "#/$defs/hana_sourceLink"
+          }
+        }
+      }
+    },
+    "hana_suite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "id",
+        "role",
+        "component",
+        "canonicalHanaId",
+        "installable"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "id": {
+          "const": "hanamesh"
+        },
+        "role": {
+          "enum": [
+            "suite",
+            "component",
+            "client-only"
+          ]
+        },
+        "component": {
+          "enum": [
+            "core",
+            "usage",
+            "app-host",
+            "brand"
+          ]
+        },
+        "canonicalHanaId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        },
+        "installable": {
+          "type": "boolean"
+        },
+        "installTargets": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "component",
+              "npmPackageName",
+              "githubRepo",
+              "source"
+            ],
+            "properties": {
+              "component": {
+                "enum": [
+                  "core",
+                  "usage",
+                  "app-host"
+                ]
+              },
+              "npmPackageName": {
+                "type": "string",
+                "maxLength": 214,
+                "pattern": "^(?:@[a-z0-9-]+/)?[a-z0-9][a-z0-9._-]*$"
+              },
+              "githubRepo": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9.-]+/[A-Za-z0-9._-]+$"
+              },
+              "source": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "source",
+                      "repo",
+                      "ref"
+                    ],
+                    "properties": {
+                      "source": {
+                        "const": "github"
+                      },
+                      "repo": {
+                        "type": "string"
+                      },
+                      "ref": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{40}$"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "source",
+                      "name",
+                      "version"
+                    ],
+                    "properties": {
+                      "source": {
+                        "const": "npm"
+                      },
+                      "name": {
+                        "type": "string",
+                        "maxLength": 214,
+                        "pattern": "^(?:@[a-z0-9-]+/)?[a-z0-9][a-z0-9._-]*$"
+                      },
+                      "version": {
+                        "$ref": "#/$defs/hana_semver"
+                      }
+                    }
+                  }
+                ]
+              },
+              "version": {
+                "$ref": "#/$defs/hana_semver"
+              }
+            },
+            "allOf": [
+              {
+                "$ref": "#/$defs/hana_officialSuiteIdentity"
+              },
+              {
+                "if": {
+                  "properties": {
+                    "source": {
+                      "properties": {
+                        "source": {
+                          "const": "npm"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "then": {
+                  "required": [
+                    "version"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "distributionVersion": {
+          "$ref": "#/$defs/hana_semver"
+        },
+        "components": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "component",
+              "npmPackageName",
+              "githubRepo",
+              "version"
+            ],
+            "properties": {
+              "component": {
+                "enum": [
+                  "core",
+                  "usage",
+                  "app-host",
+                  "brand"
+                ]
+              },
+              "npmPackageName": {
+                "type": "string"
+              },
+              "githubRepo": {
+                "type": "string"
+              },
+              "version": {
+                "$ref": "#/$defs/hana_semver"
+              }
+            },
+            "allOf": [
+              {
+                "$ref": "#/$defs/hana_officialSuiteIdentity"
+              }
+            ]
+          },
+          "allOf": [
+            {
+              "contains": {
+                "type": "object",
+                "required": [
+                  "component"
+                ],
+                "properties": {
+                  "component": {
+                    "const": "core"
+                  }
+                }
+              }
+            },
+            {
+              "contains": {
+                "type": "object",
+                "required": [
+                  "component"
+                ],
+                "properties": {
+                  "component": {
+                    "const": "usage"
+                  }
+                }
+              }
+            },
+            {
+              "contains": {
+                "type": "object",
+                "required": [
+                  "component"
+                ],
+                "properties": {
+                  "component": {
+                    "const": "app-host"
+                  }
+                }
+              }
+            },
+            {
+              "contains": {
+                "type": "object",
+                "required": [
+                  "component"
+                ],
+                "properties": {
+                  "component": {
+                    "const": "brand"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "agentPlugins": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "host",
+              "pluginName",
+              "pluginId",
+              "marketplaceUrl",
+              "version"
+            ],
+            "properties": {
+              "host": {
+                "enum": [
+                  "claude",
+                  "codex"
+                ]
+              },
+              "pluginName": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$"
+              },
+              "pluginId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,119}@[A-Za-z0-9][A-Za-z0-9._-]{0,119}$"
+              },
+              "marketplaceUrl": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://"
+              },
+              "version": {
+                "$ref": "#/$defs/hana_semver"
+              }
+            }
+          }
+        }
+      },
+      "description": "Validated Indexer declaration. Optional versions are provider-supplied SemVer, never inferred from another component. Worker enforces role/component relationships, canonical self UUID for installation, distinct official components, source.repo=githubRepo and matching component/target versions when both are supplied. npm targets require source.name=npmPackageName and source.version=target.version=component.version; agent targets bind the distribution version. Cross-field checks also run in the Worker.",
+      "allOf": [
+        {
+          "if": {
+            "anyOf": [
+              {
+                "required": [
+                  "components"
+                ]
+              },
+              {
+                "required": [
+                  "distributionVersion"
+                ]
+              },
+              {
+                "required": [
+                  "agentPlugins"
+                ]
+              }
+            ]
+          },
+          "then": {
+            "properties": {
+              "role": {
+                "const": "suite"
+              },
+              "component": {
+                "const": "usage"
+              },
+              "installable": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "hana_officialSuiteIdentity": {
+      "description": "Public Indexer official component identities; shared by Web validation for mirrored rows and install targets. Ref commits remain provider supplied. Scoped identities and their explicit historical npm names share the same component/GitHub binding.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "npmPackageName",
+            "githubRepo"
+          ],
+          "properties": {
+            "component": {
+              "const": "core"
+            },
+            "npmPackageName": {
+              "enum": [
+                "@hanamesh/core",
+                "hanamesh-core"
+              ]
+            },
+            "githubRepo": {
+              "const": "yzsnstotz/hanamesh-core"
+            },
+            "suite": {
+              "type": "object",
+              "properties": {
+                "component": {
+                  "const": "core"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "npmPackageName",
+            "githubRepo"
+          ],
+          "properties": {
+            "component": {
+              "const": "usage"
+            },
+            "npmPackageName": {
+              "enum": [
+                "@hanamesh/usage",
+                "hanamesh-usage"
+              ]
+            },
+            "githubRepo": {
+              "const": "yzsnstotz/hanamesh-usage"
+            },
+            "suite": {
+              "type": "object",
+              "properties": {
+                "component": {
+                  "const": "usage"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "npmPackageName",
+            "githubRepo"
+          ],
+          "properties": {
+            "component": {
+              "const": "app-host"
+            },
+            "npmPackageName": {
+              "enum": [
+                "@hanamesh/dsh-app-host"
+              ]
+            },
+            "githubRepo": {
+              "const": "yzsnstotz/hanamesh-plugin-app-host"
+            },
+            "suite": {
+              "type": "object",
+              "properties": {
+                "component": {
+                  "const": "app-host"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "npmPackageName",
+            "githubRepo"
+          ],
+          "properties": {
+            "component": {
+              "const": "brand"
+            },
+            "npmPackageName": {
+              "enum": [
+                "@hanamesh/brand",
+                "hanamesh-brand"
+              ]
+            },
+            "githubRepo": {
+              "const": "yzsnstotz/hanamesh-brand"
+            },
+            "suite": {
+              "type": "object",
+              "properties": {
+                "component": {
+                  "const": "brand"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "hana_semver": {
+      "type": "string",
+      "maxLength": 128,
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$(?![\\s\\S])"
+    },
+    "hanaPage": {
+      "title": "HanaMesh opt-in full catalog page",
+      "description": "C-WEB-CATALOG version 1 public allowlist. Runtime additionally enforces id=itemId, npm package equality, classification, source safety and actual UTF-8 response byte limits.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "items",
+        "page"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "hanamesh.catalog.v1"
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/hana_item"
+          }
+        },
+        "page": {
+          "$ref": "#/$defs/hana_page"
+        }
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "schemaVersion": {
+            "const": "hanamesh.catalog.v1"
+          }
+        }
+      },
+      "then": {
+        "$ref": "#/$defs/hanaPage"
+      },
+      "else": {
+        "$ref": "#/$defs/legacyPage"
+      }
+    }
+  ]
 }
