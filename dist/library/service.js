@@ -36,7 +36,11 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   async function installedPlugins(){return config.profileDir?await scanInstalledPlugins({profileDir:config.profileDir,bootDependencies}):[];}
   const settingsWriter=new SerialQueue();
   function persist(update){return settingsWriter.run(async()=>{const next={...update(state),revision:state.revision+1};await domain.global.set(next);state=next;});}
-  async function operation(type,task){const operationId=randomUUID();emit({type:`library.${type}-started`,operationId});const work=Promise.resolve().then(()=>task(operationId)).then(result=>{emit({type:`library.${type}-done`,operationId,result});return result;},error=>{emit({type:`library.${type}-failed`,operationId,code:error.code??'LIBRARY_OPERATION_FAILED',...(error.recovery?{recovery:error.recovery}:{}),...(error.details?.stage==='suite-upgrade'?{details:{stage:'suite-upgrade',actual:error.details.actual,command:SUITE_INSTALL_COMMAND}}:{})});throw error;}).finally(()=>running.delete(operationId));running.set(operationId,work);work.catch(()=>{});return{operationId,status:'started'};}
+  async function operation(type,task){const operationId=randomUUID();emit({type:`library.${type}-started`,operationId});const work=Promise.resolve().then(()=>task(operationId)).then(result=>{emit({type:`library.${type}-done`,operationId,result});return result;},error=>{
+    const details=error.details?.stage==='suite-upgrade'?{stage:'suite-upgrade',actual:error.details.actual,command:SUITE_INSTALL_COMMAND}:{};
+    if(error instanceof AppHostError&&error.code==='DSH_PLUGIN_FAILED'&&typeof error.details?.diagnostic==='string')details.diagnostic=error.details.diagnostic;
+    emit({type:`library.${type}-failed`,operationId,code:error.code??'LIBRARY_OPERATION_FAILED',...(error.recovery?{recovery:error.recovery}:{}),...(Object.keys(details).length?{details}:{})});throw error;
+  }).finally(()=>running.delete(operationId));running.set(operationId,work);work.catch(()=>{});return{operationId,status:'started'};}
   const requireInstaller=(message)=>requireCondition(ready(),'LIBRARY_INSTALL_UNAVAILABLE',message,{need:unavailable()},503);
   /**
    * The host itself loaded/unloaded a plugin (pluginManager `applied`): it no longer waits for a restart. When the profile

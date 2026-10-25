@@ -3,6 +3,8 @@ import { join, resolve, dirname, sep, delimiter } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {safeGitEnv,guardNodeBinary,spawnGitSafe} from '../git-process.js';
 import { randomUUID } from 'node:crypto';
+import { stripVTControlCharacters } from 'node:util';
+import { redact } from '../runtime.js';
 import { AppHostError, requireCondition, SerialQueue } from '../errors.js';
 import { validateDefinition } from '../descriptor.js';
 import { itemKind } from './catalog.js';
@@ -66,7 +68,9 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
     const options={cwd:profileDir,workerNode:supervisorNode,env:safeGitEnv({HOME:process.env.HOME,DSH_HOME:process.env.DSH_HOME,LANG:process.env.LANG??'C.UTF-8',PATH:commandPath(nodeBinary??desktopLauncher.command)})},tail=['plugin','--profile',profileName,...args];
     if(launcherAvailable)options.env=safeGitEnv({...options.env,DSH_HOME:desktopLauncher.home,PATH:commandPath(desktopLauncher.command)});
     const result=await spawn(launcherAvailable?desktopLauncher.command:nodeBinary,launcherAvailable?tail:[...(desktopCli?['--expose-internals',fileURLToPath(new URL('./desktop-cli.js',import.meta.url)),desktopCli.entry,desktopCli.runtimeDir,desktopCli.supportDir]:[dshBin]),...tail],options);
-    requireCondition(result.code===0,'DSH_PLUGIN_FAILED','DSH plugin operation failed.',{code:result.code,signal:result.signal,stderr:String(result.stderr??'').slice(-2000)},502);return result;}
+    const clean=text=>redact(stripVTControlCharacters(String(text??''))).replace(/(https?:\/\/)[^/\s@]+@/g,'$1[REDACTED]@').slice(-2000);
+    const stdout=clean(result.stdout),stderr=clean(result.stderr);
+    requireCondition(result.code===0,'DSH_PLUGIN_FAILED','DSH plugin operation failed.',{code:result.code,signal:result.signal,stderr,diagnostic:[stdout,stderr].filter(Boolean).join('\n')||`DSH plugin exited with code ${result.code}${result.signal?' ('+result.signal+')':''}.`},502);return result;}
   /** The exact version `dsh plugin add` will pin: the registry's `latest` dist-tag, re-checked here (the catalog's `latestVersion` is a hint only). */
   async function latest(name){
     const base=new URL(registry);requireCondition(['https:','http:'].includes(base.protocol),'REGISTRY_DENIED','Registry URL is invalid.');
