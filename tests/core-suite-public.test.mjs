@@ -38,7 +38,7 @@ test('confirmation binds declaration, registry, tuple identities/digests/sources
   const root=await profile();let value=declaration(),writes=0;const installer=createLibraryInstaller({profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.js'),registry,coreService:provider(value),spawn:async()=>{writes++;return{code:0};}});const plan=await installer.prepareSuiteUpgrade();value.checkedAt='2026-10-16T01:00:00.000Z';await assert.rejects(installer.upgradeSuite({planId:plan.planId}),{code:'INSTALL_READBACK_MISMATCH'});assert.equal(writes,1);
 });
 test('a physical change or Core removal after preview prevents CLI',async()=>{
-  for(const change of ['physical','activation','unload']){const root=await profile();let service=core(declaration()),writes=0;const installer=createLibraryInstaller({profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.js'),registry,coreService:()=>service,spawn:async()=>{writes++;return{code:0};}});const plan=await installer.prepareSuiteUpgrade();if(change==='unload')service=undefined;else if(change==='activation')await writeFile(join(root,'package.json'),JSON.stringify({dependencies:Object.fromEntries(names.map((name,i)=>[name,versions[i]])),dsh:{profile:{bundles:[]}}}));else await writeFile(join(root,'node_modules/hanamesh-core/package.json'),JSON.stringify({name:names[0],version:'0.3.11'}));await assert.rejects(installer.upgradeSuite({planId:plan.planId}),{code:change==='unload'?'CORE_SUITE_DECLARATION_MISSING':'SUITE_PLAN_CHANGED'});assert.equal(writes,0);}
+  for(const change of ['physical','activation','unload']){const root=await profile();let service=core(declaration()),writes=0;const installer=createLibraryInstaller({profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.js'),registry,coreService:()=>service,spawn:async()=>{writes++;return{code:0};}});const plan=await installer.prepareSuiteUpgrade();if(change==='unload')service=undefined;else if(change==='activation')await writeFile(join(root,'package.json'),JSON.stringify({dependencies:Object.fromEntries(names.map((name,i)=>[name,versions[i]])),dsh:{profile:{bundles:[]}}}));else await writeFile(join(root,'node_modules/@hanamesh/core/package.json'),JSON.stringify({name:names[0],version:'0.3.11'}));await assert.rejects(installer.upgradeSuite({planId:plan.planId}),{code:change==='unload'?'CORE_SUITE_DECLARATION_MISSING':'SUITE_PLAN_CHANGED'});assert.equal(writes,0);}
 });
 test('a getter timeout remains unknown with its named error and never grants an execution plan',async()=>{
   const root=await profile(),error=Object.assign(new Error('timeout'),{code:'CORE_SUITE_METADATA_TIMEOUT'});const installer=createLibraryInstaller({profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.js'),registry,coreService:()=>({protocolVersion:'1',getSuiteDeclaration:async()=>{throw error;}}),spawn:async()=>assert.fail('no CLI')});const facts=await installer.suiteFacts();assert.equal(facts.completeness,'unknown');assert.equal(facts.blocked[0].code,error.code);await assert.rejects(installer.prepareSuiteUpgrade(),e=>e===error);
@@ -55,4 +55,16 @@ test('suite confirmation displays the selected canonical registry and other cand
 });
 test('a rejected candidate lookup exposes the Core named blocked facts in the existing target failure view',async t=>{
   const h=await clientHarness({fetch:async path=>path.startsWith('/hanamesh/library/target?')?{ok:false,json:async()=>({error:{code:'CORE_SUITE_NO_COMPATIBLE_TUPLE',details:{blocked:[{code:'CORE_SUITE_METADATA_TIMEOUT',moduleName:names[0]}]}}})}:{ok:true,json:async()=>({items:[],installed:[],plugins:[],page:{}})}});t.after(()=>h.unmount());await assert.rejects(h.module.openInstallTarget({itemId:'hanamesh:suite-upgrade'}));await settle();const text=JSON.stringify(h.tree);assert.match(text,/CORE_SUITE_METADATA_TIMEOUT/);assert.ok(text.includes(names[0]));assert.doesNotMatch(text,/部分组件可能已改变/);
+});
+
+test('scoped suite names keep repository and component ids, reject old npm declarations and use the exact repair tuple',async()=>{
+  assert.deepEqual(suite.SUITE_PACKAGES.map(p=>p.name),['@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host']);
+  assert.deepEqual(suite.SUITE_PACKAGES.map(p=>p.repo),['hanamesh-core','hanamesh-usage','hanamesh-plugin-app-host']);
+  assert.equal(suite.SUITE_INSTALL_COMMAND,"dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.21' '@hanamesh/usage@0.3.0-rc.6' '@hanamesh/dsh-app-host@0.6.13'");
+  const value=declaration();
+  value.manifest.core.name='hanamesh-core';
+  await assert.rejects(adapter({core:provider(value),registry}).readFacts(),{code:'CORE_SUITE_DECLARATION_INVALID'});
+  const oldUsage=declaration();oldUsage.manifest.components[0].moduleName='hanamesh-usage';
+  await assert.rejects(adapter({core:provider(oldUsage),registry}).readFacts(),{code:'CORE_SUITE_DECLARATION_INVALID'});
+  assert.deepEqual(declaration().installed.map(row=>row.id),['core','usage','app-host']);
 });

@@ -20,7 +20,7 @@ Review fixes. The install-target probe on the handoff listener answers only orig
 plutil timeout); the remaining fixed rules are served as `rules` by `/hanamesh/library/handoff-settings` and listed on
 the settings page. Expiry codes: `HANDOFF_NOT_PICKED_UP` (window never fetched it / fetched but no outcome) and
 `HANDOFF_EXPIRED` (shown or confirmed, no answer); the client reports `failed` with `error.code` when the confirmation
-cannot open (`HANDOFF_OPEN_FAILED`, `cause`). Live install results carry `restartBaseline`. `hanamesh-brand` is protected.
+cannot open (`HANDOFF_OPEN_FAILED`, `cause`). Live install results carry `restartBaseline`. `@hanamesh/brand` and legacy `hanamesh-brand` are protected.
 
 ## 0.6.0 (2026-10-15)
 

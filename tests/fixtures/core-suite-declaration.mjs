@@ -1,6 +1,6 @@
 // Public C-CORE section D DTO fixture. This is not a Core runtime integration receipt.
 export const registry='https://registry.example.test/';
-export const names=['hanamesh-core','hanamesh-usage','@hanamesh/dsh-app-host'];
+export const names=['@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host'];
 export const versions=['0.3.12','0.2.0-rc.34','0.6.5'];
 const ids=['core','usage','app-host'];
 const repositories=['https://github.com/yzsnstotz/hanamesh-core','https://github.com/yzsnstotz/hanamesh-usage','https://github.com/yzsnstotz/hanamesh-plugin-app-host'];

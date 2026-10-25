@@ -847,7 +847,7 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
   const KIND_TEXT={application:t('应用'),plugin:t('插件'),listing:t('仅收录')};
   const STATE_TEXT={registered:t('已安装'),installed:t('已安装'),'installed-not-loaded':t('需重启'),'uninstalled-not-unloaded':t('已卸载 · 需重启'),'runtime-missing':t('缺运行时'),invalid:t('包无效')};
   // Mirrors PROTECTED_PACKAGES on the host: the suite is never offered an uninstall button (the host answers 403 anyway).
-  const PROTECTED=new Set(['@hanamesh/dsh-app-host','hanamesh-core','hanamesh-usage','hanamesh-brand','@hanamesh/dsh-core','@hanamesh/dsh-usage']);
+  const PROTECTED=new Set(['@hanamesh/core','@hanamesh/usage','@hanamesh/brand','@hanamesh/dsh-app-host','hanamesh-core','hanamesh-usage','hanamesh-brand','@hanamesh/dsh-core','@hanamesh/dsh-usage']);
   function RestartNotice({reason}){useLocale();
     return h('p',{role:'status',className:'hm-restart-notice','data-hanamesh-restart':'required'},h('strong',null,t('需重新打开客户端')),' ',reason??t('插件更改需要重新打开客户端后生效。'),' ',h('span',{className:'hm-restart-hint'},t('请完全退出 HanaMesh 客户端或 DSH 后重新打开；关闭窗口不等于退出。')));
   }

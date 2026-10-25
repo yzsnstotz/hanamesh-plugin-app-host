@@ -46,8 +46,8 @@ test('HC25 C-MARKET public listing retains its own cursor boundary without trunc
 // C-WEB-CATALOG 2026-10-18 / C-INDEXER-CATALOG SuitePresentationDTO.
 // SOURCE examples; official/suite metadata grants no installation authority.
 const presentation=()=>({schemaVersion:1,id:'hanamesh',role:'suite',component:'usage',canonicalHanaId:item().id,installable:true,
-  distributionVersion:'0.1.0',components:[{component:'core',npmPackageName:'hanamesh-core',githubRepo:'yzsnstotz/hanamesh-core',version:'0.3.17'}],
-  installTargets:[{component:'core',npmPackageName:'hanamesh-core',githubRepo:'yzsnstotz/hanamesh-core',version:'0.3.17',source:{source:'github',repo:'yzsnstotz/hanamesh-core',ref:'a'.repeat(40)}}]});
+  distributionVersion:'0.1.0',components:[{component:'core',npmPackageName:'@hanamesh/core',githubRepo:'yzsnstotz/hanamesh-core',version:'0.3.17'}],
+  installTargets:[{component:'core',npmPackageName:'@hanamesh/core',githubRepo:'yzsnstotz/hanamesh-core',version:'0.3.17',source:{source:'github',repo:'yzsnstotz/hanamesh-core',ref:'a'.repeat(40)}}]});
 test('HC26 HanaMesh official true/false/absent survives exact page readback',()=>{
   for(const official of [true,false,undefined]){const p=page();if(official!==undefined)p.items[0].official=official;
     assert.doesNotThrow(()=>validateProviderPage(p));assert.deepEqual(validateProviderPage(p),p);}

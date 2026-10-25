@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/dsh-app-host",
-  "version": "0.6.12",
+  "version": "0.6.13",
   "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.x",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
