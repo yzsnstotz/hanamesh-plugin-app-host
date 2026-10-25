@@ -1,4 +1,7 @@
-node_modules/
+/node_modules/*
+!node_modules/@hanamesh/
+node_modules/@hanamesh/*
+!node_modules/@hanamesh/lib-provision/
 *.tgz
 coverage/
 .DS_Store

@@ -1,9 +1,9 @@
 {
   "currentCandidate": {
-    "version": "0.6.12",
+    "version": "0.6.13",
     "dshTarget": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0",
     "vendorSha256VerifiedAtBuild": false,
-    "libProvisionDistribution": "随包分发、源仓不变; bundleDependencies; original LICENSE retained, no relicensing",
+    "libProvisionDistribution": "Unchanged provider files committed as node_modules/@hanamesh/lib-provision for Git and normal bundleDependencies distribution; original LICENSE retained, no relicensing",
     "publicNpmGate": "NOT_RUN",
     "verification": "PARTIAL / D230 failed activation cleanup; real original facts, native isolation and final-package U2 independently pending",
     "node": "24.13.1",
@@ -94,7 +94,7 @@
       "version": "0.2.1",
       "source": "file:vendor/hanamesh-lib-provision-0.2.1.tgz",
       "sha256": "4217b9fe1be98f6e82437539d1c4c43166ed1f5c292efff100733e0cb09530e9",
-      "mode": "Fixed provider package archive; unchanged published files at sourceCommit; bundled runtime dependency",
+      "mode": "Fixed provider archive; identical published files at sourceCommit committed as a Git runtime bundle and included by normal pack",
       "sourceCommit": "575d63fb70e08c47e980dbf25f07921a7ba5aa2a",
       "license": "SEE LICENSE IN LICENSE",
       "originalSource": "git+https://github.com/yzsnstotz/hanamesh-lib-provision.git#575d63fb70e08c47e980dbf25f07921a7ba5aa2a"

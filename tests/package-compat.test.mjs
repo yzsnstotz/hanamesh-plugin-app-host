@@ -78,3 +78,20 @@ test('NPM-APPHOST-01: actual packed manifest keeps devkit development-only and t
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+// Git consumers do not install producer dependencies before packlist when main
+// is already built. The bundle must be present in the committed Git archive.
+test('NPM-APPHOST-01: Git source carries the exact normal bundled provider', async () => {
+  const root=new URL('..',import.meta.url);
+  const files=execFileSync('git',['ls-files','-z','node_modules/@hanamesh/lib-provision'],{cwd:root}).toString().split('\0').filter(Boolean);
+  const canonical=execFileSync('tar',['-tzf','vendor/hanamesh-lib-provision-0.2.1.tgz'],{cwd:root}).toString().trim().split('\n').filter(p=>!p.endsWith('/'));
+  assert.equal(files.length,canonical.length,'Git must carry every original bundled provider file');
+  for(const member of canonical){
+    const path='node_modules/@hanamesh/lib-provision/'+member.replace(/^package\//u,'');
+    assert.ok(files.includes(path),'Git bundle missing '+path);
+    const original=execFileSync('tar',['-xOf','vendor/hanamesh-lib-provision-0.2.1.tgz',member],{cwd:root});
+    const committed=execFileSync('git',['show',':'+path],{cwd:root});
+    assert.deepEqual(committed,original,'unchanged provider bytes: '+path);
+    assert.deepEqual(await readFile(new URL(path,root)),original,'installed provider bytes: '+path);
+  }
+});
