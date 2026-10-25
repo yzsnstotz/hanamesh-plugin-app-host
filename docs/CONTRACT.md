@@ -248,3 +248,7 @@ B17 review repair（同0.6.8候选）：`AppHost` 未注入 `runtimeLedgerReader
 
 
 0.6.12：目录条目的展示/跳转链接（`sourceLinks.sourceUrl`、`homepage`、`repository.url`、`publisher.url`）接受 fragment 并原样保留；目录自身 attribution 展示链接亦保留 fragment。manifest 来源和 `transport.endpoint` 等请求 URL 校验不变。单条非法仍拒绝整个 provider page，不返回部分结果。
+
+
+0.6.14 / R1-COMBO-01：HanaMesh view 的可选 suite.agentPlugins 接受 claude/codex 唯一渠道、hanamesh / hanamesh@hanamesh、公开 hanamesh-plugins HTTPS 市场及与 distributionVersion 相同的精确 SemVer。npm source 严格为 {source:'npm',name,version}，name=目标 npmPackageName，source.version=目标 version=对应 components.version；三个不同目标限 Core/Usage/AppHost，Brand 仅组件事实。公开组件的新旧 npm 名均绑定原 GitHub 仓库，不猜发布版本。未知字段、范围/tag、缺件、重复件及不一致整页拒绝 INVALID_CATALOG_PAGE。
+历史 GitHub DTO 按已审标准分发提议继续可读：source 只许 source/repo/ref，repo=目标 githubRepo，ref 为40位hex；可缺历史版本事实，不自动转换或选备用源。目录发布事实不作为 Core 兼容声明、安装授权或本机已装观察。随包 catalog/schema/page.json 同时描述默认和 HanaMesh 两视图，跨字段相等性由运行解码器检查。

@@ -141,7 +141,7 @@ test('GIT14 copied first-install line installs the exact scoped npm tuple withou
  const dsh=join(h.bin,'dsh');await writeFile(dsh,'#!'+process.execPath+'\nprocess.stdout.write(JSON.stringify({env:process.env,args:process.argv.slice(2)}));');await chmod(dsh,0o700);
  const child=spawn('/bin/sh',['-c',SUITE_INSTALL_COMMAND],{env:h.env,stdio:['ignore','pipe','pipe']});let stdout='',stderr='';child.stdout.on('data',chunk=>stdout+=chunk);child.stderr.on('data',chunk=>stderr+=chunk);
  assert.equal(await new Promise(resolve=>child.once('close',resolve)),0,stderr);const actual=JSON.parse(stdout);
- assert.deepEqual(actual.args,['plugin','--profile','desktop','add','--save-exact','@hanamesh/core@0.3.21','@hanamesh/usage@0.3.0-rc.6','@hanamesh/dsh-app-host@0.6.13']);
+ assert.deepEqual(actual.args,['plugin','--profile','desktop','add','--save-exact','@hanamesh/core@0.3.21','@hanamesh/usage@0.3.0-rc.6','@hanamesh/dsh-app-host@0.6.14']);
  for(const key of [...Object.keys(keys),'GIT_CONFIG_PARAMETERS'])assert.equal(actual.env[key],h.env[key],'npm line leaves caller Git environment untouched: '+key);
  assert.deepEqual(await h.readCalls(),[],'npm line does not invoke Git credential helpers');
 });

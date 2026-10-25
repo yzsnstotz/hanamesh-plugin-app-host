@@ -72,7 +72,8 @@ export function packOptions(tarball){
       assert.equal(packed.dependencies['@hanamesh/devkit'],undefined);
       assert.equal(packed.peerDependencies['@hanamesh/devkit'],undefined);
       assert.equal(packed.peerDependenciesMeta?.['@hanamesh/devkit'],undefined);
-      for(const path of ['manager.js','library/installation-status.js','library/installation-status-http.js','library/installation-cli.js','library/installation-worker.js','library/installation-command-worker.js','git-process.js','git-worker.js','client-ui.js','client-ui.d.ts','library/routes.js','library/service.js','install-target/suite.js','install-target/harness.js','install-target/fixtures/provider-cases.json','install-target/fixtures/consumer-cases.json'])assert.deepEqual(read('dist/'+path),await readFile(join(root,'src',path)),'packed install-target bytes: '+path);
+      for(const path of ['library/catalog.js','manager.js','library/installation-status.js','library/installation-status-http.js','library/installation-cli.js','library/installation-worker.js','library/installation-command-worker.js','git-process.js','git-worker.js','client-ui.js','client-ui.d.ts','library/routes.js','library/service.js','install-target/suite.js','install-target/harness.js','install-target/fixtures/provider-cases.json','install-target/fixtures/consumer-cases.json'])assert.deepEqual(read('dist/'+path),await readFile(join(root,'src',path)),'packed install-target bytes: '+path);
+      for(const path of ['catalog-provider-page.schema.json'])assert.deepEqual(read('schemas/'+path),await readFile(join(root,'schemas',path)));
     }};
 }
 

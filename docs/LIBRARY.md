@@ -59,7 +59,7 @@ Both SOURCE fixture sets and suites ship as `@hanamesh/dsh-app-host/catalog/suit
 DSH 首次安装或缺组件时，完全退出客户端后执行同一行，再重新打开：
 
 ```sh
-dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.21' '@hanamesh/usage@0.3.0-rc.6' '@hanamesh/dsh-app-host@0.6.13'
+dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.21' '@hanamesh/usage@0.3.0-rc.6' '@hanamesh/dsh-app-host@0.6.14'
 ```
 
 套件版本范围、是否完整、候选来源及兼容/升级规则唯一属于 Core。App-host 只读物理安装版本，不能用它们推导兼容或安装许可；不自行读取 npm latest、计算组件组合、校验候选宿主 peers 或持有 Core 的版本范围副本。普通安装/卸载接口继续拒绝套件包。

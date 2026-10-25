@@ -60,7 +60,7 @@ test('a rejected candidate lookup exposes the Core named blocked facts in the ex
 test('scoped suite names keep repository and component ids, reject old npm declarations and use the exact repair tuple',async()=>{
   assert.deepEqual(suite.SUITE_PACKAGES.map(p=>p.name),['@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host']);
   assert.deepEqual(suite.SUITE_PACKAGES.map(p=>p.repo),['hanamesh-core','hanamesh-usage','hanamesh-plugin-app-host']);
-  assert.equal(suite.SUITE_INSTALL_COMMAND,"dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.21' '@hanamesh/usage@0.3.0-rc.6' '@hanamesh/dsh-app-host@0.6.13'");
+  assert.equal(suite.SUITE_INSTALL_COMMAND,"dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.21' '@hanamesh/usage@0.3.0-rc.6' '@hanamesh/dsh-app-host@0.6.14'");
   const value=declaration();
   value.manifest.core.name='hanamesh-core';
   await assert.rejects(adapter({core:provider(value),registry}).readFacts(),{code:'CORE_SUITE_DECLARATION_INVALID'});

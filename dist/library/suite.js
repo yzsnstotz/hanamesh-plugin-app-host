@@ -10,7 +10,7 @@ export const SUITE_PACKAGES=Object.freeze([
   {name:'@hanamesh/usage',label:'使用记录',repo:'hanamesh-usage'},
   {name:'@hanamesh/dsh-app-host',label:'应用库',repo:'hanamesh-plugin-app-host'},
 ].map(Object.freeze));
-export const SUITE_INSTALL_COMMAND="dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.21' '@hanamesh/usage@0.3.0-rc.6' '@hanamesh/dsh-app-host@0.6.13'";
+export const SUITE_INSTALL_COMMAND="dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.21' '@hanamesh/usage@0.3.0-rc.6' '@hanamesh/dsh-app-host@0.6.14'";
 const json=async path=>JSON.parse(await readFile(path,'utf8'));
 /** Physical inventory only, never a compatibility declaration or permission to upgrade. */
 export async function readSuiteStatus(profileDir){
