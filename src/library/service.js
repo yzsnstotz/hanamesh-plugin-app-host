@@ -6,6 +6,7 @@ import {SUITE_TARGET,SUITE_PACKAGES,readSuiteStatus,SUITE_INSTALL_COMMAND,CORE_S
 import { PROTECTED_PACKAGES } from './install.js';
 import { handoffSettings } from './handoff.js';
 import { INSTALLATION_STATUS_CAPABILITY } from '../installation-status.js';
+import {installationDiagnostic} from './diagnostics.js';
 
 /** Install-target contract version this market implements (schemas/install-target.schema.json). */
 export const INSTALL_TARGET_CONTRACT_VERSION='1';
@@ -38,8 +39,11 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   function persist(update){return settingsWriter.run(async()=>{const next={...update(state),revision:state.revision+1};await domain.global.set(next);state=next;});}
   async function operation(type,task){const operationId=randomUUID();emit({type:`library.${type}-started`,operationId});const work=Promise.resolve().then(()=>task(operationId)).then(result=>{emit({type:`library.${type}-done`,operationId,result});return result;},error=>{
     const details=error.details?.stage==='suite-upgrade'?{stage:'suite-upgrade',actual:error.details.actual,command:SUITE_INSTALL_COMMAND}:{};
-    if(error instanceof AppHostError&&error.code==='DSH_PLUGIN_FAILED'&&typeof error.details?.diagnostic==='string')details.diagnostic=error.details.diagnostic;
-    emit({type:`library.${type}-failed`,operationId,code:error.code??'LIBRARY_OPERATION_FAILED',...(error.recovery?{recovery:error.recovery}:{}),...(Object.keys(details).length?{details}:{})});throw error;
+    details.diagnostic=installationDiagnostic(error);
+    emit({type:`library.${type}-failed`,operationId,code:error.code??'LIBRARY_OPERATION_FAILED',...(error.recovery?{recovery:error.recovery}:{}),details});
+    try{warn('hanamesh-app-host library: %s operation %s failed\n%s',type,operationId,details.diagnostic);}
+    catch{try{console.warn('hanamesh-app-host library: diagnostic logger unavailable; operation %s\n%s',operationId,details.diagnostic);}catch{}}
+    throw error;
   }).finally(()=>running.delete(operationId));running.set(operationId,work);work.catch(()=>{});return{operationId,status:'started'};}
   const requireInstaller=(message)=>requireCondition(ready(),'LIBRARY_INSTALL_UNAVAILABLE',message,{need:unavailable()},503);
   /**

@@ -49,6 +49,8 @@ DSH/宿主 cookie、控制头与 Authorization 默认不传上游；应用 cooki
 
 ## 日志与凭据
 
+市场异步操作失败只投影有界脱敏的Error类型/消息、最多两层cause与既有CLI退出摘要，记录实际执行阶段和operationId；同一安全诊断进入技术详情与宿主logger。拒绝任意details、stack、response对象；Bearer、常见secret字段、URL userinfo/query和Authorization/Cookie行脱敏。不记录环境/请求正文，不承诺识别任意业务敏感文本。诊断不包装或替换原安装异常，logger故障不覆盖原异常。
+
 日志有界、按完整行处理、Bearer/常见 token 字段及显式 secret env 值脱敏；超大行丢弃。此规则不可能识别任意业务敏感信息，默认不记录请求体/配置环境。leaseToken 原文只在回执中返回，磁盘保存哈希；工作台不得把 token 放进公开 URL、分析日志或应用 iframe。
 
 恢复凭据属于同一已认证 owner 的显式操作，要求 confirm:true，旋转 generation；真实 DSH bridge 的 authorize 必须对该路径落实授权。示例/测试的固定认证值绝不能作为真实 DSH 身份实现。

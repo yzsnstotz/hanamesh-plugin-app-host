@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { stripVTControlCharacters } from 'node:util';
 import { redact } from '../runtime.js';
 import { AppHostError, requireCondition, SerialQueue } from '../errors.js';
+import {noteFailurePhase} from './diagnostics.js';
 import { validateDefinition } from '../descriptor.js';
 import { itemKind } from './catalog.js';
 import { profileSnapshot, runtimeSnapshot, profileChecks, runtimeChecks, packageRestoreArgs, keepOriginals } from './recovery.js';
@@ -64,20 +65,23 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
   const runtimeApi=async name=>injected[name]??(await defaults())[name];
   async function installed(packageNameValue){const root=join(profileDir,'node_modules',...packageNameValue.split('/')),pkg=await json(join(root,'package.json'));const appFile=typeof pkg.hanamesh?.app==='string'?pkg.hanamesh.app:'app.json';return{pkg,definition:validateDefinition(await json(join(root,appFile)))};}
   const commandPath=command=>[dirname(command),...(process.platform==='win32'?(process.env.PATH??process.env.Path??'').split(delimiter):['/opt/homebrew/bin','/usr/local/bin','/usr/bin','/bin'])].join(delimiter);
-  async function run(args){requireCondition(cliAvailable,'DSH_CLI_UNAVAILABLE','The official dsh plugin CLI is unavailable in this host.',{need:['nodeBinary','dshBin']},503);
+  async function run(args){try{requireCondition(cliAvailable,'DSH_CLI_UNAVAILABLE','The official dsh plugin CLI is unavailable in this host.',{need:['nodeBinary','dshBin']},503);
     const options={cwd:profileDir,workerNode:supervisorNode,env:safeGitEnv({HOME:process.env.HOME,DSH_HOME:process.env.DSH_HOME,LANG:process.env.LANG??'C.UTF-8',PATH:commandPath(nodeBinary??desktopLauncher.command)})},tail=['plugin','--profile',profileName,...args];
     if(launcherAvailable)options.env=safeGitEnv({...options.env,DSH_HOME:desktopLauncher.home,PATH:commandPath(desktopLauncher.command)});
     const result=await spawn(launcherAvailable?desktopLauncher.command:nodeBinary,launcherAvailable?tail:[...(desktopCli?['--expose-internals',fileURLToPath(new URL('./desktop-cli.js',import.meta.url)),desktopCli.entry,desktopCli.runtimeDir,desktopCli.supportDir]:[dshBin]),...tail],options);
     const clean=text=>redact(stripVTControlCharacters(String(text??''))).replace(/(https?:\/\/)[^/\s@]+@/g,'$1[REDACTED]@').slice(-2000);
     const stdout=clean(result.stdout),stderr=clean(result.stderr);
-    requireCondition(result.code===0,'DSH_PLUGIN_FAILED','DSH plugin operation failed.',{code:result.code,signal:result.signal,stderr,diagnostic:[stdout,stderr].filter(Boolean).join('\n')||`DSH plugin exited with code ${result.code}${result.signal?' ('+result.signal+')':''}.`},502);return result;}
+    requireCondition(result.code===0,'DSH_PLUGIN_FAILED','DSH plugin operation failed.',{code:result.code,signal:result.signal,stderr,diagnostic:[stdout,stderr].filter(Boolean).join('\n')||`DSH plugin exited with code ${result.code}${result.signal?' ('+result.signal+')':''}.`},502);return result;
+    }catch(error){noteFailurePhase(error,'CLI run');throw error;}}
   /** The exact version `dsh plugin add` will pin: the registry's `latest` dist-tag, re-checked here (the catalog's `latestVersion` is a hint only). */
   async function latest(name){
+    let phase='registry fetch';try{
     const base=new URL(registry);requireCondition(['https:','http:'].includes(base.protocol),'REGISTRY_DENIED','Registry URL is invalid.');
     const target=new URL(`${base.href.replace(/\/$/,'')}/${encodeURIComponent(name)}/latest`);const response=await fetchImpl(target,{headers:{accept:'application/json','accept-encoding':'identity'}});
-    requireCondition(response.ok,'REGISTRY_LOOKUP_FAILED','Registry latest lookup failed.',{status:response.status},502);const metadata=await response.json();const version=metadata.version;
+    requireCondition(response.ok,'REGISTRY_LOOKUP_FAILED','Registry latest lookup failed.',{status:response.status},502);phase='registry readback';const metadata=await response.json();const version=metadata.version;
     requireCondition(versionText(version)&&(allowPrerelease||!version.includes('-')),'UNSTABLE_VERSION','Registry latest must be an exact stable version.');
     return version;
+    }catch(error){noteFailurePhase(error,phase);throw error;}
   }
   /**
    * rc.10 compensation after a failed install: the package goes back to its baseline spec through the official CLI, runtime
@@ -132,7 +136,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       if(declared){stage='provision';const root=runtimeRoot(record.definition.id);runtime={root,base:await runtimeSnapshot(await runtimeApi('ledger'),root)};
         await (await runtimeApi('provision'))(declared.manifest,{root,only:[declared.item],onProgress:event=>emit({type:'library.provision-progress',appId:record.definition.id,...event})});}
       return{status:'restart-required',kind,appId:record.definition.id,packageName:name,version};
-    }catch(error){error.recovery=await recover({name,stage,base,runtime,operationId});throw error;}
+    }catch(error){noteFailurePhase(error,{baseline:'profile baseline','before-add':'registry fetch',add:'CLI run',readback:'profile readback',definition:'application readback',provision:'runtime provision'}[stage]);error.recovery=await recover({name,stage,base,runtime,operationId});throw error;}
   }
   async function installAs(item,kind,context){
     permitted(item.package.name);const name=item.package.name;

@@ -84,3 +84,7 @@ HanaMesh 视图原样保留可选 `official:boolean`（包括 false）与 C-INDE
 
 
 0.6.12：目录条目的展示/跳转链接（`sourceLinks.sourceUrl`、`homepage`、`repository.url`、`publisher.url`）接受 fragment 并原样保留；目录自身 attribution 展示链接亦保留 fragment。manifest 来源和 `transport.endpoint` 等请求 URL 校验不变。单条非法仍拒绝整个 provider page，不返回部分结果。
+
+## 0.6.16 · 安装失败诊断
+
+`library.*-failed` 保留原code/recovery，`details.diagnostic` 为最多4001字符的安全摘要，包含原异常类型/消息、真实registry fetch或registry readback/CLI run/profile readback阶段；已知CLI非零还含exit、signal和stderr/输出摘要。与operationId关联的同一摘要写入宿主logger.warn（logger不可用时写安全console警告），UI沿既有可展开技术详情显示。没有诊断时才保留原通用提示；不追加请求头/正文/环境/stack/任意details，不猜网络原因、不重试或改变安装/回滚流程。已有历史通用失败无法从新代码补回丢失的原Error。
