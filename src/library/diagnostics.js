@@ -2,7 +2,7 @@ import {stripVTControlCharacters} from 'node:util';
 import {redact} from '../runtime.js';
 import {AppHostError} from '../errors.js';
 
-// Diagnostic context only: never replace or wrap the original installation error.
+// Diagnostic context only; the registry boundary retains native exceptions as Error.cause.
 const phases=new WeakMap();
 export function noteFailurePhase(error,phase){
   if(error&&typeof error==='object'&&!phases.has(error))phases.set(error,phase);

@@ -252,3 +252,8 @@ B17 review repair（同0.6.8候选）：`AppHost` 未注入 `runtimeLedgerReader
 
 0.6.14 / R1-COMBO-01：HanaMesh view 的可选 suite.agentPlugins 接受 claude/codex 唯一渠道、hanamesh / hanamesh@hanamesh、公开 hanamesh-plugins HTTPS 市场及与 distributionVersion 相同的精确 SemVer。npm source 严格为 {source:'npm',name,version}，name=目标 npmPackageName，source.version=目标 version=对应 components.version；三个不同目标限 Core/Usage/AppHost，Brand 仅组件事实。公开组件的新旧 npm 名均绑定原 GitHub 仓库，不猜发布版本。未知字段、范围/tag、缺件、重复件及不一致整页拒绝 INVALID_CATALOG_PAGE。
 历史 GitHub DTO 按已审标准分发提议继续可读：source 只许 source/repo/ref，repo=目标 githubRepo，ref 为40位hex；可缺历史版本事实，不自动转换或选备用源。目录发布事实不作为 Core 兼容声明、安装授权或本机已装观察。随包 catalog/schema/page.json 同时描述默认和 HanaMesh 两视图，跨字段相等性由运行解码器检查。
+
+
+## 0.6.16 市场查询来源与诊断（原协议1）
+
+普通市场安装/升级的 latest 查询消费 DSH 公开 pluginManager.registries() 与公开 registryPlan/attributeFailure，沿用用户配置源顺序和私有源隔离规则；成功后用同一实际源 --registry=<source> 进入原受控CLI。整个配置/查询/读回共30000ms，超时abort并报REGISTRY_LOOKUP_TIMEOUT，未提供公开能力/解析源报REGISTRY_CONFIG_UNAVAILABLE；原生异常为REGISTRY_LOOKUP_FAILED并保留cause。没有新的用户配置、请求字段或协议版本。既有 details.diagnostic 带脱敏类型/消息/cause.code/实际阶段及已知CLI exit/stderr摘要，同时写宿主日志；其它错误、回滚与重启语义保留。Core套件升级路径的声明/源和缺省值单独保留，不采用普通市场的源选择。

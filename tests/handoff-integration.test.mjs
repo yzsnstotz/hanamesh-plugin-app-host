@@ -29,6 +29,7 @@ async function freePort() {
 function pluginManager(profile) {
   const calls = [];
   return { calls, value: {
+    async registries(){return{registry:null,fallbackRegistries:[],resolved:null};},
     async installBundle(spec, options) {
       calls.push(['install', spec, options]);
       const at = spec.lastIndexOf('@'), name = spec.slice(0, at), version = spec.slice(at + 1);

@@ -1,7 +1,7 @@
 {
   "package": {
     "name": "@hanamesh/dsh-app-host",
-    "version": "0.6.15",
+    "version": "0.6.16",
     "license": "SEE LICENSE IN LICENSE",
     "source": "git+https://github.com/yzsnstotz/hanamesh-plugin-app-host.git",
     "purpose": "Application ownership, view leases, Router forwarding, and application library for official DSH"
@@ -293,6 +293,20 @@
       },
       "sourceCommit": "13ec0db3bc6aa6b6235f2105d3f0a6b998855ff5",
       "archiveSha256": "c72010c96a5f22e36d65f6c1fd850e583dead7e843644eba1657b4416d9cbd0d"
+    },
+    "@deepseek-ai/dsh-plugin-manager": {
+      "version": "0.2.1-alpha.2",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-plugin-manager/-/dsh-plugin-manager-0.2.1-alpha.2.tgz",
+      "purpose": "Public registries() source DTO and registryPlan/attributeFailure policy, supplied by DSH; not bundled",
+      "usedAs": [
+        "peerDependencies",
+        "devDependencies"
+      ],
+      "specs": {
+        "peerDependencies": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0",
+        "devDependencies": "0.2.1-alpha.2"
+      }
     }
   },
   "downloadedRuntimes": {

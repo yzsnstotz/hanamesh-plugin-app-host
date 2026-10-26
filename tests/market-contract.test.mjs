@@ -12,6 +12,7 @@ import * as appHost from '../src/dsh.js';
 import { AppHost, AtomicFileStore } from '../src/index.js';
 import { createLibraryService } from '../src/library/service.js';
 import { createLibraryInstaller } from '../src/library/install.js';
+import {fixtureRegistryManager} from './helpers.mjs';
 import { createLibraryHttpHandler } from '../src/library/routes.js';
 import { clientHarness, fakeClock, settle } from './fixtures/client-ui-harness.mjs';
 import { definition, http, until } from './helpers.mjs';
@@ -54,7 +55,7 @@ async function provider(t, { available = true, gate, cliFails = false, readbackV
   await host.init();
   // Official CLI counterpart writes a temporary profile; it never invokes dsh,
   // changes DSH_HOME, or installs into the user's profile.
-  const installer = available ? createLibraryInstaller({
+  const installer = available ? createLibraryInstaller({pluginManager:fixtureRegistryManager,
     profileDir: profile, profileName: 'market-contract', dataRoot,
     nodeBinary: process.execPath, dshBin: join(root, 'fixture-dsh-bin.js'),
     fetchImpl: async () => new Response(JSON.stringify({ version: '1.2.3' })),
@@ -207,7 +208,7 @@ test('CM06: accepted duplicate requests share one operation, finish with exact p
   assert.equal(first.json.installed, undefined, 'acceptance is not installation completion');
   await until(() => h.service.events().events.some(e => e.type === 'library.install-done' && e.operationId === first.json.operationId));
   assert.equal(h.calls.filter(c => c.args[4] === 'add').length, 1);
-  assert.deepEqual(h.calls[0].args.slice(1), ['plugin', '--profile', 'market-contract', 'add', '--save-exact', appTarget.packageName + '@1.2.3']);
+  assert.deepEqual(h.calls[0].args.slice(1), ['plugin', '--profile', 'market-contract', 'add', '--save-exact', '--registry=https://registry.npmjs.org/', appTarget.packageName + '@1.2.3']);
   const feed = await h.get('/hanamesh/library/events?after=0');
   const done = feed.json.events.find(e => e.operationId === first.json.operationId && e.type === 'library.install-done');
   assert.deepEqual([done.result.packageName, done.result.version, done.result.kind], [appTarget.packageName, '1.2.3', 'application']);

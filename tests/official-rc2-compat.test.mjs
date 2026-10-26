@@ -5,6 +5,7 @@ import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {inferDesktopLayout} from '../src/library/locate.js';
 import {createLibraryInstaller} from '../src/library/install.js';
+import {fixtureRegistryManager} from './helpers.mjs';
 import {createLibraryService} from '../src/library/service.js';
 import {temporary} from './helpers.mjs';
 import {validateDshPins} from '../scripts/dsh-policy.mjs';
@@ -57,22 +58,22 @@ for(const [dsh,cordis,schema,accepted] of [['0.2.0-rc.2','4.0.4','3.18.4',true],
 
 test('rc.2 manager is bypassed before mutation; public launcher pins exact version and reports restart-required',async t=>{
   const h=await fixture(t),calls=[];
-  const manager={async installBundle(){calls.push('unsupported-manager');throw new Error('rc.2 cannot saveExact');},async removeBundle(){}};
-  const installer=createLibraryInstaller({profileDir:h.profileDir,profileName:'desktop',dataRoot:join(h.root,'data'),pluginManager:()=>manager,
+  const manager={...fixtureRegistryManager(),async installBundle(){calls.push('unsupported-manager');throw new Error('rc.2 cannot saveExact');},async removeBundle(){}};
+  const installer=createLibraryInstaller({pluginManager:fixtureRegistryManager,profileDir:h.profileDir,profileName:'desktop',dataRoot:join(h.root,'data'),pluginManager:()=>manager,
     pluginManagerVersion:h.desktop.pluginManagerVersion,desktopLauncher:h.desktop.desktopLauncher,fetchImpl:registry,
     spawn:async(command,args,options)=>{calls.push({command,args,options});await writeInstalled(h.profileDir,'example-notes','1.2.3');return{code:0};}});
   assert.equal(installer.ready,true);assert.equal(installer.live,false);
   assert.deepEqual(await installer.install(item),{status:'restart-required',kind:'plugin',packageName:'example-notes',version:'1.2.3'});
   assert.equal(calls.length,1);assert.equal(calls[0].command,h.launcher);
-  assert.deepEqual(calls[0].args,['plugin','--profile','desktop','add','--save-exact','example-notes@1.2.3']);
+  assert.deepEqual(calls[0].args,['plugin','--profile','desktop','add','--save-exact','--registry=https://registry.npmjs.org/','example-notes@1.2.3']);
   assert.equal(calls[0].options.env.DSH_HOME,h.home);assert.equal(calls[0].options.env.HOME,process.env.HOME);
   assert.equal(calls[0].options.env.ELECTRON_RUN_AS_NODE,undefined,'only the upstream public launcher owns its boot environment');
 });
 
 for(const version of ['0.2.0-rc.2',undefined])test(`manager ${version??'unknown'} without CLI refuses before any profile mutation and exposes the missing feature`,async t=>{
   const h=await fixture(t),before=await readFile(join(h.profileDir,'package.json'),'utf8');let calls=0;
-  const installer=createLibraryInstaller({profileDir:h.profileDir,profileName:'desktop',dataRoot:join(h.root,'data'),pluginManagerVersion:version,
-    pluginManager:()=>({async installBundle(){calls++;},async removeBundle(){calls++;}}),fetchImpl:registry});
+  const installer=createLibraryInstaller({pluginManager:fixtureRegistryManager,profileDir:h.profileDir,profileName:'desktop',dataRoot:join(h.root,'data'),pluginManagerVersion:version,
+    pluginManager:()=>({...fixtureRegistryManager(),async installBundle(){calls++;},async removeBundle(){calls++;}}),fetchImpl:registry});
   assert.equal(installer.ready,false);assert.equal(installer.live,false);
   await assert.rejects(installer.install(item),error=>error.code==='DSH_EXACT_INSTALL_UNAVAILABLE'&&error.details.need.some(row=>/精确版本/.test(row.need)));
   assert.equal(calls,0);assert.equal(await readFile(join(h.profileDir,'package.json'),'utf8'),before);
@@ -82,8 +83,8 @@ for(const version of ['0.2.0-rc.2',undefined])test(`manager ${version??'unknown'
 
 test('alpha.2 manager also uses monitored public CLI instead of an unscoped live install',async t=>{
   const h=await fixture(t,'0.2.1-alpha.2');let managerCalls=0,cliCalls=0;
-  const installer=createLibraryInstaller({profileDir:h.profileDir,profileName:'desktop',dataRoot:join(h.root,'data'),pluginManagerVersion:h.desktop.pluginManagerVersion,
-    pluginManager:()=>({async installBundle(){managerCalls++;},async removeBundle(){managerCalls++;}}),desktopLauncher:h.desktop.desktopLauncher,fetchImpl:registry,
+  const installer=createLibraryInstaller({pluginManager:fixtureRegistryManager,profileDir:h.profileDir,profileName:'desktop',dataRoot:join(h.root,'data'),pluginManagerVersion:h.desktop.pluginManagerVersion,
+    pluginManager:()=>({...fixtureRegistryManager(),async installBundle(){managerCalls++;},async removeBundle(){managerCalls++;}}),desktopLauncher:h.desktop.desktopLauncher,fetchImpl:registry,
     spawn:async()=>{cliCalls++;await writeInstalled(h.profileDir,'example-notes','1.2.3');return{code:0};}});
   assert.equal(installer.live,false);assert.equal((await installer.install(item)).status,'restart-required');assert.equal(managerCalls,0);assert.equal(cliCalls,1);
 });

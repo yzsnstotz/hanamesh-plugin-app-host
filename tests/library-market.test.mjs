@@ -11,6 +11,7 @@ import { mkdir, writeFile, rm, realpath, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { join, resolve } from 'node:path';
 import { createLibraryInstaller, PROTECTED_PACKAGES } from '../src/library/install.js';
+import {fixtureRegistryManager} from './helpers.mjs';
 import { scanInstalledPlugins, snapshotProfileDependencies, readProfileManifest } from '../src/library/installed.js';
 import { createLibraryService } from '../src/library/service.js';
 import { createLibraryHttpHandler, LIBRARY_ROUTES } from '../src/library/routes.js';
@@ -35,7 +36,7 @@ async function recordAdd(profileDir,args){
   await writeFile(pkgPath,JSON.stringify({...pkg,version}));
 }
 function installerDouble(profile,{calls=[],events=[],latest='1.0.0'}={}){
-  return{calls,events,installer:createLibraryInstaller({profileDir:profile.profile,profileName:'web',dataRoot:profile.dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/lib/bin.js',
+  return{calls,events,installer:createLibraryInstaller({pluginManager:fixtureRegistryManager,profileDir:profile.profile,profileName:'web',dataRoot:profile.dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/lib/bin.js',
     fetchImpl:async url=>{calls.push({fetch:String(url)});return new Response(JSON.stringify({version:latest}),{headers:{'content-type':'application/json'}});},
     spawn:async(command,args,options)=>{calls.push({command,args,options});await recordAdd(profile.profile,args);return{code:0,stdout:'',stderr:''};},
     provision:async()=>{throw new Error('a plugin never provisions a runtime');},remove:async()=>{throw new Error('a plugin has no owned runtime');},emit:event=>events.push(event)})};
@@ -50,13 +51,13 @@ test('AH-M01: a catalog plugin installs through the same `dsh plugin add --save-
   assert.match(calls[0].fetch,/\/dsh-plugin-tether\/latest$/);
   assert.equal(calls[1].options.env.GIT_CONFIG_NOSYSTEM,'1');
   assert.equal(calls[1].options.env.GIT_CONFIG_VALUE_1,'!gh auth git-credential');
-  assert.deepEqual({...calls[1],options:{cwd:calls[1].options.cwd}},{command:'/opt/node/bin/node',args:['/opt/dsh/lib/bin.js','plugin','--profile','web','add','--save-exact','dsh-plugin-tether@0.1.17'],options:{cwd:profile.profile}});
+  assert.deepEqual({...calls[1],options:{cwd:calls[1].options.cwd}},{command:'/opt/node/bin/node',args:['/opt/dsh/lib/bin.js','plugin','--profile','web','add','--save-exact','--registry=https://registry.npmjs.org/','dsh-plugin-tether@0.1.17'],options:{cwd:profile.profile}});
   assert.equal(calls.length,2);
   assert.deepEqual(events.map(event=>event.type),['library.install-started','library.install-done']);
   assert.equal(events[1].kind,'plugin');
   // By package name (the rc.28 plugins/install seat) — identical command.
   const byName=await installer.installPlugin({packageName:'dsh-plugin-tether'});
-  assert.equal(byName.version,'0.1.17');assert.deepEqual(calls[3].args.slice(-2),['--save-exact','dsh-plugin-tether@0.1.17']);
+  assert.equal(byName.version,'0.1.17');assert.deepEqual(calls[3].args.slice(-3),['--save-exact','--registry=https://registry.npmjs.org/','dsh-plugin-tether@0.1.17']);
   // Repository-only entries stay browse-only.
   await assert.rejects(installer.install({id:'r',name:'r',displayName:'r',summary:'s',categories:['tools'],repository:{url:'https://example.com'}}),{code:'NOT_INSTALLABLE'});
 });
@@ -153,7 +154,7 @@ test('AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall /
   await assert.rejects(service.installPlugin({packageName:'not-in-catalog'}),{code:'CATALOG_ITEM_MISSING'});
   const started=await service.installPlugin({packageName:'@hanamesh/utility-plugin'});assert.equal(started.status,'started');
   await until(()=>service.events().events.some(event=>event.type==='library.install-done'&&event.operationId===started.operationId));
-  assert.deepEqual(calls.at(-1).args.slice(-2),['--save-exact','@hanamesh/utility-plugin@1.0.0']);
+  assert.deepEqual(calls.at(-1).args.slice(-3),['--save-exact','--registry=https://registry.npmjs.org/','@hanamesh/utility-plugin@1.0.0']);
   const removed=await service.uninstallPlugin({packageName:'dsh-plugin-tether'});
   await until(()=>service.events().events.some(event=>event.type==='library.uninstall-done'&&event.operationId===removed.operationId));
   assert.deepEqual(calls.at(-1).args.slice(-2),['remove','dsh-plugin-tether']);

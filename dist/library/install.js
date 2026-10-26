@@ -45,7 +45,7 @@ async function clearGeneratedRuntimeCache(result,runtimeRoot){
 }
 
 /** Package mutations use the public CLI in an owned monitored process; upstream's in-process manager has no scoped env/monitor port. */
-export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBinary,dshBin,desktopCli,desktopLauncher,pluginManagerVersion,registry='https://registry.npmjs.org',allowPrerelease=false,
+export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBinary,dshBin,desktopCli,desktopLauncher,pluginManagerVersion,registry,allowPrerelease=false,
   fetchImpl=globalThis.fetch,spawn=defaultSpawn,provision,remove,ledger,coreSuitePlan,coreService=()=>undefined,suiteSourceMode=()=>'configured',suiteSourceService=()=>undefined,pluginManager=()=>undefined,emit=()=>{},profileWriter=new SerialQueue()}){
   requireCondition(typeof profileDir==='string'&&resolve(profileDir)===profileDir,'PROFILE_DIR_REQUIRED','library.profileDir must be an absolute path.');
   requireCondition(typeof dataRoot==='string'&&resolve(dataRoot)===dataRoot,'INVALID_ROOT','dataRoot must be absolute.');
@@ -73,15 +73,45 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
     const stdout=clean(result.stdout),stderr=clean(result.stderr);
     requireCondition(result.code===0,'DSH_PLUGIN_FAILED','DSH plugin operation failed.',{code:result.code,signal:result.signal,stderr,diagnostic:[stdout,stderr].filter(Boolean).join('\n')||`DSH plugin exited with code ${result.code}${result.signal?' ('+result.signal+')':''}.`},502);return result;
     }catch(error){noteFailurePhase(error,'CLI run');throw error;}}
-  /** The exact version `dsh plugin add` will pin: the registry's `latest` dist-tag, re-checked here (the catalog's `latestVersion` is a hint only). */
+  /** Bound the entire pre-install lookup, including public source discovery and metadata readback. */
   async function latest(name){
-    let phase='registry fetch';try{
-    const base=new URL(registry);requireCondition(['https:','http:'].includes(base.protocol),'REGISTRY_DENIED','Registry URL is invalid.');
-    const target=new URL(`${base.href.replace(/\/$/,'')}/${encodeURIComponent(name)}/latest`);const response=await fetchImpl(target,{headers:{accept:'application/json','accept-encoding':'identity'}});
-    requireCondition(response.ok,'REGISTRY_LOOKUP_FAILED','Registry latest lookup failed.',{status:response.status},502);phase='registry readback';const metadata=await response.json();const version=metadata.version;
-    requireCondition(versionText(version)&&(allowPrerelease||!version.includes('-')),'UNSTABLE_VERSION','Registry latest must be an exact stable version.');
-    return version;
-    }catch(error){noteFailurePhase(error,phase);throw error;}
+    const controller=new AbortController();let timer,phase='registry configuration';
+    const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>{
+      const error=new AppHostError('REGISTRY_LOOKUP_TIMEOUT','Registry lookup timed out after 30000ms. Check DSH registry settings and network, then retry explicitly.',{},504);
+      noteFailurePhase(error,phase);controller.abort(error);reject(error);
+    },30000);});
+    async function lookup(){
+      const manager=pluginManager();
+      requireCondition(typeof manager?.registries==='function','REGISTRY_CONFIG_UNAVAILABLE','DSH does not expose registry configuration. Restore the public plugin manager before installing.',{},503);
+      // Public DSH ports own ordering, normalization, de-duplication and private-registry isolation.
+      const {registryPlan,attributeFailure}=await import('@deepseek-ai/dsh-plugin-manager/registry');
+      const configured=await manager.registries();controller.signal.throwIfAborted();
+      const plan=registryPlan(registry,configured);
+      for(let index=0;index<plan.length;index++){
+        const selected=plan[index],source=selected??configured.resolved;let failureKind='unknown';
+        controller.signal.throwIfAborted();phase='registry configuration';
+        requireCondition(typeof source==='string','REGISTRY_CONFIG_UNAVAILABLE','DSH could not resolve its configured registry. Check DSH registry settings.',{},503);
+        const base=new URL(source);requireCondition(['https:','http:'].includes(base.protocol),'REGISTRY_DENIED','Registry URL is invalid.');
+        try{
+          phase='registry fetch';let response;
+          try{response=await fetchImpl(new URL(`${base.href.replace(/\/$/,'')}/${encodeURIComponent(name)}/latest`),{headers:{accept:'application/json','accept-encoding':'identity'},signal:controller.signal});}
+          catch(error){failureKind='network';throw error;}
+          if(!response.ok){failureKind=response.status===404?'not-found':'unknown';throw new AppHostError('REGISTRY_LOOKUP_FAILED','Registry latest lookup failed. Check DSH registry settings and network, then retry explicitly.',{status:response.status},502);}
+          phase='registry readback';const metadata=await response.json();controller.signal.throwIfAborted();const version=metadata.version;
+          requireCondition(versionText(version)&&(allowPrerelease||!version.includes('-')),'UNSTABLE_VERSION','Registry latest must be an exact stable version.');
+          return{version,registry:source};
+        }catch(error){
+          // Ask only fallbacks configured by DSH, and only when its public rule permits another source.
+          if(!controller.signal.aborted&&index+1<plan.length&&attributeFailure(failureKind,'',{kind:'registry',name,spec:name})==='registry')continue;
+          throw error;
+        }
+      }
+    }
+    try{return await Promise.race([lookup(),timeout]);}
+    catch(cause){
+      const error=cause instanceof AppHostError?cause:new AppHostError('REGISTRY_LOOKUP_FAILED','Registry lookup failed. Check DSH registry settings and network, then retry explicitly.',{},502);
+      if(error!==cause)error.cause=cause;noteFailurePhase(error,phase);throw error;
+    }finally{clearTimeout(timer);}
   }
   /**
    * rc.10 compensation after a failed install: the package goes back to its baseline spec through the official CLI, runtime
@@ -126,9 +156,9 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
     const name=item.package.name,operationId=/^[A-Za-z0-9-]{1,64}$/.test(context?.operationId??'')?context.operationId:randomUUID();let stage='baseline',base,runtime;
     try{
       base=await profileSnapshot(profileDir,name);
-      stage='before-add';const version=await latest(name);
+      stage='before-add';const {version,registry:installRegistry}=await latest(name);
       const status='restart-required';
-      stage='add';await run(['add','--save-exact',`${name}@${version}`]);
+      stage='add';await run(['add','--save-exact',`--registry=${installRegistry}`,`${name}@${version}`]);
       stage='readback';const added=await profileSnapshot(profileDir,name);
       requireCondition(added.spec===version&&added.module===version,'INSTALL_READBACK_MISMATCH','The profile does not resolve the exact version that was added.',{expected:version,spec:added.spec,module:added.module},502);
       if(kind==='plugin')return{status,kind,packageName:name,version};
@@ -145,7 +175,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
     catch(error){emit({type:'library.install-failed',...(item.id?{itemId:item.id}:{}),packageName:name,kind,code:error.code??'INSTALL_FAILED',...(error.recovery?{recovery:error.recovery}:{})});throw error;}
   }
   let suitePlan;
-  const suiteProvider=coreSuitePlan??createCoreSuiteAdapter({core:coreService,registry,suiteSourceMode,suiteSourceService});
+  const suiteProvider=coreSuitePlan??createCoreSuiteAdapter({core:coreService,registry:registry??'https://registry.npmjs.org',suiteSourceMode,suiteSourceService});
   async function previewSuite(){
     const next=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider});
     suitePlan={...next,planId:randomUUID()};return structuredClone(suitePlan);

@@ -22,7 +22,7 @@ for(const name of ['@deepseek-ai/dsh-storage','@deepseek-ai/dsh-scope']){
         assert.equal(deps[${JSON.stringify(name)}],'0.2.1-alpha.2','consumer must explicitly supply transitive host peer: '+${JSON.stringify(name)});
         for(const [n,v] of Object.entries(pkg.peerDependencies))assert.equal(deps[n],pkg.devDependencies[n]??(n.startsWith('@deepseek-ai/dsh-')?'0.2.1-alpha.2':n==='react'?'18.3.1':v));
         assert.equal(deps['@deepseek-ai/dsh-invariants'],undefined,'alpha.2 removed the invariants package');
-        assert.equal(Object.keys(deps).length,12,'nine direct peers, two transitive peers, AppHost');
+        assert.equal(Object.keys(deps).length,13,'ten direct peers, two transitive peers, AppHost');
       }}});
       const {verifyAppHostPack}=await import('./devkit.config.mjs');
       await verifyAppHostPack('unused-unit-test.tgz');

@@ -1,4 +1,4 @@
-0.6.16 候选：市场安装失败的技术详情与宿主日志同时保留有界、脱敏后的原始异常类型/消息、安全cause及实际阶段（registry fetch/readback、CLI run、profile readback）；CLI 非零退出同时保留 exit/stderr 摘要。保留原错误对象、错误码与回滚语义，不猜原因、不自动重试或改安装策略。
+0.6.16 候选：市场查询通过 DSH 公开 registries()/registry 策略使用用户配置的源及顺序，固定版本查询与 CLI 明确使用同一源；整个查询限 30 秒，超时具名失败且不自动重试。原生查询异常保留为 REGISTRY_LOOKUP_FAILED 的 cause；安全原始诊断同时进入 UI 技术详情和宿主日志，CLI 非零含 exit/stderr。沿用原回滚与重启语义。
 
 0.6.15 候选：市场保留官方 CLI 的 stdout/stderr 真实失败原因并脱敏，在卡片与安装确认的技术详情中显示。正文显示 pnpm 真实错误类别；宿主发布时间检查失败时列出受影响包，说明默认 24 小时与实际 cutoff，并提示到 DSH 设置检查版本、升级 DSH 或等待后手动重试；不修改 profile、pnpm 供应链策略或安装执行路径。
 
