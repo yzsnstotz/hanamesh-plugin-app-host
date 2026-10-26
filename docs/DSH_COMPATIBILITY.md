@@ -33,6 +33,12 @@ Internal connection HTTPS/bind-address handling changed upstream; the local HTTP
 
 ## Installation behavior
 
+0.6.15 retains the monitored public CLI. CLI failures carry bounded, redacted stdout and stderr through the asynchronous operation's diagnostic details; the market shows the original cause in an expandable panel. The main failure message includes the exact pnpm category. A minimum-release-age rejection lists affected package versions, explains the default 24-hour requirement while deferring to the actual cutoff, explains the known first-entry-only defect in pnpm 11.7.0 bundled with DSH 0.2.0-rc.2, and directs the person to DSH Settings to check the version and upgrade DSH, or wait until the rule is met before a manual retry. No profile configuration, dependency exclusion or supply-chain policy is changed.
+
+The official 0.2.0-rc.2 bundled pnpm 11.7.0 uses only the first matching package-name rule in `minimumReleaseAgeExclude`: an earlier exact old-version entry shadows a later exact new-version entry. The existing lockfile verifier can therefore reject an unrelated installation even though the new version is visibly listed. The 11.7.0 package obtained from npm has the same entry and core bytes as the supplied Desktop copy. Official Desktop 0.2.1-rc.3's pnpm 11.28.5 unions all matching exact versions and passes the same diagnostic profile. This establishes two tested endpoints, not the first fixed version. Both Desktop CLI and in-process manager use this pnpm path and set `ELECTRON_RUN_AS_NODE=1`; switching to the manager does not correct the 11.7.0 rule evaluation.
+
+The rc.2 manager lacks the explicit `saveExact` option, but that alone does not prove exact installation unavailable: normal pnpm 10.33.0 and 11.7.0 both saved an explicitly supplied `name@version` as an exact spec in diagnostic runs. The retained CLI requirement below comes from the scoped environment and Git monitor contract; no manager path is added by 0.6.15.
+
 AppHost reads public package metadata resolved from the proven Desktop runtime, or the CLI/profile package anchor.
 It never infers capability from the presence of a method alone or from function source text. Unknown versions do not
 enable live exact installation. Compatible manager versions at least `0.2.1-alpha.2` support `saveExact`,

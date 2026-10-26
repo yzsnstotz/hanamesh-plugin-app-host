@@ -130,7 +130,9 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy122": "为什么：",
     "copy123": "安装命令返回成功，但 profile 读回的版本与固定版本不一致",
     "copy124": "包不在当前 registry 上——尚未发布到 npm，或客户端 registry 设置不对",
-    "copy125": "DSH 安装命令失败，查看宿主日志",
+    "copy125": "DSH 安装命令失败，请展开技术详情查看原始原因",
+    "installAgeRejected": "宿主的依赖发布时间检查未通过（默认需发布满 24 小时，以技术详情中的 cutoff 为准）。已知 DSH 0.2.0-rc.2 内置 pnpm 11.7.0 对同名多条白名单只认第一条。请在 DSH 设置中检查当前版本并升级 DSH，或等待受影响版本满足规则后手动重试。",
+    "installAffectedPackages": "受影响包：",
     "copy126": "当前宿主未提供安装参数（profile / node 路径）",
     "copy127": "目录里已没有这一项，刷新后重试",
     "copy128": "registry 上的最新版是预发布版（rc），客户端未允许安装预发布版",
@@ -433,7 +435,9 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy122": "Reason: ",
     "copy123": "Installation command succeeded, but the version read from the profile differs from the confirmed version",
     "copy124": "Package not found in the current registry. It may not be published, or the registry setting may be incorrect",
-    "copy125": "DSH installation command failed. See the host logs",
+    "copy125": "DSH installation failed. Expand Technical details for the original cause",
+    "installAgeRejected": "The host rejected a dependency's release age (the default requires 24 hours since publication; see the actual cutoff in Technical details). Known issue: pnpm 11.7.0 bundled with DSH 0.2.0-rc.2 only recognizes the first allowlist entry for a package name. Check your version in DSH Settings and upgrade DSH, or wait until the affected versions meet the rule before trying again manually.",
+    "installAffectedPackages": "Affected packages: ",
     "copy126": "This host has not provided installation parameters (profile / Node path)",
     "copy127": "This item is no longer in the catalog. Refresh before trying again",
     "copy128": "The latest registry version is a prerelease, which this client has not allowed",
@@ -831,8 +835,16 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
         defaults&&names?h('div',null,h('h3',null,t('设置名称与默认值')),h('dl',null,...['enabled','ports','allowedOrigins','ttlMs','pollMs'].flatMap(key=>[h('dt',{key:key+'-name'},names[key]),h('dd',{key:key+'-value'},Array.isArray(defaults[key])?defaults[key].join(', '):typeof defaults[key]==='boolean'?(defaults[key]?t('开'):t('关')):String(defaults[key]))]))):null,
         value?.rules?h('div',null,h('h3',null,t('固定规则（不能关）')),h('ul',null,...value.rules.map(row=>h('li',{key:row.rule},t(row.rule),h('br',null),h('small',null,t('为什么：')+t(row.why)))))):null));
   }
-  const FAILURE_REASONS={...CORE_SUITE_FAILURES,INSTALL_READBACK_MISMATCH:t('安装命令返回成功，但 profile 读回的版本与固定版本不一致'),REGISTRY_LOOKUP_FAILED:t('包不在当前 registry 上——尚未发布到 npm，或客户端 registry 设置不对'),DSH_PLUGIN_FAILED:t('DSH 安装命令失败，查看宿主日志'),LIBRARY_INSTALL_UNAVAILABLE:t('当前宿主未提供安装参数（profile / node 路径）'),CATALOG_ITEM_MISSING:t('目录里已没有这一项，刷新后重试'),UNSTABLE_VERSION:t('registry 上的最新版是预发布版（rc），客户端未允许安装预发布版'),RUNTIME_ARCHIVE_UNAVAILABLE:t('运行时归档下载失败，检查网络或来源'),OPERATION_TIMEOUT:t('10 分钟内没有结果，可稍后重试'),PACKAGE_DENIED:t('HanaMesh 套件自身不能从市场安装或卸载'),INSTANCE_IN_USE:t('先关闭该应用的所有视图再卸载')};
-  const failureReason=code=>t(FAILURE_REASONS[code])??t('详细原因见宿主日志');
+  const FAILURE_REASONS={...CORE_SUITE_FAILURES,INSTALL_READBACK_MISMATCH:t('安装命令返回成功，但 profile 读回的版本与固定版本不一致'),REGISTRY_LOOKUP_FAILED:t('包不在当前 registry 上——尚未发布到 npm，或客户端 registry 设置不对'),DSH_PLUGIN_FAILED:t('DSH 安装命令失败，请展开技术详情查看原始原因'),LIBRARY_INSTALL_UNAVAILABLE:t('当前宿主未提供安装参数（profile / node 路径）'),CATALOG_ITEM_MISSING:t('目录里已没有这一项，刷新后重试'),UNSTABLE_VERSION:t('registry 上的最新版是预发布版（rc），客户端未允许安装预发布版'),RUNTIME_ARCHIVE_UNAVAILABLE:t('运行时归档下载失败，检查网络或来源'),OPERATION_TIMEOUT:t('10 分钟内没有结果，可稍后重试'),PACKAGE_DENIED:t('HanaMesh 套件自身不能从市场安装或卸载'),INSTANCE_IN_USE:t('先关闭该应用的所有视图再卸载')};
+  const failureReason=(code,details)=>{
+    const diagnostic=code==='DSH_PLUGIN_FAILED'?details?.diagnostic??'':'',pnpmCode=diagnostic.match(/\bERR_PNPM_[A-Z0-9_]+\b/)?.[0];
+    if(pnpmCode==='ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION'){
+      const packages=[...new Set([...diagnostic.matchAll(/((?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*@\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)\s+was published\b/g)].map(match=>match[1]))];
+      return pnpmCode+' · '+t('宿主的依赖发布时间检查未通过（默认需发布满 24 小时，以技术详情中的 cutoff 为准）。已知 DSH 0.2.0-rc.2 内置 pnpm 11.7.0 对同名多条白名单只认第一条。请在 DSH 设置中检查当前版本并升级 DSH，或等待受影响版本满足规则后手动重试。')+(packages.length?' '+t('受影响包：')+packages.join(', '):'');
+    }
+    return(pnpmCode?pnpmCode+' · ':'')+(t(FAILURE_REASONS[code])??t('详细原因见宿主日志'));
+  };
+  const operationNotice=op=>op?h('div',null,h('p',{role:op.failed?'alert':'status',className:op.failed?'hm-library-failed':'hm-library-ok',style:{overflowWrap:'anywhere'}},t(op.text)),op.diagnostic?h('details',null,h('summary',null,t('技术详情')),h('pre',{style:{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}},op.diagnostic)):null):null;
   const suiteRecoveryText=details=>details?.stage==='suite-upgrade'?t('；升级未完成，部分组件可能已改变。当前读回：')+(details.actual?.components?.map(c=>c.label+' '+(c.version??t('检测不到'))+(c.active?'':t('（未启用）'))).join('；')||t('检测不到'))+t('。请完全退出客户端，使用补齐命令（仅 macOS / Linux 终端；Windows 安全命令暂未提供）修复并重新打开：')+details.command:'';
   /** pluginManager applied it, but the profile could not be read back: the installed list may still say 「需重启」. */
   const baselineText=result=>result?.restartBaseline?.updated===false?t('；但应用库没能读回 profile（')+result.restartBaseline.code+t('），已安装列表可能仍显示「需重启」'):'';
@@ -966,7 +978,7 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
       if(!outcome)outcome={ok:false,code:'OPERATION_TIMEOUT'};
       const liveLoaded=outcome.ok&&outcome.result?.status==='applied';
       if(outcome.ok&&!awaitReadback&&!liveLoaded)setChanged(true);
-      setPending(p=>({...p,[key]:outcome.ok?(awaitReadback?{label,text:()=>(t(label)+t('读回中…')),busy:true}:{label,text:()=>(liveLoaded?t(label)+t('完成，已生效，可以直接使用')+baselineText(outcome.result):t(label)+t('完成，重启 DSH 后生效'))}):{label,text:()=>(outcome.unknown?t(label)+t('结果不可追溯，请查看已安装列表后再明确操作'):t(label)+t('失败：')+outcome.code+'（'+failureReason(outcome.code)+'）'+recoveryText(outcome.recovery)+suiteRecoveryText(outcome.details)),failed:true}}));
+      setPending(p=>({...p,[key]:outcome.ok?(awaitReadback?{label,text:()=>(t(label)+t('读回中…')),busy:true}:{label,text:()=>(liveLoaded?t(label)+t('完成，已生效，可以直接使用')+baselineText(outcome.result):t(label)+t('完成，重启 DSH 后生效'))}):{label,text:()=>(outcome.unknown?t(label)+t('结果不可追溯，请查看已安装列表后再明确操作'):t(label)+t('失败：')+outcome.code+'（'+failureReason(outcome.code,outcome.details)+'）'+recoveryText(outcome.recovery)+suiteRecoveryText(outcome.details)),failed:true,diagnostic:outcome.details?.diagnostic}}));
       await load();return outcome;}catch(e){const code=String(e.message??e);setPending(p=>({...p,[key]:{label,text:()=>(t(label)+t('失败：')+code),failed:true}}));return{ok:false,code};}};
     const confirmTarget=async()=>{
       const selected=targetSelection;if(selected?.status!=='confirmation-required'||pendingOperations[selected.item.id]?.busy)return;
@@ -1044,14 +1056,14 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
       else if(row)action=h('span',null,t('已安装，重启 DSH 后生效'));
       return h('article',{key:item.id,'data-hanamesh-library-item':item.id,'data-hanamesh-kind':item.kind},h('h3',null,item.displayName),h('p',null,item.summary),
         h('small',null,t(KIND_TEXT[item.kind])+' · '+(item.publisher?.name??t('未知发布者'))+' · '+(item.latestVersion??'—')+((item.categories??[]).length?' · '+item.categories.join('、'):'')),
-        state,action,op&&!busy?h('p',{role:op.failed?'alert':'status',className:op.failed?'hm-library-failed':'hm-library-ok'},t(op.text)):null);};
+        state,action,op&&!busy?operationNotice(op):null);};
     const catalogSection=receipt?h('div',{className:'hm-app-frame'},h('div',null,h('strong',null,receipt.instance.appId),h('button',{type:'button',disabled:closing,onClick:()=>void close()},closing?t('关闭中…'):t('关闭视图'))),h('iframe',{ref:frame,src:receipt.uiUrl,title:receipt.instance.appId,sandbox:'allow-forms allow-modals allow-popups allow-same-origin allow-scripts'})):
       h('div',{className:'hm-library-grid',key:'catalog'},...items.map(card));
     const moreButton=nextCursor&&!receipt?h('button',{type:'button',className:'hm-library-more',key:'more',onClick:()=>void more()},t('更多')):null;
     const installedSection=!receipt&&(installed.length||plugins.length)?h('section',{className:'hm-market-installed',key:'installed'},h('h2',null,t('已安装')),h('ul',null,
         ...installed.map(row=>h('li',{key:'app:'+row.packageName,'data-hanamesh-installed':row.packageName},t('应用 · ')+(row.name??row.packageName)+' · '+row.packageName+' '+(row.version??'')+' · '+(t(STATE_TEXT[row.state]??row.state)))),
         ...plugins.filter(row=>!PROTECTED.has(row.packageName)).map(row=>h('li',{key:'plugin:'+row.packageName,'data-hanamesh-installed':row.packageName},t('插件 · ')+row.packageName+' '+(row.version??'')+' · '+(t(STATE_TEXT[row.state]??row.state))+(row.bundle&&!row.active&&row.state==='installed'?t('（未启用为 profile 层）'):''),
-          row.state==='installed'&&!PROTECTED.has(row.packageName)&&!pending['plugin:'+row.packageName]?h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/plugins/uninstall',{packageName:row.packageName},'plugin:'+row.packageName,t('卸载'))},t('卸载')):pending['plugin:'+row.packageName]?h('span',{className:pending['plugin:'+row.packageName].failed?'hm-library-failed':'hm-library-ok'},' '+t(pending['plugin:'+row.packageName].text)):null)))):null;
+          row.state==='installed'&&!PROTECTED.has(row.packageName)&&!pending['plugin:'+row.packageName]?h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/plugins/uninstall',{packageName:row.packageName},'plugin:'+row.packageName,t('卸载'))},t('卸载')):pending['plugin:'+row.packageName]?operationNotice(pending['plugin:'+row.packageName]):null)))):null;
     // The seat owner may ask for a subsection to come first; `installed` is the only one it names today.
     const body=preferredSubsectionId==='installed'?[installedSection,catalogSection,moreButton]:[catalogSection,moreButton,installedSection];
     return h('section',{className:embedded?'hm-market hm-market-embedded':'hm-library-overlay hm-market'},
@@ -1071,7 +1083,7 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
           target.status==='confirmation-required'?h('div',null,h('button',{type:'button',onClick:()=>void confirmTarget()},t('确认安装')),h('button',{type:'button',onClick:()=>{targetSequence++;void reportHandoff(targetSelection?.handoffId,'cancelled');setTarget({...targetSelection,status:'cancelled'});}},t('取消'))):
           target.status==='failed'?FailureNotice({error:target.diagnostic??target.error}):h('p',{role:['readback-failed','suite-upgrade-failed'].includes(target.status)?'alert':'status'},({resolving:t('正在查询市场目录…'),installing:t('安装中…'),installed:t('安装完成，请查看已安装列表'),'installed-live':t('安装完成，已加载，可以直接使用'),cancelled:t('已取消，未安装'),'result-unavailable':t('安装结果不可追溯，请查看已安装列表；不会自动重试'),'already-installed':t('已安装，无需重复安装'),failed:t('未安装：')+(target.error??pending[target.item?.id]?.text??t('安装失败')),'readback-failed':target.error,'suite-upgrade-failed':suiteTargetFailure(target)})[target.status]),
           target.item?.source?h('div',{'aria-label':t('目录条目来源')},h('p',null,target.item.source.sourceId+' · '+target.item.source.sourceRef),...(target.item.source.sourceLinks??[]).map((link,index)=>h('p',{key:index},h('a',{href:link.sourceUrl,target:'_blank',rel:'noopener noreferrer'},link.sourceId+' · '+link.sourceRef),h('small',null,' '+link.firstSeenAt+' / '+link.lastSeenAt)))):null,
-          target.item&&pending[target.item.id]?h('p',{role:pending[target.item.id].failed?'alert':'status'},t(pending[target.item.id].text)):null,
+          target.item?operationNotice(pending[target.item.id]):null,
           ['installed','already-installed'].includes(target.status)&&target.item?.installed?.state==='registered'?openButton(target.item.installed):null):null,
       verification===true?h('section',{'aria-label':t('C-MARKET 合约验证')},h('h2',null,t('C-MARKET 合约验证')),
         h('p',null,t('测试版；输入与输出仅供当前客户端验证。安装仍须在正常确认框确认。')),

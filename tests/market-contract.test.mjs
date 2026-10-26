@@ -247,7 +247,7 @@ for (const [options, code] of [[{ cliFails: true }, 'DSH_PLUGIN_FAILED'], [{ rea
   });
 }
 
-async function market(t, { failed = false, recoveryStatus = 'failed', version = '1.2.3', registered = false, verification = false } = {}) {
+async function market(t, { failed = false, recoveryStatus = 'failed', version = '1.2.3', registered = false, verification = false, diagnostic } = {}) {
   const clock = fakeClock(), calls = [];
   let complete = false;
   const row = () => complete ? { packageName: appTarget.packageName, appId: 'market-example', name: 'Ordinary fixture app', version, state: registered ? 'registered' : 'installed-not-loaded', definition: definition({ id: 'market-example' }) } : null;
@@ -262,7 +262,7 @@ async function market(t, { failed = false, recoveryStatus = 'failed', version = 
       complete = !failed;
       value = { sequence: 2, operations: [], resetRequired: false, traceId: 'fixture-events', events: [
         { sequence: 1, at: clock.now(), operationId: 'unrelated-op', type: 'library.install-done', result: { status: 'restart-required', kind: 'plugin', packageName: 'unrelated-plugin', version: '0.0.1' } },
-        failed ? { sequence: 2, at: clock.now(), operationId: 'fixture-op', type: 'library.install-failed', code: 'DSH_PLUGIN_FAILED', recovery: { status: recoveryStatus, mode: 'new-install', stage: 'add', previousVersion: null, actions: [], checks: [{ item: 'module', expected: null, actual: '1.2.3', ok: false }], residue: [{ item: 'module', reason: 'NOT_RESTORED' }] } }
+        failed ? { sequence: 2, at: clock.now(), operationId: 'fixture-op', type: 'library.install-failed', code: 'DSH_PLUGIN_FAILED', ...(diagnostic ? { details: { diagnostic } } : {}), recovery: { status: recoveryStatus, mode: 'new-install', stage: 'add', previousVersion: null, actions: [], checks: [{ item: 'module', expected: null, actual: '1.2.3', ok: false }], residue: [{ item: 'module', reason: 'NOT_RESTORED' }] } }
           : { sequence: 2, at: clock.now(), operationId: 'fixture-op', type: 'library.install-done', result: { status: 'restart-required', kind: 'application', packageName: appTarget.packageName, appId: 'market-example', version: '1.2.3' } },
       ] };
     } else if (path === '/apps/open') value = { instance: { id: 'fixture-instance', appId: 'market-example', deploymentId: 'local', dataId: 'data-v1', mode: 'owned', runtimeId: 'fixture-runtime', status: 'ready' }, lease: { principalId: 'market-fixture', viewId: JSON.parse(init.body).viewId, instanceId: 'fixture-instance', generation: 1, status: 'active', createdAt: clock.now(), expiresAt: clock.now() + 90_000, originalSessionId: null }, leaseToken: fixtureLeaseToken, uiUrl: 'http://127.0.0.1:49201/', originalSessionId: null, traceId: 'fixture-open' };
@@ -388,4 +388,30 @@ test('CM15: an event cursor from before a provider restart reports loss of opera
 
 test('R1 recovery not-needed preserves original install failure and never reports success',async t=>{
  const m=await market(t,{failed:true,recoveryStatus:'not-needed'});await m.h.module.openInstallTarget(appTarget);await settle();await m.h.click('确认安装');await m.clock.advance(1000);assert.match(m.text(),/DSH_PLUGIN_FAILED/);assert.match(m.text(),/安装前状态未被改动/);assert.doesNotMatch(m.text(),/returnt|安装完成/);
+});
+
+test('MP03 market failure shows the release-age cause and DSH upgrade action with original diagnostics',async t=>{
+ const diagnostic='[ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION] 3 lockfile entries failed verification:\n @ai-workbench/connect@0.7.37 was published at 2026-10-25T19:37:31.290Z, within the minimumReleaseAge cutoff (2026-10-24T20:22:43.181Z)\n @ai-workbench/remote-agent@0.8.29 was published within the minimumReleaseAge cutoff\n @ai-workbench/workbench@0.1.3 was published within the minimumReleaseAge cutoff';
+ const m=await market(t,{failed:true,recoveryStatus:'not-needed',diagnostic});
+ await m.h.module.openInstallTarget(appTarget);await settle();await m.h.click('确认安装');await m.clock.advance(1000);
+ assert.match(m.text(),/升级 DSH/,'show an actionable upstream fix');
+ assert.match(m.text(),/发布时间检查未通过/,'show the actual failure class');
+ const alert=m.h.find(n=>n.props?.role==='alert'&&JSON.stringify(n).includes('ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION'));
+ assert.ok(alert,'show the exact pnpm category without opening details');
+ const visible=JSON.stringify(alert);for(const spec of ['@ai-workbench/connect@0.7.37','@ai-workbench/remote-agent@0.8.29','@ai-workbench/workbench@0.1.3'])assert.ok(visible.includes(spec),'list affected package '+spec+' in the alert');
+ assert.match(visible,/默认.*24 小时/,'explain the default age rule without overriding the actual cutoff');
+ assert.match(visible,/DSH 0\.2\.0-rc\.2.*pnpm 11\.7\.0.*同名多条白名单只认第一条/);
+ assert.match(visible,/DSH 设置/);assert.match(visible,/等待/);assert.match(visible,/cutoff/);
+ const details=m.h.find(n=>n.type==='details'&&n.children.some(child=>child?.type==='pre'&&child.children.includes(diagnostic)));
+ assert.ok(details,'retain the original package/version/cutoff diagnostic in expandable details');
+ assert.equal(m.calls.filter(c=>c.path==='/hanamesh/library/install').length,1,'never retry a policy rejection');
+ assert.doesNotMatch(m.text(),/安装完成/);
+});
+
+test('MP04 non-policy install failure retains its actual cause without suggesting a DSH upgrade',async t=>{
+ const diagnostic='[ERR_PNPM_FETCH_404] package unavailable';const m=await market(t,{failed:true,diagnostic});
+ await m.h.module.openInstallTarget(appTarget);await settle();await m.h.click('确认安装');await m.clock.advance(1000);
+ assert.ok(m.h.find(n=>n.type==='details'&&n.children.some(child=>child?.type==='pre'&&child.children.includes(diagnostic))),'generic pnpm diagnostics must also reach the person');
+ const alert=m.h.find(n=>n.props?.role==='alert'&&JSON.stringify(n).includes('ERR_PNPM_FETCH_404'));assert.ok(alert,'generic pnpm category must be visible outside folded details');
+ assert.doesNotMatch(m.text(),/升级 DSH/);
 });
