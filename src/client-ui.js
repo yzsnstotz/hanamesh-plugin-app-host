@@ -131,7 +131,8 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy123": "安装命令返回成功，但 profile 读回的版本与固定版本不一致",
     "copy124": "包不在当前 registry 上——尚未发布到 npm，或客户端 registry 设置不对",
     "copy125": "DSH 安装命令失败，请展开技术详情查看原始原因",
-    "installAgeRejected": "宿主的依赖发布时间检查未通过。请升级 DSH 后重试；具体包名和原始原因见技术详情。",
+    "installAgeRejected": "宿主的依赖发布时间检查未通过（默认需发布满 24 小时，以技术详情中的 cutoff 为准）。已知 DSH 0.2.0-rc.2 内置 pnpm 11.7.0 对同名多条白名单只认第一条。请在 DSH 设置中检查当前版本并升级 DSH，或等待受影响版本满足规则后手动重试。",
+    "installAffectedPackages": "受影响包：",
     "copy126": "当前宿主未提供安装参数（profile / node 路径）",
     "copy127": "目录里已没有这一项，刷新后重试",
     "copy128": "registry 上的最新版是预发布版（rc），客户端未允许安装预发布版",
@@ -435,7 +436,8 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy123": "Installation command succeeded, but the version read from the profile differs from the confirmed version",
     "copy124": "Package not found in the current registry. It may not be published, or the registry setting may be incorrect",
     "copy125": "DSH installation failed. Expand Technical details for the original cause",
-    "installAgeRejected": "The host rejected a dependency's release age. Upgrade DSH, then try again. Package names and the original cause are in Technical details.",
+    "installAgeRejected": "The host rejected a dependency's release age (the default requires 24 hours since publication; see the actual cutoff in Technical details). Known issue: pnpm 11.7.0 bundled with DSH 0.2.0-rc.2 only recognizes the first allowlist entry for a package name. Check your version in DSH Settings and upgrade DSH, or wait until the affected versions meet the rule before trying again manually.",
+    "installAffectedPackages": "Affected packages: ",
     "copy126": "This host has not provided installation parameters (profile / Node path)",
     "copy127": "This item is no longer in the catalog. Refresh before trying again",
     "copy128": "The latest registry version is a prerelease, which this client has not allowed",
@@ -834,8 +836,15 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
         value?.rules?h('div',null,h('h3',null,t('固定规则（不能关）')),h('ul',null,...value.rules.map(row=>h('li',{key:row.rule},t(row.rule),h('br',null),h('small',null,t('为什么：')+t(row.why)))))):null));
   }
   const FAILURE_REASONS={...CORE_SUITE_FAILURES,INSTALL_READBACK_MISMATCH:t('安装命令返回成功，但 profile 读回的版本与固定版本不一致'),REGISTRY_LOOKUP_FAILED:t('包不在当前 registry 上——尚未发布到 npm，或客户端 registry 设置不对'),DSH_PLUGIN_FAILED:t('DSH 安装命令失败，请展开技术详情查看原始原因'),LIBRARY_INSTALL_UNAVAILABLE:t('当前宿主未提供安装参数（profile / node 路径）'),CATALOG_ITEM_MISSING:t('目录里已没有这一项，刷新后重试'),UNSTABLE_VERSION:t('registry 上的最新版是预发布版（rc），客户端未允许安装预发布版'),RUNTIME_ARCHIVE_UNAVAILABLE:t('运行时归档下载失败，检查网络或来源'),OPERATION_TIMEOUT:t('10 分钟内没有结果，可稍后重试'),PACKAGE_DENIED:t('HanaMesh 套件自身不能从市场安装或卸载'),INSTANCE_IN_USE:t('先关闭该应用的所有视图再卸载')};
-  const failureReason=(code,details)=>code==='DSH_PLUGIN_FAILED'&&details?.diagnostic?.includes('ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION')?t('宿主的依赖发布时间检查未通过。请升级 DSH 后重试；具体包名和原始原因见技术详情。'):t(FAILURE_REASONS[code])??t('详细原因见宿主日志');
-  const operationNotice=op=>op?h('div',null,h('p',{role:op.failed?'alert':'status',className:op.failed?'hm-library-failed':'hm-library-ok'},t(op.text)),op.diagnostic?h('details',null,h('summary',null,t('技术详情')),h('pre',{style:{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}},op.diagnostic)):null):null;
+  const failureReason=(code,details)=>{
+    const diagnostic=code==='DSH_PLUGIN_FAILED'?details?.diagnostic??'':'',pnpmCode=diagnostic.match(/\bERR_PNPM_[A-Z0-9_]+\b/)?.[0];
+    if(pnpmCode==='ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION'){
+      const packages=[...new Set([...diagnostic.matchAll(/((?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*@\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)\s+was published\b/g)].map(match=>match[1]))];
+      return pnpmCode+' · '+t('宿主的依赖发布时间检查未通过（默认需发布满 24 小时，以技术详情中的 cutoff 为准）。已知 DSH 0.2.0-rc.2 内置 pnpm 11.7.0 对同名多条白名单只认第一条。请在 DSH 设置中检查当前版本并升级 DSH，或等待受影响版本满足规则后手动重试。')+(packages.length?' '+t('受影响包：')+packages.join(', '):'');
+    }
+    return(pnpmCode?pnpmCode+' · ':'')+(t(FAILURE_REASONS[code])??t('详细原因见宿主日志'));
+  };
+  const operationNotice=op=>op?h('div',null,h('p',{role:op.failed?'alert':'status',className:op.failed?'hm-library-failed':'hm-library-ok',style:{overflowWrap:'anywhere'}},t(op.text)),op.diagnostic?h('details',null,h('summary',null,t('技术详情')),h('pre',{style:{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}},op.diagnostic)):null):null;
   const suiteRecoveryText=details=>details?.stage==='suite-upgrade'?t('；升级未完成，部分组件可能已改变。当前读回：')+(details.actual?.components?.map(c=>c.label+' '+(c.version??t('检测不到'))+(c.active?'':t('（未启用）'))).join('；')||t('检测不到'))+t('。请完全退出客户端，使用补齐命令（仅 macOS / Linux 终端；Windows 安全命令暂未提供）修复并重新打开：')+details.command:'';
   /** pluginManager applied it, but the profile could not be read back: the installed list may still say 「需重启」. */
   const baselineText=result=>result?.restartBaseline?.updated===false?t('；但应用库没能读回 profile（')+result.restartBaseline.code+t('），已安装列表可能仍显示「需重启」'):'';
