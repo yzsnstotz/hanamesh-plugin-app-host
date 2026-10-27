@@ -22,7 +22,8 @@ for(const name of ['@deepseek-ai/dsh-storage','@deepseek-ai/dsh-scope']){
         assert.equal(deps[${JSON.stringify(name)}],'0.2.1-alpha.2','consumer must explicitly supply transitive host peer: '+${JSON.stringify(name)});
         for(const [n,v] of Object.entries(pkg.peerDependencies))assert.equal(deps[n],pkg.devDependencies[n]??(n.startsWith('@deepseek-ai/dsh-')?'0.2.1-alpha.2':n==='react'?'18.3.1':v));
         assert.equal(deps['@deepseek-ai/dsh-invariants'],undefined,'alpha.2 removed the invariants package');
-        assert.equal(Object.keys(deps).length,13,'ten direct peers, two transitive peers, AppHost');
+        assert.equal(Object.keys(deps).length,36,'ten direct peers, 25 required transitive host peers, AppHost');
+        assert.equal(deps['@deepseek-ai/cordis-plugin-group'],'1.0.5-alpha.1','host closure must retain the alpha.2 Cordis line');
       }}});
       const {verifyAppHostPack}=await import('./devkit.config.mjs');
       await verifyAppHostPack('unused-unit-test.tgz');
