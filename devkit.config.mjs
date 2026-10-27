@@ -111,33 +111,9 @@ export async function verifyAppHostPack(tarball){
   }
   // Explicit consumer closure; these remain transitive host peers, not AppHost declarations.
   const peers=Object.fromEntries(Object.keys(pkg.peerDependencies).map(name=>[name,pkg.devDependencies[name]??(name.startsWith('@deepseek-ai/dsh-')?'0.2.1-alpha.2':name==='react'?'18.3.1':pkg.peerDependencies[name])]))
-  // Required host peers of manager and its normal dependencies come from the public alpha.2 manifests.
   Object.assign(peers,{
     '@deepseek-ai/dsh-storage':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-scope':'0.2.1-alpha.2',
-    '@deepseek-ai/cordis-plugin-loader':'1.0.6-alpha.1',
-    '@deepseek-ai/dsh-host-plugin-inventory':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-subprocess':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-typert-protocol':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-tools':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-brand':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-sandbox-policy':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-sandbox':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-http-proxy':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-agent':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-ptc-runtime':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-llm':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-session':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-system-prompt':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-user-approval':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-working-directory':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-session-projection':'0.2.1-alpha.2',
-    '@deepseek-ai/cordis-plugin-group':'1.0.5-alpha.1',
-    '@deepseek-ai/cordis-plugin-include':'1.0.10-alpha.1',
-    '@deepseek-ai/dsh-launch-environment':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-home-paths':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-util-values':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-fs':'0.2.1-alpha.2'});
+    '@deepseek-ai/dsh-scope':'0.2.1-alpha.2'});
   await verifyPack({...options,consumer:{packageJson:{private:true,type:'module',dependencies:{...peers,
     '@hanamesh/dsh-app-host':`file:${options.tarball}`}},
     javascript:"import assert from 'node:assert/strict';import{createRequire}from'node:module';import{apply}from'@hanamesh/dsh-app-host/dsh';assert.equal(typeof apply,'function');const require=createRequire(import.meta.url);assert.throws(()=>require.resolve('@hanamesh/devkit'),{code:'MODULE_NOT_FOUND'});"+'\n'+runtimeLedgerJavascript,

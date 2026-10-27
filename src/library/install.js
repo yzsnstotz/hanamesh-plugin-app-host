@@ -45,7 +45,7 @@ async function clearGeneratedRuntimeCache(result,runtimeRoot){
 }
 
 /** Package mutations use the public CLI in an owned monitored process; upstream's in-process manager has no scoped env/monitor port. */
-export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBinary,dshBin,desktopCli,desktopLauncher,pluginManagerVersion,registry,allowPrerelease=false,
+export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBinary,dshBin,desktopCli,desktopLauncher,pluginManagerVersion,registryRules,registry,allowPrerelease=false,
   fetchImpl=globalThis.fetch,spawn=defaultSpawn,provision,remove,ledger,coreSuitePlan,coreService=()=>undefined,suiteSourceMode=()=>'configured',suiteSourceService=()=>undefined,pluginManager=()=>undefined,emit=()=>{},profileWriter=new SerialQueue()}){
   requireCondition(typeof profileDir==='string'&&resolve(profileDir)===profileDir,'PROFILE_DIR_REQUIRED','library.profileDir must be an absolute path.');
   requireCondition(typeof dataRoot==='string'&&resolve(dataRoot)===dataRoot,'INVALID_ROOT','dataRoot must be absolute.');
@@ -84,7 +84,11 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       const manager=pluginManager();
       requireCondition(typeof manager?.registries==='function','REGISTRY_CONFIG_UNAVAILABLE','DSH does not expose registry configuration. Restore the public plugin manager before installing.',{},503);
       // Public DSH ports own ordering, normalization, de-duplication and private-registry isolation.
-      const {registryPlan,attributeFailure}=await import('@deepseek-ai/dsh-plugin-manager/registry');
+      const ruleMessage='DSH does not expose its registry rules. Restore the public plugin manager before installing.';
+      requireCondition(typeof registryRules==='function','REGISTRY_CONFIG_UNAVAILABLE',ruleMessage,{},503);
+      let rules;try{rules=await registryRules();}catch(cause){const error=new AppHostError('REGISTRY_CONFIG_UNAVAILABLE',ruleMessage,{},503);error.cause=cause;throw error;}
+      const {registryPlan,attributeFailure}=rules??{};
+      requireCondition(typeof registryPlan==='function'&&typeof attributeFailure==='function','REGISTRY_CONFIG_UNAVAILABLE',ruleMessage,{},503);
       controller.signal.throwIfAborted();const configured=await manager.registries();controller.signal.throwIfAborted();
       const plan=registryPlan(registry,configured);
       for(let index=0;index<plan.length;index++){
@@ -99,7 +103,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
           controller.signal.throwIfAborted();if(!response.ok){failureKind=response.status===404?'not-found':response.status>=500?'network':'unknown';throw new AppHostError('REGISTRY_LOOKUP_FAILED','Registry latest lookup failed. Check DSH registry settings and network, then retry explicitly.',{status:response.status},502);}
           phase='registry readback';const metadata=await response.json();controller.signal.throwIfAborted();const version=metadata.version;
           requireCondition(versionText(version)&&(allowPrerelease||!version.includes('-')),'UNSTABLE_VERSION','Registry latest must be an exact stable version.');
-          return{version,registry:source};
+          return{version,registry:selected};
         }catch(error){
           // Ask only fallbacks configured by DSH, and only when its public rule permits another source.
           if(!controller.signal.aborted&&index+1<plan.length&&attributeFailure(failureKind,'',{kind:'registry',name,spec:name})==='registry')continue;
@@ -158,7 +162,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       base=await profileSnapshot(profileDir,name);
       stage='before-add';const {version,registry:installRegistry}=await latest(name);
       const status='restart-required';
-      stage='add';await run(['add','--save-exact',`--registry=${installRegistry}`,`${name}@${version}`]);
+      stage='add';await run(['add','--save-exact',...(installRegistry===null?[]:[`--registry=${installRegistry}`]),`${name}@${version}`]);
       stage='readback';const added=await profileSnapshot(profileDir,name);
       requireCondition(added.spec===version&&added.module===version,'INSTALL_READBACK_MISMATCH','The profile does not resolve the exact version that was added.',{expected:version,spec:added.spec,module:added.module},502);
       if(kind==='plugin')return{status,kind,packageName:name,version};

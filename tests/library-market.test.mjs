@@ -11,7 +11,7 @@ import { mkdir, writeFile, rm, realpath, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { join, resolve } from 'node:path';
 import { createLibraryInstaller, PROTECTED_PACKAGES } from '../src/library/install.js';
-import {fixtureRegistryManager} from './helpers.mjs';
+import {fixtureRegistryManager,fixtureRegistryRules} from './helpers.mjs';
 import { scanInstalledPlugins, snapshotProfileDependencies, readProfileManifest } from '../src/library/installed.js';
 import { createLibraryService } from '../src/library/service.js';
 import { createLibraryHttpHandler, LIBRARY_ROUTES } from '../src/library/routes.js';
@@ -36,7 +36,7 @@ async function recordAdd(profileDir,args){
   await writeFile(pkgPath,JSON.stringify({...pkg,version}));
 }
 function installerDouble(profile,{calls=[],events=[],latest='1.0.0'}={}){
-  return{calls,events,installer:createLibraryInstaller({pluginManager:fixtureRegistryManager,profileDir:profile.profile,profileName:'web',dataRoot:profile.dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/lib/bin.js',
+  return{calls,events,installer:createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:profile.profile,profileName:'web',dataRoot:profile.dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/lib/bin.js',
     fetchImpl:async url=>{calls.push({fetch:String(url)});return new Response(JSON.stringify({version:latest}),{headers:{'content-type':'application/json'}});},
     spawn:async(command,args,options)=>{calls.push({command,args,options});await recordAdd(profile.profile,args);return{code:0,stdout:'',stderr:''};},
     provision:async()=>{throw new Error('a plugin never provisions a runtime');},remove:async()=>{throw new Error('a plugin has no owned runtime');},emit:event=>events.push(event)})};

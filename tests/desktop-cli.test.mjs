@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdir,writeFile,readFile,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {createLibraryInstaller} from '../src/library/install.js';
-import {fixtureRegistryManager} from './helpers.mjs';
+import {fixtureRegistryManager,fixtureRegistryRules} from './helpers.mjs';
 import {temporary} from './helpers.mjs';
 
 // Component provider fixture for fixed d743267 runDesktopCli(runtimeDir,supportDir).
@@ -27,7 +27,7 @@ export async function record(entry,runtimeDir,supportDir){
   const plain=join(root,'plain-cli.mjs'),desktop=join(root,'desktop-cli.mjs');
   await writeFile(plain,"import {record} from './record.mjs';await record('plain');");
   await writeFile(desktop,"import {record} from './record.mjs';export async function runDesktopCli(runtimeDir,supportDir){await record('desktop',runtimeDir,supportDir);}");
-  const installer=createLibraryInstaller({pluginManager:fixtureRegistryManager,profileDir:profile,profileName:'desktop',dataRoot:join(root,'data'),nodeBinary:process.execPath,dshBin:plain,
+  const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:profile,profileName:'desktop',dataRoot:join(root,'data'),nodeBinary:process.execPath,dshBin:plain,
     desktopCli:{entry:desktop,runtimeDir,supportDir},
     fetchImpl:async()=>new Response(JSON.stringify({version}),{headers:{'content-type':'application/json'}})});
   const result=await installer.installPlugin({packageName});

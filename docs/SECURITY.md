@@ -84,4 +84,6 @@ The authenticated browser supplies settings or opaque plan/operation identifiers
 
 B17 候选的套件来源选择仅在 AppHost 自有同源已准入设置端点写入。Core 来源状态是公开只读事实，不授予安装权限；预览/确认/执行及异步声明返回时复读来源，沿用原 planId/精确 tuple/物理 baseline，来源丢失或替换即拒绝原确认。设置保存只串行持久化选择，不触发下载/安装或改写 Core 配置；持久失败保持旧选择。无 service/watch/generation 时保持不可观察边界，不缓存 ready 或回退 registry。详见 CONTRACT.md B17 段。
 
-0.6.16：只消费 DSH 公开源事实和公开排序/后继许可规则，不读 .npmrc、凭据、私有服务字段；配置源与受控 CLI 使用同一地址。30秒上限只用于本次安装前查询，超时终止且不重试；配置源的顺序由 DSH 决定。诊断只投影脱敏的类型/消息/code/cause链及已知CLI字段，同时进既有UI和宿主日志；URL用户信息、全部查询值、Authorization/Cookie、token/secret均删除，限4001字符，不传任意details/stack/响应正文。
+0.6.16：只消费 DSH 公开源事实和公开排序/后继许可规则，不读 .npmrc、凭据、私有服务字段；配置源与受控 CLI 使用同一选择；null项沿用pnpm自有配置，不显式传registry。30秒上限只用于本次安装前查询，超时终止且不重试；配置源的顺序由 DSH 决定。诊断只投影脱敏的类型/消息/code/cause链及已知CLI字段，同时进既有UI和宿主日志；URL用户信息、全部查询值、Authorization/Cookie、token/secret均删除，限4001字符，不传任意details/stack/响应正文。
+
+公开registry规则只从已证明的宿主manager安装位置加载，复用原版本守卫；不安装第二份manager、不复制生产规则、不从任意浏览器路径加载模块。tests/fixtures的原始MIT规则与SHA/许可证只作测试，不进发布包。

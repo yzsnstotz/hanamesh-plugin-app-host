@@ -120,8 +120,7 @@
     "@deepseek-ai/dsh-client-ui-renderer": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0",
     "@deepseek-ai/dsh-client-ui-settings": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0",
     "@deepseek-ai/dsh-client-locale": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0",
-    "react": "^18.3.1",
-    "@deepseek-ai/dsh-plugin-manager": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0"
+    "react": "^18.3.1"
   },
   "hanamesh": {
     "module": "app-host",
@@ -152,11 +151,7 @@
     "typescript": "5.8.3",
     "@hanamesh/devkit": "file:vendor/hanamesh-devkit-0.2.3.tgz",
     "@deepseek-ai/dsh-client-ui-renderer": "0.2.1-alpha.2",
-    "@hanamesh/release-platform-gate": "file:vendor/hanamesh-release-platform-gate-0.1.9.tgz",
-    "@deepseek-ai/dsh-plugin-manager": "0.2.1-alpha.2",
-    "@deepseek-ai/cordis-plugin-group": "1.0.5-alpha.1",
-    "@deepseek-ai/cordis-plugin-include": "1.0.10-alpha.1",
-    "@deepseek-ai/cordis-plugin-loader": "1.0.6-alpha.1"
+    "@hanamesh/release-platform-gate": "file:vendor/hanamesh-release-platform-gate-0.1.10.tgz"
   },
   "packageManager": "pnpm@10.33.0",
   "bundleDependencies": [

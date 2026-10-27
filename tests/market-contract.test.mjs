@@ -12,7 +12,7 @@ import * as appHost from '../src/dsh.js';
 import { AppHost, AtomicFileStore } from '../src/index.js';
 import { createLibraryService } from '../src/library/service.js';
 import { createLibraryInstaller } from '../src/library/install.js';
-import {fixtureRegistryManager} from './helpers.mjs';
+import {fixtureRegistryManager,fixtureRegistryRules} from './helpers.mjs';
 import { createLibraryHttpHandler } from '../src/library/routes.js';
 import { clientHarness, fakeClock, settle } from './fixtures/client-ui-harness.mjs';
 import { definition, http, until } from './helpers.mjs';
@@ -55,7 +55,7 @@ async function provider(t, { available = true, gate, cliFails = false, readbackV
   await host.init();
   // Official CLI counterpart writes a temporary profile; it never invokes dsh,
   // changes DSH_HOME, or installs into the user's profile.
-  const installer = available ? createLibraryInstaller({pluginManager:fixtureRegistryManager,
+  const installer = available ? createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,
     profileDir: profile, profileName: 'market-contract', dataRoot,
     nodeBinary: process.execPath, dshBin: join(root, 'fixture-dsh-bin.js'),
     fetchImpl: async () => new Response(JSON.stringify({ version: '1.2.3' })),

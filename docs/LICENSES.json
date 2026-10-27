@@ -281,68 +281,19 @@
       }
     },
     "@hanamesh/release-platform-gate": {
-      "version": "0.1.9",
+      "version": "0.1.10",
       "license": "UNKNOWN: private development tool does not declare a license",
-      "source": "file:vendor/hanamesh-release-platform-gate-0.1.9.tgz",
-      "purpose": "Development-only shared immutable platform dependency release gate; R2 PASS tool019, integration subject to R1; never runtime or bundled",
+      "source": "file:vendor/hanamesh-release-platform-gate-0.1.10.tgz",
+      "purpose": "Development-only shared immutable platform gate0.1.10; R2 PASS docs cce1576, source C7a39e4e and same reviewed archive SHA; never runtime or bundled",
       "usedAs": [
         "devDependencies"
       ],
       "specs": {
-        "devDependencies": "file:vendor/hanamesh-release-platform-gate-0.1.9.tgz"
+        "devDependencies": "file:vendor/hanamesh-release-platform-gate-0.1.10.tgz"
       },
-      "sourceCommit": "13ec0db3bc6aa6b6235f2105d3f0a6b998855ff5",
-      "archiveSha256": "c72010c96a5f22e36d65f6c1fd850e583dead7e843644eba1657b4416d9cbd0d"
-    },
-    "@deepseek-ai/dsh-plugin-manager": {
-      "version": "0.2.1-alpha.2",
-      "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/dsh-plugin-manager/-/dsh-plugin-manager-0.2.1-alpha.2.tgz",
-      "purpose": "Public registries() source DTO and registryPlan/attributeFailure policy, supplied by DSH; not bundled",
-      "usedAs": [
-        "peerDependencies",
-        "devDependencies"
-      ],
-      "specs": {
-        "peerDependencies": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0",
-        "devDependencies": "0.2.1-alpha.2"
-      }
-    },
-    "@deepseek-ai/cordis-plugin-group": {
-      "version": "1.0.5-alpha.1",
-      "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/cordis-plugin-group/-/cordis-plugin-group-1.0.5-alpha.1.tgz",
-      "purpose": "Development-only explicit official alpha.2 host peer closure; avoids resolving a newer stable Cordis plugin against the pinned alpha host",
-      "usedAs": [
-        "devDependencies"
-      ],
-      "specs": {
-        "devDependencies": "1.0.5-alpha.1"
-      }
-    },
-    "@deepseek-ai/cordis-plugin-include": {
-      "version": "1.0.10-alpha.1",
-      "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/cordis-plugin-include/-/cordis-plugin-include-1.0.10-alpha.1.tgz",
-      "purpose": "Development-only explicit official alpha.2 host peer closure; avoids resolving a newer stable Cordis plugin against the pinned alpha host",
-      "usedAs": [
-        "devDependencies"
-      ],
-      "specs": {
-        "devDependencies": "1.0.10-alpha.1"
-      }
-    },
-    "@deepseek-ai/cordis-plugin-loader": {
-      "version": "1.0.6-alpha.1",
-      "license": "MIT",
-      "source": "https://registry.npmjs.org/@deepseek-ai/cordis-plugin-loader/-/cordis-plugin-loader-1.0.6-alpha.1.tgz",
-      "purpose": "Development-only explicit official alpha.2 host peer closure; avoids resolving a newer stable Cordis plugin against the pinned alpha host",
-      "usedAs": [
-        "devDependencies"
-      ],
-      "specs": {
-        "devDependencies": "1.0.6-alpha.1"
-      }
+      "sourceCommit": "7a39e4e332a2cbb5dcbfddec68383fb5cef39eb8",
+      "archiveSha256": "71545cbb636d3b1a5e7d9fbba728b16e006b8eaf70bc2540038d077df7263a61",
+      "reviewDocs": "cce157612b1390b845ccca3f0632247de9fb3229"
     }
   },
   "downloadedRuntimes": {

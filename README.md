@@ -1,4 +1,4 @@
-0.6.16 候选：市场查询通过 DSH 公开 registries()/registry 策略使用用户配置的源及顺序，固定版本查询与 CLI 明确使用同一源；整个查询限 30 秒，超时具名失败且不自动重试。原生查询异常保留为 REGISTRY_LOOKUP_FAILED 的 cause；安全原始诊断同时进入 UI 技术详情和宿主日志，CLI 非零含 exit/stderr。沿用原回滚与重启语义。
+0.6.16 候选：普通市场通过注入的宿主 pluginManager.registries() 读取源事实，并按宿主锚点/版本守卫加载公开 ./registry 规则模块；AppHost 不声明、安装或捆绑 manager。发布依赖/peer闭包与0.6.15一致。pnpm自有源(null)不显式传--registry，配置镜像则传同一源；查询30秒具名超时，脱敏原诊断同进UI和日志。
 
 0.6.15 候选：市场保留官方 CLI 的 stdout/stderr 真实失败原因并脱敏，在卡片与安装确认的技术详情中显示。正文显示 pnpm 真实错误类别；宿主发布时间检查失败时列出受影响包，说明默认 24 小时与实际 cutoff，并提示到 DSH 设置检查版本、升级 DSH 或等待后手动重试；不修改 profile、pnpm 供应链策略或安装执行路径。
 
@@ -226,7 +226,7 @@ Actions runs on the standard public/free `macos-15` arm64 runner because the exi
 
 运行 `npm run release:check` 正常打包并检查；发布仅用 `npm run release:publish`，发布已检查的同一 tarball。直接目录 npm publish 会被 prepublishOnly 明确拒绝。开发工具 `@hanamesh/release-platform-gate` 仅 devDependency，先按接线请求复制经 SHA 固定的正常工具包并更新冻结锁；CI 必须接入这个发布门。详细输出包含不可关闭的原因、正常包/锁 SHA 和扫描路径；absent optional peer 按 npm 定义列明，不等同 optionalDependencies。
 
-共享门已升级到 R2 PASS 的 0.1.9，原正常工具 tar SHA256 为 `c72010c96a5f22e36d65f6c1fd850e583dead7e843644eba1657b4416d9cbd0d`；最终 main 来源见 `vendor/release-platform-gate.json`。本仓接线仍须 R1 独审，不等于 npm 发布放行，本次不发布。
+共享门已升级到 R2 PASS 的 0.1.10，原正常工具 tar SHA256 为 `c72010c96a5f22e36d65f6c1fd850e583dead7e843644eba1657b4416d9cbd0d`；最终 main 来源见 `vendor/release-platform-gate.json`。本仓接线仍须 R1 独审，不等于 npm 发布放行，本次不发布。
 
 `verify:pack` 原有 tarball 参数保持；正常消费者验证之后通过共享公开 checkRelease 核对同一个归档，CI沿该入口必经硬门，不另打一个包代替原包。接线没有复制扫描实现。
 
@@ -234,4 +234,4 @@ Actions runs on the standard public/free `macos-15` arm64 runner because the exi
 
 发布说明：DSH 内置 pnpm 11.7.0 处理不适用平台 optional 子包时可能安装后不退出，使 DSH 一直等安装结束；因此本门是正确性不变量（`disableable:false`），没有关闭开关。所有 OS/CPU/libc 都必须具备平台中立的完整安装依赖闭包，不能用本机已装、omit-optional、ignore-scripts、超时、重试、放宽断言或改客户端代替。每次 PASS/FAIL 的 JSON/receipt 都包含触发背景和不能关闭的 reason；release:check 正常 pack，release:publish 只发布同一已检查且再核 SHA 的 tar。源码目录发布由 prepublishOnly 拒绝，CI 的 verify:pack/preflight 必经该门；无可失败 job 或旁路入口。
 
-固定提供方 main 提交 `13ec0db3bc6aa6b6235f2105d3f0a6b998855ff5`，与 R2 审过的 0.1.9 正常包6载荷逐字一致；来源/归档摘要见 `vendor/release-platform-gate.json`。
+固定提供方 main 提交 `13ec0db3bc6aa6b6235f2105d3f0a6b998855ff5`，与 R2 审过的 0.1.10 正常包6载荷逐字一致；来源/归档摘要见 `vendor/release-platform-gate.json`。

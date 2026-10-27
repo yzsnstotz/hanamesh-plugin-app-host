@@ -256,4 +256,6 @@ B17 review repair（同0.6.8候选）：`AppHost` 未注入 `runtimeLedgerReader
 
 ## 0.6.16 市场查询来源与诊断（原协议1）
 
-普通市场安装/升级的 latest 查询消费 DSH 公开 pluginManager.registries() 与公开 registryPlan/attributeFailure，沿用用户配置源顺序和私有源隔离规则；成功后用同一实际源 --registry=<source> 进入原受控CLI。整个配置/查询/读回共30000ms，超时abort并报REGISTRY_LOOKUP_TIMEOUT，未提供公开能力/解析源报REGISTRY_CONFIG_UNAVAILABLE；原生异常为REGISTRY_LOOKUP_FAILED并保留cause。没有新的用户配置、请求字段或协议版本。既有 details.diagnostic 带脱敏类型/消息/cause.code/实际阶段及已知CLI exit/stderr摘要，同时写宿主日志；其它错误、回滚与重启语义保留。Core套件升级路径的声明/源和缺省值单独保留，不采用普通市场的源选择。
+普通市场安装/升级的 latest 查询消费 DSH 公开 pluginManager.registries() 与公开 registryPlan/attributeFailure，沿用用户配置源顺序和私有源隔离规则；成功后将同一源选择传入原受控CLI：显式源用--registry=<source>，pnpm自有源(null)不传--registry以保留scope/认证配置。整个配置/查询/读回共30000ms，超时abort并报REGISTRY_LOOKUP_TIMEOUT，未提供公开能力/解析源报REGISTRY_CONFIG_UNAVAILABLE；原生异常为REGISTRY_LOOKUP_FAILED并保留cause。没有新的用户配置、请求字段或协议版本。既有 details.diagnostic 带脱敏类型/消息/cause.code/实际阶段及已知CLI exit/stderr摘要，同时写宿主日志；其它错误、回滚与重启语义保留。Core套件升级路径的声明/源和缺省值单独保留，不采用普通市场的源选择。
+
+0.6.16最小接线：公开规则模块从宿主manager同锚点/版本守卫加载，不在AppHost声明manager依赖/peer；找不到模块或公开函数则REGISTRY_CONFIG_UNAVAILABLE，无npmjs回退或自创排序。发布依赖闭包与0.6.15一致。

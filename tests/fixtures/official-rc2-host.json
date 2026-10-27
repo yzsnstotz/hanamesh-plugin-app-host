@@ -1,6 +1,6 @@
 {
-  "source": "/Applications/DeepSeek Harness.app/Contents/Resources/app.asar/dsh/node_modules public package manifests; React supplied by the renderer; manager0.2.0-rc.2 verified from public @deepseek-ai/dsh@0.2.0-rc.2 dependencies on 2026-10-27; app-boot0.2.0-rc.2 public peer ~1.0.4 supplied explicitly as group1.0.4 (public peers Cordis~4.0.4/loader~1.0.5), not an override",
-  "auditedAt": "2026-10-27",
+  "source": "/Applications/DeepSeek Harness.app/Contents/Resources/app.asar/dsh/node_modules public package manifests; React supplied by the renderer",
+  "auditedAt": "2026-10-15",
   "dependencies": {
     "@deepseek-ai/cordis": "4.0.4",
     "@deepseek-ai/schemastery": "3.18.4",
@@ -19,8 +19,6 @@
     "@deepseek-ai/cordis-plugin-include": "1.0.9",
     "@deepseek-ai/cordis-plugin-loader": "1.0.5",
     "react": "18.3.1",
-    "zod": "4.6.5",
-    "@deepseek-ai/dsh-plugin-manager": "0.2.0-rc.2",
-    "@deepseek-ai/cordis-plugin-group": "1.0.4"
+    "zod": "4.6.5"
   }
 }

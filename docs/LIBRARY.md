@@ -87,8 +87,10 @@ HanaMesh 视图原样保留可选 `official:boolean`（包括 false）与 C-INDE
 
 ## 0.6.16 · 安装查询来源与失败诊断
 
-市场通过公开 `pluginManager.registries()` 读取 DSH 的首选源、顺序 fallback 和 pnpm 已解析的源；复用公开 `@deepseek-ai/dsh-plugin-manager/registry` 的 `registryPlan` / `attributeFailure`，不读取私有配置或发明兜底源。`library.registry` 若显式设置，沿用 DSH 对请求源的规则（外部私有源单独使用）。查询 latest 成功后，精确版本及同一实际源以 `add --save-exact --registry=<source>` 传入原有受控 CLI；缺公开源能力或 pnpm 自有源无法解析，明确 `REGISTRY_CONFIG_UNAVAILABLE`，不猜 npmjs。DSH rc.2、alpha.2、rc.3 均公开这些端口。
+市场通过公开 `pluginManager.registries()` 读取 DSH 的首选源、顺序 fallback 和 pnpm 已解析的源；从宿主自己的安装锚点按既有版本守卫定位 `exports['./registry']`，动态加载其公开 `registryPlan` / `attributeFailure`，不读取私有配置或发明兜底源。`library.registry` 若显式设置，沿用 DSH 对请求源的规则（外部私有源单独使用）。查询 latest 成功后，精确版本及同一源选择传入原受控CLI：显式配置源用 `add --save-exact --registry=<source>`，DSH的pnpm自有源(null)沿原生语义不传 `--registry`，保留scope源和认证配置；缺公开源能力或 pnpm 自有源无法解析，明确 `REGISTRY_CONFIG_UNAVAILABLE`，不猜 npmjs。DSH rc.2、alpha.2、rc.3 均公开这些端口。
 
 整个查询（配置读取、配置源顺序查询、JSON 读回）共享 30000ms 上限。到期 abort 并报 `REGISTRY_LOOKUP_TIMEOUT`，不重试、不在超时后继续 fallback。只有 DSH 规则允许的网络/未找到失败才查询其已配置后继源；HTTP 认证/权限拒绝及无效 JSON 不换源。包版本稳定性策略、受控 CLI、读回、补偿、restart-required 行为保留。
 
 原生 lookup 异常包为 `REGISTRY_LOOKUP_FAILED`，原 Error 保留于 cause；已知具名码保留。`library.*-failed.details.diagnostic` 最多4001字符，含脱敏异常类型/消息/cause.code 与实际 registry configuration/fetch/readback、CLI run、profile readback 阶段；CLI 非零另含 exit、signal 与 stderr/输出摘要。同一摘要及 operationId 写宿主 logger.warn（logger失效时安全console），UI已有可展开技术详情显示，并提示检查 DSH 源设置/网络后手动重试。不记录请求头、正文、环境、stack 或任意 details；不猜历史丢失的原错。
+
+规则模块只由宿主公开exports提供；普通DSH用与manager版本查询相同createRequire(anchor)，Desktop限已证明的runtimeDir与匹配版本。没有新增manager依赖/peer、没有生产规则副本；无法定位/加载规则或端口不完整均REGISTRY_CONFIG_UNAVAILABLE。钉SHA的rc.2规则仅位于tests/fixtures，不进入发布包。

@@ -1,3 +1,4 @@
+import {pathToFileURL} from 'node:url';
 import { createInstallationStatusReader } from './library/installation-status.js';
 /**
  * DSH plugin entry for @hanamesh/dsh-app-host, using the public APIs audited in
@@ -244,7 +245,7 @@ export async function apply(ctx, config) {
     if(locations.profileDir&&locations.profileName){
       provisionApi=await import('@hanamesh/lib-provision');
       installer=nodeBinding(()=>nodeRuntime.executable,nodeBinary=>createLibraryInstaller({profileDir:locations.profileDir,profileName:locations.profileName,dataRoot,
-        ...(cliUsable?{nodeBinary,dshBin,desktopCli:locations.desktopCli,desktopLauncher:locations.desktopLauncher}:{}),pluginManagerVersion:locations.pluginManagerVersion,profileWriter,
+        ...(cliUsable?{nodeBinary,dshBin,desktopCli:locations.desktopCli,desktopLauncher:locations.desktopLauncher}:{}),pluginManagerVersion:locations.pluginManagerVersion,profileWriter,registryRules:locations.pluginManagerRegistry?()=>import(pathToFileURL(locations.pluginManagerRegistry).href):undefined,
         registry:libraryConfig.registry,allowPrerelease:libraryConfig.allowPrerelease,provision:provisionApi.provision,remove:provisionApi.remove,ledger:provisionApi.ledger,
         coreService:()=>coreService,suiteSourceService:()=>suiteSourceService,suiteSourceMode:()=>library?.suiteSourceSettings().mode??'configured',pluginManager:()=>pluginManager,emit:event=>library?.emit(event)}));
     }

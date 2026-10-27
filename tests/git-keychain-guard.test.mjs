@@ -5,7 +5,7 @@ import {join,dirname} from 'node:path';
 import {spawn} from 'node:child_process';
 import {scratch} from './helpers.mjs';
 import {createLibraryInstaller} from '../src/library/install.js';
-import {fixtureRegistryManager} from './helpers.mjs';
+import {fixtureRegistryManager,fixtureRegistryRules} from './helpers.mjs';
 const policy=await import('../src/git-process.js').catch(error=>{if(error.code!=='ERR_MODULE_NOT_FOUND')throw error;return{};});
 const keys={GIT_CONFIG_NOSYSTEM:'1',GIT_TERMINAL_PROMPT:'0',GIT_CONFIG_COUNT:'2',GIT_CONFIG_KEY_0:'credential.helper',GIT_CONFIG_VALUE_0:'',GIT_CONFIG_KEY_1:'credential.helper',GIT_CONFIG_VALUE_1:'!gh auth git-credential'};
 function required(name){assert.equal(typeof policy[name],'function',`missing own Git safeguard: ${name}`);return policy[name];}
@@ -29,7 +29,7 @@ const input='protocol=https\nhost=fixture.invalid\nusername=fixture\npassword=fi
 test('GIT01 every DSH CLI installer receives the full safe Git environment after minimal env rebuilding',async t=>{
  const root=await scratch('git-cli-env-');t.after(()=>rm(root,{recursive:true,force:true}));
  await writeFile(join(root,'package.json'),JSON.stringify({dependencies:{}}));let observed;
- const installer=createLibraryInstaller({pluginManager:fixtureRegistryManager,profileDir:root,profileName:'desktop',dataRoot:root,
+ const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:root,profileName:'desktop',dataRoot:root,
   nodeBinary:process.execPath,dshBin:join(root,'dsh.mjs'),fetchImpl:async()=>new Response('{"version":"1.2.3"}'),
   spawn:async(_cmd,_args,options)=>{observed=options.env;return{code:1};}});
  await assert.rejects(()=>installer.installPlugin({packageName:'fixture-plugin'}));
@@ -89,7 +89,7 @@ test('GIT08 unsafe live manager environment refuses before mutation and reports 
  const prior=process.env.GIT_CONFIG_NOSYSTEM;delete process.env.GIT_CONFIG_NOSYSTEM;
  t.after(()=>{if(prior===undefined)delete process.env.GIT_CONFIG_NOSYSTEM;else process.env.GIT_CONFIG_NOSYSTEM=prior;});
  const root=await scratch('git-manager-env-');t.after(()=>rm(root,{recursive:true,force:true}));let calls=0;
- const installer=createLibraryInstaller({pluginManager:fixtureRegistryManager,profileDir:root,profileName:'desktop',dataRoot:root,pluginManagerVersion:'0.2.1-alpha.2',pluginManager:()=>({...fixtureRegistryManager(),installBundle(){calls++;},removeBundle(){calls++;}})});
+ const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:root,profileName:'desktop',dataRoot:root,pluginManagerVersion:'0.2.1-alpha.2',pluginManager:()=>({...fixtureRegistryManager(),installBundle(){calls++;},removeBundle(){calls++;}})});
  assert.equal(installer.ready,false);assert.equal(installer.live,false);
  await assert.rejects(()=>installer.installPlugin({packageName:'fixture-plugin'}),error=>error.code==='DSH_EXACT_INSTALL_UNAVAILABLE'&&/Git/.test(error.details.need[0].need));assert.equal(calls,0);
 });
@@ -121,7 +121,7 @@ for(const stopSignal of ['SIGTERM','SIGKILL'])test(`GIT11 ${stopSignal} of an ou
 });
 test('GIT12 even helper-safe host environment cannot bypass the owned monitor through in-process manager',async t=>{
  const root=await scratch('git-live-monitor-');t.after(()=>rm(root,{recursive:true,force:true}));let calls=0;
- const installer=createLibraryInstaller({pluginManager:fixtureRegistryManager,profileDir:root,profileName:'desktop',dataRoot:root,pluginManagerVersion:'0.2.1-alpha.2',pluginManager:()=>({...fixtureRegistryManager(),installBundle(){calls++;},removeBundle(){calls++;}})});
+ const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:root,profileName:'desktop',dataRoot:root,pluginManagerVersion:'0.2.1-alpha.2',pluginManager:()=>({...fixtureRegistryManager(),installBundle(){calls++;},removeBundle(){calls++;}})});
  assert.equal(installer.ready,false,'manager has no public scoped env/monitor port');assert.equal(installer.live,false);
  await assert.rejects(()=>installer.installPlugin({packageName:'fixture-plugin'}));assert.equal(calls,0);
 });

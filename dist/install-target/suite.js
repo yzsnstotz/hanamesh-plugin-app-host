@@ -93,7 +93,8 @@ export async function sourceRecoveryProfile({recovery},item={}){
   if(item.mode==='upgrade')await profile.seed(target.packageName,app.previous);
   for(const [command,phase,skip] of item.inject??[])profile.fail(command,phase,skip);
   if(item.concurrent)profile.concurrentAdd('@fixture/concurrent','1.0.0');
-  const installer=emit=>createLibraryInstaller({pluginManager:()=>({registries:async()=>({registry:'https://source-fixture.invalid/',fallbackRegistries:[],resolved:'https://source-fixture.invalid/'})}),profileDir:profile.profileDir,profileName:profile.profileName,dataRoot:profile.dataRoot,nodeBinary:'/source-fixture/bin/node',dshBin:'/source-fixture/dsh/lib/bin.js',
+  // Named single-source contract fixture; not production registry policy.
+  const installer=emit=>createLibraryInstaller({registryRules:async()=>({registryPlan:(_requested,configured)=>[configured.registry],attributeFailure:()=>'other'}),pluginManager:()=>({registries:async()=>({registry:'https://source-fixture.invalid/',fallbackRegistries:[],resolved:'https://source-fixture.invalid/'})}),profileDir:profile.profileDir,profileName:profile.profileName,dataRoot:profile.dataRoot,nodeBinary:'/source-fixture/bin/node',dshBin:'/source-fixture/dsh/lib/bin.js',
     fetchImpl:profile.fetchImpl(item.registryMissing?{}:{[app.packageName]:app.latest,[plugin.packageName]:plugin.latest}),spawn:profile.spawn,provision:profile.provision,remove:profile.remove,ledger:profile.ledger,emit});
   return{profile,target,installer};
 }

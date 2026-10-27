@@ -1,10 +1,11 @@
+import {createHash} from 'node:crypto';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {writeFile,rm,mkdir} from 'node:fs/promises';
+import {writeFile,rm,mkdir,readFile} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
 import {temporary,until} from './helpers.mjs';
 import {createLibraryInstaller} from '../src/library/install.js';
-import {fixtureRegistryManager} from './helpers.mjs';
+import {fixtureRegistryManager,fixtureRegistryRules} from './helpers.mjs';
 import {createLibraryService} from '../src/library/service.js';
 
 test('MP01 stdout-only pnpm rejection survives the installer and asynchronous operation with secrets redacted',async t=>{
@@ -12,7 +13,7 @@ test('MP01 stdout-only pnpm rejection survives the installer and asynchronous op
  await writeFile(join(root,'package.json'),'{"dependencies":{}}');
  const raw='\u001b[31m[ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION]\u001b[0m @example/plugin@1.2.3 was published within the minimumReleaseAge cutoff\nBearer fake-secret-value\nhttps://fake-user:fake-pass@registry.invalid/file?token=fake-token-value';
  let calls=0;
- const installer=createLibraryInstaller({pluginManager:fixtureRegistryManager,profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.mjs'),
+ const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.mjs'),
   fetchImpl:async()=>new Response('{"version":"1.2.3"}'),spawn:async()=>{calls++;return{code:1,stdout:raw,stderr:''};}});
  await assert.rejects(installer.installPlugin({packageName:'fixture-plugin'}),error=>{
   assert.equal(error.code,'DSH_PLUGIN_FAILED');assert.equal(error.details.code,1);assert.equal(error.details.stderr,'');
@@ -34,7 +35,7 @@ test('MP01 stdout-only pnpm rejection survives the installer and asynchronous op
 
 test('MP02 stderr failures retain bounded diagnostics and untrusted exceptions stay private',async t=>{
  const root=await temporary();t.after(()=>rm(root,{recursive:true,force:true}));await writeFile(join(root,'package.json'),'{"dependencies":{}}');
- const installer=createLibraryInstaller({pluginManager:fixtureRegistryManager,profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.mjs'),
+ const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.mjs'),
   fetchImpl:async()=>new Response('{"version":"1.2.3"}'),spawn:async()=>({code:9,stdout:'x'.repeat(3000),stderr:'[ERR_PNPM_FETCH_404] unavailable'})});
  await assert.rejects(installer.installPlugin({packageName:'fixture-plugin'}),error=>{
   assert.equal(error.details.stderr,'[ERR_PNPM_FETCH_404] unavailable');assert.ok(error.details.diagnostic.length<=4001);return true;
@@ -51,7 +52,7 @@ test('MP02 stderr failures retain bounded diagnostics and untrusted exceptions s
 
 async function observedInstall(t,{fetchImpl,spawn,error,pluginManager=fixtureRegistryManager}){
  const root=await temporary();await writeFile(join(root,'package.json'),'{"dependencies":{}}');let fetches=0,spawns=0;const logged=[];
- const installer=createLibraryInstaller({pluginManager,profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.mjs'),fetchImpl:async(...args)=>{fetches++;return await fetchImpl(...args);},spawn:async(...args)=>{spawns++;return await spawn(...args);}});
+ const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager,profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.mjs'),fetchImpl:async(...args)=>{fetches++;return await fetchImpl(...args);},spawn:async(...args)=>{spawns++;return await spawn(...args);}});
  if(error)await assert.rejects(installer.installPlugin({packageName:'fixture-plugin'}),actual=>actual.cause===error,'the native exception remains the named lookup error cause');
  const service=createLibraryService({domain:{global:{get:()=>({schema:1,revision:0,sources:[]}),set:async()=>{}},close:async()=>{}},host:{list:()=>[]},dataRoot:root,config:{profileDir:root,fixture:resolve('tests/fixtures/catalog/provider-page.json')},installer,logger:{warn:(...args)=>logged.push(args)}});
  await service.init();t.after(()=>service.close());const receipt=await service.install({itemId:'com.hanamesh.utility-plugin'});
@@ -102,20 +103,20 @@ test('MD06 malformed registry JSON keeps the original SyntaxError and registry r
 const registryManager=(registry,fallbackRegistries=[])=>()=>({registries:async()=>({registry,fallbackRegistries,resolved:registry})});
 test('MD07 configured reachable registry is used for lookup and the exact CLI install, without querying npmjs',async t=>{
  const root=await temporary();await writeFile(join(root,'package.json'),'{}');const asked=[],commands=[];
- const installer=createLibraryInstaller({pluginManager:fixtureRegistryManager,profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.mjs'),pluginManager:registryManager('https://configured.invalid/'),
+ const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.mjs'),pluginManager:registryManager('https://configured.invalid/'),
   fetchImpl:async url=>{asked.push(String(url));if(new URL(url).hostname!=='configured.invalid')throw new TypeError('fixture npmjs unreachable');return Response.json({version:'1.2.3'});},
   spawn:async(_command,args)=>{commands.push(args);const dir=join(root,'node_modules','fixture-plugin');await mkdir(dir,{recursive:true});await writeFile(join(dir,'package.json'),JSON.stringify({name:'fixture-plugin',version:'1.2.3'}));await writeFile(join(root,'package.json'),JSON.stringify({dependencies:{'fixture-plugin':'1.2.3'}}));return{code:0,stdout:'',stderr:''};}});
  const result=await installer.installPlugin({packageName:'fixture-plugin'});assert.equal(result.version,'1.2.3');assert.deepEqual(asked,['https://configured.invalid/fixture-plugin/latest']);assert(commands[0].includes('--registry=https://configured.invalid/'));
 });
 test('MD08 configured registry unreachable is a named lookup failure with original cause, safe phase, and no CLI',async t=>{
  const root=await temporary();await writeFile(join(root,'package.json'),'{}');let calls=0;const original=new TypeError('fixture source unreachable',{cause:Object.assign(new Error('fixture DNS'),{code:'ENOTFOUND'})});
- const installer=createLibraryInstaller({pluginManager:fixtureRegistryManager,profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.mjs'),pluginManager:registryManager('https://configured.invalid/'),fetchImpl:async()=>{calls++;throw original;},spawn:async()=>assert.fail('no CLI after lookup failure')});
+ const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.mjs'),pluginManager:registryManager('https://configured.invalid/'),fetchImpl:async()=>{calls++;throw original;},spawn:async()=>assert.fail('no CLI after lookup failure')});
  await assert.rejects(installer.installPlugin({packageName:'fixture-plugin'}),error=>{assert.equal(error.code,'REGISTRY_LOOKUP_FAILED');assert.equal(error.cause,original);return true;});assert.equal(calls,1);
 });
 
 async function sourceFixture(t,{registry='https://first.invalid/',fallbacks=['https://second.invalid/','https://third.invalid/'],override,fetchImpl,manager}={}){
  const root=await temporary();await writeFile(join(root,'package.json'),'{}');const commands=[];
- const installer=createLibraryInstaller({profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.mjs'),registry:override,pluginManager:manager??registryManager(registry,fallbacks),fetchImpl,
+ const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.mjs'),registry:override,pluginManager:manager??registryManager(registry,fallbacks),fetchImpl,
   spawn:async(_command,args)=>{commands.push(args);const dir=join(root,'node_modules','fixture-plugin');await mkdir(dir,{recursive:true});await writeFile(join(dir,'package.json'),JSON.stringify({name:'fixture-plugin',version:'1.2.3'}));await writeFile(join(root,'package.json'),JSON.stringify({dependencies:{'fixture-plugin':'1.2.3'}}));return{code:0,stdout:'',stderr:''};}});
  return{installer,commands};
 }
@@ -129,7 +130,7 @@ test('MD10 private explicit source never falls through into public configured so
 });
 test('MD11 pnpm-own source is read only through DSH public resolved fact; absent public API fails without any query',async t=>{
  const asked=[];const h=await sourceFixture(t,{manager:()=>({registries:async()=>({registry:null,fallbackRegistries:[],resolved:'https://pnpm-configured.invalid/'})}),fetchImpl:async url=>{asked.push(String(url));return Response.json({version:'1.2.3'});}});
- await h.installer.installPlugin({packageName:'fixture-plugin'});assert.deepEqual(asked,['https://pnpm-configured.invalid/fixture-plugin/latest']);assert(h.commands[0].includes('--registry=https://pnpm-configured.invalid/'));
+ await h.installer.installPlugin({packageName:'fixture-plugin'});assert.deepEqual(asked,['https://pnpm-configured.invalid/fixture-plugin/latest']);assert.equal(h.commands[0].some(arg=>arg.startsWith('--registry=')),false,'pnpm-own null source must preserve pnpm scope/auth configuration');
  for(const manager of [()=>({}),()=>({registries:async()=>({registry:null,resolved:null,fallbackRegistries:[]})})]){const absent=await sourceFixture(t,{manager,fetchImpl:async()=>assert.fail('must not invent a registry')});await assert.rejects(absent.installer.installPlugin({packageName:'fixture-plugin'}),{code:'REGISTRY_CONFIG_UNAVAILABLE'});assert.equal(absent.commands.length,0);}
 });
 test('MD12 deadline aborts a hung registry lookup with named diagnostic, no retry or fallback or CLI',async t=>{
@@ -149,4 +150,19 @@ test('MD14 HTTP 503 follows DSH configured network fallback, while 401 never cha
   if(status===503){await h.installer.installPlugin({packageName:'fixture-plugin'});assert.equal(calls,2);assert(h.commands[0].includes('--registry=https://second.invalid/'));}
   else{await assert.rejects(h.installer.installPlugin({packageName:'fixture-plugin'}),{code:'REGISTRY_LOOKUP_FAILED'});assert.equal(calls,1);assert.equal(h.commands.length,0);}
  }
+});
+
+
+test('MIN01 missing or failed host registry rule port is named config-unavailable before any fetch or CLI',async t=>{
+ const root=await temporary();await writeFile(join(root,'package.json'),'{}');
+ for(const registryRules of [undefined,async()=>({}),async()=>{throw Object.assign(new Error('fixture missing public export'),{code:'ERR_MODULE_NOT_FOUND'});}]){
+  const installer=createLibraryInstaller({profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.mjs'),pluginManager:fixtureRegistryManager,registryRules,fetchImpl:async()=>assert.fail('no query without host rule module'),spawn:async()=>assert.fail('no CLI')});
+  await assert.rejects(installer.installPlugin({packageName:'fixture-plugin'}),{code:'REGISTRY_CONFIG_UNAVAILABLE'});
+ }
+});
+
+
+test('MIN03 test-only public DSH rc.2 registry rules retain their audited original SHA',async()=>{
+ const bytes=await readFile(new URL('./fixtures/dsh-registry-0.2.0-rc.2.js',import.meta.url));
+ assert.equal(createHash('sha256').update(bytes).digest('hex'),'9b8e2a742c989c4741dc4e5a2ba25a00b305d71b5eea90213d24a38ebb53ae5d');
 });

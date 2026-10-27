@@ -77,3 +77,5 @@ export async function identity(origin){return(await http(origin+'/identity')).js
 
 // Public DSH registry DTO for CLI tests: no fallback or host configuration is inferred by AppHost.
 export const fixtureRegistryManager=()=>({registries:async()=>({registry:'https://registry.npmjs.org/',fallbackRegistries:[],resolved:'https://registry.npmjs.org/'})});
+
+export const fixtureRegistryRules=()=>import('./fixtures/dsh-registry-0.2.0-rc.2.js');

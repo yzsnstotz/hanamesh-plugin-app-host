@@ -12,9 +12,9 @@ function rejection(list=peers){
   });
 }
 
-test('J1S2-AH-05: accepts only the exact ten declared host peers, including versions',()=>{
+test('J1S2-AH-05: accepts only the exact nine declared host peers, including versions',()=>{
   assert.equal(typeof policy.assertHostPeerInstallRejected,'function','strict host-peer rejection policy is required');
-  assert.equal(peers.length,10);
+  assert.equal(peers.length,9);
   assert.deepEqual(policy.assertHostPeerInstallRejected(rejection([...peers].reverse())),[...peers].sort());
 });
 
