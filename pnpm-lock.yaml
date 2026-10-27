@@ -70,8 +70,8 @@ importers:
         specifier: file:vendor/hanamesh-devkit-0.2.3.tgz
         version: file:vendor/hanamesh-devkit-0.2.3.tgz
       '@hanamesh/release-platform-gate':
-        specifier: file:vendor/hanamesh-release-platform-gate-0.1.9.tgz
-        version: file:vendor/hanamesh-release-platform-gate-0.1.9.tgz
+        specifier: file:vendor/hanamesh-release-platform-gate-0.1.10.tgz
+        version: file:vendor/hanamesh-release-platform-gate-0.1.10.tgz
       typescript:
         specifier: 5.8.3
         version: 5.8.3
@@ -340,9 +340,9 @@ packages:
     engines: {node: '>=24.13.1 <25'}
     hasBin: true
 
-  '@hanamesh/release-platform-gate@file:vendor/hanamesh-release-platform-gate-0.1.9.tgz':
-    resolution: {integrity: sha512-Ro+Oeorjitxxn6szRDrxUBGHuDTFZaxxIGHOopbaFjp+ugtJ9TAlmNrj3rtkB4NNhzoFFCuYa050W4gxKgGl1A==, tarball: file:vendor/hanamesh-release-platform-gate-0.1.9.tgz}
-    version: 0.1.9
+  '@hanamesh/release-platform-gate@file:vendor/hanamesh-release-platform-gate-0.1.10.tgz':
+    resolution: {integrity: sha512-n+wQk1/46fHo3y8Dbd5P1KTYcCo8VIqjg/MzLSZy2biMgydsNkpaJe8gdK7VdIgzYLeQV53YMeucmdqN4mrV6Q==, tarball: file:vendor/hanamesh-release-platform-gate-0.1.10.tgz}
+    version: 0.1.10
     engines: {node: '>=24.13.1 <25'}
     hasBin: true
 
@@ -908,7 +908,7 @@ snapshots:
 
   '@hanamesh/lib-provision@file:vendor/hanamesh-lib-provision-0.2.1.tgz': {}
 
-  '@hanamesh/release-platform-gate@file:vendor/hanamesh-release-platform-gate-0.1.9.tgz':
+  '@hanamesh/release-platform-gate@file:vendor/hanamesh-release-platform-gate-0.1.10.tgz':
     dependencies:
       '@npmcli/map-workspaces': 5.0.3
       npm-package-arg: 13.0.2

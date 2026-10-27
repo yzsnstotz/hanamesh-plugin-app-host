@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/dsh-app-host",
-  "version": "0.6.15",
+  "version": "0.6.16",
   "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.x",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
@@ -151,7 +151,7 @@
     "typescript": "5.8.3",
     "@hanamesh/devkit": "file:vendor/hanamesh-devkit-0.2.3.tgz",
     "@deepseek-ai/dsh-client-ui-renderer": "0.2.1-alpha.2",
-    "@hanamesh/release-platform-gate": "file:vendor/hanamesh-release-platform-gate-0.1.9.tgz"
+    "@hanamesh/release-platform-gate": "file:vendor/hanamesh-release-platform-gate-0.1.10.tgz"
   },
   "packageManager": "pnpm@10.33.0",
   "bundleDependencies": [

@@ -13,7 +13,7 @@ import { constants } from 'node:fs';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { createRequire } from 'node:module';
-import { basename, dirname, isAbsolute, join, sep } from 'node:path';
+import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const PACKAGE_NAME='@hanamesh/dsh-app-host';
@@ -23,9 +23,22 @@ const DSH_BIN_SUFFIX='/@deepseek-ai/dsh/lib/bin.js';
 
 async function json(path){try{return JSON.parse(await readFile(path,'utf8'));}catch{return undefined;}}
 /** The public package manifest resolved by the host's installation/profile anchor. No service flags are inferred. */
-export async function inferPluginManagerVersion(anchor){
-  if(typeof anchor!=='string'||!isAbsolute(anchor))return undefined;
-  try{const pkg=await json(createRequire(anchor).resolve('@deepseek-ai/dsh-plugin-manager/package.json'));return pkg?.name==='@deepseek-ai/dsh-plugin-manager'?pkg.version:undefined;}catch{return undefined;}
+async function pluginManagerFacts(anchor){
+  if(typeof anchor!=='string'||!isAbsolute(anchor))return {};
+  try{
+    const require=createRequire(anchor),manifestPath=require.resolve('@deepseek-ai/dsh-plugin-manager/package.json'),pkg=await json(manifestPath);
+    if(pkg?.name!=='@deepseek-ai/dsh-plugin-manager'||typeof pkg.version!=='string')return {};
+    let pluginManagerRegistry;
+    try{const path=require.resolve('@deepseek-ai/dsh-plugin-manager/registry');if(path.startsWith(dirname(manifestPath)+sep))pluginManagerRegistry=path;}catch{}
+    return{pluginManagerVersion:pkg.version,...(pluginManagerRegistry?{pluginManagerRegistry}:{})};
+  }catch{return {};}
+}
+export async function inferPluginManagerVersion(anchor){return(await pluginManagerFacts(anchor)).pluginManagerVersion;}
+async function desktopRegistryPath(root,pkg){
+  const entry=pkg.exports?.['./registry'],target=typeof entry==='string'?entry:entry?.import??entry?.default;
+  if(typeof target!=='string'||!target.startsWith('./'))return undefined;
+  const path=resolve(root,target);if(!path.startsWith(root+sep))return undefined;
+  try{await access(path);return path;}catch{return undefined;}
 }
 /** A DSH profile manifest that carries HanaMesh: `dsh.profile` (written by `dsh plugin`) or a hanamesh dependency. */
 export function isHanameshProfileManifest(manifest){
@@ -96,6 +109,7 @@ export async function inferDesktopLayout({moduleUrl=import.meta.url,argv=process
   }
   const managerManifest=await json(join(runtimeDir,'node_modules/@deepseek-ai/dsh-plugin-manager/package.json'));
   const pluginManagerVersion=managerManifest?.name==='@deepseek-ai/dsh-plugin-manager'&&managerManifest.version===hostManifest.version?managerManifest.version:undefined;
+  const pluginManagerRegistry=pluginManagerVersion?await desktopRegistryPath(join(runtimeDir,'node_modules/@deepseek-ai/dsh-plugin-manager'),managerManifest):undefined;
   // Current canonical runtime manifest only. No legacy descriptor inference or PATH search.
   if(metadata?.platform===process.platform&&metadata?.arch===process.arch&&
     metadata.desktopVersion===(await json(join(hostRoot,'package.json')))?.version&&/^24\.\d+\.\d+$/.test(metadata.node??'')) {
@@ -107,7 +121,7 @@ export async function inferDesktopLayout({moduleUrl=import.meta.url,argv=process
       if(actual.node===metadata.node&&actual.electron===undefined)nodeBinary=await realpath(node);
     } catch { /* Unavailable/unproven payload Node stays unavailable; never use Electron. */ }
   }
-  return {profileDir:await realpath(profileDir),profileName:'desktop',dshBin,parentOrigin:'dsh-app://app',frameAncestors:[],desktopCli,desktopLauncher,pluginManagerVersion,nodeBinary,runtimeDir};
+  return {profileDir:await realpath(profileDir),profileName:'desktop',dshBin,parentOrigin:'dsh-app://app',frameAncestors:[],desktopCli,desktopLauncher,pluginManagerVersion,pluginManagerRegistry,nodeBinary,runtimeDir};
 }
 
 /** The DSH CLI that started this process — `argv[1]` only when it IS `@deepseek-ai/dsh/lib/bin.js`. */
@@ -135,6 +149,6 @@ export async function resolveLibraryLocations(config={},{moduleUrl=import.meta.u
   let dshBin=config.dshBin;if(dshBin===undefined){dshBin=desktop?.dshBin??inferDshBin(argv);if(dshBin)inferred.push('dshBin');}
   let node=nodeBinary;if(node===undefined){node=desktop?.nodeBinary??inferNodeBinary({execPath,versions});if(node)inferred.push('nodeBinary');}
   let sources=config.sources;if(sources===undefined){sources=structuredClone(DEFAULT_CATALOG_SOURCES);inferred.push('sources');}
-  const pluginManagerVersion=desktop?desktop.pluginManagerVersion:await inferPluginManagerVersion(inferDshBin(argv)??(profileDir?join(profileDir,'package.json'):undefined));
-  return{profileDir,profileName,dshBin,nodeBinary:node,sources,inferred,...(pluginManagerVersion?{pluginManagerVersion}:{}),...(desktop&&desktop.profileDir===profileDir&&config.dshBin===undefined?{desktopCli:desktop.desktopCli,desktopLauncher:desktop.desktopLauncher}:{})};
+  const {pluginManagerVersion,pluginManagerRegistry}=desktop??await pluginManagerFacts(inferDshBin(argv)??(profileDir?join(profileDir,'package.json'):undefined));
+  return{profileDir,profileName,dshBin,nodeBinary:node,sources,inferred,...(pluginManagerVersion?{pluginManagerVersion}:{}),...(pluginManagerRegistry?{pluginManagerRegistry}:{}),...(desktop&&desktop.profileDir===profileDir&&config.dshBin===undefined?{desktopCli:desktop.desktopCli,desktopLauncher:desktop.desktopLauncher}:{})};
 }

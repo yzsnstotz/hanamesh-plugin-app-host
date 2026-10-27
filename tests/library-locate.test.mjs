@@ -109,3 +109,15 @@ test('AH-L10: dshBin is taken from argv[1] only when that script is @deepseek-ai
   const resolved=await resolveLibraryLocations({},{moduleUrl:import.meta.url,argv:['/opt/node/bin/node','/x/other.js'],execPath:process.execPath,versions:{}});
   assert.equal(resolved.dshBin,undefined);assert.equal(resolved.inferred.includes('dshBin'),false);
 });
+
+
+test('MIN02 plain DSH resolves the registry export from its own anchor, separately from profile packages',async t=>{
+ const h=await profileFixture(t);const dsh=join(h.root,'host/node_modules/@deepseek-ai/dsh'),manager=join(h.root,'host/node_modules/@deepseek-ai/dsh-plugin-manager');
+ await mkdir(join(dsh,'lib'),{recursive:true});await mkdir(join(manager,'lib'),{recursive:true});
+ await writeFile(join(dsh,'lib/bin.js'),'');await writeFile(join(dsh,'package.json'),JSON.stringify({name:'@deepseek-ai/dsh',version:'0.2.0-rc.2'}));
+ await writeFile(join(manager,'package.json'),JSON.stringify({name:'@deepseek-ai/dsh-plugin-manager',version:'0.2.0-rc.2',type:'module',exports:{'./package.json':'./package.json','./registry':'./lib/registry.js'}}));await writeFile(join(manager,'lib/registry.js'),'export const fixture=true;');
+ const locations=await resolveLibraryLocations({},{moduleUrl:h.moduleUrl,argv:[process.execPath,join(dsh,'lib/bin.js')],execPath:process.execPath,versions:{}});
+ assert.equal(locations.pluginManagerVersion,'0.2.0-rc.2');assert.equal(locations.pluginManagerRegistry,join(manager,'lib/registry.js'));
+ await writeFile(join(manager,'package.json'),JSON.stringify({name:'wrong-package',version:'0.2.0-rc.2',exports:{'./package.json':'./package.json','./registry':'./lib/registry.js'}}));
+ assert.equal((await resolveLibraryLocations({},{moduleUrl:h.moduleUrl,argv:[process.execPath,join(dsh,'lib/bin.js')],versions:{}})).pluginManagerRegistry,undefined);
+});

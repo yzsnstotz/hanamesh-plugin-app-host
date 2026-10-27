@@ -1,0 +1,9 @@
+{
+  "package": "@deepseek-ai/dsh-plugin-manager",
+  "version": "0.2.0-rc.2",
+  "source": "https://registry.npmjs.org/@deepseek-ai/dsh-plugin-manager/-/dsh-plugin-manager-0.2.0-rc.2.tgz",
+  "path": "lib/types/registry.js",
+  "sha256": "9b8e2a742c989c4741dc4e5a2ba25a00b305d71b5eea90213d24a38ebb53ae5d",
+  "license": "MIT; original LICENSE retained alongside fixture",
+  "scope": "Tests only; excluded from release tarball"
+}

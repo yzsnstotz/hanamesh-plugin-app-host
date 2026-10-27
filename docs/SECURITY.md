@@ -49,6 +49,8 @@ DSH/宿主 cookie、控制头与 Authorization 默认不传上游；应用 cooki
 
 ## 日志与凭据
 
+市场异步操作失败只投影有界脱敏的Error类型/消息、最多两层cause与既有CLI退出摘要，记录实际执行阶段和operationId；同一安全诊断进入技术详情与宿主logger。拒绝任意details、stack、response对象；Bearer、常见secret字段、URL userinfo/query和Authorization/Cookie行脱敏。不记录环境/请求正文，不承诺识别任意业务敏感文本。原生 registry 查询异常以 REGISTRY_LOOKUP_FAILED 具名并保留原 cause；其它安装异常保持原对象，logger故障不覆盖原异常。
+
 日志有界、按完整行处理、Bearer/常见 token 字段及显式 secret env 值脱敏；超大行丢弃。此规则不可能识别任意业务敏感信息，默认不记录请求体/配置环境。leaseToken 原文只在回执中返回，磁盘保存哈希；工作台不得把 token 放进公开 URL、分析日志或应用 iframe。
 
 恢复凭据属于同一已认证 owner 的显式操作，要求 confirm:true，旋转 generation；真实 DSH bridge 的 authorize 必须对该路径落实授权。示例/测试的固定认证值绝不能作为真实 DSH 身份实现。
@@ -81,3 +83,7 @@ The authenticated browser supplies settings or opaque plan/operation identifiers
 
 
 B17 候选的套件来源选择仅在 AppHost 自有同源已准入设置端点写入。Core 来源状态是公开只读事实，不授予安装权限；预览/确认/执行及异步声明返回时复读来源，沿用原 planId/精确 tuple/物理 baseline，来源丢失或替换即拒绝原确认。设置保存只串行持久化选择，不触发下载/安装或改写 Core 配置；持久失败保持旧选择。无 service/watch/generation 时保持不可观察边界，不缓存 ready 或回退 registry。详见 CONTRACT.md B17 段。
+
+0.6.16：只消费 DSH 公开源事实和公开排序/后继许可规则，不读 .npmrc、凭据、私有服务字段；配置源与受控 CLI 使用同一选择；null项沿用pnpm自有配置，不显式传registry。30秒上限只用于本次安装前查询，超时终止且不重试；配置源的顺序由 DSH 决定。诊断只投影脱敏的类型/消息/code/cause链及已知CLI字段，同时进既有UI和宿主日志；URL用户信息、全部查询值、Authorization/Cookie、token/secret均删除，限4001字符，不传任意details/stack/响应正文。
+
+公开registry规则只从已证明的宿主manager安装位置加载，复用原版本守卫；不安装第二份manager、不复制生产规则、不从任意浏览器路径加载模块。tests/fixtures的原始MIT规则与SHA/许可证只作测试，不进发布包。

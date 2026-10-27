@@ -1,28 +1,28 @@
 {
   "name": "@hanamesh/release-platform-gate",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "sourceRepository": "https://github.com/yzsnstotz/hanamesh-docs.git",
   "sourcePath": "tools/release-platform-gate",
-  "sourceRef": "main",
-  "sourceCommit": "13ec0db3bc6aa6b6235f2105d3f0a6b998855ff5",
-  "reviewCommit": "dad7fc34d52c784ac99cdd7a8a31fcaa0a618d36",
-  "reviewDocs": "95988178db76caa38c4160ae0c779061d8d8795a",
-  "archiveSha256": "c72010c96a5f22e36d65f6c1fd850e583dead7e843644eba1657b4416d9cbd0d",
+  "sourceRef": "stage/c-leoventory-release-platform-cycle-0110-1027",
+  "sourceCommit": "7a39e4e332a2cbb5dcbfddec68383fb5cef39eb8",
+  "reviewCommit": "7a39e4e332a2cbb5dcbfddec68383fb5cef39eb8",
+  "reviewDocs": "cce157612b1390b845ccca3f0632247de9fb3229",
+  "archiveSha256": "71545cbb636d3b1a5e7d9fbba728b16e006b8eaf70bc2540038d077df7263a61",
   "invariant": "DSH_PNPM_PLATFORM_CLOSURE",
   "disableable": false,
   "dependencyShapeContract": "dependency-shapes-v1",
   "payload": [
     {
       "path": "package.json",
-      "sha256": "658e430aa12559b4047e00ffa6b771803f11df788a10d4652c4c17e6ad4d8113"
+      "sha256": "c902bb6eed2b6682aeeeaf2a81a97c89fbcaffb9ca3b843bbf10fef183507fdf"
     },
     {
       "path": "DEPENDENCY_SHAPES.md",
-      "sha256": "2f58596410f9ff1f8f036e3b275bcc5a8b89ddbf8b3a8f0f73ae2d6af260907a"
+      "sha256": "4ec79aceec8ad9fcdef806212e3bb89b09e882a071f50f2a8f8240ff33e3d2d7"
     },
     {
       "path": "README.md",
-      "sha256": "3563d26920ce06e1400e608beea23568f385a1732622ce72a987b0b150c66721"
+      "sha256": "ec1654e533eb183d4f13a1e4d824c4f42ae602550f2c846ed88e7373c2d71c1e"
     },
     {
       "path": "cli.mjs",
@@ -30,11 +30,13 @@
     },
     {
       "path": "index.mjs",
-      "sha256": "59fcac3d0283b33c77a104c639bc691ef398f3e432cbdde1d71237f0bd23695d"
+      "sha256": "3a8bd2557f187ea068ade2bc593827e4d12e3a2b9cd0d34556c00ae3f6e5e1ff"
     },
     {
       "path": "release.mjs",
       "sha256": "d1cabae7f77e5f6cea1d5b1b823b5c58e565b2c75a4b96ab2454618a9397c740"
     }
-  ]
+  ],
+  "reviewTargetCommit": "7a39e4e332a2cbb5dcbfddec68383fb5cef39eb8",
+  "reviewStatus": "PASS"
 }

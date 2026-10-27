@@ -56,3 +56,14 @@ test('suite failure UI shows partial versions and the repair command without cla
   await h.module.openInstallTarget({itemId:'hanamesh:suite-upgrade'});await settle();await h.click('确认安装');await clock.advance(1000);
   const text=JSON.stringify(h.tree);assert.match(text,/套件升级未完成/);assert.match(text,/部分组件可能已改变/);assert.ok(text.includes(targets['@hanamesh/core']));assert.ok(text.includes(SUITE_INSTALL_COMMAND));assert.doesNotMatch(text,/未安装：/);
 });
+
+
+test('ordinary registry alignment preserves the existing default for the separate Core suite upgrade path',async t=>{
+ const root=await profile(t),{createLibraryInstaller}=await import('../src/library/install.js');
+ const installer=createLibraryInstaller({profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'official-dsh.js'),coreSuitePlan,fetchImpl:async()=>assert.fail('suite uses Core plan'),spawn:async(_command,args)=>{
+  assert.ok(args.includes('--registry=https://registry.npmjs.org'),'suite default registry remains unchanged');
+  for(const {name} of SUITE_PACKAGES)await writeFile(join(root,'node_modules',name,'package.json'),JSON.stringify({name,version:targets[name]}));
+  await writeFile(join(root,'package.json'),JSON.stringify({dependencies:targets,dsh:{profile:{bundles:Object.keys(targets)}}}));return{code:0};
+ }});
+ const plan=await installer.prepareSuiteUpgrade();assert.equal((await installer.upgradeSuite({planId:plan.planId})).status,'restart-required');
+});

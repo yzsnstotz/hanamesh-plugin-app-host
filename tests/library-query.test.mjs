@@ -23,7 +23,7 @@ test('AH-L11: library card tracks install/provision/uninstall operations via the
   assert.match(source, /'\/hanamesh\/library\/events\?after='/, 'polls the event feed');
   assert.match(source, /event\.operationId!==operationId/, 'matches events by operationId');
   assert.match(source, /endsWith\('-failed'\)/);
-  assert.match(source, /REGISTRY_LOOKUP_FAILED:t\('包不在当前 registry 上/, 'readable reason for the case the user hit');
+  assert.match(source, /REGISTRY_LOOKUP_FAILED:t\('无法查询 DSH 配置的 registry/, 'readable reason for the case the user hit');
   assert.match(source, /UNSTABLE_VERSION:/);
   assert.match(source, /t\('重试安装'\):t\('安装'\)/, 'failed card offers a retry');
   assert.match(source, /role:op\.failed\?'alert':'status'/, 'outcome is rendered on the card');

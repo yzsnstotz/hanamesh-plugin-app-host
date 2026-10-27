@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdir,writeFile,readFile,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {createLibraryInstaller} from '../src/library/install.js';
+import {fixtureRegistryManager,fixtureRegistryRules} from './helpers.mjs';
 import {temporary} from './helpers.mjs';
 
 // Component provider fixture for fixed d743267 runDesktopCli(runtimeDir,supportDir).
@@ -26,7 +27,7 @@ export async function record(entry,runtimeDir,supportDir){
   const plain=join(root,'plain-cli.mjs'),desktop=join(root,'desktop-cli.mjs');
   await writeFile(plain,"import {record} from './record.mjs';await record('plain');");
   await writeFile(desktop,"import {record} from './record.mjs';export async function runDesktopCli(runtimeDir,supportDir){await record('desktop',runtimeDir,supportDir);}");
-  const installer=createLibraryInstaller({profileDir:profile,profileName:'desktop',dataRoot:join(root,'data'),nodeBinary:process.execPath,dshBin:plain,
+  const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:profile,profileName:'desktop',dataRoot:join(root,'data'),nodeBinary:process.execPath,dshBin:plain,
     desktopCli:{entry:desktop,runtimeDir,supportDir},
     fetchImpl:async()=>new Response(JSON.stringify({version}),{headers:{'content-type':'application/json'}})});
   const result=await installer.installPlugin({packageName});
@@ -34,5 +35,5 @@ export async function record(entry,runtimeDir,supportDir){
   const actual=JSON.parse(await readFile(observation,'utf8'));
   console.log(JSON.stringify({case:'DESKTOP_INSTALLER_PROVIDER_FIXTURE',...actual}));
   assert.equal(actual.entry,'desktop','Desktop install must use reserved-profile runDesktopCli, not the plain CLI');
-  assert.deepEqual(actual,{entry:'desktop',runtimeDir,supportDir,args:['plugin','--profile','desktop','add','--save-exact',packageName+'@'+version],cwd:profile,node:process.execPath});
+  assert.deepEqual(actual,{entry:'desktop',runtimeDir,supportDir,args:['plugin','--profile','desktop','add','--save-exact','--registry=https://registry.npmjs.org/',packageName+'@'+version],cwd:profile,node:process.execPath});
 });
