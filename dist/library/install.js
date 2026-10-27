@@ -85,7 +85,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       requireCondition(typeof manager?.registries==='function','REGISTRY_CONFIG_UNAVAILABLE','DSH does not expose registry configuration. Restore the public plugin manager before installing.',{},503);
       // Public DSH ports own ordering, normalization, de-duplication and private-registry isolation.
       const {registryPlan,attributeFailure}=await import('@deepseek-ai/dsh-plugin-manager/registry');
-      const configured=await manager.registries();controller.signal.throwIfAborted();
+      controller.signal.throwIfAborted();const configured=await manager.registries();controller.signal.throwIfAborted();
       const plan=registryPlan(registry,configured);
       for(let index=0;index<plan.length;index++){
         const selected=plan[index],source=selected??configured.resolved;let failureKind='unknown';
@@ -96,7 +96,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
           phase='registry fetch';let response;
           try{response=await fetchImpl(new URL(`${base.href.replace(/\/$/,'')}/${encodeURIComponent(name)}/latest`),{headers:{accept:'application/json','accept-encoding':'identity'},signal:controller.signal});}
           catch(error){failureKind='network';throw error;}
-          if(!response.ok){failureKind=response.status===404?'not-found':'unknown';throw new AppHostError('REGISTRY_LOOKUP_FAILED','Registry latest lookup failed. Check DSH registry settings and network, then retry explicitly.',{status:response.status},502);}
+          controller.signal.throwIfAborted();if(!response.ok){failureKind=response.status===404?'not-found':response.status>=500?'network':'unknown';throw new AppHostError('REGISTRY_LOOKUP_FAILED','Registry latest lookup failed. Check DSH registry settings and network, then retry explicitly.',{status:response.status},502);}
           phase='registry readback';const metadata=await response.json();controller.signal.throwIfAborted();const version=metadata.version;
           requireCondition(versionText(version)&&(allowPrerelease||!version.includes('-')),'UNSTABLE_VERSION','Registry latest must be an exact stable version.');
           return{version,registry:source};
@@ -201,7 +201,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       requireCondition(identity(executing)===identity(confirmed),'SUITE_PLAN_CHANGED','执行前套件安装包来源或声明已变化，请重新查看并确认。',{},409);
       emit({type:'library.install-started',itemId:'hanamesh:suite-upgrade',packageName:'@hanamesh/core',kind:'suite-upgrade'});
       try{
-        await run(['add','--save-exact','--strict-peer-dependencies',`--registry=${fresh.registry??registry}`,...fresh.components.map(c=>`${c.name}@${c.to}`)]);
+        await run(['add','--save-exact','--strict-peer-dependencies',`--registry=${fresh.registry??registry??'https://registry.npmjs.org'}`,...fresh.components.map(c=>`${c.name}@${c.to}`)]);
         const actual=await readSuiteStatus(profileDir);
         const saved=await json(join(profileDir,'package.json'));
         requireCondition(actual.status==='installed'&&fresh.components.every((c,i)=>actual.components[i]?.version===c.to&&saved.dependencies?.[c.name]===c.to),'INSTALL_READBACK_MISMATCH','套件升级后的版本或启用状态不符，请完全退出后按补齐命令修复。',{},502);

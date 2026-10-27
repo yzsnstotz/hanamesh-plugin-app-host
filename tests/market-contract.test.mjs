@@ -426,3 +426,19 @@ test('MD04 uncoded install failure shows its sanitized original phase/type/messa
  assert.ok(m.h.find(n=>n.type==='details'&&n.children.some(child=>child?.type==='pre'&&child.children.includes(diagnostic))),'the exact safe failure reaches the existing technical-details surface');
  assert.equal(m.calls.filter(c=>c.path==='/hanamesh/library/install').length,1,'no hidden retries');assert.doesNotMatch(m.text(),/发布时间检查未通过/,'an uncoded exception is not reclassified as a pnpm policy failure');
 });
+
+
+test('MD15 named registry failures show an actionable source or network instruction and retain technical details',async t=>{
+ for(const [failureCode,action] of [
+  ['REGISTRY_LOOKUP_FAILED',/检查 DSH 源设置与网络/],
+  ['REGISTRY_LOOKUP_TIMEOUT',/registry 查询超过 30 秒/],
+  ['REGISTRY_CONFIG_UNAVAILABLE',/检查客户端插件管理器/]
+ ]){
+  const diagnostic='Phase: registry fetch\nAppHostError ['+failureCode+']: fixture refusal';
+  const m=await market(t,{failed:true,recoveryStatus:'not-needed',diagnostic,failureCode});
+  await m.h.module.openInstallTarget(appTarget);await settle();await m.h.click('确认安装');await m.clock.advance(1000);
+  assert.match(m.text(),action);assert.match(m.text(),/安装前状态未被改动/);
+  assert.ok(m.h.find(n=>n.type==='details'&&n.children.some(child=>child?.type==='pre'&&child.children.includes(diagnostic))));
+  assert.equal(m.calls.filter(c=>c.path==='/hanamesh/library/install').length,1,'the person must explicitly request another attempt');
+ }
+});
