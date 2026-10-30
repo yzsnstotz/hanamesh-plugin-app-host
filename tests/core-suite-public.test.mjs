@@ -57,7 +57,7 @@ test('a rejected candidate lookup exposes the Core named blocked facts in the ex
   const h=await clientHarness({fetch:async path=>path.startsWith('/hanamesh/library/target?')?{ok:false,json:async()=>({error:{code:'CORE_SUITE_NO_COMPATIBLE_TUPLE',details:{blocked:[{code:'CORE_SUITE_METADATA_TIMEOUT',moduleName:names[0]}]}}})}:{ok:true,json:async()=>({items:[],installed:[],plugins:[],page:{}})}});t.after(()=>h.unmount());await assert.rejects(h.module.openInstallTarget({itemId:'hanamesh:suite-upgrade'}));await settle();const text=JSON.stringify(h.tree);assert.match(text,/CORE_SUITE_METADATA_TIMEOUT/);assert.ok(text.includes(names[0]));assert.doesNotMatch(text,/部分组件可能已改变/);
 });
 
-test('scoped suite names keep repository and component ids, reject old npm declarations and use the exact repair tuple',async()=>{
+test('scoped suite names keep repository and component ids, reject old npm declarations and use the Core supplied repair command',async()=>{
   assert.deepEqual(suite.SUITE_PACKAGES.map(p=>p.name),['@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host']);
   assert.deepEqual(suite.SUITE_PACKAGES.map(p=>p.repo),['hanamesh-core','hanamesh-usage','hanamesh-plugin-app-host']);
   const source=declaration();source.installCommand='CORE_OWNED_COMMAND';
