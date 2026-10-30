@@ -235,3 +235,7 @@ Actions runs on the standard public/free `macos-15` arm64 runner because the exi
 发布说明：DSH 内置 pnpm 11.7.0 处理不适用平台 optional 子包时可能安装后不退出，使 DSH 一直等安装结束；因此本门是正确性不变量（`disableable:false`），没有关闭开关。所有 OS/CPU/libc 都必须具备平台中立的完整安装依赖闭包，不能用本机已装、omit-optional、ignore-scripts、超时、重试、放宽断言或改客户端代替。每次 PASS/FAIL 的 JSON/receipt 都包含触发背景和不能关闭的 reason；release:check 正常 pack，release:publish 只发布同一已检查且再核 SHA 的 tar。源码目录发布由 prepublishOnly 拒绝，CI 的 verify:pack/preflight 必经该门；无可失败 job 或旁路入口。
 
 固定提供方 main 提交 `13ec0db3bc6aa6b6235f2105d3f0a6b998855ff5`，与 R2 审过的 0.1.10 正常包6载荷逐字一致；来源/归档摘要见 `vendor/release-platform-gate.json`。
+
+## 10-31 边界核对的正常提供方输入
+
+本仓测试直接消费`@hanamesh/core/contract/fixtures`或`@hanamesh/core/suite`。完成本仓锁定依赖安装后，用`npm install --no-save --package-lock=false --ignore-scripts --strict-peer-deps <已核SHA的Core正常tgz>`提供开发输入，再跑原测试命令；本轮输入Core0.3.28。正常包由Core目标构建提供，不放入本仓、不复制私有实现、不workspace-link源码。Usage测试改动不进入生产文件，本轮不重新物化Agent。

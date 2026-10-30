@@ -22,7 +22,7 @@ test('public adapter observes absent, old, arriving, and removed optional method
   service=core(declaration());assert.equal(get.unavailable,null);assert.equal((await get()).available,true);delete service.getSuiteDeclaration;assert.equal(get.unavailable,missing);await assert.rejects(get(),{code:'CORE_SUITE_DECLARATION_MISSING'});
 });
 test('public adapter refuses malformed DTOs instead of interpreting unknown as complete',async()=>{
-  for(const mutate of [v=>{v.schemaVersion=2;},v=>{delete v.manifest;},v=>{v.completeness='ready';},v=>{v.installed.pop();},v=>{v.upgrades[0].targets[0].version='latest';},v=>{delete v.upgrades[0].targets[0].metadataDigest;},v=>{v.upgrades[0].targets[1].moduleName='foreign';},v=>{delete v.peerFacts;}]){const value=declaration();mutate(value);await assert.rejects(adapter({core:provider(value),registry})(),{code:'CORE_SUITE_DECLARATION_INVALID'});}
+  for(const mutate of [v=>{delete v.installCommand;},v=>{v.schemaVersion=2;},v=>{delete v.manifest;},v=>{v.completeness='ready';},v=>{v.installed.pop();},v=>{v.upgrades[0].targets[0].version='latest';},v=>{delete v.upgrades[0].targets[0].metadataDigest;},v=>{v.upgrades[0].targets[1].moduleName='foreign';},v=>{delete v.peerFacts;}]){const value=declaration();mutate(value);await assert.rejects(adapter({core:provider(value),registry})(),{code:'CORE_SUITE_DECLARATION_INVALID'});}
 });
 test('Core completeness and named blocked facts control refusal; blocked other candidates do not veto a valid tuple',async()=>{
   const value=declaration();value.blocked=[{code:'CORE_SUITE_METADATA_TIMEOUT',coreVersion:'99.0.0'}];assert.equal((await adapter({core:provider(value),registry})()).available,true);
@@ -60,7 +60,8 @@ test('a rejected candidate lookup exposes the Core named blocked facts in the ex
 test('scoped suite names keep repository and component ids, reject old npm declarations and use the exact repair tuple',async()=>{
   assert.deepEqual(suite.SUITE_PACKAGES.map(p=>p.name),['@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host']);
   assert.deepEqual(suite.SUITE_PACKAGES.map(p=>p.repo),['hanamesh-core','hanamesh-usage','hanamesh-plugin-app-host']);
-  assert.equal(suite.SUITE_INSTALL_COMMAND,"dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.21' '@hanamesh/usage@0.3.0-rc.6' '@hanamesh/dsh-app-host@0.6.14'");
+  const source=declaration();source.installCommand='CORE_OWNED_COMMAND';
+  assert.equal((await adapter({core:provider(source),registry})()).installCommand,source.installCommand);
   const value=declaration();
   value.manifest.core.name='hanamesh-core';
   await assert.rejects(adapter({core:provider(value),registry}).readFacts(),{code:'CORE_SUITE_DECLARATION_INVALID'});

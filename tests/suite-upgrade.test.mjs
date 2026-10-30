@@ -1,13 +1,14 @@
+import {SUITE_INSTALL_COMMAND} from '@hanamesh/core/suite';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {scratch} from './helpers.mjs';
-import {SUITE_PACKAGES,SUITE_INSTALL_COMMAND,readSuiteStatus,prepareSuiteUpgrade} from '../src/library/suite.js';
+import {SUITE_PACKAGES,readSuiteStatus,prepareSuiteUpgrade} from '../src/library/suite.js';
 async function profile(t,prefix='suite-'){const root=await scratch(prefix);const versions={'@hanamesh/core':'0.3.11','@hanamesh/usage':'0.2.0-rc.34','@hanamesh/dsh-app-host':'0.6.3'};const dependencies={};for(const {name} of SUITE_PACKAGES){dependencies[name]=versions[name];const p=join(root,'node_modules',name);await mkdir(p,{recursive:true});await writeFile(join(p,'package.json'),JSON.stringify({name,version:versions[name]}));}await writeFile(join(root,'package.json'),JSON.stringify({dependencies,dsh:{profile:{bundles:Object.keys(dependencies)}}}));return root;}
 const targets={'@hanamesh/core':'0.3.12','@hanamesh/usage':'0.2.0-rc.35','@hanamesh/dsh-app-host':'0.6.4'};
 // Internal normalized execution-port double; public C-CORE DTO coverage is in core-suite-public.test.mjs.
-const coreSuitePlan=async()=>({available:true,components:SUITE_PACKAGES.map(p=>({name:p.name,label:p.label,from:({'@hanamesh/core':'0.3.11','@hanamesh/usage':'0.2.0-rc.34','@hanamesh/dsh-app-host':'0.6.3'})[p.name],to:targets[p.name]}))});
+const coreSuitePlan=async()=>({available:true,installCommand:SUITE_INSTALL_COMMAND,components:SUITE_PACKAGES.map(p=>({name:p.name,label:p.label,from:({'@hanamesh/core':'0.3.11','@hanamesh/usage':'0.2.0-rc.34','@hanamesh/dsh-app-host':'0.6.3'})[p.name],to:targets[p.name]}))});
 test('suite discovery reads actual three versions and explicit profile activation; unreadable is unknown',async t=>{const root=await profile(t);assert.equal((await readSuiteStatus(root)).status,'installed');assert.equal((await readSuiteStatus(root)).components.length,3);assert.equal((await readSuiteStatus(join(root,'missing'))).status,'unknown');const p=JSON.parse(await import('node:fs/promises').then(m=>m.readFile(join(root,'package.json'),'utf8')));p.dsh.profile.bundles.pop();await writeFile(join(root,'package.json'),JSON.stringify(p));assert.equal((await readSuiteStatus(root)).status,'incomplete');assert.ok(!SUITE_INSTALL_COMMAND.includes('brand'));});
 test('only explicit current upgrade confirmation can invoke the official CLI; ordinary protected install remains denied',async t=>{
   const root=await profile(t,'legal-brand-profile-'),{createLibraryInstaller}=await import('../src/library/install.js');assert.ok(root.includes('brand'));let writes=0;

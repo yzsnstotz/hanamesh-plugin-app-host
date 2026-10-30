@@ -10,7 +10,6 @@ export const SUITE_PACKAGES=Object.freeze([
   {name:'@hanamesh/usage',label:'使用记录',repo:'hanamesh-usage'},
   {name:'@hanamesh/dsh-app-host',label:'应用库',repo:'hanamesh-plugin-app-host'},
 ].map(Object.freeze));
-export const SUITE_INSTALL_COMMAND="dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.21' '@hanamesh/usage@0.3.0-rc.6' '@hanamesh/dsh-app-host@0.6.14'";
 const json=async path=>JSON.parse(await readFile(path,'utf8'));
 /** Physical inventory only, never a compatibility declaration or permission to upgrade. */
 export async function readSuiteStatus(profileDir){
@@ -33,7 +32,7 @@ const digest=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
 const nullableText=value=>value===null||text(value);
 const invalid=()=>requireCondition(false,'CORE_SUITE_DECLARATION_INVALID','Core 套件声明无法用于精确安装。',{},503);
 function validateDeclaration(value){
-  if(!object(value)||value.schemaVersion!==1||!text(value.checkedAt)||!digest(value.declarationId)||!text(value.nodeVersion)||!nullableText(value.registry)||!['complete','incomplete','unknown'].includes(value.completeness))invalid();
+  if(!object(value)||value.schemaVersion!==1||!text(value.checkedAt)||!text(value.installCommand)||!digest(value.declarationId)||!text(value.nodeVersion)||!nullableText(value.registry)||!['complete','incomplete','unknown'].includes(value.completeness))invalid();
   const manifest=value.manifest;
   if(!object(manifest)||manifest.schemaVersion!==1||!text(manifest.id)||!object(manifest.core)||manifest.core.name!==SUITE_PACKAGES[0].name||!exact(manifest.core.version)||!text(manifest.core.repository)||!Array.isArray(manifest.components)||manifest.components.length!==2)invalid();
   const members=new Map();
@@ -99,7 +98,7 @@ export function createCoreSuiteAdapter({core=()=>undefined,registry,suiteSourceM
     const selectedUpgrade=declaration.upgrades[0];
     requireCondition(selectedUpgrade.registry===declaration.registry,'CORE_SUITE_SOURCE_MISMATCH','Core 升级组合来源与执行 registry 不符。',{},409);
     const components=SUITE_PACKAGES.map(({name,label})=>{const from=declaration.installed.find(row=>row.moduleName===name).actualVersion;if(!exact(from))invalid();return{name,label,from,to:selectedUpgrade.targets.find(row=>row.moduleName===name).version};});
-    return{available:true,components,sourceBinding:binding,declarationId:declaration.declarationId,registry:declaration.registry,selectedUpgrade,physicalBaseline:declaration.installed,upgrades:declaration.upgrades,blocked:declaration.blocked};
+    return{available:true,components,installCommand:declaration.installCommand,sourceBinding:binding,declarationId:declaration.declarationId,registry:declaration.registry,selectedUpgrade,physicalBaseline:declaration.installed,upgrades:declaration.upgrades,blocked:declaration.blocked};
   };
   Object.defineProperty(get,'unavailable',{get:()=>current()?null:CORE_SUITE_DECLARATION_MISSING});
   get.readFacts=async()=>{
@@ -120,7 +119,7 @@ export async function prepareSuiteUpgrade({coreSuitePlan}={}){
   const plan=await coreSuitePlan();
   requireCondition(plan!==undefined&&plan!==null,'CORE_SUITE_DECLARATION_MISSING',CORE_SUITE_DECLARATION_MISSING,{},503);
   const invalid=()=>requireCondition(false,'CORE_SUITE_DECLARATION_INVALID','Core 套件声明无法用于精确安装。',{},503);
-  if(typeof plan!=='object'||Array.isArray(plan)||typeof plan.available!=='boolean'||!Array.isArray(plan.components)||plan.components.length!==SUITE_PACKAGES.length)invalid();
+  if(typeof plan!=='object'||Array.isArray(plan)||typeof plan.available!=='boolean'||!text(plan.installCommand)||!Array.isArray(plan.components)||plan.components.length!==SUITE_PACKAGES.length)invalid();
   const rows=new Map();
   for(const row of plan.components){
     if(!row||typeof row!=='object'||!SUITE_PACKAGES.some(p=>p.name===row.name)||rows.has(row.name)||typeof row.from!=='string'||semver.valid(row.from)!==row.from||typeof row.to!=='string'||semver.valid(row.to)!==row.to)invalid();
