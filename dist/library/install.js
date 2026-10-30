@@ -10,7 +10,7 @@ import {noteFailurePhase} from './diagnostics.js';
 import { validateDefinition } from '../descriptor.js';
 import { itemKind } from './catalog.js';
 import { profileSnapshot, runtimeSnapshot, profileChecks, runtimeChecks, packageRestoreArgs, keepOriginals } from './recovery.js';
-import {prepareSuiteUpgrade,readSuiteStatus,createCoreSuiteAdapter,SUITE_INSTALL_COMMAND} from './suite.js';
+import {prepareSuiteUpgrade,readSuiteStatus,createCoreSuiteAdapter} from './suite.js';
 
 /** The HanaMesh suite itself (real names + the historical scoped spellings) is never installed or removed through the market. */
 export const PROTECTED_PACKAGES=Object.freeze(['@hanamesh/core','@hanamesh/usage','@hanamesh/brand','@hanamesh/dsh-app-host','hanamesh-core','hanamesh-usage','hanamesh-brand','@hanamesh/dsh-core','@hanamesh/dsh-usage']);
@@ -211,7 +211,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
         requireCondition(actual.status==='installed'&&fresh.components.every((c,i)=>actual.components[i]?.version===c.to&&saved.dependencies?.[c.name]===c.to),'INSTALL_READBACK_MISMATCH','套件升级后的版本或启用状态不符，请完全退出后按补齐命令修复。',{},502);
         return{status:'restart-required',kind:'suite-upgrade',packageName:'@hanamesh/core',components:fresh.components,version:actual.version};
       }catch(error){
-        error.details={...error.details,stage:'suite-upgrade',actual:await readSuiteStatus(profileDir),command:SUITE_INSTALL_COMMAND};
+        error.details={...error.details,stage:'suite-upgrade',actual:await readSuiteStatus(profileDir),command:fresh.installCommand};
         emit({type:'library.install-failed',packageName:'@hanamesh/core',code:error.code??'SUITE_UPGRADE_FAILED'});throw error;
       }
     });},
