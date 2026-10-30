@@ -238,4 +238,4 @@ Actions runs on the standard public/free `macos-15` arm64 runner because the exi
 
 ## 10-31 边界核对的正常提供方输入
 
-本仓测试直接消费`@hanamesh/core/contract/fixtures`或`@hanamesh/core/suite`。完成本仓锁定依赖安装后，用`npm install --no-save --package-lock=false --ignore-scripts --strict-peer-deps <已核SHA的Core正常tgz>`提供开发输入，再跑原测试命令；本轮输入Core0.3.28。正常包由Core目标构建提供，不放入本仓、不复制私有实现、不workspace-link源码。Usage测试改动不进入生产文件，本轮不重新物化Agent。
+AppHost 通过 Cordis 的 Core 套件声明读取 installCommand，不维护安装命令副本。源码测试从 `@hanamesh/core/suite` 读取同一公开命令。先完成本仓 frozen 安装，再在独立 provider consumer 中声明已核 SHA 的 Core0.3.28 正常 tgz 及其固定公开 peer，严格安装并冻结读回；将已安装的公开 Core 包连接到本仓测试解析路径后跑原 CI。tgz 不放进本仓，不链接相邻源码；正常 AppHost 包不携带这份开发输入。
