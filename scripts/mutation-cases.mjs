@@ -110,4 +110,5 @@ export const cases=[
   {id:'M105-configured-source-order-reversed',file:'src/library/install.js',from:'const plan=registryPlan(registry,configured);',to:'const plan=registryPlan(registry,configured).reverse();',test:'tests/install-diagnostics.test.mjs',pattern:'^MD09',reason:/Expected values to be strictly deep-equal/},
   {id:'M106-lookup-timeout-does-not-abort',file:'src/library/install.js',from:'controller.abort(error);reject(error);',to:'reject(error);',test:'tests/install-diagnostics.test.mjs',pattern:'^MD12',reason:/Expected values to be strictly equal/},
   {id:'M107-native-lookup-cause-dropped',file:'src/library/install.js',from:'if(error!==cause)error.cause=cause;',to:'/* dropped original */;',test:'tests/install-diagnostics.test.mjs',pattern:'^MD08',reason:/Expected values to be strictly equal/},
+  {id:'M108-recovery-registry-dropped',file:'src/library/install.js',from:'recover({name,stage,base,runtime,operationId,installRegistry})',to:'recover({name,stage,base,runtime,operationId,installRegistry:null})',test:'tests/library-install.test.mjs',pattern:'^AH-RB03',reason:/Expected values to be strictly equal/},
 ];

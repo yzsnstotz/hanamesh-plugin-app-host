@@ -95,3 +95,45 @@ test('AH-RB02: market installs and their compensations never interleave profile 
   assert.deepEqual(results.map(result=>[result.status,result.reason?.recovery?.status]),[['rejected','restored'],['rejected','restored']]);
   assert.deepEqual(order,['start add','end add','start remove','end remove','start add','end add','start remove','end remove']);
 });
+
+for(const {id,phase,ownRegistry} of [
+  {id:'AH-RB03',phase:'definition',ownRegistry:false},
+  {id:'AH-RB04',phase:'provision',ownRegistry:false},
+  {id:'AH-RB05',phase:'provision',ownRegistry:true},
+])test(`${id}: failed private-registry upgrade restores the old version after ${phase} failure (${ownRegistry?'pnpm configuration':'explicit registry'})`,async()=>{
+  const profile=await scratch('hm-library-private-recovery-'),dataRoot=join(profile,'data');
+  const name='@hanamesh/app-vibe-trading',privateRegistry='https://private.registry.invalid/',calls=[],events=[],fetches=[];
+  const manifest=JSON.stringify({dependencies:{[name]:'1.2.3'}}),lock=JSON.stringify({[name]:'1.2.3'});
+  await installedPackage(profile);await writeFile(join(profile,'package.json'),manifest);await writeFile(join(profile,'pnpm-lock.yaml'),lock);
+  const appPath=join(profile,'node_modules',...name.split('/'),'app.json'),originalDefinition=await readFile(appPath);
+  const cli=cliDouble(profile),provisionError=Object.assign(new Error('fixture runtime provisioning failed'),{code:'FIXTURE_PROVISION_FAILED'});
+  const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,
+    pluginManager:ownRegistry?()=>({registries:async()=>({registry:null,fallbackRegistries:[],resolved:privateRegistry})}):fixtureRegistryManager,
+    registry:ownRegistry?null:privateRegistry,profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
+    fetchImpl:async url=>{fetches.push(String(url));return await registry();},
+    spawn:async(command,args,options)=>{
+      calls.push(args);const selected=args.find(arg=>arg.startsWith('--registry='))?.slice('--registry='.length)??(ownRegistry?privateRegistry:'https://registry.npmjs.org/');
+      // No cached old package: a restore must fetch it from the private source, just like the forward add.
+      if(selected!==privateRegistry)return{code:1,stdout:'',stderr:'ERR_PNPM_FETCH_404: private package is absent from the default registry'};
+      const result=await cli(command,args,options);
+      if(phase==='provision'||args.at(-1)===`${name}@1.2.3`)await writeFile(appPath,originalDefinition);
+      return result;
+    },provision:async()=>{throw provisionError;},ledger:async()=>({schema:1,items:{}}),emit:event=>events.push(event)});
+  await assert.rejects(installer.install({id:'private-app',categories:['hanamesh-app'],package:{registry:'npm',name}}),error=>{
+    if(phase==='provision')assert.equal(error,provisionError);else assert.equal(error.code,'INVALID_DEFINITION');
+    assert.equal(error.recovery.status,'restored');assert.equal(error.recovery.previousVersion,'1.2.3');
+    assert.equal(error.recovery.stage,phase);assert.deepEqual(error.recovery.residue,[]);
+    assert.ok(error.recovery.checks.every(row=>row.ok));return true;
+  });
+  const registryArgs=ownRegistry?[]:[`--registry=${privateRegistry}`],prefix=['/opt/dsh/bin.js','plugin','--profile','p3','add'];
+  assert.deepEqual(calls,[
+    [...prefix,'--save-exact',...registryArgs,`${name}@2.0.0`],
+    [...prefix,...registryArgs,'--save-exact',`${name}@1.2.3`],
+  ]);
+  assert.deepEqual(fetches,[`${privateRegistry}${encodeURIComponent(name)}/latest`]);
+  assert.equal(await readFile(join(profile,'package.json'),'utf8'),manifest);
+  assert.equal(await readFile(join(profile,'pnpm-lock.yaml'),'utf8'),lock);
+  assert.equal(JSON.parse(await readFile(join(profile,'node_modules',...name.split('/'),'package.json'),'utf8')).version,'1.2.3');
+  assert.equal(events.find(event=>event.type==='library.install-failed').recovery.status,'restored');
+  assert.equal(events.some(event=>event.type==='library.install-done'),false);
+});

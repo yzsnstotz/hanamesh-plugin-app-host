@@ -95,6 +95,8 @@ node node_modules/@hanamesh/dsh-app-host/dist/install-target/run.js consumer --u
 
 `checks` 逐项列出 dependency、module、bundle、lockfile、bundles 与 `runtime:<item>` 的 expected/actual/ok。别的写者在此期间改动的其他依赖永不撤销，lockfile 因此无法证明已恢复时报 `CONCURRENT_PROFILE_WRITE`。未认领文件与 `<dataRoot>` 下的应用数据从不删除。失败不会自动重试。
 
+补偿的 `add` / `install` 沿用本次 latest 查询与正向安装选中的同一 registry：显式源继续传 `--registry=<source>`，pnpm 自有源（`null`）继续省略该参数。回滚不会重新选源、查询 latest 或退到默认公共源；`remove` 参数保持原样。恢复动作列表保留原包操作摘要，不加入 registry URL。
+
 市场显示：`安装失败：<原码>（原因）` 后接 `已恢复到安装前状态（已逐项读回）` / `已恢复到原版本 x（已逐项读回）` / `安装前状态未被改动（已逐项读回）`；`failed` 显示 `恢复失败：<码>，未恢复：<项>，安装前原件：<目录>。未安装成功，也未回到安装前状态，需要人工处理`，不会显示为成功或「已回滚」。
 
 **已知边界（不是隐藏限制）：** 官方 DSH 没有公开「跨多条 `dsh plugin` 命令持有 profile 写锁」或「外部回滚整个 add」的端口，所以宿主外的并发写者只能被检出并如实报告，不能被阻止。runtime 读回以 lib-provision ledger 为准；promote 与 ledger 之间的进程崩溃由 lib-provision `verify` 负责，不在本流程内调用。provision 对无当前平台资产的项返回 `unsupported` 而不抛错，沿用 rc9，不视为失败。

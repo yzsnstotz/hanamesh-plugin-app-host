@@ -122,13 +122,13 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
    * items this operation newly claimed are removed by ownership, a replaced baseline item is provisioned again from the
    * restored definition, and then every item is read back. `restored`/`not-needed` only when every row matches the baseline.
    */
-  async function recover({name,stage,base,runtime,operationId}){
+  async function recover({name,stage,base,runtime,operationId,installRegistry}){
     const report={status:'failed',mode:base?.spec===null?'new-install':'upgrade',stage,previousVersion:base?.module??null,actions:[],checks:[],residue:[]};
     if(!base){report.mode='unknown';report.status='not-needed';return report;}
     const fail=error=>{report.error??={code:error.code??'INSTALL_RECOVERY_FAILED',message:String(error.message??error)};};
     try{
       let now=await profileSnapshot(profileDir,name);const args=packageRestoreArgs(base,now,name);
-      if(args){report.actions.push(['dsh','plugin',...args].join(' '));try{await run(args);}catch(error){fail(error);}now=await profileSnapshot(profileDir,name);}
+      if(args){report.actions.push(['dsh','plugin',...args].join(' '));try{await run([args[0],...(args[0]!=='remove'&&installRegistry!==null?[`--registry=${installRegistry}`]:[]),...args.slice(1)]);}catch(error){fail(error);}now=await profileSnapshot(profileDir,name);}
       report.checks.push(...profileChecks(base,now,name));
     }catch(error){fail(error);report.residue.push({item:'profile',reason:'NOT_VERIFIED'});}
     if(runtime)try{
@@ -157,10 +157,10 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
    */
   async function transaction(item,kind,context){
     requireCondition(cliAvailable,'DSH_EXACT_INSTALL_UNAVAILABLE','The host cannot install a package with an exact saved version.',{need:unavailable()},503);
-    const name=item.package.name,operationId=/^[A-Za-z0-9-]{1,64}$/.test(context?.operationId??'')?context.operationId:randomUUID();let stage='baseline',base,runtime;
+    const name=item.package.name,operationId=/^[A-Za-z0-9-]{1,64}$/.test(context?.operationId??'')?context.operationId:randomUUID();let stage='baseline',base,runtime,installRegistry=null;
     try{
       base=await profileSnapshot(profileDir,name);
-      stage='before-add';const {version,registry:installRegistry}=await latest(name);
+      stage='before-add';let version;({version,registry:installRegistry}=await latest(name));
       const status='restart-required';
       stage='add';await run(['add','--save-exact',...(installRegistry===null?[]:[`--registry=${installRegistry}`]),`${name}@${version}`]);
       stage='readback';const added=await profileSnapshot(profileDir,name);
@@ -170,7 +170,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       if(declared){stage='provision';const root=runtimeRoot(record.definition.id);runtime={root,base:await runtimeSnapshot(await runtimeApi('ledger'),root)};
         await (await runtimeApi('provision'))(declared.manifest,{root,only:[declared.item],onProgress:event=>emit({type:'library.provision-progress',appId:record.definition.id,...event})});}
       return{status:'restart-required',kind,appId:record.definition.id,packageName:name,version};
-    }catch(error){noteFailurePhase(error,{baseline:'profile baseline','before-add':'registry fetch',add:'CLI run',readback:'profile readback',definition:'application readback',provision:'runtime provision'}[stage]);error.recovery=await recover({name,stage,base,runtime,operationId});throw error;}
+    }catch(error){noteFailurePhase(error,{baseline:'profile baseline','before-add':'registry fetch',add:'CLI run',readback:'profile readback',definition:'application readback',provision:'runtime provision'}[stage]);error.recovery=await recover({name,stage,base,runtime,operationId,installRegistry});throw error;}
   }
   async function installAs(item,kind,context){
     permitted(item.package.name);const name=item.package.name;
