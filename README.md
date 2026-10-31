@@ -238,4 +238,4 @@ Actions runs on the standard public/free `macos-15` arm64 runner because the exi
 
 ## Core 公开套件声明的测试依赖
 
-源码测试通过 `@hanamesh/core/suite` 读取 Core 单源公开命令。`@hanamesh/core` 是仓库声明的 devDependency，沿本仓现有固定 vendor 正常包写法消费 Core main `62059ca586be2bffa054b5d392ebde41c51939ec` /0.3.28 的 R2 已审原件；来源、许可与完整 SHA 见 `vendor/supply.json`，声明指向本仓固定提交 `cb0bb9f7da4ca817649b65882e06ea2103b9b49d` 中该原件的公开 HTTPS tarball；现有 workflow 的 `vendor/SHA256SUMS` 和冻结 pnpm 锁分别验证同一归档的 SHA256/SRI，许可证记录见 `docs/LICENSES.json`。公开不可变 URL 符合现有发布元数据测试对新增依赖禁止 `file:/link:` 的要求，不增加例外或改变断言。干净 clone 直接按 workflow 安装，无需本机 provider consumer、手工连接或额外输入；Core 不成为运行时依赖或 bundled 包。Git 源的原 prepack 会安装私有 Devkit 开发来源，不能用于当前无凭据 CI；这里保留已审正常包原字节，不改 Core、不绕构建检查、不发布 npm。
+源码测试通过 `@hanamesh/core/suite` 读取 Core 单源公开命令。`@hanamesh/core` 是仓库声明的 devDependency，按 npm 版本范围 `^0.3.28` 从公开 npm 安装，冻结 pnpm 锁记录实际版本与 SRI；许可证记录见 `docs/LICENSES.json`。Core 不成为运行时依赖或 bundled 包。

@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/dsh-app-host",
-  "version": "0.6.17",
+  "version": "0.6.18",
   "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.x",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
@@ -137,7 +137,7 @@
     }
   },
   "devDependencies": {
-    "@hanamesh/core": "https://raw.githubusercontent.com/yzsnstotz/hanamesh-plugin-app-host/cb0bb9f7da4ca817649b65882e06ea2103b9b49d/vendor/hanamesh-core-0.3.28.tgz",
+    "@hanamesh/core": "^0.3.28",
     "@deepseek-ai/cordis": "4.0.5-alpha.1",
     "@deepseek-ai/dsh-host-webserver": "0.2.1-alpha.2",
     "@deepseek-ai/dsh-scope": "0.2.1-alpha.2",
