@@ -294,6 +294,22 @@
       "sourceCommit": "7a39e4e332a2cbb5dcbfddec68383fb5cef39eb8",
       "archiveSha256": "71545cbb636d3b1a5e7d9fbba728b16e006b8eaf70bc2540038d077df7263a61",
       "reviewDocs": "cce157612b1390b845ccca3f0632247de9fb3229"
+    },
+    "@hanamesh/core": {
+      "version": "0.3.28",
+      "license": "MIT",
+      "source": "https://raw.githubusercontent.com/yzsnstotz/hanamesh-plugin-app-host/cb0bb9f7da4ca817649b65882e06ea2103b9b49d/vendor/hanamesh-core-0.3.28.tgz",
+      "purpose": "Development-only public Core suite declaration and provider-owned install command for clean CI; never runtime or bundled",
+      "usedAs": [
+        "devDependencies"
+      ],
+      "specs": {
+        "devDependencies": "https://raw.githubusercontent.com/yzsnstotz/hanamesh-plugin-app-host/cb0bb9f7da4ca817649b65882e06ea2103b9b49d/vendor/hanamesh-core-0.3.28.tgz"
+      },
+      "sourceCommit": "62059ca586be2bffa054b5d392ebde41c51939ec",
+      "archiveSha256": "9ef8c250efa3bc46de583dc82103719d71d9f3dcc2233fd49731b4467337efa9",
+      "licenseNotice": "MIT License\n\nCopyright (c) 2026 HanaMesh\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n",
+      "licenseSha256": "cd29e05178eecb3207c494901de7d41785a7b31216e94ab37f3e104e93f3f3b1"
     }
   },
   "downloadedRuntimes": {

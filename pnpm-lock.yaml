@@ -67,8 +67,8 @@ importers:
         specifier: 3.18.5-alpha.1
         version: 3.18.5-alpha.1
       '@hanamesh/core':
-        specifier: file:vendor/hanamesh-core-0.3.28.tgz
-        version: file:vendor/hanamesh-core-0.3.28.tgz(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-client-connection@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-scope@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)))(@deepseek-ai/dsh-client-ui-primitives@0.2.1-rc.5(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-client-ui-settings@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-client-ui-sidebar@0.2.1-rc.5(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-scope@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-storage-domain@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-storage@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)))(@deepseek-ai/dsh-storage@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-typert-protocol@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(react@18.3.1)(zod@4.5.4)
+        specifier: https://raw.githubusercontent.com/yzsnstotz/hanamesh-plugin-app-host/cb0bb9f7da4ca817649b65882e06ea2103b9b49d/vendor/hanamesh-core-0.3.28.tgz
+        version: https://raw.githubusercontent.com/yzsnstotz/hanamesh-plugin-app-host/cb0bb9f7da4ca817649b65882e06ea2103b9b49d/vendor/hanamesh-core-0.3.28.tgz(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-client-connection@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-scope@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)))(@deepseek-ai/dsh-client-ui-primitives@0.2.1-rc.5(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-client-ui-settings@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-client-ui-sidebar@0.2.1-rc.5(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-scope@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-storage-domain@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-storage@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)))(@deepseek-ai/dsh-storage@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-typert-protocol@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(react@18.3.1)(zod@4.5.4)
       '@hanamesh/devkit':
         specifier: file:vendor/hanamesh-devkit-0.2.3.tgz
         version: file:vendor/hanamesh-devkit-0.2.3.tgz
@@ -341,8 +341,8 @@ packages:
     resolution: {integrity: sha512-GmzA9ckNokPypTg10pgpeHNQe7ph+iIKKmhKu3Ob9ANkswreCx7R3cKmY781K8QK3AqVL3xVh9A42JvIAbkkSA==}
     engines: {node: ^20.17.0 || >=22.9.0}
 
-  '@hanamesh/core@file:vendor/hanamesh-core-0.3.28.tgz':
-    resolution: {integrity: sha512-J0s6ffDqfUlMQvfrjfGpPEmwQIvMPicIv7NLyhNix3wDZDvlATjoK0KOwrCjvKib3MIeq9v+TegJlZ4gTXzPlQ==, tarball: file:vendor/hanamesh-core-0.3.28.tgz}
+  '@hanamesh/core@https://raw.githubusercontent.com/yzsnstotz/hanamesh-plugin-app-host/cb0bb9f7da4ca817649b65882e06ea2103b9b49d/vendor/hanamesh-core-0.3.28.tgz':
+    resolution: {integrity: sha512-J0s6ffDqfUlMQvfrjfGpPEmwQIvMPicIv7NLyhNix3wDZDvlATjoK0KOwrCjvKib3MIeq9v+TegJlZ4gTXzPlQ==, tarball: https://raw.githubusercontent.com/yzsnstotz/hanamesh-plugin-app-host/cb0bb9f7da4ca817649b65882e06ea2103b9b49d/vendor/hanamesh-core-0.3.28.tgz}
     version: 0.3.28
     engines: {node: '>=24.13.1 <25'}
     hasBin: true
@@ -943,7 +943,7 @@ snapshots:
 
   '@gar/promise-retry@1.0.3': {}
 
-  '@hanamesh/core@file:vendor/hanamesh-core-0.3.28.tgz(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-client-connection@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-scope@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)))(@deepseek-ai/dsh-client-ui-primitives@0.2.1-rc.5(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-client-ui-settings@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-client-ui-sidebar@0.2.1-rc.5(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-scope@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-storage-domain@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-storage@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)))(@deepseek-ai/dsh-storage@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-typert-protocol@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(react@18.3.1)(zod@4.5.4)':
+  '@hanamesh/core@https://raw.githubusercontent.com/yzsnstotz/hanamesh-plugin-app-host/cb0bb9f7da4ca817649b65882e06ea2103b9b49d/vendor/hanamesh-core-0.3.28.tgz(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-client-connection@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-scope@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)))(@deepseek-ai/dsh-client-ui-primitives@0.2.1-rc.5(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-client-ui-settings@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-client-ui-sidebar@0.2.1-rc.5(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-scope@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-storage-domain@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-storage@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)))(@deepseek-ai/dsh-storage@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-typert-protocol@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(react@18.3.1)(zod@4.5.4)':
     dependencies:
       '@deepseek-ai/cordis': 4.0.5-alpha.1
       '@deepseek-ai/dsh-client-connection': 0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-scope@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))
