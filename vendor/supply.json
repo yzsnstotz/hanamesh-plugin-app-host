@@ -28,6 +28,23 @@
         "D-2026-10-05-02"
       ],
       "publishedFilesMatchInstalledBaseline": true
+    },
+    {
+      "name": "@hanamesh/core",
+      "version": "0.3.28",
+      "path": "vendor/hanamesh-core-0.3.28.tgz",
+      "sha256": "9ef8c250efa3bc46de583dc82103719d71d9f3dcc2233fd49731b4467337efa9",
+      "repository": "https://github.com/yzsnstotz/hanamesh-core",
+      "sourceCommit": "62059ca586be2bffa054b5d392ebde41c51939ec",
+      "sourceSubdirectory": ".",
+      "license": "MIT",
+      "normalArtifact": {
+        "repository": "https://github.com/yzsnstotz/hanamesh-docs",
+        "commit": "d80705e85bf47bca8c00a3c405aa69b80da62eda",
+        "path": "证据/I-BoundaryFix-20261031/hanamesh-core-0.3.28.tgz"
+      },
+      "reviewDocs": "43768fd6",
+      "developmentOnly": true
     }
   ]
 }

@@ -236,6 +236,6 @@ Actions runs on the standard public/free `macos-15` arm64 runner because the exi
 
 固定提供方 main 提交 `13ec0db3bc6aa6b6235f2105d3f0a6b998855ff5`，与 R2 审过的 0.1.10 正常包6载荷逐字一致；来源/归档摘要见 `vendor/release-platform-gate.json`。
 
-## 10-31 边界核对的正常提供方输入
+## Core 公开套件声明的测试依赖
 
-AppHost 通过 Cordis 的 Core 套件声明读取 installCommand，不维护安装命令副本。源码测试从 `@hanamesh/core/suite` 读取同一公开命令。先完成本仓 frozen 安装，再在独立 provider consumer 中声明已核 SHA 的 Core0.3.28 正常 tgz 及其固定公开 peer，严格安装并冻结读回；将已安装的公开 Core 包连接到本仓测试解析路径后跑原 CI。tgz 不放进本仓，不链接相邻源码；正常 AppHost 包不携带这份开发输入。
+源码测试通过 `@hanamesh/core/suite` 读取 Core 单源公开命令。`@hanamesh/core` 是仓库声明的 devDependency，沿本仓现有固定 vendor 正常包写法消费 Core main `62059ca586be2bffa054b5d392ebde41c51939ec` /0.3.28 的 R2 已审原件；来源、许可与完整 SHA 见 `vendor/supply.json`，现有 workflow 的 `vendor/SHA256SUMS` 和冻结 pnpm 锁分别验证 SHA256/SRI。干净 clone 直接按 workflow 安装，无需本机 provider consumer、手工连接或额外输入；Core 不成为运行时依赖或 bundled 包。Git 源的原 prepack 会安装私有 Devkit 开发来源，不能用于当前无凭据 CI；这里保留已审正常包原字节，不改 Core、不绕构建检查、不发布 npm。

@@ -137,6 +137,7 @@
     }
   },
   "devDependencies": {
+    "@hanamesh/core": "file:vendor/hanamesh-core-0.3.28.tgz",
     "@deepseek-ai/cordis": "4.0.5-alpha.1",
     "@deepseek-ai/dsh-host-webserver": "0.2.1-alpha.2",
     "@deepseek-ai/dsh-scope": "0.2.1-alpha.2",
