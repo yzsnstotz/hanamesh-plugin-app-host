@@ -19,7 +19,7 @@ test('NPM-APPHOST-01: published metadata admits official rc.2 and alpha.2 with b
   assert.equal(pkg.peerDependencies['@deepseek-ai/schemastery'], '>=3.18.4 <3.19.0-0 || >=3.18.5-alpha.1 <3.19.0-0');
   assert.equal(pkg.peerDependencies.react, '^18.3.1');
   assert.equal(pkg.peerDependencies['@hanamesh/lib-provision'], undefined);
-  assert.equal(pkg.dependencies['@hanamesh/lib-provision'],'file:vendor/hanamesh-lib-provision-0.2.1.tgz');
+  assert.equal(pkg.dependencies['@hanamesh/lib-provision'],'^0.2.1');
 });
 
 test('NPM-APPHOST-01: actual packed manifest keeps devkit development-only and the fixed provision bundled', async () => {
@@ -63,9 +63,9 @@ test('NPM-APPHOST-01: actual packed manifest keeps devkit development-only and t
     assert.equal(manifest.hanamesh?.deliveryStatus, undefined);
     for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies', 'devDependencies']) {
       for (const [name, spec] of Object.entries(manifest[field] ?? {})) {
-        if(field==='devDependencies'&&name==='@hanamesh/devkit')assert.equal(spec,'file:vendor/hanamesh-devkit-0.2.3.tgz');
+        if(field==='devDependencies'&&name==='@hanamesh/devkit')assert.equal(spec,'^0.2.4');
         else if(field==='devDependencies'&&name==='@hanamesh/release-platform-gate')assert.equal(spec,'file:vendor/hanamesh-release-platform-gate-0.1.10.tgz');
-        else if(field==='dependencies'&&name==='@hanamesh/lib-provision')assert.equal(spec,'file:vendor/hanamesh-lib-provision-0.2.1.tgz');
+        else if(field==='dependencies'&&name==='@hanamesh/lib-provision')assert.equal(spec,'^0.2.1');
         else assert.doesNotMatch(spec, /^(?:file:|link:)/, `${field}.${name}`);
       }
     }

@@ -108,7 +108,7 @@
   },
   "dependencies": {
     "zod": "4.5.4",
-    "@hanamesh/lib-provision": "file:vendor/hanamesh-lib-provision-0.2.1.tgz",
+    "@hanamesh/lib-provision": "^0.2.1",
     "semver": "7.8.5"
   },
   "peerDependencies": {
@@ -150,7 +150,7 @@
     "@deepseek-ai/dsh-storage-json": "0.2.1-alpha.2",
     "@deepseek-ai/schemastery": "3.18.5-alpha.1",
     "typescript": "5.8.3",
-    "@hanamesh/devkit": "file:vendor/hanamesh-devkit-0.2.3.tgz",
+    "@hanamesh/devkit": "^0.2.4",
     "@deepseek-ai/dsh-client-ui-renderer": "0.2.1-alpha.2",
     "@hanamesh/release-platform-gate": "file:vendor/hanamesh-release-platform-gate-0.1.10.tgz"
   },

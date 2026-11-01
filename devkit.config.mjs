@@ -10,7 +10,7 @@ import {typescript,runtimeLedgerJavascript} from './scripts/package-probes.mjs';
 const root=import.meta.dirname;
 const pkg=JSON.parse(await readFile(join(root,'package.json'),'utf8'));
 const pins=JSON.parse(await readFile(join(root,'toolchain.json'),'utf8'));
-const devkitSpec='file:vendor/hanamesh-devkit-0.2.3.tgz';
+const devkitSpec='^0.2.4';
 const digest=value=>createHash('sha256').update(value).digest('hex');
 const cardRun=process.env.HANAMESH_APPHOST_RUN_DIR;
 const evidenceDir=resolve(cardRun??join(root,'artifacts'),'mutations');
