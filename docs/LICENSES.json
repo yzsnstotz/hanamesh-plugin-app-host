@@ -11,7 +11,7 @@
     "@hanamesh/lib-provision": {
       "version": "0.2.1",
       "license": "SEE LICENSE IN LICENSE",
-      "source": "https://registry.npmjs.org/@hanamesh/lib-provision/-/lib-provision-0.2.1.tgz",
+      "source": "^0.2.1",
       "purpose": "Runtime provision/remove/ledger API; 随包分发、源仓不变; no inlined copy",
       "specs": {
         "dependencies": "^0.2.1"
