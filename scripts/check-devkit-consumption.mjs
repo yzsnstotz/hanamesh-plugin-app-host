@@ -11,14 +11,9 @@ const entry=new URL(import.meta.resolve('@hanamesh/devkit'));const packageRoot=d
 const pkg=JSON.parse(await readFile(join(packageRoot,'package.json')));
 assert.equal(pkg.name,'@hanamesh/devkit');assert.equal(pkg.version,provider.package.version);
 const verifiedProvider=suite.checkProvider({packageRoot,descriptor:provider});
-suite.validateDescriptor(consumer);assert(suite.satisfiesCaret(pkg.version,consumer.range));
-// npm registry transport: the manifest range admits the installed version and the frozen lock pins that version with sha512 integrity.
-const manifest=JSON.parse(await readFile(join(root,'package.json')));
-const range=manifest.devDependencies[pkg.name];
+// The provider's consumer suite owns the npm range, export, CLI and registry-lock checks.
+const verifiedConsumer=suite.checkConsumer({consumerRoot:root,requirement:consumer});
+const range=JSON.parse(await readFile(join(root,'package.json'))).devDependencies[pkg.name];
 assert(suite.satisfiesCaret(pkg.version,range),`devkit ${pkg.version} outside ${range}`);
-const lock=await readFile(join(root,'pnpm-lock.yaml'),'utf8');
-const pinned=new RegExp(`\\n  '@hanamesh/devkit@${pkg.version.replaceAll('.','\\.')}':\\n    resolution: \\{integrity: (sha512-[A-Za-z0-9+/]+={0,2})\\}\\n`,'u').exec(lock);
-assert(pinned,'devkit lock must pin the installed npm registry version with sha512 integrity');
-assert.doesNotMatch(lock,/hanamesh-server-shared\.git|git@github\.com:/u);
 const cli=execFileSync(join(root,'node_modules/.bin',consumer.bin),['preflight',join(root,'devkit.config.mjs')],{encoding:'utf8'});
-console.log(JSON.stringify({provider:verifiedProvider,consumer:{transport:'npm-registry',name:pkg.name,version:pkg.version,range,integrity:pinned[1],cli:cli.trim()}}));
+console.log(JSON.stringify({provider:verifiedProvider,consumer:{...verifiedConsumer,range,appHostPreflight:cli.trim()}}));

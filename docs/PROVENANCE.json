@@ -69,9 +69,9 @@
   "historicalCandidateLicense": "UNLICENSED; no upstream-license inheritance or open-source grant asserted",
   "developmentArtifacts": {
     "@hanamesh/devkit": {
-      "version": "0.2.4",
-      "source": "https://registry.npmjs.org/@hanamesh/devkit/-/devkit-0.2.4.tgz",
-      "sourceCommit": "2f65d0f1498d890afe71e4f013f845be2b8ea4f9",
+      "version": "0.2.6",
+      "source": "https://registry.npmjs.org/@hanamesh/devkit/-/devkit-0.2.6.tgz",
+      "sourceCommit": "019033b83aa0ede9e0c54d735f1ee5349fe39998",
       "mode": "Public npm package; development-only, excluded from runtime tarball",
       "license": "SEE LICENSE IN LICENSE",
       "distributionNotice": "Canonical LICENSE and LICENSE_RECORD.md copied verbatim to docs/LICENSES.json; no new MIT or relicensing grant",
@@ -84,19 +84,16 @@
         "version": "0.2.0",
         "sha256": "de15f0913dd6de5ba9ce96b8d92ea862ec44489eb698628de963cbbead68bc25",
         "sourceCommit": "8f9bcc69cbacf01d97ffe63bbbade4f865e6dd89"
-      },
-      "integrity": "sha512-Gi9NoEfmiu4ID44vqJpxHj+YXklCDfZ3thRrIzhC4x7SakCO3+F1LtNMoDAI9syXv0jGw5wDxQRh/JjkWdxGOg=="
+      }
     }
   },
   "externalArtifacts": {
     "@hanamesh/lib-provision": {
       "version": "0.2.1",
       "source": "https://registry.npmjs.org/@hanamesh/lib-provision/-/lib-provision-0.2.1.tgz",
-      "sha256": "4217b9fe1be98f6e82437539d1c4c43166ed1f5c292efff100733e0cb09530e9",
       "mode": "Public npm package; bundled runtime dependency",
       "sourceCommit": "838cf462de9192fb5f2d63497212e7275f5c6e39",
-      "license": "SEE LICENSE IN LICENSE",
-      "integrity": "sha512-LvCdIeB9Wq5hIW8plirAa6l1AL8FJN/cd8YKqeF1XrxEVTIbaJZxF5+kyCPddZ3zWd4wKZbUK5K/f363chC0OQ=="
+      "license": "SEE LICENSE IN LICENSE"
     }
   },
   "historicalInputNotice": "Top-level legacy input/runtime/prototype fields below describe the original rc.12 intake only. Current candidate identity and verification are in currentCandidate; they do not inherit legacy host/UI evidence."

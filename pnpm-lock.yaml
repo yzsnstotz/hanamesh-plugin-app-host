@@ -70,8 +70,8 @@ importers:
         specifier: ^0.3.28
         version: 0.3.28(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-client-connection@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-scope@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)))(@deepseek-ai/dsh-client-ui-primitives@0.2.1-rc.5(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-client-ui-settings@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-client-ui-sidebar@0.2.1-rc.5(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-scope@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-storage-domain@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-storage@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)))(@deepseek-ai/dsh-storage@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(@deepseek-ai/dsh-typert-protocol@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))(react@18.3.1)(zod@4.5.4)
       '@hanamesh/devkit':
-        specifier: ^0.2.4
-        version: 0.2.4
+        specifier: ^0.2.6
+        version: 0.2.6
       '@hanamesh/release-platform-gate':
         specifier: file:vendor/hanamesh-release-platform-gate-0.1.10.tgz
         version: file:vendor/hanamesh-release-platform-gate-0.1.10.tgz
@@ -358,8 +358,8 @@ packages:
       react: ^18.3.1
       zod: ^4.5.4
 
-  '@hanamesh/devkit@0.2.4':
-    resolution: {integrity: sha512-Gi9NoEfmiu4ID44vqJpxHj+YXklCDfZ3thRrIzhC4x7SakCO3+F1LtNMoDAI9syXv0jGw5wDxQRh/JjkWdxGOg==}
+  '@hanamesh/devkit@0.2.6':
+    resolution: {integrity: sha512-FTZhMLWz0zfJAHbQwOr6f/N3dSzdUS4w0oUuYs11TsmWEfa9cRvx2qpKa5brJvrPoouYcTz9JC9/iexOeJKNLA==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -956,7 +956,7 @@ snapshots:
       tar: 7.5.22
       zod: 4.5.4
 
-  '@hanamesh/devkit@0.2.4': {}
+  '@hanamesh/devkit@0.2.6': {}
 
   '@hanamesh/lib-provision@0.2.1': {}
 
