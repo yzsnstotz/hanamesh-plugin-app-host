@@ -60,7 +60,7 @@ test('a rejected candidate lookup exposes the Core named blocked facts in the ex
 test('scoped suite names keep repository and component ids, reject old npm declarations and use the Core supplied repair command',async()=>{
   assert.deepEqual(suite.SUITE_PACKAGES.map(p=>p.name),['@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host']);
   assert.deepEqual(suite.SUITE_PACKAGES.map(p=>p.repo),['hanamesh-core','hanamesh-usage','hanamesh-plugin-app-host']);
-  const source=declaration();source.installCommand='CORE_OWNED_COMMAND';
+  const source=declaration();source.installCommand='dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@2.4.6';
   assert.equal((await adapter({core:provider(source),registry})()).installCommand,source.installCommand);
   const value=declaration();
   value.manifest.core.name='hanamesh-core';
@@ -68,4 +68,13 @@ test('scoped suite names keep repository and component ids, reject old npm decla
   const oldUsage=declaration();oldUsage.manifest.components[0].moduleName='hanamesh-usage';
   await assert.rejects(adapter({core:provider(oldUsage),registry}).readFacts(),{code:'CORE_SUITE_DECLARATION_INVALID'});
   assert.deepEqual(declaration().installed.map(row=>row.id),['core','usage','app-host']);
+});
+
+
+test('missing published repair version remains null while bare and range commands are rejected',async()=>{
+ const source=declaration();source.installCommand=null;
+ assert.equal((await adapter({core:provider(source),registry})()).installCommand,null);
+ for(const command of ['dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh','dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@latest','dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@^1.2.3']){
+  source.installCommand=command;await assert.rejects(adapter({core:provider(source),registry})(),{code:'CORE_SUITE_DECLARATION_INVALID'});
+ }
 });

@@ -1,5 +1,5 @@
 import {writeSuiteProfile} from './fixtures/core-suite-declaration.mjs';
-const SUITE_INSTALL_COMMAND='dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh';
+const SUITE_INSTALL_COMMAND='dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@0.1.1';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
