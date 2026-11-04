@@ -40,7 +40,7 @@ interface InstallationObservation {
     kind:'responding-runtime'|'unobserved-runtime'|'official-user-profile'|'desktop-app';label:string};
   status:'installed'|'not-installed'|'incomplete'|'unknown';
   version:string|null;
-  versionKind:'core'|'agent-distribution';
+  versionKind:'suite-bundle'|'agent-distribution';
   components:readonly {name:string;version:string|null;active?:boolean;status?:string}[];
   identity:{pluginName:string;marketplace:string}|null;
   reason:{code:string;message:string;action:string}|null;
@@ -50,7 +50,7 @@ interface InstallationObservation {
 
 The five distinct observations are: responding runtime, the other DSH/HanaMesh runtime (always `unknown`, not observed by this responder), Claude Code configured user-level CLI scope, Codex CLI configured local-marketplace user scope, and Codex/ChatGPT desktop App scope (always named `unknown`). CLI labels explicitly exclude project/other isolated profiles and desktop App. A valid absence is absence **only in the named configured scope**; never show it as a machine-wide uninstall. Preserve every responder/scope; ports are not durable instance identities. Conflicts between responders are unknown, never resolved by choosing one installed result.
 
-Current runtime status/version/components come only from the optional public Core protocol `'1'` `getSuiteDeclaration()` **without an argument**, through the existing Core adapter. No registry request, health substitution, physical file-count completeness, version-range/peer/source algorithm or local upgrade selection is added. Complete maps to installed; incomplete stays incomplete; unknown stays unknown with top-level version null but known component versions and sanitized named blocked codes retained. Missing method, malformed declaration and read failure have distinct reasons. Each detection re-reads; Core removal/invalidation cannot reuse an old installed answer. Agent distribution version is independent of Core version. Missing active fields remain absent.
+Current runtime status/version/components come only from the optional public Core protocol `'1'` `getSuiteDeclaration()` **without an argument**, through the existing Core adapter. No registry request, health substitution, physical file-count completeness, version-range/peer/source algorithm or local upgrade selection is added. Complete maps to installed; incomplete stays incomplete; unknown stays unknown with top-level version null but known component versions and sanitized named blocked codes retained. Missing method, malformed declaration and read failure have distinct reasons. Each detection re-reads; Core removal/invalidation cannot reuse an old installed answer. Agent distribution version is independent of the DSH suite bundle version. Missing active fields remain absent.
 
 ## Explicit agent reader settings
 
@@ -94,3 +94,5 @@ Per-scope unknown reasons always include a safe code/message/action:
 Start each explicit detection by clearing previous observations. Cancel fetch when the person clears/revokes/leaves, the consumer/identity changes, or the window unmounts. Discard late request generations. A failed read/capability disappearance never keeps old installed status. Do not poll, persist, forward inventory or change Core/Usage recording consent. G's website consumer owns these page lifecycle rules; the bridge cancels on disconnect and module unload and holds no cross-request observation cache.
 
 Official command references: [Claude Code plugin commands](https://code.claude.com/docs/en/plugins/cli-reference), [Codex CLI plugin reference](https://learn.chatgpt.com/docs/cli/reference). [OpenAI local plugin scope documentation](https://developers.openai.com/plugins/build/plugins) describes multiple client scopes; CLI installation is not used here as proof of the desktop App.
+
+For DSH/HanaMesh runtime observations, versionKind is suite-bundle and version is the installed @hanamesh/hanamesh version. Component rows retain their physical versions. Agent distribution observations retain their existing semantics.

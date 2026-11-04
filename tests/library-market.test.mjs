@@ -67,7 +67,7 @@ test('AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite
   const result=await installer.uninstallPlugin({packageName:'dsh-plugin-tether'});
   assert.deepEqual(result,{status:'restart-required',kind:'plugin',packageName:'dsh-plugin-tether'});
   assert.deepEqual(calls[0].args,['/opt/dsh/lib/bin.js','plugin','--profile','web','remove','dsh-plugin-tether']);
-  assert.deepEqual([...PROTECTED_PACKAGES].sort(),['@hanamesh/brand','@hanamesh/core','@hanamesh/dsh-app-host','@hanamesh/dsh-core','@hanamesh/dsh-usage','@hanamesh/usage','hanamesh-brand','hanamesh-core','hanamesh-usage']);
+  assert.deepEqual([...PROTECTED_PACKAGES].sort(),['@hanamesh/core','@hanamesh/dsh-app-host','@hanamesh/hanamesh','@hanamesh/usage','hanamesh-brand']);
   for(const name of PROTECTED_PACKAGES){
     await assert.rejects(installer.uninstallPlugin({packageName:name}),{code:'PACKAGE_DENIED'});
     await assert.rejects(installer.installPlugin({packageName:name}),{code:'PACKAGE_DENIED'});
@@ -147,7 +147,7 @@ test('AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall /
   }
   await assert.rejects(service.install({}),error=>error.code==='INVALID_INPUT'&&error.status===400);
   // The suite itself is refused synchronously (403) before an operation is even started (the installer guard remains the last line).
-  for(const name of ['hanamesh-core','@hanamesh/dsh-app-host']){await assert.rejects(service.installPlugin({packageName:name}),error=>error.code==='PACKAGE_DENIED'&&error.status===403);await assert.rejects(service.uninstallPlugin({packageName:name}),error=>error.code==='PACKAGE_DENIED'&&error.status===403);}
+  for(const name of ['@hanamesh/hanamesh','@hanamesh/core','@hanamesh/dsh-app-host']){await assert.rejects(service.installPlugin({packageName:name}),error=>error.code==='PACKAGE_DENIED'&&error.status===403);await assert.rejects(service.uninstallPlugin({packageName:name}),error=>error.code==='PACKAGE_DENIED'&&error.status===403);}
   assert.equal(calls.length,0,'nothing reached the DSH CLI');
   assert.equal(service.events().events.length,0,'no operation was started for a rejected input');
   // A plugin the catalog does not list is refused (404), a listed one starts the operation.

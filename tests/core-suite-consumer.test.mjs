@@ -1,4 +1,5 @@
-import {SUITE_INSTALL_COMMAND} from '@hanamesh/core/suite';
+import {writeSuiteProfile} from './fixtures/core-suite-declaration.mjs';
+const SUITE_INSTALL_COMMAND='dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
@@ -11,8 +12,8 @@ import {clientHarness,settle,fakeClock} from './fixtures/client-ui-harness.mjs';
 
 const missing='Core 未提供套件声明';
 // An App-host execution-port double, deliberately NOT a proposed Core wire DTO/getter.
-const approved=()=>({available:true,installCommand:SUITE_INSTALL_COMMAND,components:SUITE_PACKAGES.map((p,i)=>({name:p.name,label:p.label,from:['0.3.12','0.2.0-rc.34','0.6.5'][i],to:['0.4.0','0.3.0','0.7.0'][i]}))});
-async function profile(){const root=await scratch('core-suite-consumer-'),dependencies={};for(const c of approved().components){dependencies[c.name]=c.from;await mkdir(join(root,'node_modules',c.name),{recursive:true});await writeFile(join(root,'node_modules',c.name,'package.json'),JSON.stringify({name:c.name,version:c.from}));}await writeFile(join(root,'package.json'),JSON.stringify({dependencies,dsh:{profile:{bundles:Object.keys(dependencies)}}}));return root;}
+const approved=()=>({available:true,bundle:{name:'@hanamesh/hanamesh',from:'0.1.0',to:'0.1.1'},installCommand:SUITE_INSTALL_COMMAND,components:SUITE_PACKAGES.map((p,i)=>({name:p.name,label:p.label,from:['0.3.12','0.2.0-rc.34','0.6.5'][i],to:['0.4.0','0.3.0','0.7.0'][i]}))});
+async function profile(){const root=await scratch('core-suite-consumer-'),dependencies={};for(const c of approved().components){dependencies[c.name]=c.from;await mkdir(join(root,'node_modules',c.name),{recursive:true});await writeFile(join(root,'node_modules',c.name,'package.json'),JSON.stringify({name:c.name,version:c.from}));}await writeSuiteProfile(root,approved().components.map(c=>c.from));return root;}
 const noRegistry=async()=>{assert.fail('App-host must not select or judge suite candidates from registry metadata');};
 
 test('missing Core declaration refuses before registry access or an installation plan',async()=>{

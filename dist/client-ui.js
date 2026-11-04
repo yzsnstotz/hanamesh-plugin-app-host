@@ -187,7 +187,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy175": "打开",
     "copy176": "仅收录，不可安装",
     "copy177": "HanaMesh 套件",
-    "copy178": "已安装 · Core ",
+    "copy178": "已安装 · HanaMesh ",
     "copy179": "套件不完整，请查看组件状态",
     "copy180": "套件状态未知，请查看 Core 声明与阻断原因",
     "copy181": "Core 完整性：",
@@ -227,7 +227,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy215": "目录未提供版本",
     "copy216": "测试目录（fixture）",
     "copy217": "当前市场目录",
-    "copy218": "确认后升级三个官方组件；需要完全退出并重新打开客户端。",
+    "copy218": "确认后升级 HanaMesh 总包及其锁定组件；需要完全退出并重新打开客户端。",
     "copy219": "确认安装",
     "copy220": "取消",
     "copy221": "正在查询市场目录…",
@@ -360,7 +360,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy45": "Remove",
     "copy46": "Add and enable",
     "copy47": "Suite package source",
-    "copy48": "Choose the npm registry for the three official suite components. Browseable catalogs are configured separately in Market catalog sources.",
+    "copy48": "Choose the npm registry for the HanaMesh bundle. Browseable catalogs are configured separately in Market catalog sources.",
     "copy49": "Package source",
     "copy50": "Existing configuration (default)",
     "copy51": "Core’s current local source",
@@ -494,7 +494,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy175": "Open",
     "copy176": "Listed only; not installable",
     "copy177": "HanaMesh suite",
-    "copy178": "Installed · Core ",
+    "copy178": "Installed · HanaMesh ",
     "copy179": "Suite incomplete. Check component status",
     "copy180": "Suite status unknown. Check the Core declaration and blocking reasons",
     "copy181": "Core completeness: ",
@@ -534,7 +534,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy215": "No version provided by catalog",
     "copy216": "Test catalog (fixture)",
     "copy217": "Current market catalog",
-    "copy218": "Confirmation upgrades three official components. Fully quit and reopen the client afterwards.",
+    "copy218": "Confirmation upgrades the HanaMesh bundle and its locked components. Fully quit and reopen the client afterwards.",
     "copy219": "Confirm installation",
     "copy220": "Cancel",
     "copy221": "Reading market catalog…",
@@ -863,7 +863,7 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
   const KIND_TEXT={application:t('应用'),plugin:t('插件'),listing:t('仅收录')};
   const STATE_TEXT={registered:t('已安装'),installed:t('已安装'),'installed-not-loaded':t('需重启'),'uninstalled-not-unloaded':t('已卸载 · 需重启'),'runtime-missing':t('缺运行时'),invalid:t('包无效')};
   // Mirrors PROTECTED_PACKAGES on the host: the suite is never offered an uninstall button (the host answers 403 anyway).
-  const PROTECTED=new Set(['@hanamesh/core','@hanamesh/usage','@hanamesh/brand','@hanamesh/dsh-app-host','hanamesh-core','hanamesh-usage','hanamesh-brand','@hanamesh/dsh-core','@hanamesh/dsh-usage']);
+  const PROTECTED=new Set(['@hanamesh/hanamesh','@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host','hanamesh-brand']);
   function RestartNotice({reason}){useLocale();
     return h('p',{role:'status',className:'hm-restart-notice','data-hanamesh-restart':'required'},h('strong',null,t('需重新打开客户端')),' ',reason??t('插件更改需要重新打开客户端后生效。'),' ',h('span',{className:'hm-restart-hint'},t('请完全退出 HanaMesh 客户端或 DSH 后重新打开；关闭窗口不等于退出。')));
   }
@@ -1049,7 +1049,7 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
     const card=item=>{const row=item.installed,op=pending[item.id],busy=op?.busy;const installBody={itemId:item.id,...(item.package?.name?{packageName:item.package.name}:{})};
       let action=h('span',null,t('仅收录，不可安装')),state=null;
       if(row)state=h('span',{className:'hm-market-state','data-hanamesh-state':row.state},(t(STATE_TEXT[row.state]??row.state))+(row.version?' '+row.version:''));
-      if(item.kind==='suite')return h('article',{key:item.id,'data-hanamesh-library-item':item.id,'data-hanamesh-kind':'suite'},h('h3',null,t('HanaMesh 套件')),h('p',null,item.summary),h('p',null,item.suite?.status==='installed'?t('已安装 · Core ')+item.suite.version:item.suite?.status==='incomplete'?t('套件不完整，请查看组件状态'):t('套件状态未知，请查看 Core 声明与阻断原因')),item.suite?.completeness?h('p',null,t('Core 完整性：')+item.suite.completeness):null,...(item.suite?.components??[]).map(c=>h('p',{key:c.name},c.requiredRange?c.label+t(' · 要求 ')+c.requiredRange+t(' · 实际 ')+(c.actualVersion??t('检测不到'))+' · '+c.status:c.label+' · '+(c.version??t('检测不到'))+(c.active?'':t(' · 未启用')))),...(item.suite?.blocked??[]).map((row,i)=>h('p',{key:'blocked-'+i,role:'status'},row.code+(row.moduleName?' · '+row.moduleName:'')+(row.coreVersion?' · '+row.coreVersion:''))),item.suiteUpgradeUnavailable?h('p',{role:'status'},item.suiteUpgradeUnavailable):null,h('button',{type:'button',disabled:Boolean(item.suiteUpgradeUnavailable),onClick:()=>void openInstallTarget({itemId:'hanamesh:suite-upgrade'}).catch(()=>{})},t('检查兼容升级')));
+      if(item.kind==='suite')return h('article',{key:item.id,'data-hanamesh-library-item':item.id,'data-hanamesh-kind':'suite'},h('h3',null,t('HanaMesh 套件')),h('p',null,item.summary),h('p',null,item.suite?.status==='installed'?t('已安装 · HanaMesh ')+item.suite.version:item.suite?.status==='incomplete'?t('套件不完整，请查看组件状态'):t('套件状态未知，请查看 Core 声明与阻断原因')),item.suite?.completeness?h('p',null,t('Core 完整性：')+item.suite.completeness):null,...(item.suite?.components??[]).map(c=>h('p',{key:c.name},c.requiredRange?c.label+t(' · 要求 ')+c.requiredRange+t(' · 实际 ')+(c.actualVersion??t('检测不到'))+' · '+c.status:c.label+' · '+(c.version??t('检测不到'))+(c.active?'':t(' · 未启用')))),...(item.suite?.blocked??[]).map((row,i)=>h('p',{key:'blocked-'+i,role:'status'},row.code+(row.moduleName?' · '+row.moduleName:'')+(row.bundleVersion?' · HanaMesh '+row.bundleVersion:'')+(row.coreVersion?' · Core '+row.coreVersion:''))),item.suiteUpgradeUnavailable?h('p',{role:'status'},item.suiteUpgradeUnavailable):null,h('button',{type:'button',disabled:Boolean(item.suiteUpgradeUnavailable),onClick:()=>void openInstallTarget({itemId:'hanamesh:suite-upgrade'}).catch(()=>{})},t('检查兼容升级')));
       if(busy)action=h('button',{type:'button',disabled:true},t(op.text));
       else if(item.kind!=='listing'&&!row)action=h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/install',installBody,item.id,t('安装'))},op?.failed?t('重试安装'):t('安装'));
       else if(row&&item.upgradeAvailable)action=h('span',{className:'hm-market-actions'},h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/install',installBody,item.id,t('升级'))},t('升级到 ')+item.latestVersion),row.state==='registered'?openButton(row):null);
@@ -1081,9 +1081,9 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
           h('input',{'aria-label':t('包名'),value:targetPackageName,placeholder:t('packageName（可选）'),onChange:event=>setTargetPackageName(event.target.value)}),h('button',{type:'submit'},t('查看安装目标')))):null,
         target?h('div',{role:target.status==='confirmation-required'?'dialog':'status','aria-label':t('市场安装确认')},
           target.item?h('dl',null,h('dt',null,t('插件名')),h('dd',null,target.item.displayName),h('dt',null,t('包名')),h('dd',null,target.item.package.name),h('dt',null,t('版本')),h('dd',null,target.item.latestVersion??t('目录未提供版本')),h('dt',null,t('来源')),h('dd',null,target.source?.kind==='fixture'?t('测试目录（fixture）'):target.source?.manifestUrl??t('当前市场目录'))):null,
-          target.item?.suiteUpgrade?h('ul',null,...target.item.suiteUpgrade.components.map(c=>h('li',{key:c.name},c.label+'：'+c.from+' → '+c.to)),h('li',null,t('确认后升级三个官方组件；需要完全退出并重新打开客户端。'))):null,
+          target.item?.suiteUpgrade?h('ul',null,...target.item.suiteUpgrade.components.map(c=>h('li',{key:c.name},c.label+'：'+c.from+' → '+c.to)),h('li',null,t('确认后升级 HanaMesh 总包及其锁定组件；需要完全退出并重新打开客户端。'))):null,
           target.item?.suiteUpgrade?.registry?h('p',null,'Registry：'+target.item.suiteUpgrade.registry):null,
-          ...(target.item?.suiteUpgrade?.blocked??target.details?.blocked??[]).map((row,i)=>h('p',{key:'suite-blocked-'+i,role:'status'},row.code+(row.moduleName?' · '+row.moduleName:'')+(row.coreVersion?' · '+row.coreVersion:''))),
+          ...(target.item?.suiteUpgrade?.blocked??target.details?.blocked??[]).map((row,i)=>h('p',{key:'suite-blocked-'+i,role:'status'},row.code+(row.moduleName?' · '+row.moduleName:'')+(row.bundleVersion?' · HanaMesh '+row.bundleVersion:'')+(row.coreVersion?' · Core '+row.coreVersion:''))),
           target.status==='confirmation-required'?h('div',null,h('button',{type:'button',onClick:()=>void confirmTarget()},t('确认安装')),h('button',{type:'button',onClick:()=>{targetSequence++;void reportHandoff(targetSelection?.handoffId,'cancelled');setTarget({...targetSelection,status:'cancelled'});}},t('取消'))):
           target.status==='failed'?FailureNotice({error:target.diagnostic??target.error}):h('p',{role:['readback-failed','suite-upgrade-failed'].includes(target.status)?'alert':'status'},({resolving:t('正在查询市场目录…'),installing:t('安装中…'),installed:t('安装完成，请查看已安装列表'),'installed-live':t('安装完成，已加载，可以直接使用'),cancelled:t('已取消，未安装'),'result-unavailable':t('安装结果不可追溯，请查看已安装列表；不会自动重试'),'already-installed':t('已安装，无需重复安装'),failed:t('未安装：')+(target.error??pending[target.item?.id]?.text??t('安装失败')),'readback-failed':target.error,'suite-upgrade-failed':suiteTargetFailure(target)})[target.status]),
           target.item?.source?h('div',{'aria-label':t('目录条目来源')},h('p',null,target.item.source.sourceId+' · '+target.item.source.sourceRef),...(target.item.source.sourceLinks??[]).map((link,index)=>h('p',{key:index},h('a',{href:link.sourceUrl,target:'_blank',rel:'noopener noreferrer'},link.sourceId+' · '+link.sourceRef),h('small',null,' '+link.firstSeenAt+' / '+link.lastSeenAt)))):null,

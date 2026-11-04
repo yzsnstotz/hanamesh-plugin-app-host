@@ -1,7 +1,7 @@
 /** Read fresh public installation facts. No compatibility calculation, persistence or polling. */
 import semver from 'semver';
 import {AppHostError} from '../errors.js';
-import {createCoreSuiteAdapter,SUITE_PACKAGES} from './suite.js';
+import {SUITE_BUNDLE,createCoreSuiteAdapter,SUITE_PACKAGES} from './suite.js';
 import {SUPPORTED_READER_VERSIONS,validReader,runOfficialInstallationCommand} from './installation-cli.js';
 const object=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const exact=x=>typeof x==='string'&&semver.valid(x)===x?x:null;
@@ -11,7 +11,7 @@ function abortable(work,signal){
  if(signal.aborted)return Promise.reject(interrupted());
  return new Promise((resolve,reject)=>{const abort=()=>reject(interrupted());signal.addEventListener('abort',abort,{once:true});Promise.resolve(work).then(resolve,reject).finally(()=>signal.removeEventListener('abort',abort))});
 }
-const base=(channel,id,kind,label)=>({channel,scope:{id,kind,label},status:'unknown',version:null,versionKind:['dsh','hanamesh'].includes(channel)?'core':'agent-distribution',components:[],identity:null,reason:null});
+const base=(channel,id,kind,label)=>({channel,scope:{id,kind,label},status:'unknown',version:null,versionKind:['dsh','hanamesh'].includes(channel)?'suite-bundle':'agent-distribution',components:[],identity:null,reason:null});
 const unknown=(row,code,message,action)=>({...row,status:'unknown',version:null,reason:reason(code,message,action)});
 const agentBase=channel=>base(channel,'agent-cli','official-user-profile',channel==='claude'?'Claude Code 用户级插件（不覆盖项目或其他隔离资料）':'Codex CLI 本地市场用户资料（不代表桌面 App、项目或其他隔离资料）');
 const inventoryError=()=>{throw new AppHostError('AGENT_INVENTORY_INVALID','Official inventory shape is unsupported.',{},503)};
@@ -58,7 +58,7 @@ export function createInstallationStatusReader({client='dsh',core=()=>undefined,
   const row=base(client,'current-runtime','responding-runtime',client==='dsh'?'当前响应的 DSH runtime':'当前响应的 HanaMesh 客户端 runtime');
   try{const value=await abortable(suite.readFacts(),signal);
    const components=value.components.map(c=>({name:c.name,version:exact(c.version),...(['satisfied','missing','incompatible','damaged','unreadable','inactive','failed','ambiguous'].includes(c.status)?{status:c.status}:{}),...(typeof c.active==='boolean'?{active:c.active}:{})}));
-   const blocked=value.blocked.map(r=>({code:/^CORE_[A-Z0-9_]{1,75}$/.test(r.code)?r.code:'CORE_SUITE_BLOCKED',...(SUITE_PACKAGES.some(c=>c.name===r.moduleName)?{moduleName:r.moduleName}:{})}));
+   const blocked=value.blocked.map(r=>({code:/^CORE_[A-Z0-9_]{1,75}$/.test(r.code)?r.code:'CORE_SUITE_BLOCKED',...(r.moduleName===SUITE_BUNDLE||SUITE_PACKAGES.some(c=>c.name===r.moduleName)?{moduleName:r.moduleName}:{})}));
    return{...row,status:value.status,version:value.status==='unknown'?null:exact(value.version),components,blocked,
     reason:value.status==='unknown'?reason('CORE_SUITE_DECLARATION_UNKNOWN','Core 尚不能确认本 runtime 的套件完整性。','查看 Core 设置中的具名阻断原因，补齐其公开事实后重新检测。'):value.status==='incomplete'?reason('CORE_SUITE_CURRENT_INCOMPLETE','Core 报告本 runtime 的套件不完整。','在本客户端按 Core 组件说明修复后重新检测。'):null};
   }catch(error){if(signal.aborted)throw interrupted();const code=['CORE_SUITE_DECLARATION_MISSING','CORE_SUITE_DECLARATION_INVALID'].includes(error.code)?error.code:'CORE_SUITE_READ_FAILED';return unknown(row,code,code==='CORE_SUITE_DECLARATION_MISSING'?'本 runtime 未提供 Core 套件声明方法。':'本次 Core 套件声明读取失败。','启用支持 protocol 1 getSuiteDeclaration 的 Core，查看其设置并重新检测。')}

@@ -6,12 +6,12 @@ import * as suite from '../src/library/suite.js';
 import {createLibraryInstaller} from '../src/library/install.js';
 import {createLibraryService} from '../src/library/service.js';
 import {scratch} from './helpers.mjs';
-import {declaration,core,registry,names,versions} from './fixtures/core-suite-declaration.mjs';
+import {declaration,core,registry,names,versions,writeSuiteProfile} from './fixtures/core-suite-declaration.mjs';
 import {clientHarness,settle} from './fixtures/client-ui-harness.mjs';
 const missing='Core 未提供套件声明';
 const provider=value=>{const service=core(value);return()=>service;};
 function adapter(options){assert.equal(typeof suite.createCoreSuiteAdapter,'function','public Core adapter is available');return suite.createCoreSuiteAdapter(options);}
-async function profile(){const root=await scratch('public-core-suite-');for(const [i,name] of names.entries()){await mkdir(join(root,'node_modules',name),{recursive:true});await writeFile(join(root,'node_modules',name,'package.json'),JSON.stringify({name,version:versions[i]}));}await writeFile(join(root,'package.json'),JSON.stringify({dependencies:Object.fromEntries(names.map((name,i)=>[name,versions[i]])),dsh:{profile:{bundles:names}}}));return root;}
+async function profile(){const root=await scratch('public-core-suite-');for(const [i,name] of names.entries()){await mkdir(join(root,'node_modules',name),{recursive:true});await writeFile(join(root,'node_modules',name,'package.json'),JSON.stringify({name,version:versions[i]}));}await writeSuiteProfile(root,versions);return root;}
 test('public adapter sends only actual registry for candidates, zero request for facts, and preserves Core tuple identities',async()=>{
   const value=declaration(),requests=[];const service={protocolVersion:'1',getSuiteDeclaration:async(...args)=>{requests.push(args);return value;}};
   const get=adapter({core:()=>service,registry:registry.slice(0,-1)});const facts=await get.readFacts();assert.deepEqual(requests,[[]]);assert.equal(facts.completeness,'complete');assert.equal(facts.components[0].requiredRange,'0.3.12');assert.equal(facts.components[0].actualVersion,versions[0]);
@@ -22,7 +22,7 @@ test('public adapter observes absent, old, arriving, and removed optional method
   service=core(declaration());assert.equal(get.unavailable,null);assert.equal((await get()).available,true);delete service.getSuiteDeclaration;assert.equal(get.unavailable,missing);await assert.rejects(get(),{code:'CORE_SUITE_DECLARATION_MISSING'});
 });
 test('public adapter refuses malformed DTOs instead of interpreting unknown as complete',async()=>{
-  for(const mutate of [v=>{delete v.installCommand;},v=>{v.schemaVersion=2;},v=>{delete v.manifest;},v=>{v.completeness='ready';},v=>{v.installed.pop();},v=>{v.upgrades[0].targets[0].version='latest';},v=>{delete v.upgrades[0].targets[0].metadataDigest;},v=>{v.upgrades[0].targets[1].moduleName='foreign';},v=>{delete v.peerFacts;}]){const value=declaration();mutate(value);await assert.rejects(adapter({core:provider(value),registry})(),{code:'CORE_SUITE_DECLARATION_INVALID'});}
+  for(const mutate of [v=>{v.bundleVersion=null;},v=>{delete v.upgrades[0].bundle;},v=>{v.upgrades[0].bundle.moduleName='foreign';},v=>{delete v.installCommand;},v=>{v.schemaVersion=2;},v=>{delete v.manifest;},v=>{v.completeness='ready';},v=>{v.installed.pop();},v=>{v.upgrades[0].targets[0].version='latest';},v=>{delete v.upgrades[0].targets[0].metadataDigest;},v=>{v.upgrades[0].targets[1].moduleName='foreign';},v=>{delete v.peerFacts;}]){const value=declaration();mutate(value);await assert.rejects(adapter({core:provider(value),registry})(),{code:'CORE_SUITE_DECLARATION_INVALID'});}
 });
 test('Core completeness and named blocked facts control refusal; blocked other candidates do not veto a valid tuple',async()=>{
   const value=declaration();value.blocked=[{code:'CORE_SUITE_METADATA_TIMEOUT',coreVersion:'99.0.0'}];assert.equal((await adapter({core:provider(value),registry})()).available,true);

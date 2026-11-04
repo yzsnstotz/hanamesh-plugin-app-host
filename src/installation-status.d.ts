@@ -12,7 +12,7 @@ export interface InstallationStatusRequest {contractVersion:'1';consent:'read-in
 export interface InstallationObservation {
  channel:'hanamesh'|'dsh'|'claude'|'codex';
  scope:{id:'current-runtime'|'other-runtime'|'agent-cli'|'desktop-app';kind:'responding-runtime'|'unobserved-runtime'|'official-user-profile'|'desktop-app';label:string};
- status:'installed'|'not-installed'|'incomplete'|'unknown';version:string|null;versionKind:'core'|'agent-distribution';
+ status:'installed'|'not-installed'|'incomplete'|'unknown';version:string|null;versionKind:'suite-bundle'|'agent-distribution';
  components:readonly {name:string;version:string|null;active?:boolean;status?:string}[];
  identity:{pluginName:string;marketplace:string}|null;
  reason:{code:string;message:string;action:string}|null;

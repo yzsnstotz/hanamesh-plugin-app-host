@@ -10,10 +10,10 @@ import {noteFailurePhase} from './diagnostics.js';
 import { validateDefinition } from '../descriptor.js';
 import { itemKind } from './catalog.js';
 import { profileSnapshot, runtimeSnapshot, profileChecks, runtimeChecks, packageRestoreArgs, keepOriginals } from './recovery.js';
-import {prepareSuiteUpgrade,readSuiteStatus,createCoreSuiteAdapter} from './suite.js';
+import {SUITE_BUNDLE,prepareSuiteUpgrade,readSuiteStatus,createCoreSuiteAdapter} from './suite.js';
 
-/** The HanaMesh suite itself (real names + the historical scoped spellings) is never installed or removed through the market. */
-export const PROTECTED_PACKAGES=Object.freeze(['@hanamesh/core','@hanamesh/usage','@hanamesh/brand','@hanamesh/dsh-app-host','hanamesh-core','hanamesh-usage','hanamesh-brand','@hanamesh/dsh-core','@hanamesh/dsh-usage']);
+/** Suite packages are changed only by the confirmed suite upgrade command. */
+export const PROTECTED_PACKAGES=Object.freeze([SUITE_BUNDLE,'@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host','hanamesh-brand']);
 const blocked=new Set(PROTECTED_PACKAGES);
 const packageName=value=>typeof value==='string'&&/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(value);
 const versionText=value=>typeof value==='string'&&/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(value);
@@ -195,24 +195,24 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       requireCondition(suitePlan?.planId===planId,'SUITE_PLAN_CHANGED','升级确认已变化，请重新查看并确认。',{},409);
       const confirmed=suitePlan;suitePlan=undefined;
       const fresh=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider});
-      const identity=plan=>JSON.stringify({sourceBinding:plan.sourceBinding,components:plan.components,declarationId:plan.declarationId,registry:plan.registry,selectedUpgrade:plan.selectedUpgrade,physicalBaseline:plan.physicalBaseline});
+      const identity=plan=>JSON.stringify({sourceBinding:plan.sourceBinding,bundle:plan.bundle,components:plan.components,declarationId:plan.declarationId,registry:plan.registry,selectedUpgrade:plan.selectedUpgrade,physicalBaseline:plan.physicalBaseline});
       requireCondition(identity(fresh)===identity(confirmed),'SUITE_PLAN_CHANGED','套件声明或版本已变化，请重新查看并确认。',{},409);
       requireCondition(fresh.available,'SUITE_NO_UPDATE','当前没有兼容新版。',{},409);
       const before=await readSuiteStatus(profileDir);
-      requireCondition(before.status==='installed'&&fresh.components.every((c,i)=>before.components[i]?.version===c.from),'SUITE_PLAN_CHANGED','已装版本或启用状态已变化，请重新查看并确认。',{},409);
+      requireCondition(before.status==='installed'&&before.version===fresh.bundle.from&&fresh.components.every((c,i)=>before.components[i]?.version===c.from),'SUITE_PLAN_CHANGED','已装版本或启用状态已变化，请重新查看并确认。',{},409);
       requireCondition(cliAvailable,'DSH_CLI_UNAVAILABLE','套件升级需客户端随附的官方 CLI；请恢复后重试。',{},503);
       const executing=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider});
       requireCondition(identity(executing)===identity(confirmed),'SUITE_PLAN_CHANGED','执行前套件安装包来源或声明已变化，请重新查看并确认。',{},409);
-      emit({type:'library.install-started',itemId:'hanamesh:suite-upgrade',packageName:'@hanamesh/core',kind:'suite-upgrade'});
+      emit({type:'library.install-started',itemId:'hanamesh:suite-upgrade',packageName:SUITE_BUNDLE,kind:'suite-upgrade'});
       try{
-        await run(['add','--save-exact','--strict-peer-dependencies',`--registry=${fresh.registry??registry??'https://registry.npmjs.org'}`,...fresh.components.map(c=>`${c.name}@${c.to}`)]);
+        await run(['add','--save-exact','--strict-peer-dependencies',`--registry=${fresh.registry??registry??'https://registry.npmjs.org'}`,`${SUITE_BUNDLE}@${fresh.bundle.to}`]);
         const actual=await readSuiteStatus(profileDir);
         const saved=await json(join(profileDir,'package.json'));
-        requireCondition(actual.status==='installed'&&fresh.components.every((c,i)=>actual.components[i]?.version===c.to&&saved.dependencies?.[c.name]===c.to),'INSTALL_READBACK_MISMATCH','套件升级后的版本或启用状态不符，请完全退出后按补齐命令修复。',{},502);
-        return{status:'restart-required',kind:'suite-upgrade',packageName:'@hanamesh/core',components:fresh.components,version:actual.version};
+        requireCondition(actual.status==='installed'&&actual.version===fresh.bundle.to&&saved.dependencies?.[SUITE_BUNDLE]===fresh.bundle.to&&fresh.components.every((c,i)=>actual.components[i]?.version===c.to),'INSTALL_READBACK_MISMATCH','套件升级后的版本或启用状态不符，请完全退出后按补齐命令修复。',{},502);
+        return{status:'restart-required',kind:'suite-upgrade',packageName:SUITE_BUNDLE,components:fresh.components,version:actual.version};
       }catch(error){
         error.details={...error.details,stage:'suite-upgrade',actual:await readSuiteStatus(profileDir),command:fresh.installCommand};
-        emit({type:'library.install-failed',packageName:'@hanamesh/core',code:error.code??'SUITE_UPGRADE_FAILED'});throw error;
+        emit({type:'library.install-failed',packageName:SUITE_BUNDLE,code:error.code??'SUITE_UPGRADE_FAILED'});throw error;
       }
     });},
     async install(item,context){

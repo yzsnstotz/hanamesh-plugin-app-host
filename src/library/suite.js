@@ -1,9 +1,12 @@
 import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import semver from 'semver';
+import {createRequire} from 'node:module';
+import {pathToFileURL} from 'node:url';
 import {randomUUID} from 'node:crypto';
 import {requireCondition} from '../errors.js';
 
+export const SUITE_BUNDLE='@hanamesh/hanamesh';
 export const SUITE_TARGET='hanamesh:suite-upgrade';
 export const SUITE_PACKAGES=Object.freeze([
   {name:'@hanamesh/core',label:'Core',repo:'hanamesh-core'},
@@ -17,11 +20,16 @@ export async function readSuiteStatus(profileDir){
   try{
     const profile=await json(join(profileDir,'package.json'));
     if(!profile.dependencies||!Array.isArray(profile.dsh?.profile?.bundles))throw new Error('unreadable profile');
+    const resolver=createRequire(pathToFileURL(join(profileDir,'package.json')));
+    let bundle,bundlePath;try{bundlePath=resolver.resolve(`${SUITE_BUNDLE}/package.json`);bundle=await json(bundlePath);}catch{}
+    const memberResolver=bundlePath?createRequire(bundlePath):resolver;
+    const selected=profile.dsh.profile.bundles.includes(SUITE_BUNDLE)&&Object.hasOwn(profile.dependencies,SUITE_BUNDLE);
     const components=await Promise.all(SUITE_PACKAGES.map(async({name,label})=>{
-      let pkg;try{pkg=await json(join(profileDir,'node_modules',name,'package.json'));}catch{}
-      return{name,label,version:pkg?.name===name&&semver.valid(pkg.version)?pkg.version:null,active:profile.dsh.profile.bundles.includes(name)};
+      let pkg;try{pkg=await json(memberResolver.resolve(`${name}/package.json`));}catch{}
+      return{name,label,version:pkg?.name===name&&semver.valid(pkg.version)?pkg.version:null,active:selected};
     }));
-    return{status:components.every(c=>c.version&&c.active)?'installed':'incomplete',version:components[0].version,components};
+    const version=bundle?.name===SUITE_BUNDLE&&semver.valid(bundle.version)?bundle.version:null;
+    return{status:version&&selected&&components.every(c=>c.version&&bundle.dependencies?.[c.name]===c.version)?'installed':'incomplete',version,components};
   }catch{return{status:'unknown',version:null,components:[]};}
 }
 export const CORE_SUITE_DECLARATION_MISSING='Core 未提供套件声明';
@@ -32,9 +40,10 @@ const digest=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
 const nullableText=value=>value===null||text(value);
 const invalid=()=>requireCondition(false,'CORE_SUITE_DECLARATION_INVALID','Core 套件声明无法用于精确安装。',{},503);
 function validateDeclaration(value){
-  if(!object(value)||value.schemaVersion!==1||!text(value.checkedAt)||!text(value.installCommand)||!digest(value.declarationId)||!text(value.nodeVersion)||!nullableText(value.registry)||!['complete','incomplete','unknown'].includes(value.completeness))invalid();
+  if(!object(value)||value.schemaVersion!==1||!text(value.checkedAt)||!text(value.installCommand)||!digest(value.declarationId)||!text(value.nodeVersion)||!nullableText(value.registry)||!(value.bundleVersion===null||exact(value.bundleVersion))||!['complete','incomplete','unknown'].includes(value.completeness))invalid();
+  if(value.completeness==='complete'&&!exact(value.bundleVersion))invalid();
   const manifest=value.manifest;
-  if(!object(manifest)||manifest.schemaVersion!==1||!text(manifest.id)||!object(manifest.core)||manifest.core.name!==SUITE_PACKAGES[0].name||!exact(manifest.core.version)||!text(manifest.core.repository)||!Array.isArray(manifest.components)||manifest.components.length!==2)invalid();
+  if(!object(manifest)||manifest.schemaVersion!==1||!text(manifest.id)||!object(manifest.bundle)||manifest.bundle.name!==SUITE_BUNDLE||!text(manifest.bundle.repository)||!object(manifest.core)||manifest.core.name!==SUITE_PACKAGES[0].name||!exact(manifest.core.version)||!text(manifest.core.repository)||!Array.isArray(manifest.components)||manifest.components.length!==2)invalid();
   const members=new Map();
   for(const row of manifest.components){if(!object(row)||!text(row.id)||!SUITE_PACKAGES.slice(1).some(p=>p.name===row.moduleName)||members.has(row.moduleName)||!text(row.versionRange)||!text(row.repository))invalid();members.set(row.moduleName,row.id);}
   if(!Array.isArray(value.installed)||value.installed.length!==3||!Array.isArray(value.upgrades)||!Array.isArray(value.blocked)||!object(value.peerFacts)||!object(value.metadataDigests))invalid();
@@ -43,10 +52,10 @@ function validateDeclaration(value){
     if(!object(row)||!text(row.id)||!SUITE_PACKAGES.some(p=>p.name===row.moduleName)||installed.has(row.moduleName)||!text(row.requiredRange)||!text(row.repository)||!(row.actualVersion===null||exact(row.actualVersion))||!nullableText(row.actualRepository)||!text(row.status)||(row.runningVersion!==undefined&&!exact(row.runningVersion)))invalid();
     installed.set(row.moduleName,row);
   }
-  for(const row of value.blocked)if(!object(row)||!text(row.code)||(row.coreVersion!==undefined&&!text(row.coreVersion))||(row.moduleName!==undefined&&!text(row.moduleName)))invalid();
+  for(const row of value.blocked)if(!object(row)||!text(row.code)||(row.coreVersion!==undefined&&!text(row.coreVersion))||(row.bundleVersion!==undefined&&!exact(row.bundleVersion))||(row.moduleName!==undefined&&!text(row.moduleName)))invalid();
   if(!Object.values(value.peerFacts).every(nullableText)||!Object.values(value.metadataDigests).every(text))invalid();
   for(const upgrade of value.upgrades){
-    if(!object(upgrade)||!exact(upgrade.coreVersion)||!text(upgrade.registry)||!digest(upgrade.manifestDigest)||!Array.isArray(upgrade.targets)||upgrade.targets.length!==3)invalid();
+    if(!object(upgrade)||!object(upgrade.bundle)||!text(upgrade.bundle.id)||upgrade.bundle.moduleName!==SUITE_BUNDLE||!exact(upgrade.bundle.version)||!text(upgrade.bundle.repository)||!digest(upgrade.bundle.metadataDigest)||!exact(upgrade.coreVersion)||!text(upgrade.registry)||!digest(upgrade.manifestDigest)||!Array.isArray(upgrade.targets)||upgrade.targets.length!==3)invalid();
     const targets=new Set();
     for(const row of upgrade.targets){if(!object(row)||!text(row.id)||!SUITE_PACKAGES.some(p=>p.name===row.moduleName)||targets.has(row.moduleName)||!exact(row.version)||!text(row.repository)||!digest(row.metadataDigest))invalid();targets.add(row.moduleName);}
     if(upgrade.targets.find(row=>row.moduleName===SUITE_PACKAGES[0].name).version!==upgrade.coreVersion)invalid();
@@ -98,12 +107,12 @@ export function createCoreSuiteAdapter({core=()=>undefined,registry,suiteSourceM
     const selectedUpgrade=declaration.upgrades[0];
     requireCondition(selectedUpgrade.registry===declaration.registry,'CORE_SUITE_SOURCE_MISMATCH','Core 升级组合来源与执行 registry 不符。',{},409);
     const components=SUITE_PACKAGES.map(({name,label})=>{const from=declaration.installed.find(row=>row.moduleName===name).actualVersion;if(!exact(from))invalid();return{name,label,from,to:selectedUpgrade.targets.find(row=>row.moduleName===name).version};});
-    return{available:true,components,installCommand:declaration.installCommand,sourceBinding:binding,declarationId:declaration.declarationId,registry:declaration.registry,selectedUpgrade,physicalBaseline:declaration.installed,upgrades:declaration.upgrades,blocked:declaration.blocked};
+    return{available:true,bundle:{name:SUITE_BUNDLE,from:declaration.bundleVersion,to:selectedUpgrade.bundle.version},components,installCommand:declaration.installCommand,sourceBinding:binding,declarationId:declaration.declarationId,registry:declaration.registry,selectedUpgrade,physicalBaseline:declaration.installed,upgrades:declaration.upgrades,blocked:declaration.blocked};
   };
   Object.defineProperty(get,'unavailable',{get:()=>current()?null:CORE_SUITE_DECLARATION_MISSING});
   get.readFacts=async()=>{
     const declaration=await read();
-    return{status:declaration.completeness==='complete'?'installed':declaration.completeness,completeness:declaration.completeness,version:declaration.installed.find(row=>row.moduleName==='@hanamesh/core').actualVersion,
+    return{status:declaration.completeness==='complete'?'installed':declaration.completeness,completeness:declaration.completeness,version:declaration.bundleVersion,
       components:declaration.installed.map(row=>({...row,name:row.moduleName,label:SUITE_PACKAGES.find(p=>p.name===row.moduleName).label,version:row.actualVersion})),blocked:declaration.blocked};
   };
   return get;
@@ -119,7 +128,7 @@ export async function prepareSuiteUpgrade({coreSuitePlan}={}){
   const plan=await coreSuitePlan();
   requireCondition(plan!==undefined&&plan!==null,'CORE_SUITE_DECLARATION_MISSING',CORE_SUITE_DECLARATION_MISSING,{},503);
   const invalid=()=>requireCondition(false,'CORE_SUITE_DECLARATION_INVALID','Core 套件声明无法用于精确安装。',{},503);
-  if(typeof plan!=='object'||Array.isArray(plan)||typeof plan.available!=='boolean'||!text(plan.installCommand)||!Array.isArray(plan.components)||plan.components.length!==SUITE_PACKAGES.length)invalid();
+  if(typeof plan!=='object'||Array.isArray(plan)||typeof plan.available!=='boolean'||!object(plan.bundle)||plan.bundle.name!==SUITE_BUNDLE||!exact(plan.bundle.from)||!exact(plan.bundle.to)||!text(plan.installCommand)||!Array.isArray(plan.components)||plan.components.length!==SUITE_PACKAGES.length)invalid();
   const rows=new Map();
   for(const row of plan.components){
     if(!row||typeof row!=='object'||!SUITE_PACKAGES.some(p=>p.name===row.name)||rows.has(row.name)||typeof row.from!=='string'||semver.valid(row.from)!==row.from||typeof row.to!=='string'||semver.valid(row.to)!==row.to)invalid();

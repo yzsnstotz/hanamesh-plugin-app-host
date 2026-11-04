@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { AppHostError, requireCondition, SerialQueue } from '../errors.js';
 import { loadCatalog, isApplication, itemKind, upgradeAvailable, validateManifestUrl } from './catalog.js';
 import { scanInstalled, scanInstalledPlugins, snapshotProfileDependencies } from './installed.js';
-import {SUITE_TARGET,SUITE_PACKAGES,readSuiteStatus,CORE_SUITE_DECLARATION_MISSING,readSuiteSourceState} from './suite.js';
+import {SUITE_BUNDLE,SUITE_TARGET,SUITE_PACKAGES,readSuiteStatus,CORE_SUITE_DECLARATION_MISSING,readSuiteSourceState} from './suite.js';
 import { PROTECTED_PACKAGES } from './install.js';
 import { handoffSettings } from './handoff.js';
 import { INSTALLATION_STATUS_CAPABILITY } from '../installation-status.js';
@@ -70,7 +70,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       requireCondition(packageName===undefined,'INVALID_INPUT','套件升级不接受包名或任意替换参数。');
       requireCondition(typeof installer?.prepareSuiteUpgrade==='function','SUITE_UPGRADE_UNAVAILABLE','当前客户端还不支持安全套件升级，请使用补齐命令。',{},503);
       const plan=await installer.prepareSuiteUpgrade();
-      return{contractVersion:'1',source:{kind:'suite',manifestUrl:'https://github.com/yzsnstotz'},item:{id:SUITE_TARGET,displayName:'HanaMesh 套件',kind:'suite-upgrade',package:{registry:'npm',name:'@hanamesh/core'},latestVersion:plan.components[0].to,installed:{state:'installed',version:suiteStatus.version},upgradeAvailable:plan.available,suiteUpgrade:plan}};
+      return{contractVersion:'1',source:{kind:'suite',manifestUrl:'https://github.com/yzsnstotz'},item:{id:SUITE_TARGET,displayName:'HanaMesh 套件',kind:'suite-upgrade',package:{registry:'npm',name:SUITE_BUNDLE},latestVersion:plan.bundle.to,installed:{state:'installed',version:suiteStatus.version},upgradeAvailable:plan.available,suiteUpgrade:plan}};
     }
     requireCondition(itemId!==undefined||packageName!==undefined,'INVALID_INPUT','itemId or packageName is required.');
     requireCondition(itemId===undefined||(text(itemId,160)&&!/[\u0000-\u001f\u007f]/.test(itemId)),'INVALID_INPUT','itemId is invalid.');
@@ -152,7 +152,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
     get live(){return Boolean(installer?.live);},
     async upgradeSuite(input){requireInstaller('Suite upgrade is unavailable.');
       requireCondition(input&&Object.keys(input).length===1&&typeof input.planId==='string','INVALID_INPUT','Only the current planId is accepted.');
-      return await operation('install',async()=>{try{const result=await installer.upgradeSuite(input);suiteStatus={...await suiteFacts(),restartRequired:true};return result;}catch(error){if(error.details?.stage!=='suite-upgrade')throw error;const actual=await readSuiteStatus(config.profileDir);suiteStatus={...await suiteFacts(),restartRequired:true,upgradeError:error.code??'SUITE_UPGRADE_FAILED'};error.details={...error.details,stage:'suite-upgrade',actual,command:error.details.command};emit({type:'library.install-failed',packageName:'@hanamesh/core',code:error.code??'SUITE_UPGRADE_FAILED',details:{stage:'suite-upgrade',actual,command:error.details.command}});throw error;}});
+      return await operation('install',async()=>{try{const result=await installer.upgradeSuite(input);suiteStatus={...await suiteFacts(),restartRequired:true};return result;}catch(error){if(error.details?.stage!=='suite-upgrade')throw error;const actual=await readSuiteStatus(config.profileDir);suiteStatus={...await suiteFacts(),restartRequired:true,upgradeError:error.code??'SUITE_UPGRADE_FAILED'};error.details={...error.details,stage:'suite-upgrade',actual,command:error.details.command};emit({type:'library.install-failed',packageName:SUITE_BUNDLE,code:error.code??'SUITE_UPGRADE_FAILED',details:{stage:'suite-upgrade',actual,command:error.details.command}});throw error;}});
     },
     async install(input){requireCondition(input?.itemId!==SUITE_TARGET,'SUITE_CONFIRMATION_REQUIRED','请在客户端确认完整升级计划。',{},403);requireInstaller('Install requires absolute profileDir, nodeBinary, dshBin and profileName.');const{item}=await resolveTarget(input??{});if(present(item.installed)&&!item.upgradeAvailable)return{status:'already-installed',itemId:item.id,packageName:item.package.name};return await installItem(item);},
     async provision(input){requireInstaller('Runtime provision is unavailable.');

@@ -10,10 +10,10 @@ import {noteFailurePhase} from './diagnostics.js';
 import { validateDefinition } from '../descriptor.js';
 import { itemKind } from './catalog.js';
 import { profileSnapshot, runtimeSnapshot, profileChecks, runtimeChecks, packageRestoreArgs, keepOriginals } from './recovery.js';
-import {prepareSuiteUpgrade,readSuiteStatus,createCoreSuiteAdapter} from './suite.js';
+import {SUITE_BUNDLE,prepareSuiteUpgrade,readSuiteStatus,createCoreSuiteAdapter} from './suite.js';
 
-/** The HanaMesh suite itself (real names + the historical scoped spellings) is never installed or removed through the market. */
-export const PROTECTED_PACKAGES=Object.freeze(['@hanamesh/core','@hanamesh/usage','@hanamesh/brand','@hanamesh/dsh-app-host','hanamesh-core','hanamesh-usage','hanamesh-brand','@hanamesh/dsh-core','@hanamesh/dsh-usage']);
+/** Suite packages are changed only by the confirmed suite upgrade command. */
+export const PROTECTED_PACKAGES=Object.freeze([SUITE_BUNDLE,'@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host','hanamesh-brand']);
 const blocked=new Set(PROTECTED_PACKAGES);
 const packageName=value=>typeof value==='string'&&/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(value);
 const versionText=value=>typeof value==='string'&&/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(value);
@@ -122,13 +122,13 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
    * items this operation newly claimed are removed by ownership, a replaced baseline item is provisioned again from the
    * restored definition, and then every item is read back. `restored`/`not-needed` only when every row matches the baseline.
    */
-  async function recover({name,stage,base,runtime,operationId}){
+  async function recover({name,stage,base,runtime,operationId,installRegistry}){
     const report={status:'failed',mode:base?.spec===null?'new-install':'upgrade',stage,previousVersion:base?.module??null,actions:[],checks:[],residue:[]};
     if(!base){report.mode='unknown';report.status='not-needed';return report;}
     const fail=error=>{report.error??={code:error.code??'INSTALL_RECOVERY_FAILED',message:String(error.message??error)};};
     try{
       let now=await profileSnapshot(profileDir,name);const args=packageRestoreArgs(base,now,name);
-      if(args){report.actions.push(['dsh','plugin',...args].join(' '));try{await run(args);}catch(error){fail(error);}now=await profileSnapshot(profileDir,name);}
+      if(args){report.actions.push(['dsh','plugin',...args].join(' '));try{await run([args[0],...(args[0]!=='remove'&&installRegistry!==null?[`--registry=${installRegistry}`]:[]),...args.slice(1)]);}catch(error){fail(error);}now=await profileSnapshot(profileDir,name);}
       report.checks.push(...profileChecks(base,now,name));
     }catch(error){fail(error);report.residue.push({item:'profile',reason:'NOT_VERIFIED'});}
     if(runtime)try{
@@ -157,10 +157,10 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
    */
   async function transaction(item,kind,context){
     requireCondition(cliAvailable,'DSH_EXACT_INSTALL_UNAVAILABLE','The host cannot install a package with an exact saved version.',{need:unavailable()},503);
-    const name=item.package.name,operationId=/^[A-Za-z0-9-]{1,64}$/.test(context?.operationId??'')?context.operationId:randomUUID();let stage='baseline',base,runtime;
+    const name=item.package.name,operationId=/^[A-Za-z0-9-]{1,64}$/.test(context?.operationId??'')?context.operationId:randomUUID();let stage='baseline',base,runtime,installRegistry=null;
     try{
       base=await profileSnapshot(profileDir,name);
-      stage='before-add';const {version,registry:installRegistry}=await latest(name);
+      stage='before-add';let version;({version,registry:installRegistry}=await latest(name));
       const status='restart-required';
       stage='add';await run(['add','--save-exact',...(installRegistry===null?[]:[`--registry=${installRegistry}`]),`${name}@${version}`]);
       stage='readback';const added=await profileSnapshot(profileDir,name);
@@ -170,7 +170,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       if(declared){stage='provision';const root=runtimeRoot(record.definition.id);runtime={root,base:await runtimeSnapshot(await runtimeApi('ledger'),root)};
         await (await runtimeApi('provision'))(declared.manifest,{root,only:[declared.item],onProgress:event=>emit({type:'library.provision-progress',appId:record.definition.id,...event})});}
       return{status:'restart-required',kind,appId:record.definition.id,packageName:name,version};
-    }catch(error){noteFailurePhase(error,{baseline:'profile baseline','before-add':'registry fetch',add:'CLI run',readback:'profile readback',definition:'application readback',provision:'runtime provision'}[stage]);error.recovery=await recover({name,stage,base,runtime,operationId});throw error;}
+    }catch(error){noteFailurePhase(error,{baseline:'profile baseline','before-add':'registry fetch',add:'CLI run',readback:'profile readback',definition:'application readback',provision:'runtime provision'}[stage]);error.recovery=await recover({name,stage,base,runtime,operationId,installRegistry});throw error;}
   }
   async function installAs(item,kind,context){
     permitted(item.package.name);const name=item.package.name;
@@ -195,24 +195,24 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       requireCondition(suitePlan?.planId===planId,'SUITE_PLAN_CHANGED','升级确认已变化，请重新查看并确认。',{},409);
       const confirmed=suitePlan;suitePlan=undefined;
       const fresh=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider});
-      const identity=plan=>JSON.stringify({sourceBinding:plan.sourceBinding,components:plan.components,declarationId:plan.declarationId,registry:plan.registry,selectedUpgrade:plan.selectedUpgrade,physicalBaseline:plan.physicalBaseline});
+      const identity=plan=>JSON.stringify({sourceBinding:plan.sourceBinding,bundle:plan.bundle,components:plan.components,declarationId:plan.declarationId,registry:plan.registry,selectedUpgrade:plan.selectedUpgrade,physicalBaseline:plan.physicalBaseline});
       requireCondition(identity(fresh)===identity(confirmed),'SUITE_PLAN_CHANGED','套件声明或版本已变化，请重新查看并确认。',{},409);
       requireCondition(fresh.available,'SUITE_NO_UPDATE','当前没有兼容新版。',{},409);
       const before=await readSuiteStatus(profileDir);
-      requireCondition(before.status==='installed'&&fresh.components.every((c,i)=>before.components[i]?.version===c.from),'SUITE_PLAN_CHANGED','已装版本或启用状态已变化，请重新查看并确认。',{},409);
+      requireCondition(before.status==='installed'&&before.version===fresh.bundle.from&&fresh.components.every((c,i)=>before.components[i]?.version===c.from),'SUITE_PLAN_CHANGED','已装版本或启用状态已变化，请重新查看并确认。',{},409);
       requireCondition(cliAvailable,'DSH_CLI_UNAVAILABLE','套件升级需客户端随附的官方 CLI；请恢复后重试。',{},503);
       const executing=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider});
       requireCondition(identity(executing)===identity(confirmed),'SUITE_PLAN_CHANGED','执行前套件安装包来源或声明已变化，请重新查看并确认。',{},409);
-      emit({type:'library.install-started',itemId:'hanamesh:suite-upgrade',packageName:'@hanamesh/core',kind:'suite-upgrade'});
+      emit({type:'library.install-started',itemId:'hanamesh:suite-upgrade',packageName:SUITE_BUNDLE,kind:'suite-upgrade'});
       try{
-        await run(['add','--save-exact','--strict-peer-dependencies',`--registry=${fresh.registry??registry??'https://registry.npmjs.org'}`,...fresh.components.map(c=>`${c.name}@${c.to}`)]);
+        await run(['add','--save-exact','--strict-peer-dependencies',`--registry=${fresh.registry??registry??'https://registry.npmjs.org'}`,`${SUITE_BUNDLE}@${fresh.bundle.to}`]);
         const actual=await readSuiteStatus(profileDir);
         const saved=await json(join(profileDir,'package.json'));
-        requireCondition(actual.status==='installed'&&fresh.components.every((c,i)=>actual.components[i]?.version===c.to&&saved.dependencies?.[c.name]===c.to),'INSTALL_READBACK_MISMATCH','套件升级后的版本或启用状态不符，请完全退出后按补齐命令修复。',{},502);
-        return{status:'restart-required',kind:'suite-upgrade',packageName:'@hanamesh/core',components:fresh.components,version:actual.version};
+        requireCondition(actual.status==='installed'&&actual.version===fresh.bundle.to&&saved.dependencies?.[SUITE_BUNDLE]===fresh.bundle.to&&fresh.components.every((c,i)=>actual.components[i]?.version===c.to),'INSTALL_READBACK_MISMATCH','套件升级后的版本或启用状态不符，请完全退出后按补齐命令修复。',{},502);
+        return{status:'restart-required',kind:'suite-upgrade',packageName:SUITE_BUNDLE,components:fresh.components,version:actual.version};
       }catch(error){
         error.details={...error.details,stage:'suite-upgrade',actual:await readSuiteStatus(profileDir),command:fresh.installCommand};
-        emit({type:'library.install-failed',packageName:'@hanamesh/core',code:error.code??'SUITE_UPGRADE_FAILED'});throw error;
+        emit({type:'library.install-failed',packageName:SUITE_BUNDLE,code:error.code??'SUITE_UPGRADE_FAILED'});throw error;
       }
     });},
     async install(item,context){

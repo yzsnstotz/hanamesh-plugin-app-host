@@ -94,3 +94,5 @@ HanaMesh 视图原样保留可选 `official:boolean`（包括 false）与 C-INDE
 原生 lookup 异常包为 `REGISTRY_LOOKUP_FAILED`，原 Error 保留于 cause；已知具名码保留。`library.*-failed.details.diagnostic` 最多4001字符，含脱敏异常类型/消息/cause.code 与实际 registry configuration/fetch/readback、CLI run、profile readback 阶段；CLI 非零另含 exit、signal 与 stderr/输出摘要。同一摘要及 operationId 写宿主 logger.warn（logger失效时安全console），UI已有可展开技术详情显示，并提示检查 DSH 源设置/网络后手动重试。不记录请求头、正文、环境、stack 或任意 details；不猜历史丢失的原错。
 
 规则模块只由宿主公开exports提供；普通DSH用与manager版本查询相同createRequire(anchor)，Desktop限已证明的runtimeDir与匹配版本。没有新增manager依赖/peer、没有生产规则副本；无法定位/加载规则或端口不完整均REGISTRY_CONFIG_UNAVAILABLE。钉SHA的rc.2规则仅位于tests/fixtures，不进入发布包。
+
+D1: DSH suite installation and upgrades use only @hanamesh/hanamesh. Core owns the bundle metadata and exact three dependency targets. A confirmed strict CLI add changes the bundle once; readback checks its saved version, activation and locked physical children. The suite display version is the bundle version. Ordinary market install/remove denies the bundle.
