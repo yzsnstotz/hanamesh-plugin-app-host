@@ -1,13 +1,12 @@
 {
-  "schemaVersion": "1.0.0",
-  "revision": "install-target-contract-fixture-1",
+  "schemaVersion": "hanamesh.catalog.v1",
+  "generatedAt": "2026-11-05T00:00:00.000Z",
   "items": [
     {
       "id": "fixture.install-target.plugin",
       "name": "@hanamesh-fixture/install-target-plugin",
       "displayName": "测试目录 · 安装目标插件",
       "summary": "Install-target contract fixture (test catalog, not a real product).",
-      "latestVersion": "1.2.3",
       "categories": [
         "utility"
       ],
@@ -17,6 +16,43 @@
       },
       "publisher": {
         "name": "HanaMesh fixture"
+      },
+      "itemId": "fixture.install-target.plugin",
+      "packageName": "@hanamesh-fixture/install-target-plugin",
+      "catalogKind": "plugin",
+      "source": {
+        "sourceId": "hanamesh",
+        "sourceRef": "fixture.install-target.plugin",
+        "sourceLinks": [
+          {
+            "sourceId": "hanamesh",
+            "sourceRef": "fixture.install-target.plugin",
+            "sourceUrl": "https://catalog-fixture.example/fixture.install-target.plugin",
+            "firstSeenAt": "2026-11-05T00:00:00.000Z",
+            "lastSeenAt": "2026-11-05T00:00:00.000Z"
+          }
+        ]
+      },
+      "installMethods": [
+        {
+          "channel": "hanamesh",
+          "kind": "npm",
+          "spec": "@hanamesh-fixture/install-target-plugin",
+          "command": null,
+          "allowBuild": [],
+          "sourceId": "hanamesh",
+          "sourceRef": "fixture.install-target.plugin",
+          "target": {
+            "source": "npm",
+            "name": "@hanamesh-fixture/install-target-plugin",
+            "version": "1.2.3",
+            "allowBuild": []
+          }
+        }
+      ],
+      "oneClickInstall": {
+        "allowed": true,
+        "reason": null
       }
     },
     {
@@ -24,7 +60,6 @@
       "name": "@hanamesh-fixture/install-target-app",
       "displayName": "测试目录 · 安装目标应用",
       "summary": "Install-target contract fixture application (test catalog).",
-      "latestVersion": "0.4.0",
       "categories": [
         "hanamesh-app"
       ],
@@ -34,6 +69,43 @@
       },
       "publisher": {
         "name": "HanaMesh fixture"
+      },
+      "itemId": "fixture.install-target.app",
+      "packageName": "@hanamesh-fixture/install-target-app",
+      "catalogKind": "application",
+      "source": {
+        "sourceId": "hanamesh",
+        "sourceRef": "fixture.install-target.app",
+        "sourceLinks": [
+          {
+            "sourceId": "hanamesh",
+            "sourceRef": "fixture.install-target.app",
+            "sourceUrl": "https://catalog-fixture.example/fixture.install-target.app",
+            "firstSeenAt": "2026-11-05T00:00:00.000Z",
+            "lastSeenAt": "2026-11-05T00:00:00.000Z"
+          }
+        ]
+      },
+      "installMethods": [
+        {
+          "channel": "hanamesh",
+          "kind": "npm",
+          "spec": "@hanamesh-fixture/install-target-app",
+          "command": null,
+          "allowBuild": [],
+          "sourceId": "hanamesh",
+          "sourceRef": "fixture.install-target.app",
+          "target": {
+            "source": "npm",
+            "name": "@hanamesh-fixture/install-target-app",
+            "version": "0.4.0",
+            "allowBuild": []
+          }
+        }
+      ],
+      "oneClickInstall": {
+        "allowed": true,
+        "reason": null
       }
     },
     {
@@ -45,14 +117,33 @@
         "utility"
       ],
       "repository": {
-        "url": "https://example.com/repository"
+        "url": "https://github.com/fixture/repository-only"
       },
       "publisher": {
         "name": "HanaMesh fixture"
+      },
+      "itemId": "fixture.install-target.repository-only",
+      "packageName": null,
+      "catalogKind": "entry",
+      "source": {
+        "sourceId": "hanamesh",
+        "sourceRef": "fixture.install-target.repository-only",
+        "sourceLinks": [
+          {
+            "sourceId": "hanamesh",
+            "sourceRef": "fixture.install-target.repository-only",
+            "sourceUrl": "https://catalog-fixture.example/fixture.install-target.repository-only",
+            "firstSeenAt": "2026-11-05T00:00:00.000Z",
+            "lastSeenAt": "2026-11-05T00:00:00.000Z"
+          }
+        ]
+      },
+      "installMethods": [],
+      "oneClickInstall": {
+        "allowed": false,
+        "reason": "no-install-method"
       }
     }
   ],
-  "page": {
-    "total": 3
-  }
+  "page": {}
 }

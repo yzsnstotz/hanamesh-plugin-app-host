@@ -10,7 +10,7 @@ type PackageInstallTarget =
   | {source:'github';repo:string;ref:string;path:string|null;packageName:string;allowBuild:string[]};
 ```
 
-GitHub ref 必须是收录时固定的完整 40 位 SHA，不在安装时解析分支。结构化目标必须带 itemId；App-host 从自己的启用目录 installMethods 解析并逐字段核对，整个条目 oneClickInstall.allowed=false 时拒绝，不能换用同名 npm 包。GET target/导航片段将 installTarget JSON 编码；POST install/网站 handoff 使用对象。响应 item.installTarget 是客户端确认回传的预期目标。目录 SHA、路径或构建许可变化会拒绝 CATALOG_CHANGED，必须重新查看；不能在确认之后自动换目标。
+GitHub ref 必须是收录时固定的完整 40 位 SHA，不在安装时解析分支。结构化目标必须带 itemId；App-host 从自己的启用目录 installMethods 解析并逐字段核对，整个条目 oneClickInstall.allowed=false 时拒绝，不能换用同名 npm 包。条目带 installMethods 而未选中匹配目标时，返回 NOT_INSTALLABLE / details.reason=fixed-install-target-required，不得退回 package 展示名去装 npm latest；只有未提供 installMethods 的条目保留原标准 npm 路径。HanaMesh 视图拒绝退休的 latestVersion/license，确认页不显示版本行，升级按钮不拼目录版本；npm 升级按 installTarget.version 与已装实际版本比较。GET target/导航片段将 installTarget JSON 编码；POST install/网站 handoff 使用对象。响应 item.installTarget 是客户端确认回传的预期目标。目录 SHA、路径或构建许可变化会拒绝 CATALOG_CHANGED，必须重新查看；不能在确认之后自动换目标。
 
 确认沿现有市场表面，展示完整仓库、commit、子目录；allowBuild 非空时单列「会在本机执行构建脚本」和名单，并说明 pnpm 会保存许可。取消或预览不执行 CLI。本人确认后，仅调用原受控 `dsh plugin --profile <profile> add --save-exact [--allow-build=<项>…] github:owner/repo#<SHA>[&path:<目录>]`，每段都是独立 argv，不执行来源 command。npm 目标直接使用收录时固定的精确版本，不在安装时再解析版本。
 
@@ -38,7 +38,7 @@ Promise 在目录解析后返回 `{status,itemId?,packageName?}`：
 
 | status | 意义 |
 | --- | --- |
-| confirmation-required | 市场已按当前目录显示名称、包名、版本和目录来源；尚未安装 |
+| confirmation-required | 市场已按当前目录显示名称、包名和目录来源；结构化 GitHub 目标另显示完整 SHA/子目录；尚未安装 |
 | installing | 相同目录项已有安装进行中，复用该状态 |
 | already-installed | 当前 profile 已安装且目录没有升级，不重复安装 |
 | superseded | 解析过程中收到更新目标或取消，旧输入不再打开确认 |

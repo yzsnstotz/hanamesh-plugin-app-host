@@ -108,9 +108,9 @@ function suitePresentation(value,item){
 }
 
 function validateHanaItem(item,maxSourceLinks){
-  const optionalText={description:5000,latestVersion:64,license:80};
+  const optionalText={description:5000};
   const source=item?.source;
-  requireCondition(own(item,['id','itemId','packageName','name','displayName','summary','catalogKind','source','description','homepage','latestVersion','license','categories','keywords','repository','package','publisher','updatedAt','official','suite','installMethods','oneClickInstall'])&&
+  requireCondition(own(item,['id','itemId','packageName','name','displayName','summary','catalogKind','source','description','homepage','categories','keywords','repository','package','publisher','updatedAt','official','suite','installMethods','oneClickInstall'])&&
     (item.official===undefined||typeof item.official==='boolean')&&(item.suite===undefined||suitePresentation(item.suite,item))&&
     plain(item.id)&&item.id===item.itemId&&
     textWithin(item.name,160,true)&&textWithin(item.displayName,120,true)&&textWithin(item.summary,1000)&&
@@ -189,8 +189,8 @@ export function compareVersions(a,b){
     if(np&&nq){if(+p!==+q)return +p<+q?-1:1;}else if(np!==nq)return np?-1:1;else if(p!==q)return p<q?-1:1;}
   return 0;
 }
-/** `latestVersion` of the catalog entry is strictly newer than the installed version. */
-export function upgradeAvailable(latestVersion,installedVersion){return compareVersions(latestVersion,installedVersion)>0;}
+/** The reviewed target version is strictly newer than the installed version. */
+export function upgradeAvailable(targetVersion,installedVersion){return compareVersions(targetVersion,installedVersion)>0;}
 
 async function responseJson(response,label,maxBytes=MAX_BYTES,providerErrors=false){
   if(!providerErrors)requireCondition(response.ok,'CATALOG_HTTP_ERROR',`${label} returned HTTP ${response.status}.`,{status:response.status},502);

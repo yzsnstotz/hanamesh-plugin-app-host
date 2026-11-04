@@ -1,6 +1,6 @@
 /**
  * rc.28 · HanaMesh market: plugins and applications install through the same `dsh plugin add/remove` path,
- * the installed list includes plugins (profile package.json dependencies), upgrade = catalog latestVersion
+ * the installed list includes plugins (profile package.json dependencies), upgrade = the reviewed exact npm target version
  * newer than the installed version, restart states come from the boot-time dependency snapshot, and
  * malformed provision/uninstall input answers 400 (LIB-PROVISION-INPUT). Real temp profiles; the DSH CLI
  * is a recorded spawn double (the real CLI is exercised by the acceptance gate in docs/acceptance/).
@@ -99,7 +99,7 @@ test('AH-M03: installed plugins = profile dependencies minus application package
   await assert.rejects(scanInstalledPlugins({profileDir:'relative/path'}),{code:'PROFILE_DIR_REQUIRED'});
 });
 
-test('AH-M04: upgrade = catalog latestVersion strictly newer than the installed version (semver, prerelease below release)',()=>{
+test('AH-M04: upgrade = the reviewed exact npm target version strictly newer than the installed version (semver, prerelease below release)',()=>{
   assert.equal(compareVersions('0.1.17','0.1.16'),1);assert.equal(compareVersions('0.1.16','0.1.17'),-1);assert.equal(compareVersions('1.0.0','1.0.0'),0);
   assert.equal(compareVersions('1.0.0-rc.2','1.0.0'),-1);assert.equal(compareVersions('1.0.0-rc.10','1.0.0-rc.9'),1);assert.equal(compareVersions('1.0.0-beta','1.0.0-alpha'),1);
   assert.equal(compareVersions('v2.0.0','1.9.9'),1);assert.equal(compareVersions('garbage','1.0.0'),0);
@@ -118,7 +118,7 @@ test('AH-M05: the market listing annotates every entry with kind / installed row
   assert.equal(byId['com.hanamesh.vibe-trading'].kind,'application');assert.equal(byId['com.hanamesh.vibe-trading'].installed.state,'registered');assert.equal(byId['com.hanamesh.vibe-trading'].upgradeAvailable,false);
   assert.equal(byId['com.example.repository-only'].kind,'listing');assert.equal(byId['com.example.repository-only'].installed,null);
   assert.equal(byId['com.hanamesh.utility-plugin'].kind,'plugin');assert.equal(byId['com.hanamesh.utility-plugin'].installed.state,'installed');assert.equal(byId['com.hanamesh.utility-plugin'].installed.version,'0.9.0');
-  assert.equal(byId['com.hanamesh.utility-plugin'].upgradeAvailable,true,'0.9.0 installed, catalog latestVersion 1.0.0');
+  assert.equal(byId['com.hanamesh.utility-plugin'].upgradeAvailable,false,'legacy display metadata cannot authorize an upgrade without a reviewed fixed target');
   assert.deepEqual(page.categories,['finance','hanamesh-app','utility']);
   assert.deepEqual(page.plugins.map(row=>row.packageName),['@hanamesh/utility-plugin']);
   assert.deepEqual(page.installed.map(row=>row.packageName),['@hanamesh/app-vibe-trading']);
@@ -193,7 +193,8 @@ test('AH-M07 (client source): the entry is 「市场」, cards carry kind/state/
   assert.match(source,/seenCategories/,'catalog categories join the filter');
   assert.match(source,/'\/hanamesh\/library\/plugins\/uninstall'/);
   assert.match(source,/item\.upgradeAvailable\)action=/,'upgrade action');
-  assert.match(source,/t\('升级到 '\)\+item\.latestVersion/);
+  assert.match(source,/t\('升级'\)/);
+  assert.doesNotMatch(source,/latestVersion|目录未提供版本/);
   assert.match(source,/'installed-not-loaded':t\('需重启'\)/);
   const clientProtected=JSON.parse(source.match(/const PROTECTED=new Set\((\[[^\]]*\])\)/)[1].replaceAll("'",'"'));
   assert.deepEqual(clientProtected.sort(),[...PROTECTED_PACKAGES].sort(),'no uninstall button for the suite (brand included), same list as the host');

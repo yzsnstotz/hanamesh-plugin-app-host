@@ -16,6 +16,7 @@ const text=(value,max)=>typeof value==='string'&&value.length>0&&value.length<=m
 const RESTART_STATES=new Set(['installed-not-loaded','uninstalled-not-unloaded']);
 const protectedPackage=name=>PROTECTED_PACKAGES.includes(name);
 const present=row=>row&&['registered','installed','installed-not-loaded'].includes(row.state);
+const npmUpgradeAvailable=(target,row)=>Boolean(target?.source==='npm'&&row?.version&&row.state!=='uninstalled-not-unloaded'&&upgradeAvailable(target.version,row.version));
 
 /**
  * `client`: which client this host is ('dsh' | 'hanamesh', see client-identity.js). `unavailable`: when there is no
@@ -73,7 +74,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       requireCondition(packageName===undefined&&!expected,'INVALID_INPUT','套件升级不接受包名或任意替换参数。');
       requireCondition(typeof installer?.prepareSuiteUpgrade==='function','SUITE_UPGRADE_UNAVAILABLE','当前客户端还不支持安全套件升级，请使用补齐命令。',{},503);
       const plan=await installer.prepareSuiteUpgrade();
-      return{contractVersion:'1',source:{kind:'suite',manifestUrl:'https://github.com/yzsnstotz'},item:{id:SUITE_TARGET,displayName:'HanaMesh 套件',kind:'suite-upgrade',package:{registry:'npm',name:SUITE_BUNDLE},latestVersion:plan.bundle.to,installed:{state:'installed',version:suiteStatus.version},upgradeAvailable:plan.available,suiteUpgrade:plan}};
+      return{contractVersion:'1',source:{kind:'suite',manifestUrl:'https://github.com/yzsnstotz'},item:{id:SUITE_TARGET,displayName:'HanaMesh 套件',kind:'suite-upgrade',package:{registry:'npm',name:SUITE_BUNDLE},installed:{state:'installed',version:suiteStatus.version},upgradeAvailable:plan.available,suiteUpgrade:plan}};
     }
     requireCondition(itemId!==undefined||packageName!==undefined,'INVALID_INPUT','itemId or packageName is required.');
     requireCondition(itemId===undefined||(text(itemId,160)&&!/[\u0000-\u001f\u007f]/.test(itemId)),'INVALID_INPUT','itemId is invalid.');
@@ -82,11 +83,11 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       requireCondition(catalogInstallationAllowed(found),'NOT_INSTALLABLE','The catalog has not approved one-click installation.',{reason:found.oneClickInstall?.reason});
       const targets=catalogPackageTargets(found),selected=targets.find(target=>expected?sameInstallTarget(target,expected):packageName===undefined||installTargetName(target)===packageName);
       requireCondition(!expected||selected,'CATALOG_CHANGED','The reviewed installation source or build permission changed. Review the current target again.',{},409);
-      requireCondition(selected||found.package?.registry==='npm','NOT_INSTALLABLE','This catalog entry has no fixed package installation target.');
+      requireCondition(selected||(found.installMethods===undefined&&found.package?.registry==='npm'),'NOT_INSTALLABLE','This catalog entry has no fixed package installation target for the requested package.',{reason:'fixed-install-target-required'});
       const name=selected?installTargetName(selected):found.package.name;
       requireCondition(!protectedPackage(name),'PACKAGE_DENIED','The HanaMesh suite is not managed through the market.',{},403);
       const rows=[...await installedPlugins(),...await installed()],row=rows.find(value=>value.packageName===name)??null;
-      let upgrade=Boolean(row?.version&&row.state!=='uninstalled-not-unloaded'&&upgradeAvailable(found.latestVersion,row.version));
+      let upgrade=npmUpgradeAvailable(selected,row);
       if(selected?.source==='github'&&row){
         const saved=await readProfileManifest(config.profileDir);
         upgrade=saved.dependencies[name]!==pinnedGithubSpec(selected.repo,selected.ref,selected.path)||row.active===false;
@@ -136,8 +137,8 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       suiteStatus={...await suiteFacts(),...(suiteStatus.restartRequired?{restartRequired:true}:{}),...(suiteStatus.upgradeError?{upgradeError:suiteStatus.upgradeError}:{})};
       const byPackage=new Map([...pluginRows,...installedRows].map(row=>[row.packageName,row]));
       let items=page.items.map(item=>{const selected=catalogPackageTargets(item)[0];return selected?{...item,installTarget:selected,package:{registry:selected.source,name:installTargetName(selected)}}:item;}).filter(item=>!protectedPackage(item.package?.name)).map(item=>{const row=byPackage.get(item.package?.name)??null;const kind=itemKind(item);
-        return{...item,kind,application:isApplication(item),installed:row,upgradeAvailable:Boolean(row&&row.version&&row.state!=='uninstalled-not-unloaded'&&upgradeAvailable(item.latestVersion,row.version))};});
-      if(config.profileDir&&!cursor&&(!category||category==='plugin')&&(!q||'hanamesh 套件'.includes(q.toLowerCase())))items.unshift({id:'hanamesh:suite',displayName:'HanaMesh 套件',summary:'官方 · 不计分。Core、使用记录与应用库一次装齐。',kind:'suite',official:true,latestVersion:suiteStatus.version,installed:suiteStatus.status==='installed'?{state:'installed',version:suiteStatus.version}:null,suite:suiteStatus,...((installer?.suiteUpgradeUnavailable??suiteStatus.suiteUpgradeUnavailable)?{suiteUpgradeUnavailable:installer?.suiteUpgradeUnavailable??suiteStatus.suiteUpgradeUnavailable}:{})});
+        return{...item,kind,application:isApplication(item),installed:row,upgradeAvailable:npmUpgradeAvailable(item.installTarget,row)};});
+      if(config.profileDir&&!cursor&&(!category||category==='plugin')&&(!q||'hanamesh 套件'.includes(q.toLowerCase())))items.unshift({id:'hanamesh:suite',displayName:'HanaMesh 套件',summary:'官方 · 不计分。Core、使用记录与应用库一次装齐。',kind:'suite',official:true,installed:suiteStatus.status==='installed'?{state:'installed',version:suiteStatus.version}:null,suite:suiteStatus,...((installer?.suiteUpgradeUnavailable??suiteStatus.suiteUpgradeUnavailable)?{suiteUpgradeUnavailable:installer?.suiteUpgradeUnavailable??suiteStatus.suiteUpgradeUnavailable}:{})});
       const categories=[...new Set(page.items.flatMap(item=>item.categories??[]))].sort();
       return{source:page.source,items,categories,installed:installedRows,plugins:pluginRows,restartRequired:[...pluginRows,...installedRows].some(row=>RESTART_STATES.has(row.state)),...(bootSnapshotError?{restartBaseline:{known:false,code:bootSnapshotError}}:{}),page:page.page};},
     sources(){return{sources:structuredClone(state.sources),revision:state.revision};},

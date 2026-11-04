@@ -7,15 +7,16 @@ const read=async name=>JSON.parse(await readFile(new URL(name,import.meta.url),'
 const captured=await read('./fixtures/r1-combo-catalog-page.json');
 const manifest=await read('./fixtures/r1-combo-catalog-source.json');
 const suiteRow=page=>page.items.find(item=>item.suite);
-const page=()=>structuredClone(captured);
-test('STD01 R1 actual 26-item response is accepted and preserved without editing upstream fields',async()=>{
+// Preserve the original capture/hash while testing its current DTO projection.
+const page=()=>{const value=structuredClone(captured);for(const item of value.items){delete item.latestVersion;delete item.license;}return value;};
+test('STD01 original 26-item capture stays unchanged while current projection preserves suite targets and identities',async()=>{
  const bytes=await readFile(new URL('./fixtures/r1-combo-catalog-page.json',import.meta.url));
  assert.equal(createHash('sha256').update(bytes).digest('hex'),'42e6adead8558fbc9191560bef58e7cf9208d1088af25b4c7a822a98368e0c81');
- assert.equal(captured.items.length,26);assert.deepEqual(validateProviderPage(captured),captured);
+ assert.equal(captured.items.length,26);const current=page();assert.deepEqual(validateProviderPage(current),current);
  const calls=[];const result=await loadCatalog({sources:[{manifestUrl:new URL('/catalog-source.json?view=hanamesh',manifest.transport.endpoint).href}],fetchImpl:async url=>{
-  calls.push(String(url));return Response.json(calls.length===1?manifest:captured);
+  calls.push(String(url));return Response.json(calls.length===1?manifest:current);
  }});
- assert.equal(calls.length,2);assert.deepEqual(result.items,captured.items);
+ assert.equal(calls.length,2);assert.deepEqual(result.items,current.items);
  assert.equal(suiteRow(result).suite.installTargets[2].source.version,'0.6.13','captured provider fact is not this consumer version');
 });
 const changes={

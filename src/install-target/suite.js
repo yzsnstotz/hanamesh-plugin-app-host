@@ -96,7 +96,7 @@ export async function sourceRecoveryProfile({recovery},item={}){
   if(item.concurrent)profile.concurrentAdd('@fixture/concurrent','1.0.0');
   // Named single-source contract fixture; not production registry policy.
   const installer=emit=>createLibraryInstaller({registryRules:async()=>({registryPlan:(_requested,configured)=>[configured.registry],attributeFailure:()=>'other'}),pluginManager:()=>({registries:async()=>({registry:'https://source-fixture.invalid/',fallbackRegistries:[],resolved:'https://source-fixture.invalid/'})}),profileDir:profile.profileDir,profileName:profile.profileName,dataRoot:profile.dataRoot,nodeBinary:'/source-fixture/bin/node',dshBin:'/source-fixture/dsh/lib/bin.js',
-    fetchImpl:profile.fetchImpl(item.registryMissing?{}:{[app.packageName]:app.latest,[plugin.packageName]:plugin.latest}),spawn:profile.spawn,provision:profile.provision,remove:profile.remove,ledger:profile.ledger,emit});
+    fetchImpl:profile.fetchImpl({[app.packageName]:app.latest,[plugin.packageName]:plugin.latest}),spawn:profile.spawn,provision:profile.provision,remove:profile.remove,ledger:profile.ledger,emit});
   return{profile,target,installer};
 }
 /** Independent readback of the SOURCE profile: exact package.json/lockfile text, resolved module version, runtime ledger without timestamps. */
@@ -106,13 +106,29 @@ async function profileState({profile},name,appId){
   const ledger=Object.fromEntries(Object.entries((await profile.ledger(join(profile.dataRoot,'runtimes',appId))).items).map(([id,{installedAt:_,...entry}])=>[id,entry]));
   return{manifest:await read(join(profile.profileDir,'package.json')),lock:await read(join(profile.profileDir,'pnpm-lock.yaml')),module:module===null?null:JSON.parse(module).version,ledger};
 }
-/** Runs one install-failure case through the real service and installer on a fresh SOURCE profile; returns the failure event. */
+/** Runs a real fixed-target failure on a fresh SOURCE profile, or verifies admission refusal before installation. */
 export async function runRecoveryCase(contract,item,{check=true}={}){
   const {schema,recovery}=contract;const source=await sourceRecoveryProfile(contract,item);const {profile,target}=source;const appId=recovery.application.appId;
-  const host=await startProvider(contract,{profile,installer:source.installer});
+  let catalogPath=contract.catalogPath;
+  if(item.targetUnavailable){
+    const catalog=await json(new URL(contract.provider.catalog,FIXTURES)),row=catalog.items.find(row=>row.packageName===target.packageName);
+    row.oneClickInstall={allowed:false,reason:'npm-unchecked'};
+    for(const method of row.installMethods){delete method.target;method.targetUnavailableReason='npm-unchecked';}
+    catalogPath=join(profile.profileDir,'unavailable-catalog.json');await writeFile(catalogPath,JSON.stringify(catalog));
+  }
+  const host=await startProvider({...contract,catalogPath},{profile,installer:source.installer});
   try{
     const sentinel=join(profile.dataRoot,'principal',appId,'local','data-v1','single','user.db');await mkdir(dirname(sentinel),{recursive:true});await writeFile(sentinel,'keep');
     const before=await profileState(source,target.packageName,appId);
+    if(item.targetUnavailable){
+      const calls=profile.calls.length;let refused;
+      try{await host.service.install({packageName:target.packageName});}catch(error){refused=error;}
+      expectEqual(refused?.code,item.expect.code,'unresolved fixed target is refused');
+      expectEqual(host.installs,[],'no installer call');expectEqual(profile.calls.length,calls,'no CLI mutation');
+      expectEqual(host.service.events().events,[],'no install operation');expectEqual(await profileState(source,target.packageName,appId),before,'profile unchanged');
+      expectEqual(await readFile(sentinel,'utf8'),'keep','application data unchanged');
+      return{type:'catalog-refused',code:refused.code};
+    }
     const started=await host.service.install({packageName:target.packageName});await host.settled();
     const events=host.service.events().events.filter(event=>event.operationId===started.operationId),failed=events.find(event=>event.type==='library.install-failed');
     if(!failed||events.some(event=>event.type==='library.install-done'))throw new Error('expected one failed operation, got '+JSON.stringify(events.map(event=>event.type)));
@@ -123,7 +139,7 @@ export async function runRecoveryCase(contract,item,{check=true}={}){
     expectEqual(result.actions,item.expect.actions.map(fill),'compensation actions');
     expectEqual(result.error?.code??null,item.expect.recoveryError??null,'compensation error');
     expectEqual([...new Set(result.residue.map(row=>row.item))].sort(),[...(item.expect.residue??[])].sort(),'residue');
-    expectEqual(profile.calls.filter(call=>call[0]==='add'&&call.at(-1)===`${target.packageName}@${target.latest}`).length,item.registryMissing?0:1,'add attempts (no automatic retry)');
+    expectEqual(profile.calls.filter(call=>call[0]==='add'&&call.at(-1)===`${target.packageName}@${target.latest}`).length,1,'add attempts (no automatic retry)');
     expectEqual(await readFile(sentinel,'utf8'),'keep','application data under dataRoot');
     const after=await profileState(source,target.packageName,appId);
     if(result.status==='failed'){

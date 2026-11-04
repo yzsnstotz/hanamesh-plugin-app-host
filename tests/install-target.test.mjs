@@ -51,12 +51,12 @@ async function ui(t,{denied=false,missingReadback=false}={}){
   }});t.after(()=>harness.unmount());return{harness,calls,clock};
 }
 const text=node=>JSON.stringify(node);
-test('IT04: public market input shows market-owned four-field confirmation; cancel sends no install',async t=>{
+test('IT04: public market input shows market-owned confirmation without a directory version; cancel sends no install',async t=>{
   const {harness,calls}=await ui(t);const seat=harness.module.createMarketSeat();
   assert.equal(typeof seat.openInstallTarget,'function');
   const opened=await seat.openInstallTarget({packageName:'fixture-plugin'});await settle();
   assert.equal(opened.status,'confirmation-required');
-  assert.match(text(harness.tree),/Fixture Plugin/);assert.match(text(harness.tree),/fixture-plugin/);assert.match(text(harness.tree),/1.2.3/);assert.match(text(harness.tree),/测试目录/);
+  assert.match(text(harness.tree),/Fixture Plugin/);assert.match(text(harness.tree),/fixture-plugin/);assert.doesNotMatch(text(harness.tree),/1\.2\.3|目录未提供版本/);assert.match(text(harness.tree),/测试目录/);
   assert.equal(calls.filter(c=>c.path==='/hanamesh/library/install').length,0);
   await harness.click('取消');assert.equal(calls.filter(c=>c.path==='/hanamesh/library/install').length,0);assert.match(text(harness.tree),/已取消/);
 });

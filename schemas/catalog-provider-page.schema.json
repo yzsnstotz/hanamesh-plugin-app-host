@@ -585,16 +585,6 @@
         "homepage": {
           "$ref": "#/$defs/hana_httpsUri"
         },
-        "latestVersion": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 64
-        },
-        "license": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 80
-        },
         "categories": {
           "type": "array",
           "maxItems": 32,

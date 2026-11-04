@@ -4,7 +4,9 @@ import {readFileSync} from 'node:fs';
 import {validateProviderPage,validateManifestUrl,validateCatalogManifest} from '../src/library/catalog.js';
 // Expected projection of G78 saved 28 public rows; fragments are display data, not request targets.
 // Derived offline from raw snapshot SHA256 2287f97220c012202e69bcf672a6c67d9f2bb54bcd1bbbeacdbdace651c278d3.
-const fixture=()=>JSON.parse(readFileSync(new URL('./fixtures/g78-catalog-page-28.json',import.meta.url),'utf8'));
+// Keep historical capture bytes intact; construct only the current DTO projection for this regression.
+const fixture=()=>{const page=JSON.parse(readFileSync(new URL('./fixtures/g78-catalog-page-28.json',import.meta.url),'utf8'));
+ for(const item of page.items){delete item.latestVersion;delete item.license;}return page;};
 const usage='00592d1a-651c-4e93-a685-036cb055f43f';
 test('CAT-FRAGMENT all 28 real projected rows retain exact source links and identities',()=>{
  const page=fixture();assert.equal(page.items.length,28);assert.deepEqual(validateProviderPage(page),page);

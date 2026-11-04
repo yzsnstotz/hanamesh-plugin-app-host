@@ -198,7 +198,6 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy185": "检查兼容升级",
     "copy186": "重试安装",
     "copy187": "升级",
-    "copy188": "升级到 ",
     "copy189": "补齐运行时",
     "copy190": "卸载",
     "copy191": "已卸载，重启 DSH 后生效",
@@ -224,8 +223,6 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy211": "查看安装目标",
     "copy212": "市场安装确认",
     "copy213": "插件名",
-    "copy214": "版本",
-    "copy215": "目录未提供版本",
     "copy216": "测试目录（fixture）",
     "copy217": "当前市场目录",
     "copy218": "确认后升级 HanaMesh 总包及其锁定组件；需要完全退出并重新打开客户端。",
@@ -506,7 +503,6 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy185": "Check compatible upgrade",
     "copy186": "Retry installation",
     "copy187": "Upgrade",
-    "copy188": "Upgrade to ",
     "copy189": "Prepare runtime",
     "copy190": "Uninstall",
     "copy191": "Uninstalled; restart DSH to apply",
@@ -532,8 +528,6 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy211": "Review installation target",
     "copy212": "Confirm market installation",
     "copy213": "Plugin name",
-    "copy214": "Version",
-    "copy215": "No version provided by catalog",
     "copy216": "Test catalog (fixture)",
     "copy217": "Current market catalog",
     "copy218": "Confirmation upgrades the HanaMesh bundle and its locked components. Fully quit and reopen the client afterwards.",
@@ -1062,14 +1056,14 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
       if(item.kind==='suite')return h('article',{key:item.id,'data-hanamesh-library-item':item.id,'data-hanamesh-kind':'suite'},h('h3',null,t('HanaMesh 套件')),h('p',null,item.summary),h('p',null,item.suite?.status==='installed'?t('已安装 · HanaMesh ')+item.suite.version:item.suite?.status==='incomplete'?t('套件不完整，请查看组件状态'):t('套件状态未知，请查看 Core 声明与阻断原因')),item.suite?.completeness?h('p',null,t('Core 完整性：')+item.suite.completeness):null,...(item.suite?.components??[]).map(c=>h('p',{key:c.name},c.requiredRange?c.label+t(' · 要求 ')+c.requiredRange+t(' · 实际 ')+(c.actualVersion??t('检测不到'))+' · '+c.status:c.label+' · '+(c.version??t('检测不到'))+(c.active?'':t(' · 未启用')))),...(item.suite?.blocked??[]).map((row,i)=>h('p',{key:'blocked-'+i,role:'status'},row.code+(row.moduleName?' · '+row.moduleName:'')+(row.bundleVersion?' · HanaMesh '+row.bundleVersion:''))),item.suiteUpgradeUnavailable?h('p',{role:'status'},item.suiteUpgradeUnavailable):null,h('button',{type:'button',disabled:Boolean(item.suiteUpgradeUnavailable),onClick:()=>void openInstallTarget({itemId:'hanamesh:suite-upgrade'}).catch(()=>{})},t('检查兼容升级')));
       if(busy)action=h('button',{type:'button',disabled:true},t(op.text));
       else if(item.kind!=='listing'&&!row)action=h('button',{type:'button',onClick:()=>void reviewOrInstall(t('安装'))},op?.failed?t('重试安装'):t('安装'));
-      else if(row&&item.upgradeAvailable)action=h('span',{className:'hm-market-actions'},h('button',{type:'button',onClick:()=>void reviewOrInstall(t('升级'))},item.installTarget?.source==='github'?t('查看安装目标'):t('升级到 ')+item.latestVersion),row.state==='registered'?openButton(row):null);
+      else if(row&&item.upgradeAvailable)action=h('span',{className:'hm-market-actions'},h('button',{type:'button',onClick:()=>void reviewOrInstall(t('升级'))},item.installTarget?.source==='github'?t('查看安装目标'):t('升级')),row.state==='registered'?openButton(row):null);
       else if(row?.state==='runtime-missing')action=h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/provision',{appId:row.appId,packageName:row.packageName,runtimeItem:row.runtimeItem},item.id,t('补齐运行时'))},t('补齐运行时'));
       else if(row?.state==='registered')action=h('span',{className:'hm-market-actions'},openButton(row),h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/uninstall',{appId:row.appId,packageName:row.packageName,runtimeItem:row.runtimeItem},item.id,t('卸载'))},t('卸载')));
       else if(row?.state==='installed')action=PROTECTED.has(row.packageName)?h('span',null,t('HanaMesh 套件')):h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/plugins/uninstall',{packageName:row.packageName},item.id,t('卸载'))},t('卸载'));
       else if(row?.state==='uninstalled-not-unloaded')action=h('span',null,t('已卸载，重启 DSH 后生效'));
       else if(row)action=h('span',null,t('已安装，重启 DSH 后生效'));
       return h('article',{key:item.id,'data-hanamesh-library-item':item.id,'data-hanamesh-kind':item.kind},h('h3',null,item.displayName),h('p',null,item.summary),
-        h('small',null,t(KIND_TEXT[item.kind])+' · '+(item.publisher?.name??t('未知发布者'))+' · '+(item.latestVersion??'—')+((item.categories??[]).length?' · '+item.categories.join('、'):'')),
+        h('small',null,t(KIND_TEXT[item.kind])+' · '+(item.publisher?.name??t('未知发布者'))+((item.categories??[]).length?' · '+item.categories.join('、'):'')),
         state,action,op&&!busy?operationNotice(op):null);};
     const catalogSection=receipt?h('div',{className:'hm-app-frame'},h('div',null,h('strong',null,receipt.instance.appId),h('button',{type:'button',disabled:closing,onClick:()=>void close()},closing?t('关闭中…'):t('关闭视图'))),h('iframe',{ref:frame,src:receipt.uiUrl,title:receipt.instance.appId,sandbox:'allow-forms allow-modals allow-popups allow-same-origin allow-scripts'})):
       h('div',{className:'hm-library-grid',key:'catalog'},...items.map(card));
@@ -1090,7 +1084,7 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
           h('input',{'aria-label':t('目录条目 ID'),value:targetItemId,placeholder:t('itemId（可选）'),onChange:event=>setTargetItemId(event.target.value)}),
           h('input',{'aria-label':t('包名'),value:targetPackageName,placeholder:t('packageName（可选）'),onChange:event=>setTargetPackageName(event.target.value)}),h('button',{type:'submit'},t('查看安装目标')))):null,
         target?h('div',{role:target.status==='confirmation-required'?'dialog':'status','aria-label':t('市场安装确认')},
-          target.item?h('dl',null,h('dt',null,t('插件名')),h('dd',null,target.item.displayName),h('dt',null,t('包名')),h('dd',null,target.item.package.name),h('dt',null,t('版本')),h('dd',null,target.item.latestVersion??t('目录未提供版本')),h('dt',null,t('来源')),h('dd',null,target.source?.kind==='fixture'?t('测试目录（fixture）'):target.source?.manifestUrl??t('当前市场目录'))):null,
+          target.item?h('dl',null,h('dt',null,t('插件名')),h('dd',null,target.item.displayName),h('dt',null,t('包名')),h('dd',null,target.item.package.name),h('dt',null,t('来源')),h('dd',null,target.source?.kind==='fixture'?t('测试目录（fixture）'):target.source?.manifestUrl??t('当前市场目录'))):null,
           target.item?.installTarget?.source==='github'?h('dl',{'data-github-confirmation':true},h('dt',null,t('来源仓库')),h('dd',null,'https://github.com/'+target.item.installTarget.repo),h('dt',null,t('固定 commit')),h('dd',null,target.item.installTarget.ref),...(target.item.installTarget.path?[h('dt',null,t('仓库子目录')),h('dd',null,target.item.installTarget.path)]:[])):null,
           target.item?.installTarget?(target.item.installTarget.allowBuild.length?h('div',{role:'alert','data-build-warning':true},h('strong',null,t('会在本机执行构建脚本')),h('p',null,target.item.installTarget.allowBuild.join(', ')),h('p',null,t('确认后将按名单允许构建；pnpm 会把许可保存到当前 profile。'))):h('p',null,t('未授予构建脚本许可'))):null,
           target.item?.suiteUpgrade?h('ul',null,...target.item.suiteUpgrade.components.map(c=>h('li',{key:c.name},c.label+'：'+c.from+' → '+c.to)),h('li',null,t('确认后升级 HanaMesh 总包及其锁定组件；需要完全退出并重新打开客户端。'))):null,

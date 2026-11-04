@@ -149,9 +149,6 @@
             "displayName": {
               "type": "string"
             },
-            "latestVersion": {
-              "type": "string"
-            },
             "kind": {
               "type": "string",
               "enum": [

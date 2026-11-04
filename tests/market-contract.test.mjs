@@ -281,7 +281,7 @@ test('CM08: normal navigation shows the market confirmation; cancelling sends ne
   t.after(() => disposers.forEach(dispose => dispose?.()));
   m.h.hashchange('#hanamesh-install?' + new URLSearchParams(appTarget));
   await settle();
-  for (const field of ['Ordinary fixture app', appTarget.packageName, '1.2.3', '测试目录']) assert.ok(m.text().includes(field));
+  for (const field of ['Ordinary fixture app', appTarget.packageName, '测试目录']) assert.ok(m.text().includes(field));
   await m.h.click('取消');
   assert.match(m.text(), /已取消，未安装/);
   assert.equal(m.calls.filter(c => ['/hanamesh/library/install', '/apps/open'].includes(c.path)).length, 0);
