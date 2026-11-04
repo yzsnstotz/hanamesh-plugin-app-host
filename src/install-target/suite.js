@@ -43,6 +43,7 @@ export function validate(schema,value,ref='#/$defs/target'){
     }
     if(type==='object'){
       for(const key of node.required??[])if(!(key in value))errors.push(`${path}: missing ${key}`);
+      for(const [key,required] of Object.entries(node.dependentRequired??{}))if(key in value)for(const field of required)if(!(field in value))errors.push(`${path}: ${key} requires ${field}`);
       for(const [key,child] of Object.entries(node.properties??{}))if(key in value)check(child,value[key],`${path}.${key}`);
       if(node.additionalProperties===false)for(const key of Object.keys(value))if(!(key in (node.properties??{})))errors.push(`${path}: field ${key} is not part of the contract`);
     }
@@ -272,7 +273,8 @@ export async function runConsumerSuite(consumer){
     const prefix=contract.contract.fragmentPrefix;if(!url.hash.startsWith(prefix))throw new Error('fragment does not start with '+prefix);
     const params=new URLSearchParams(url.hash.slice(prefix.length)),keys=[...params.keys()];
     if(new Set(keys).size!==keys.length)throw new Error('duplicate fragment fields');
-    const fields=Object.fromEntries(params),errors=validate(schema,fields);if(errors.length)throw new Error(errors.join('; '));
+    const fields=Object.fromEntries(params);if(fields.installTarget!==undefined)fields.installTarget=JSON.parse(fields.installTarget);
+    const errors=validate(schema,fields);if(errors.length)throw new Error(errors.join('; '));
     expectEqual(fields,{...item.target,...(declared===undefined?{}:{contractVersion:declared})},'fragment fields');
   });
   for(const item of cases.handshake)await record(item.id,'handshake',item.note,async()=>{
@@ -306,7 +308,9 @@ export async function runChainSuite(consumer){
       const result=await consumer.navigate(workspaceUrl,item.target);if(result?.ok!==true){if(item.optional)return'skipped';throw new Error('consumer refused');}
       await client.navigate(new URL(result.url).hash);
       if(!client.button('确认安装'))throw new Error('market did not reach confirmation: '+client.text().slice(0,400));
-      const resolved=await client.module.openInstallTarget(Object.fromEntries(new URLSearchParams(new URL(result.url).hash.slice(contract.contract.fragmentPrefix.length))));
+      const fields=Object.fromEntries(new URLSearchParams(new URL(result.url).hash.slice(contract.contract.fragmentPrefix.length)));
+      if(fields.installTarget!==undefined)fields.installTarget=JSON.parse(fields.installTarget);
+      const resolved=await client.module.openInstallTarget(fields);
       expectEqual(resolved.itemId,item.resolves,'resolved catalog item');expectEqual([host.posts.length,host.installs.length],[0,0],'installs');
       await client.click('取消');
     });

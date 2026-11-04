@@ -281,7 +281,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy268": "交接状态只给发起它的那个网站看",
     "copy269": "一个网站不能读另一个网站的交接",
     "copy270": "交接请求体不超过 4096 字节",
-    "copy271": "合法请求只有插件 id、包名、合约版本三项，最长不到 500 字节；更大的一定不是交接",
+    "copy271": "交接只包含目录身份、合约版本及已审核的结构化安装目标；正文上限为 4096 字节，不接受来源命令",
     "copy272": "端口在 1024–65535 之间、互不重复，至少一个",
     "copy273": "1024 以下要管理员权限；没有端口就没有地方让网站找到",
     "copy274": "网站必须写成来源（协议 + 域名 [+ 端口]），http 只允许 127.0.0.1 / localhost",
@@ -589,7 +589,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy268": "Handoff status is visible only to the website that created it.",
     "copy269": "One website cannot read another website’s handoffs.",
     "copy270": "Handoff request body must not exceed 4096 bytes.",
-    "copy271": "A valid handoff contains only item ID, package name and contract version, under 500 bytes; a larger request is not a valid handoff.",
+    "copy271": "A handoff contains only catalog identity, contract version and the reviewed package target. The body limit is 4096 bytes; source commands are not accepted.",
     "copy272": "Provide at least one distinct port between 1024 and 65535.",
     "copy273": "Lower ports need administrator permissions. Without a port the website cannot find this client.",
     "copy274": "Websites must be origins (scheme + domain [+ port]). HTTP is allowed only for 127.0.0.1 / localhost.",
@@ -621,6 +621,8 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy301": "Supports macOS 13.5+ (Apple Silicon / Intel). Windows installation, guardian and cancellation verification are not connected; this flow does not support Windows."
   }
 };
+  Object.assign(COPY.zh,{githubRepository:'来源仓库',githubCommit:'固定 commit',githubPath:'仓库子目录',githubBuild:'会在本机执行构建脚本',githubBuildPolicy:'确认后将按名单允许构建；pnpm 会把许可保存到当前 profile。',githubNoBuild:'未授予构建脚本许可'});
+  Object.assign(COPY.en,{githubRepository:'Source repository',githubCommit:'Pinned commit',githubPath:'Repository subdirectory',githubBuild:'Build scripts will run on this computer',githubBuildPolicy:'Confirmation permits the listed builds; pnpm saves these permissions in the current profile.',githubNoBuild:'No build scripts are approved'});
   const COPY_KEYS=new Map(Object.entries(COPY.zh).map(([key,text])=>[text,key]));
   let localeService=null;
   function t(text){if(typeof text==='function')return text();const key=COPY_KEYS.get(text);if(!key)return text;return localeService?localeService.bind('hanamesh.apphost')(key):COPY.zh[key];}
@@ -666,6 +668,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   let targetSelection=null,targetSequence=0,pendingOperations={};
   const targetListeners=new Set(),pendingListeners=new Set();
   const INSTALL_TARGET_HASH='#hanamesh-install?',INSTALL_TARGET_CONTRACT_VERSION='1';
+  const targetQuery=input=>new URLSearchParams({...input,...(input.installTarget?{installTarget:JSON.stringify(input.installTarget)}:{})});
   const CORE_SUITE_FAILURES={CORE_SUITE_DECLARATION_MISSING:t('Core 未提供套件声明'),CORE_SUITE_DECLARATION_INVALID:t('Core 套件声明无法用于精确安装。')};
   const suiteTargetFailure=target=>target.previewFailed?t('兼容升级检查未通过，尚未执行安装：')+(t(CORE_SUITE_FAILURES[target.error])??target.error??t('检测不到结果')):t(CORE_SUITE_FAILURES[target.error])??(target.details?.stage==='suite-upgrade'?t('套件升级未完成：')+(target.error??t('检测不到结果'))+t('。请核对当前版本；完全退出后可使用 HanaMesh 设置中的补齐命令修复并重新打开。'):t('套件升级未完成或结果尚未确认：')+(target.error??t('检测不到结果'))+t('。请核对已装版本；不会自动重试。'));
   const setTarget=value=>{targetSelection=value;for(const listener of targetListeners)listener(value);};
@@ -677,11 +680,12 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
       if(!input||typeof input!=='object'||Array.isArray(input))throw new Error('INVALID_INPUT');
       // rc.8: optional contract declaration; absent keeps v1 semantics, an unsupported version is refused before any request.
       if(input.contractVersion!==undefined&&input.contractVersion!==INSTALL_TARGET_CONTRACT_VERSION)throw new Error('CONTRACT_VERSION_UNSUPPORTED');
-      if(Object.keys(input).some(key=>!['itemId','packageName','contractVersion'].includes(key))||(!input.itemId&&!input.packageName)||
+      if(Object.keys(input).some(key=>!['itemId','packageName','contractVersion','installTarget'].includes(key))||(!input.itemId&&!input.packageName)||
+        (input.installTarget!==undefined&&(!input.itemId||!input.installTarget||typeof input.installTarget!=='object'||Array.isArray(input.installTarget)))||
         (input.itemId!==undefined&&(typeof input.itemId!=='string'||!input.itemId.length||input.itemId.length>160||/[\u0000-\u001f\u007f]/.test(input.itemId)))||
         (input.packageName!==undefined&&(typeof input.packageName!=='string'||input.packageName.length>214||!/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(input.packageName))))throw new Error('INVALID_INPUT');
       setTarget({status:'resolving',input:{...input}});
-      const query=new URLSearchParams(input),resolved=await request('/hanamesh/library/target?'+query);
+      const query=targetQuery(input),resolved=await request('/hanamesh/library/target?'+query);
       if(sequence!==targetSequence)return{status:'superseded'};
       const item=resolved.item,op=pendingOperations[item.id];
       const status=op?.busy?'installing':['registered','installed','installed-not-loaded'].includes(item.installed?.state)&&!item.upgradeAvailable?'already-installed':'confirmation-required';
@@ -707,7 +711,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     if(handoffIssue?.poll)setHandoffIssue(null);
     for(const row of value.handoffs??[]){
       if(row.state!=='pending'||handled.has(row.handoffId))continue;handled.add(row.handoffId);
-      const input={...(row.itemId?{itemId:row.itemId}:{}),...(row.packageName&&row.itemId!=='hanamesh:suite-upgrade'?{packageName:row.packageName}:{}),contractVersion:INSTALL_TARGET_CONTRACT_VERSION};
+      const input={...(row.itemId?{itemId:row.itemId}:{}),...(row.packageName&&row.itemId!=='hanamesh:suite-upgrade'?{packageName:row.packageName}:{}),...(row.installTarget?{installTarget:row.installTarget}:{}),contractVersion:INSTALL_TARGET_CONTRACT_VERSION};
       let opened=false;
       try{await openInstallTarget(input,{handoffId:row.handoffId});opened=true;}
       catch(error){noteHandoffIssue(t('确认框打不开'),error);await reportHandoff(row.handoffId,'failed',{code:errorCode(error)});}
@@ -720,7 +724,9 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     const hash=globalThis.location?.hash;if(!hash?.startsWith(INSTALL_TARGET_HASH))return;
     const params=new URLSearchParams(hash.slice(INSTALL_TARGET_HASH.length));
     if(new Set(params.keys()).size!==[...params.keys()].length){targetSequence++;if(entryVisible)setLibraryVisible(true);setTarget({status:'failed',error:'INVALID_INPUT'});return;}
-    void openInstallTarget(Object.fromEntries(params)).catch(()=>{});
+    const input=Object.fromEntries(params);
+    if(input.installTarget!==undefined){try{input.installTarget=JSON.parse(input.installTarget);}catch{setTarget({status:'failed',error:'INVALID_INPUT'});return;}}
+    void openInstallTarget(input).catch(()=>{});
   }
   // rc.32 market seat. The shell's Extension Management panel (dsh-tauri-panel-extension) reads the client-side
   // cordis service `market` via `ctx.reflect.get('market')` and shows a 「市场」 tab when it is there; it calls
@@ -990,14 +996,15 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
       const selected=targetSelection;if(selected?.status!=='confirmation-required'||pendingOperations[selected.item.id]?.busy)return;
       setTarget({...selected,status:'installing'});
       const suite=selected.item.kind==='suite-upgrade';
-      const outcome=await operate(suite?'/hanamesh/library/suite/upgrade':'/hanamesh/library/install',suite?{planId:selected.item.suiteUpgrade.planId}:{itemId:selected.item.id,packageName:selected.item.package.name},selected.item.id,suite?t('升级套件'):t('安装'),true);
+      const reviewed={itemId:selected.item.id,packageName:selected.item.package.name,...(selected.item.installTarget?{installTarget:selected.item.installTarget}:{})};
+      const outcome=await operate(suite?'/hanamesh/library/suite/upgrade':'/hanamesh/library/install',suite?{planId:selected.item.suiteUpgrade.planId}:reviewed,selected.item.id,suite?t('升级套件'):t('安装'),true);
       if(outcome){
         if(!outcome.ok){if(targetSelection?.item?.id===selected.item.id)setTarget({...targetSelection,status:outcome.unknown?'result-unavailable':suite?'suite-upgrade-failed':'failed',error:outcome.code,details:outcome.details});return;}
         if(suite){
           try{const snapshot=await request('/hanamesh/library/installedPlugins');if(!outcome.result.components.every(c=>snapshot.plugins.some(p=>p.packageName===c.name&&p.version===c.to&&p.active)))throw new Error('INSTALL_READBACK_MISMATCH');setPending(p=>({...p,[selected.item.id]:{label:t("升级套件"),text:()=>(t('套件升级已读回，请完全退出并重新打开客户端。'))}}));setChanged(true);setTarget({...selected,status:'installed'});}
           catch(error){setPending(p=>({...p,[selected.item.id]:{label:t("升级套件"),text:()=>(t('套件版本读回失败，请检查三个组件。')),failed:true}}));setTarget({...selected,status:'readback-failed',error:String(error.message??error)});}return;
         }
-        try{const fresh=await request('/hanamesh/library/target?'+new URLSearchParams({itemId:selected.item.id,packageName:selected.item.package.name}));
+        try{const fresh=await request('/hanamesh/library/target?'+targetQuery(reviewed));
           const row=fresh.item?.installed;
           if(row?.packageName!==selected.item.package.name||!['registered','installed','installed-not-loaded'].includes(row.state)||(outcome.result?.version&&row.version!==outcome.result.version))throw new Error('INSTALL_READBACK_MISMATCH');
           const live=outcome.result?.status==='applied';setPending(p=>({...p,[selected.item.id]:{label:t("安装"),text:()=>(live?t('安装完成，已加载，可以直接使用（已按精确版本读回）')+baselineText(outcome.result):t('安装完成，已按精确版本读回'))}}));if(!live)setChanged(true);
@@ -1048,13 +1055,14 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
     const restartRequired=changed||Boolean(snapshot?.restartRequired);
     const filters=[...BASE_FILTERS,...seenCategories.filter(c=>c!=='hanamesh-app').map(c=>[c,c])];
     const openButton=row=>h('button',{type:'button',disabled:Boolean(openingAppId),onClick:()=>void open(row)},openingAppId===row.appId?t('打开中…'):t('打开'));
-    const card=item=>{const row=item.installed,op=pending[item.id],busy=op?.busy;const installBody={itemId:item.id,...(item.package?.name?{packageName:item.package.name}:{})};
+    const card=item=>{const row=item.installed,op=pending[item.id],busy=op?.busy;const installBody={itemId:item.id,...(item.package?.name?{packageName:item.package.name}:{}),...(item.installTarget?{installTarget:item.installTarget}:{})};
+      const reviewOrInstall=label=>item.installTarget?openInstallTarget(installBody).catch(()=>{}):operate('/hanamesh/library/install',installBody,item.id,label);
       let action=h('span',null,t('仅收录，不可安装')),state=null;
       if(row)state=h('span',{className:'hm-market-state','data-hanamesh-state':row.state},(t(STATE_TEXT[row.state]??row.state))+(row.version?' '+row.version:''));
       if(item.kind==='suite')return h('article',{key:item.id,'data-hanamesh-library-item':item.id,'data-hanamesh-kind':'suite'},h('h3',null,t('HanaMesh 套件')),h('p',null,item.summary),h('p',null,item.suite?.status==='installed'?t('已安装 · HanaMesh ')+item.suite.version:item.suite?.status==='incomplete'?t('套件不完整，请查看组件状态'):t('套件状态未知，请查看 Core 声明与阻断原因')),item.suite?.completeness?h('p',null,t('Core 完整性：')+item.suite.completeness):null,...(item.suite?.components??[]).map(c=>h('p',{key:c.name},c.requiredRange?c.label+t(' · 要求 ')+c.requiredRange+t(' · 实际 ')+(c.actualVersion??t('检测不到'))+' · '+c.status:c.label+' · '+(c.version??t('检测不到'))+(c.active?'':t(' · 未启用')))),...(item.suite?.blocked??[]).map((row,i)=>h('p',{key:'blocked-'+i,role:'status'},row.code+(row.moduleName?' · '+row.moduleName:'')+(row.bundleVersion?' · HanaMesh '+row.bundleVersion:''))),item.suiteUpgradeUnavailable?h('p',{role:'status'},item.suiteUpgradeUnavailable):null,h('button',{type:'button',disabled:Boolean(item.suiteUpgradeUnavailable),onClick:()=>void openInstallTarget({itemId:'hanamesh:suite-upgrade'}).catch(()=>{})},t('检查兼容升级')));
       if(busy)action=h('button',{type:'button',disabled:true},t(op.text));
-      else if(item.kind!=='listing'&&!row)action=h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/install',installBody,item.id,t('安装'))},op?.failed?t('重试安装'):t('安装'));
-      else if(row&&item.upgradeAvailable)action=h('span',{className:'hm-market-actions'},h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/install',installBody,item.id,t('升级'))},t('升级到 ')+item.latestVersion),row.state==='registered'?openButton(row):null);
+      else if(item.kind!=='listing'&&!row)action=h('button',{type:'button',onClick:()=>void reviewOrInstall(t('安装'))},op?.failed?t('重试安装'):t('安装'));
+      else if(row&&item.upgradeAvailable)action=h('span',{className:'hm-market-actions'},h('button',{type:'button',onClick:()=>void reviewOrInstall(t('升级'))},item.installTarget?.source==='github'?t('查看安装目标'):t('升级到 ')+item.latestVersion),row.state==='registered'?openButton(row):null);
       else if(row?.state==='runtime-missing')action=h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/provision',{appId:row.appId,packageName:row.packageName,runtimeItem:row.runtimeItem},item.id,t('补齐运行时'))},t('补齐运行时'));
       else if(row?.state==='registered')action=h('span',{className:'hm-market-actions'},openButton(row),h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/uninstall',{appId:row.appId,packageName:row.packageName,runtimeItem:row.runtimeItem},item.id,t('卸载'))},t('卸载')));
       else if(row?.state==='installed')action=PROTECTED.has(row.packageName)?h('span',null,t('HanaMesh 套件')):h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/plugins/uninstall',{packageName:row.packageName},item.id,t('卸载'))},t('卸载'));
@@ -1083,6 +1091,8 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
           h('input',{'aria-label':t('包名'),value:targetPackageName,placeholder:t('packageName（可选）'),onChange:event=>setTargetPackageName(event.target.value)}),h('button',{type:'submit'},t('查看安装目标')))):null,
         target?h('div',{role:target.status==='confirmation-required'?'dialog':'status','aria-label':t('市场安装确认')},
           target.item?h('dl',null,h('dt',null,t('插件名')),h('dd',null,target.item.displayName),h('dt',null,t('包名')),h('dd',null,target.item.package.name),h('dt',null,t('版本')),h('dd',null,target.item.latestVersion??t('目录未提供版本')),h('dt',null,t('来源')),h('dd',null,target.source?.kind==='fixture'?t('测试目录（fixture）'):target.source?.manifestUrl??t('当前市场目录'))):null,
+          target.item?.installTarget?.source==='github'?h('dl',{'data-github-confirmation':true},h('dt',null,t('来源仓库')),h('dd',null,'https://github.com/'+target.item.installTarget.repo),h('dt',null,t('固定 commit')),h('dd',null,target.item.installTarget.ref),...(target.item.installTarget.path?[h('dt',null,t('仓库子目录')),h('dd',null,target.item.installTarget.path)]:[])):null,
+          target.item?.installTarget?(target.item.installTarget.allowBuild.length?h('div',{role:'alert','data-build-warning':true},h('strong',null,t('会在本机执行构建脚本')),h('p',null,target.item.installTarget.allowBuild.join(', ')),h('p',null,t('确认后将按名单允许构建；pnpm 会把许可保存到当前 profile。'))):h('p',null,t('未授予构建脚本许可'))):null,
           target.item?.suiteUpgrade?h('ul',null,...target.item.suiteUpgrade.components.map(c=>h('li',{key:c.name},c.label+'：'+c.from+' → '+c.to)),h('li',null,t('确认后升级 HanaMesh 总包及其锁定组件；需要完全退出并重新打开客户端。'))):null,
           target.item?.suiteUpgrade?.registry?h('p',null,'Registry：'+target.item.suiteUpgrade.registry):null,
           ...(target.item?.suiteUpgrade?.blocked??target.details?.blocked??[]).map((row,i)=>h('p',{key:'suite-blocked-'+i,role:'status'},row.code+(row.moduleName?' · '+row.moduleName:'')+(row.bundleVersion?' · HanaMesh '+row.bundleVersion:''))),

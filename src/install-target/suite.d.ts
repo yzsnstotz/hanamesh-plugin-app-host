@@ -1,7 +1,8 @@
 /** Install-target contract conformance suite (hanamesh.install-target v1). */
 export interface ContractCaseResult {id:string;semantic:string;note:string;outcome:'pass'|'fail'|'skipped';detail?:string;}
 export interface ContractSuiteReport {suite:'provider'|'consumer'|'chain';contract:'hanamesh.install-target';contractVersion:string;total:number;pass:number;fail:number;skipped:number;results:ContractCaseResult[];[key:string]:unknown;}
-export interface InstallTargetFields {itemId?:string;packageName?:string;contractVersion?:string;}
+import type {PackageInstallTarget} from '../client-ui.js';
+export interface InstallTargetFields {itemId?:string;packageName?:string;contractVersion?:string;installTarget?:PackageInstallTarget;}
 export interface ProviderDeclaration {contract:string;contractVersion:string;supported:string[];schema?:string;}
 /** A caller handing catalog identities to the market by normal navigation of its own workspace. */
 export interface InstallTargetConsumer {

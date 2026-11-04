@@ -2,11 +2,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hanamesh.com/schemas/app-host/install-target.schema.json",
   "title": "HanaMesh AppHost install target",
-  "description": "Public identifiers a caller may hand to the AppHost market. The market resolves its own catalog, shows its own confirmation and performs the install; callers never supply versions, download locations or confirmation. Lengths are JavaScript string lengths.",
+  "description": "Catalog identity and reviewed structured npm/GitHub target. AppHost resolves its own catalog, binds the source/SHA/build permissions shown in its confirmation, and installs only on explicit client confirmation.",
   "x-hanamesh-contract": {
     "name": "hanamesh.install-target",
     "version": "1",
-    "supported": ["1"],
+    "supported": [
+      "1"
+    ],
     "package": "@hanamesh/dsh-app-host",
     "since": "0.2.0-rc.8",
     "fragmentPrefix": "#hanamesh-install?",
@@ -38,6 +40,12 @@
       "compensation": "New install: dsh plugin remove (or dsh plugin install when only residue remains); runtime items newly claimed by this operation are removed by lib-provision ownership, unowned files and dataRoot are never deleted. Upgrade: dsh plugin add of the original spec (--save-exact when exact); a replaced runtime item is provisioned again from the restored definition. Concurrent writes by other profile writers are never undone. No automatic retry; no manual profile/store/metadata edit.",
       "readback": "restored and not-needed are reported only when every check row equals the baseline. Anything else is failed with residue rows, the recovery error (if the compensation itself failed) and originals: the pre-operation package.json/pnpm-lock.yaml/runtime ledger kept under <dataRoot>/library-recovery/<operationId>/.",
       "presentation": "A failed install is never presented as installed. failed is never presented as restored or rolled back. An event without recovery (provider before rc.10) is not presented as restored."
+    },
+    "github": {
+      "target": "C-INDEXER-CATALOG CatalogPackageInstallTarget",
+      "ref": "full immutable 40-character commit SHA, pinned at collection",
+      "confirmation": "show repository, full commit, path and build script permission; submit the same installTarget",
+      "execution": "official dsh plugin add --save-exact; native pnpm Git source and --allow-build arguments"
     }
   },
   "$ref": "#/$defs/target",
@@ -57,65 +65,155 @@
     "contractVersion": {
       "description": "Optional declaration of the contract version the caller speaks.",
       "type": "string",
-      "enum": ["1"]
+      "enum": [
+        "1"
+      ]
     },
     "target": {
-      "description": "openInstallTarget input, GET /hanamesh/library/target query and #hanamesh-install? fragment fields. At least one identifier; both must name the same catalog item. Every other field is refused.",
+      "description": "Catalog identifiers and optional reviewed I1 package installation target. Structured targets require itemId and must match the current catalog; callers cannot supply commands or arbitrary sources.",
       "type": "object",
       "properties": {
-        "itemId": { "$ref": "#/$defs/itemId" },
-        "packageName": { "$ref": "#/$defs/packageName" },
-        "contractVersion": { "$ref": "#/$defs/contractVersion" }
+        "itemId": {
+          "$ref": "#/$defs/itemId"
+        },
+        "packageName": {
+          "$ref": "#/$defs/packageName"
+        },
+        "contractVersion": {
+          "$ref": "#/$defs/contractVersion"
+        },
+        "installTarget": {
+          "$ref": "#/$defs/packageInstallTarget"
+        }
       },
       "additionalProperties": false,
       "anyOf": [
-        { "required": ["itemId"] },
-        { "required": ["packageName"] }
-      ]
+        {
+          "required": [
+            "itemId"
+          ]
+        },
+        {
+          "required": [
+            "packageName"
+          ]
+        }
+      ],
+      "dependentRequired": {
+        "installTarget": [
+          "itemId"
+        ]
+      }
     },
     "receipt": {
       "description": "openInstallTarget resolution receipt; not an install result.",
       "type": "object",
       "properties": {
-        "status": { "type": "string", "enum": ["confirmation-required", "installing", "already-installed", "superseded"] },
-        "itemId": { "type": "string" },
-        "packageName": { "type": "string" }
+        "status": {
+          "type": "string",
+          "enum": [
+            "confirmation-required",
+            "installing",
+            "already-installed",
+            "superseded"
+          ]
+        },
+        "itemId": {
+          "type": "string"
+        },
+        "packageName": {
+          "type": "string"
+        }
       },
-      "required": ["status"],
+      "required": [
+        "status"
+      ],
       "additionalProperties": false
     },
     "resolution": {
       "description": "GET /hanamesh/library/target 200 body. contractVersion is the provider's declaration (added in 0.2.0-rc.8).",
       "type": "object",
       "properties": {
-        "contractVersion": { "type": "string", "enum": ["1"] },
+        "contractVersion": {
+          "type": "string",
+          "enum": [
+            "1"
+          ]
+        },
         "item": {
           "type": "object",
           "properties": {
-            "id": { "$ref": "#/$defs/itemId" },
-            "displayName": { "type": "string" },
-            "latestVersion": { "type": "string" },
-            "kind": { "type": "string", "enum": ["application", "plugin", "listing"] },
-            "upgradeAvailable": { "type": "boolean" },
+            "id": {
+              "$ref": "#/$defs/itemId"
+            },
+            "displayName": {
+              "type": "string"
+            },
+            "latestVersion": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "application",
+                "plugin",
+                "listing"
+              ]
+            },
+            "upgradeAvailable": {
+              "type": "boolean"
+            },
             "package": {
               "type": "object",
               "properties": {
-                "registry": { "type": "string", "const": "npm" },
-                "name": { "$ref": "#/$defs/packageName" }
+                "registry": {
+                  "type": "string",
+                  "enum": [
+                    "npm",
+                    "github"
+                  ]
+                },
+                "name": {
+                  "$ref": "#/$defs/packageName"
+                }
               },
-              "required": ["registry", "name"]
+              "required": [
+                "registry",
+                "name"
+              ]
+            },
+            "installTarget": {
+              "$ref": "#/$defs/packageInstallTarget"
             }
           },
-          "required": ["id", "kind", "package", "upgradeAvailable"]
+          "required": [
+            "id",
+            "kind",
+            "package",
+            "upgradeAvailable"
+          ]
         },
         "source": {
           "type": "object",
-          "properties": { "kind": { "type": "string" } },
-          "required": ["kind"]
+          "properties": {
+            "kind": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ]
         },
-        "traceId": { "type": "string" }
+        "traceId": {
+          "type": "string"
+        }
       },
-      "required": ["contractVersion", "item", "source", "traceId"]
+      "required": [
+        "contractVersion",
+        "item",
+        "source",
+        "traceId"
+      ]
     },
     "error": {
       "description": "Refusal body of the HTTP routes; the client rejects with the same code.",
@@ -126,26 +224,64 @@
           "properties": {
             "code": {
               "type": "string",
-              "enum": ["INVALID_INPUT", "CONTRACT_VERSION_UNSUPPORTED", "CATALOG_ITEM_MISSING", "NOT_INSTALLABLE", "PACKAGE_DENIED", "HOST_DENIED", "ORIGIN_DENIED", "FRAME_CONTROL_DENIED", "CSRF_DENIED", "UNAUTHENTICATED", "FORBIDDEN", "METHOD_NOT_ALLOWED", "LIBRARY_INSTALL_UNAVAILABLE"]
+              "enum": [
+                "INVALID_INPUT",
+                "CONTRACT_VERSION_UNSUPPORTED",
+                "CATALOG_ITEM_MISSING",
+                "NOT_INSTALLABLE",
+                "PACKAGE_DENIED",
+                "HOST_DENIED",
+                "ORIGIN_DENIED",
+                "FRAME_CONTROL_DENIED",
+                "CSRF_DENIED",
+                "UNAUTHENTICATED",
+                "FORBIDDEN",
+                "METHOD_NOT_ALLOWED",
+                "LIBRARY_INSTALL_UNAVAILABLE"
+              ]
             },
-            "message": { "type": "string" }
+            "message": {
+              "type": "string"
+            }
           },
-          "required": ["code"]
+          "required": [
+            "code"
+          ]
         },
-        "traceId": { "type": "string" }
+        "traceId": {
+          "type": "string"
+        }
       },
-      "required": ["error"]
+      "required": [
+        "error"
+      ]
     },
     "providerDeclaration": {
       "description": "package.json hanamesh.installTarget of a provider package.",
       "type": "object",
       "properties": {
-        "contract": { "type": "string", "const": "hanamesh.install-target" },
-        "contractVersion": { "type": "string" },
-        "supported": { "type": "array", "items": { "type": "string" } },
-        "schema": { "type": "string" }
+        "contract": {
+          "type": "string",
+          "const": "hanamesh.install-target"
+        },
+        "contractVersion": {
+          "type": "string"
+        },
+        "supported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "schema": {
+          "type": "string"
+        }
       },
-      "required": ["contract", "contractVersion", "supported"]
+      "required": [
+        "contract",
+        "contractVersion",
+        "supported"
+      ]
     },
     "recovery": {
       "description": "library.install-failed recovery result (added in 0.2.0-rc.10).",
@@ -292,6 +428,87 @@
       "required": [
         "type",
         "code"
+      ]
+    },
+    "packageInstallTarget": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "source": {
+              "const": "npm"
+            },
+            "allowBuild": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048,
+                "pattern": "^[^\\s\\u0000-\\u001f\\u007f-\\u009f]+$"
+              }
+            },
+            "name": {
+              "$ref": "#/$defs/packageName"
+            },
+            "version": {
+              "type": "string",
+              "maxLength": 128,
+              "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+            }
+          },
+          "required": [
+            "source",
+            "name",
+            "version",
+            "allowBuild"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "source": {
+              "const": "github"
+            },
+            "allowBuild": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048,
+                "pattern": "^[^\\s\\u0000-\\u001f\\u007f-\\u009f]+$"
+              }
+            },
+            "repo": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?/[A-Za-z0-9_][A-Za-z0-9._-]*$"
+            },
+            "ref": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{40}$"
+            },
+            "path": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}(?:/|$))[A-Za-z0-9_@+.-]+(?:/(?!\\.{1,2}(?:/|$))[A-Za-z0-9_@+.-]+)*$"
+            },
+            "packageName": {
+              "$ref": "#/$defs/packageName"
+            }
+          },
+          "required": [
+            "source",
+            "repo",
+            "ref",
+            "path",
+            "packageName",
+            "allowBuild"
+          ],
+          "additionalProperties": false
+        }
       ]
     }
   }

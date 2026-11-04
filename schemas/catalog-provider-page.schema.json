@@ -658,6 +658,32 @@
         },
         "suite": {
           "$ref": "#/$defs/hana_suite"
+        },
+        "installMethods": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/hana_installMethod"
+          }
+        },
+        "oneClickInstall": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "allowed",
+            "reason"
+          ],
+          "properties": {
+            "allowed": {
+              "type": "boolean"
+            },
+            "reason": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 160
+            }
+          }
         }
       },
       "allOf": [
@@ -1229,6 +1255,77 @@
         },
         "page": {
           "$ref": "#/$defs/hana_page"
+        }
+      }
+    },
+    "hana_installMethod": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "channel",
+        "kind",
+        "spec",
+        "command",
+        "allowBuild",
+        "sourceId",
+        "sourceRef"
+      ],
+      "properties": {
+        "channel": {
+          "enum": [
+            "hanamesh",
+            "dsh",
+            "claude",
+            "codex"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "npm",
+            "github",
+            "agent"
+          ]
+        },
+        "spec": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "command": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4096
+        },
+        "allowBuild": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "sourceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "sourceRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "npmOwnership": {
+          "type": "object"
+        },
+        "target": {
+          "$ref": "https://hanamesh.com/schemas/app-host/install-target.schema.json#/$defs/packageInstallTarget"
+        },
+        "targetUnavailableReason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
         }
       }
     }

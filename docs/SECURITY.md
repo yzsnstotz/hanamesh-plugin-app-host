@@ -8,6 +8,8 @@ D-214: verification is trusted producer/client-view configuration, never a Targe
 
 # 安全与运行边界
 
+0.6.19 GitHub 安装候选：仅消费 Indexer 的完整 SHA/包名/子目录/构建许可，且与 App-host 当前启用目录逐字段核对。网站或客户端的 installTarget 是预期值，不是任意执行源；未知字段、浮动 ref、参数注入/越界目录拒绝，套件保护名单同样适用于 Git 包。既有确认回传完整目标，目录变更不得偷换 SHA 或放行额外脚本。官方 CLI 用 argv，不执行采集来源的 shell command；受控独立 Node、Git helper 与监测边界不变。脚本许可由 pnpm 管理并可能持久化，安装失败保留具体 build-permissions 残留，不手改策略、不冒充恢复。仍不是 OS 沙箱。
+
 ## 可信边界
 
 注册描述符、DSH bridge 与宿主代码可信；浏览器请求、应用 HTTP 内容、旧租约和磁盘错误不可信。浏览器不能传命令、argv、env、cwd、dataDir 或任意上游 URL。实际 HTTP 拒绝和负向测试见 acceptance。

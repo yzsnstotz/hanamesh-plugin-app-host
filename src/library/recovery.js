@@ -15,11 +15,11 @@ async function optional(path){try{return await readFile(path);}catch(error){if(e
 
 /** The profile facts one package operation can change: its direct spec, bundle selection, lockfile and resolved module. */
 export async function profileSnapshot(profileDir,name){
-  const manifestBytes=await optional(join(profileDir,'package.json')),lockBytes=await optional(join(profileDir,'pnpm-lock.yaml'));
+  const manifestBytes=await optional(join(profileDir,'package.json')),lockBytes=await optional(join(profileDir,'pnpm-lock.yaml')),workspaceBytes=await optional(join(profileDir,'pnpm-workspace.yaml'));
   const manifest=manifestBytes===null?{}:JSON.parse(manifestBytes.toString('utf8'));
   const direct=Object.assign({},...DEPENDENCY_FIELDS.map(field=>manifest[field]??{}));
   const moduleBytes=await optional(join(profileDir,'node_modules',...name.split('/'),'package.json'));
-  return{manifestBytes,lockBytes,spec:direct[name]??null,others:Object.fromEntries(Object.entries(direct).filter(([key])=>key!==name)),
+  return{manifestBytes,lockBytes,workspaceBytes,buildPermissions:digest(workspaceBytes),spec:direct[name]??null,others:Object.fromEntries(Object.entries(direct).filter(([key])=>key!==name)),
     bundles:manifest.dsh?.profile?.bundles??[],lock:digest(lockBytes),module:moduleBytes===null?null:JSON.parse(moduleBytes.toString('utf8')).version??null};
 }
 
@@ -39,6 +39,7 @@ export function profileChecks(base,now,name){
     {item:'dependency',expected:base.spec,actual:now.spec},
     {item:'module',expected:base.module,actual:now.module},
     {item:'bundle',expected:base.bundles.includes(name),actual:now.bundles.includes(name)},
+    {item:'build-permissions',expected:base.buildPermissions,actual:now.buildPermissions},
   ].map(row=>({...row,ok:same(row.expected,row.actual)}));
   if(concurrent.length)rows.push({item:'lockfile',expected:base.lock,actual:now.lock,ok:false,reason:'CONCURRENT_PROFILE_WRITE',concurrent});
   else rows.push({item:'lockfile',expected:base.lock,actual:now.lock,ok:base.lock===now.lock},{item:'bundles',expected:base.bundles,actual:now.bundles,ok:same(base.bundles,now.bundles)});
@@ -51,7 +52,7 @@ export function runtimeChecks(base,now){
 
 /** The official CLI arguments that put one package back to its baseline spec, or none when nothing package-side changed. */
 export function packageRestoreArgs(base,now,name){
-  if(profileChecks(base,now,name).every(row=>row.ok||row.reason==='CONCURRENT_PROFILE_WRITE'))return null;
+  if(profileChecks(base,now,name).every(row=>row.ok||row.reason==='CONCURRENT_PROFILE_WRITE'||row.item==='build-permissions'))return null;
   if(base.spec===null)return now.spec===null?['install']:['remove',name];
   return['add',...(EXACT.test(base.spec)?['--save-exact']:[]),`${name}@${base.spec}`];
 }
@@ -61,6 +62,7 @@ export async function keepOriginals(dir,base,runtimeBase){
   await mkdir(dir,{recursive:true,mode:0o700});const files=[];
   if(base.manifestBytes!==null){await writeFile(join(dir,'package.json'),base.manifestBytes,{mode:0o600});files.push('package.json');}
   if(base.lockBytes!==null){await writeFile(join(dir,'pnpm-lock.yaml'),base.lockBytes,{mode:0o600});files.push('pnpm-lock.yaml');}
+  if(base.workspaceBytes){await writeFile(join(dir,'pnpm-workspace.yaml'),base.workspaceBytes,{mode:0o600});files.push('pnpm-workspace.yaml');}
   if(runtimeBase){await writeFile(join(dir,'runtime-ledger.json'),JSON.stringify(runtimeBase,undefined,2)+'\n',{mode:0o600});files.push('runtime-ledger.json');}
   return{dir,files,sha256:{...(base.manifestBytes===null?{}:{'package.json':digest(base.manifestBytes)}),...(base.lockBytes===null?{}:{'pnpm-lock.yaml':digest(base.lockBytes)})}};
 }

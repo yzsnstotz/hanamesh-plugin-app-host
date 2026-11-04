@@ -19,7 +19,7 @@ export function createReferenceConsumer(options={}){
     navigate(workspaceUrl,target){
       const fields={...target,...(contractVersion===undefined?{}:{contractVersion})};
       if(validate(schema,fields).length)return{ok:false,code:'INVALID_INSTALL_TARGET'};
-      const url=new URL(workspaceUrl);url.hash=contract.fragmentPrefix.slice(1)+new URLSearchParams(fields);
+      const url=new URL(workspaceUrl);url.hash=contract.fragmentPrefix.slice(1)+new URLSearchParams({...fields,...(fields.installTarget?{installTarget:JSON.stringify(fields.installTarget)}:{})});
       return{ok:true,url:url.href};
     },
     /** rc.10: present a library.install-failed event; only a schema-valid restored/not-needed recovery counts as restored. */

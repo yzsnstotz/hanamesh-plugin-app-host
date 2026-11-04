@@ -1,5 +1,21 @@
 # 客户端市场安装目标入口
 
+## 0.6.21 候选 · 固定 GitHub 安装目标
+
+目标新增 `installTarget`，采用 C-INDEXER-CATALOG 已确认的两个形状：
+
+```ts
+type PackageInstallTarget =
+  | {source:'npm';name:string;version:string;allowBuild:string[]}
+  | {source:'github';repo:string;ref:string;path:string|null;packageName:string;allowBuild:string[]};
+```
+
+GitHub ref 必须是收录时固定的完整 40 位 SHA，不在安装时解析分支。结构化目标必须带 itemId；App-host 从自己的启用目录 installMethods 解析并逐字段核对，整个条目 oneClickInstall.allowed=false 时拒绝，不能换用同名 npm 包。GET target/导航片段将 installTarget JSON 编码；POST install/网站 handoff 使用对象。响应 item.installTarget 是客户端确认回传的预期目标。目录 SHA、路径或构建许可变化会拒绝 CATALOG_CHANGED，必须重新查看；不能在确认之后自动换目标。
+
+确认沿现有市场表面，展示完整仓库、commit、子目录；allowBuild 非空时单列「会在本机执行构建脚本」和名单，并说明 pnpm 会保存许可。取消或预览不执行 CLI。本人确认后，仅调用原受控 `dsh plugin --profile <profile> add --save-exact [--allow-build=<项>…] github:owner/repo#<SHA>[&path:<目录>]`，每段都是独立 argv，不执行来源 command。npm 目标直接使用收录时固定的精确版本，不在安装时再解析版本。
+
+GitHub CLI exit 0 后还须核对 profile 精确保存的 Git spec、模块包名/版本、dsh.bundle 和 profile 启用列表，随后报告 restart-required；重开后由原生 DSH 加载。不自行 clone/build，不改上游，不用进程内安装器。失败补偿沿原 CLI；pnpm-workspace.yaml 若发生变化，恢复报告保留 build-permissions 残留及原文件，不擅自撤销或静默宣称恢复。handoff 事件按完整目标匹配，不能只靠同名包把另一个 SHA 报为成功。
+
 网站发现：DSH 本地路由与交接监听的 `/hanamesh/library/install-target` 都按当前 `library.handoff.allowedOrigins` 回答跨来源 GET / OPTIONS；只回显获准 Origin（Vary: Origin），不使用通配 CORS。未获准来源为 403 ORIGIN_DENIED，正文无客户端能力。正常工作区同源读取、无 Origin 的本机工具读取保留。其余安装/状态路由继续需要各自认证与确认。
 
 轮询设置：`pollMs` 写入应用库真实 storage domain；保存、卸载再加载后保持。旧记录没有该字段时使用既有配置/默认 1500 ms，不重写其它存储数据。
@@ -14,7 +30,7 @@ AppHost `0.2.0-rc.10`（安装目标入口自 rc7；合约声明与随包套件�
 
 在 DSH 的正常客户端模块系统中取得 `@hanamesh/dsh-app-host` 的公开客户端模块，调用 `openInstallTarget({itemId?, packageName?})`。已有客户端 `market` service 也提供同名方法：`market.openInstallTarget(target)`；原 `market.render({preferredSubsectionId})` 与 `setSettingsVisible()` 保持原协议。
 
-至少一个标识；两者都给时必须匹配同一条目录项。拒绝所有其他字段，包括 version、url、downloadUrl。itemId 最长 160 字符；packageName 按 npm 包名语法校验、最长 214 字符。壳不得解析目录、代填版本/下载地址、点击私有 DOM、注入脚本、代按确认或访问组件状态。
+至少一个标识；两者都给时必须匹配同一条目录项。可选 installTarget 仅为上述目录目标的预期值；其它字段（包括顶层 version、url、downloadUrl）拒绝。itemId 最长 160 字符；packageName 按 npm 包名语法校验、最长 214 字符。壳不得解析目录、代填版本/下载地址、点击私有 DOM、注入脚本、代按确认或访问组件状态。
 
 入口先显现 AppHost 自己的侧栏市场覆盖层。若宿主已用 market 席位拥有市场表面（setSettingsVisible(false)），调用方需选中/呈现现有 market.render() 表面，AppHost 不叠加第二个覆盖层。即使尚未挂载，目标确认也保存在本客户端模块内，正常挂载后读回；不跨 profile 保存。
 
@@ -31,9 +47,9 @@ Promise 在目录解析后返回 `{status,itemId?,packageName?}`：
 
 ## HTTP 契约
 
-新增只读 `GET /hanamesh/library/target?itemId=...&packageName=...`，查询字段仍只接受上述两个标识。宿主用当前市场目录逐页解析，返回 `{item,source,traceId}`；item 含 kind、installed、upgradeAvailable 和原目录元数据，source 含市场自己的 manifestUrl；fixture 来源明确标「测试目录」。查询不会安装。
+只读 `GET /hanamesh/library/target?itemId=...&packageName=...` 接受两个标识及可选 JSON 编码 installTarget。宿主用当前市场目录逐页解析，返回 `{item,source,traceId}`；item 含 kind、installed、upgradeAvailable、选定 installTarget 和原目录元数据，source 含市场自己的 manifestUrl；fixture 来源明确标「测试目录」。查询不会安装。
 
-同实例同端口的精确 `127.0.0.1:<port>` 与 `localhost:<port>` Host 同时可用（同一 parentOrigin 配置，无切换）。Origin 若出现必须与本次请求 Host 的 http origin 精确一致；两个别名仍是不同的浏览器 origin，不允许跨别名请求。未知 Host、其他端口、IPv6/尾点别名、外来或 opaque Origin 明确拒绝；非 iframe、authenticate、authorize 检查保持。GET 允许同源浏览器默认不带 Origin；不接受外来 Origin。实际安装只用原 `POST /hanamesh/library/install`，要求精确同源 Origin、`X-HanaMesh-Client: workspace-v1`、资源端身份及授权；重新解析当前目录，不信任请求内版本或地址。进行中返回原 `202 {operationId,status:'started'}`；相同包共享该 operationId。已经安装且没有目录升级时返回 `200 {status:'already-installed',itemId,packageName}`。安装事件/结果与既有安装器不改。目录版本是原目录 latestVersion，既有安装器仍自行核 registry 的 latest 并固定精确版本；最终显示的已安装版本来自 profile 扫描，并与操作结果版本一致才报告读回成功。
+同实例同端口的精确 `127.0.0.1:<port>` 与 `localhost:<port>` Host 同时可用（同一 parentOrigin 配置，无切换）。Origin 若出现必须与本次请求 Host 的 http origin 精确一致；两个别名仍是不同的浏览器 origin，不允许跨别名请求。未知 Host、其他端口、IPv6/尾点别名、外来或 opaque Origin 明确拒绝；非 iframe、authenticate、authorize 检查保持。GET 允许同源浏览器默认不带 Origin；不接受外来 Origin。实际安装只用原 `POST /hanamesh/library/install`，要求精确同源 Origin、`X-HanaMesh-Client: workspace-v1`、资源端身份及授权；重新解析当前目录，不信任请求内版本或地址。进行中返回原 `202 {operationId,status:'started'}`；相同包且相同结构化目标共享该 operationId，目标不同拒绝 CATALOG_CHANGED。已经安装且没有目录升级时返回 `200 {status:'already-installed',itemId,packageName}`。安装事件/结果与既有安装器不改。结构化 npm 来源只执行收录时固定的精确版本；GitHub 只执行已确认的 SHA。最终已安装版本来自 profile 扫描，GitHub 还须读回精确来源与启用项，均与操作结果一致才报告读回成功。
 
 ## 合约版本与一致性套件
 

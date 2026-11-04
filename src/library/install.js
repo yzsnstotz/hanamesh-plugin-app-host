@@ -11,6 +11,7 @@ import { validateDefinition } from '../descriptor.js';
 import { itemKind } from './catalog.js';
 import { profileSnapshot, runtimeSnapshot, profileChecks, runtimeChecks, packageRestoreArgs, keepOriginals } from './recovery.js';
 import {SUITE_BUNDLE,prepareSuiteUpgrade,readSuiteStatus,createCoreSuiteAdapter} from './suite.js';
+import {packageInstallTarget,installTargetName,pinnedGithubSpec} from './github-target.js';
 
 /** Suite packages are changed only by the confirmed suite upgrade command. */
 export const PROTECTED_PACKAGES=Object.freeze([SUITE_BUNDLE,'@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host','hanamesh-brand']);
@@ -160,23 +161,31 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
     const name=item.package.name,operationId=/^[A-Za-z0-9-]{1,64}$/.test(context?.operationId??'')?context.operationId:randomUUID();let stage='baseline',base,runtime,installRegistry=null;
     try{
       base=await profileSnapshot(profileDir,name);
-      stage='before-add';let version;({version,registry:installRegistry}=await latest(name));
+      stage='before-add';let version;const target=item.installTarget,github=target?.source==='github';
+      if(target?.source==='npm'){version=target.version;installRegistry=registry??null;}
+      else if(!github)({version,registry:installRegistry}=await latest(name));
+      const spec=github?pinnedGithubSpec(target.repo,target.ref,target.path):`${name}@${version}`;
       const status='restart-required';
-      stage='add';await run(['add','--save-exact',...(installRegistry===null?[]:[`--registry=${installRegistry}`]),`${name}@${version}`]);
+      stage='add';await run(['add','--save-exact',...(installRegistry===null?[]:[`--registry=${installRegistry}`]),...(target?.allowBuild??[]).map(entry=>`--allow-build=${entry}`),spec]);
       stage='readback';const added=await profileSnapshot(profileDir,name);
-      requireCondition(added.spec===version&&added.module===version,'INSTALL_READBACK_MISMATCH','The profile does not resolve the exact version that was added.',{expected:version,spec:added.spec,module:added.module},502);
-      if(kind==='plugin')return{status,kind,packageName:name,version};
+      if(github){
+        const actual=await json(join(profileDir,'node_modules',...name.split('/'),'package.json'));
+        requireCondition(added.spec===spec&&actual.name===name&&typeof actual.version==='string'&&typeof actual.dsh?.bundle?.patch==='string'&&actual.dsh.bundle.patch.length>0&&added.bundles.includes(name),
+          'INSTALL_READBACK_MISMATCH','The profile does not resolve and enable the reviewed GitHub package.',{expected:spec,spec:added.spec,packageName:actual.name,active:added.bundles.includes(name)},502);
+        version=actual.version;
+      }else requireCondition(added.spec===version&&added.module===version,'INSTALL_READBACK_MISMATCH','The profile does not resolve the exact version that was added.',{expected:version,spec:added.spec,module:added.module},502);
+      if(kind==='plugin')return{status,kind,packageName:name,version,...(target?{installTarget:target}:{}),...(github?{commit:target.ref}:{})};
       stage='definition';const record=await installed(name);const declared=record.definition.deployments.map(deployment=>deployment.runtime).find(Boolean);
       if(declared){stage='provision';const root=runtimeRoot(record.definition.id);runtime={root,base:await runtimeSnapshot(await runtimeApi('ledger'),root)};
         await (await runtimeApi('provision'))(declared.manifest,{root,only:[declared.item],onProgress:event=>emit({type:'library.provision-progress',appId:record.definition.id,...event})});}
-      return{status:'restart-required',kind,appId:record.definition.id,packageName:name,version};
+      return{status:'restart-required',kind,appId:record.definition.id,packageName:name,version,...(target?{installTarget:target}:{}),...(github?{commit:target.ref}:{})};
     }catch(error){noteFailurePhase(error,{baseline:'profile baseline','before-add':'registry fetch',add:'CLI run',readback:'profile readback',definition:'application readback',provision:'runtime provision'}[stage]);error.recovery=await recover({name,stage,base,runtime,operationId,installRegistry});throw error;}
   }
   async function installAs(item,kind,context){
     permitted(item.package.name);const name=item.package.name;
-    emit({type:'library.install-started',...(item.id?{itemId:item.id}:{}),packageName:name,kind});
+    emit({type:'library.install-started',...(item.id?{itemId:item.id}:{}),packageName:name,kind,...(item.installTarget?{installTarget:item.installTarget}:{})});
     try{const result=await profileWriter.run(()=>transaction(item,kind,context));emit({type:'library.install-done',...result});return result;}
-    catch(error){emit({type:'library.install-failed',...(item.id?{itemId:item.id}:{}),packageName:name,kind,code:error.code??'INSTALL_FAILED',...(error.recovery?{recovery:error.recovery}:{})});throw error;}
+    catch(error){emit({type:'library.install-failed',...(item.id?{itemId:item.id}:{}),packageName:name,kind,...(item.installTarget?{installTarget:item.installTarget}:{}),code:error.code??'INSTALL_FAILED',...(error.recovery?{recovery:error.recovery}:{})});throw error;}
   }
   let suitePlan;
   const suiteProvider=coreSuitePlan??createCoreSuiteAdapter({core:coreService,registry:registry??'https://registry.npmjs.org',suiteSourceMode,suiteSourceService});
@@ -216,6 +225,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       }
     });},
     async install(item,context){
+      if(item.installTarget){const target=packageInstallTarget(item.installTarget);item={...item,installTarget:target,package:{registry:target.source,name:installTargetName(target)}};}
       const kind=itemKind(item);
       requireCondition(kind!=='listing','NOT_INSTALLABLE','Catalog item has no npm package to install.');
       return await installAs(item,kind,context);

@@ -52,6 +52,7 @@ export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,a
     requireCondition(subject&&typeof subject.principalId==='string','UNAUTHENTICATED','Host authentication is required.',{},401);
     if(readOnly)requireCondition(new Set(url.searchParams.keys()).size===[...url.searchParams.keys()].length,'INVALID_INPUT','Duplicate query fields are not accepted.');
     const input=readOnly?Object.fromEntries(url.searchParams):await jsonBody(req);
+    if(readOnly&&path==='/hanamesh/library/target'&&input.installTarget!==undefined){try{input.installTarget=JSON.parse(input.installTarget);}catch{throw new AppHostError('INVALID_INPUT','installTarget must contain a structured catalog target.');}}
     requireCondition(await authorize(subject,path,input)===true,'FORBIDDEN','Operation is not authorized.',{},403);
     let result;
     if(NODE_RUNTIME_ROUTES.includes(path)){

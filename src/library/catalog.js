@@ -1,4 +1,5 @@
 import semver from 'semver';
+import {packageInstallTarget,catalogInstallationAllowed} from './github-target.js';
 import { readFile } from 'node:fs/promises';
 import { AppHostError, requireCondition } from '../errors.js';
 
@@ -109,7 +110,7 @@ function suitePresentation(value,item){
 function validateHanaItem(item,maxSourceLinks){
   const optionalText={description:5000,latestVersion:64,license:80};
   const source=item?.source;
-  requireCondition(own(item,['id','itemId','packageName','name','displayName','summary','catalogKind','source','description','homepage','latestVersion','license','categories','keywords','repository','package','publisher','updatedAt','official','suite'])&&
+  requireCondition(own(item,['id','itemId','packageName','name','displayName','summary','catalogKind','source','description','homepage','latestVersion','license','categories','keywords','repository','package','publisher','updatedAt','official','suite','installMethods','oneClickInstall'])&&
     (item.official===undefined||typeof item.official==='boolean')&&(item.suite===undefined||suitePresentation(item.suite,item))&&
     plain(item.id)&&item.id===item.itemId&&
     textWithin(item.name,160,true)&&textWithin(item.displayName,120,true)&&textWithin(item.summary,1000)&&
@@ -129,6 +130,22 @@ function validateHanaItem(item,maxSourceLinks){
       own(link,['sourceId','sourceRef','sourceUrl','firstSeenAt','lastSeenAt'])&&textWithin(link.sourceId,120,true)&&textWithin(link.sourceRef,512,true)&&
       displayUrl(link.sourceUrl)&&timestamp(link.firstSeenAt)&&timestamp(link.lastSeenAt)),
     'INVALID_CATALOG_PAGE','HanaMesh catalog item does not match its public schema.');
+  requireCondition(item.oneClickInstall===undefined||(own(item.oneClickInstall,['allowed','reason'])&&typeof item.oneClickInstall.allowed==='boolean'&&
+    (item.oneClickInstall.reason===null||textWithin(item.oneClickInstall.reason,160,true))),
+    'INVALID_CATALOG_PAGE','Invalid catalog installation permission.');
+  if(item.installMethods!==undefined){
+    requireCondition(Array.isArray(item.installMethods),'INVALID_CATALOG_PAGE','Invalid catalog installation methods.');
+    for(const method of item.installMethods){
+      requireCondition(own(method,['channel','kind','spec','command','allowBuild','sourceId','sourceRef','npmOwnership','target','targetUnavailableReason'])&&
+        ['hanamesh','dsh','claude','codex'].includes(method.channel)&&['npm','github','agent'].includes(method.kind)&&
+        textWithin(method.spec,4096,true)&&(method.command===null||textWithin(method.command,4096,true))&&
+        textWithin(method.sourceId,120,true)&&textWithin(method.sourceRef,512,true)&&Array.isArray(method.allowBuild)&&
+        method.allowBuild.every(entry=>textWithin(entry,2048,true)),
+        'INVALID_CATALOG_PAGE','Invalid catalog installation method.');
+      if(method.targetUnavailableReason!==undefined)requireCondition(textWithin(method.targetUnavailableReason,160,true),'INVALID_CATALOG_PAGE','Invalid unavailable installation target reason.');
+      if(method.target!==undefined){try{packageInstallTarget(method.target);}catch{throw new AppHostError('INVALID_CATALOG_PAGE','Invalid fixed catalog package target.');}}
+    }
+  }
 }
 
 function validateItem(item){
@@ -156,11 +173,11 @@ export function validateProviderPage(value,{maxItems=200,maxSourceLinks=MAX_SOUR
   return structuredClone(value);
 }
 
-export function isApplication(item){return Boolean(item?.categories?.includes('hanamesh-app')&&item?.package?.registry==='npm');}
+export function isApplication(item){return Boolean(item?.categories?.includes('hanamesh-app')&&(item?.package?.registry==='npm'||item?.installTarget));}
 /** rc.28 market: an npm-backed entry that is not a HanaMesh application installs as a plain DSH plugin (`dsh plugin add`). */
-export function isPlugin(item){return Boolean(item?.package?.registry==='npm'&&!isApplication(item));}
+export function isPlugin(item){return Boolean((item?.package?.registry==='npm'||item?.installTarget)&&!isApplication(item));}
 /** `application` | `plugin` | `listing` (repository-only / no npm package: browse only). */
-export function itemKind(item){return isApplication(item)?'application':isPlugin(item)?'plugin':'listing';}
+export function itemKind(item){return !catalogInstallationAllowed(item)?'listing':isApplication(item)?'application':isPlugin(item)?'plugin':'listing';}
 
 /** Exact semver compare without a dependency: numeric core, then a prerelease sorts below its release; unparsable → 0. */
 export function compareVersions(a,b){
