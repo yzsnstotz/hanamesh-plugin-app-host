@@ -134,8 +134,8 @@ for (const available of [true, false]) test(`CM01-facts/${available}: authentica
     const item=reply.json.items.find(row=>row.kind==='suite');assert.ok(item);
     assert.equal(item.suite.completeness,'unknown');assert.equal(item.suite.status,'unknown');assert.equal(item.suiteUpgradeUnavailable,'Core 未提供套件声明');assert.equal(item.installed,null);
     assert.deepEqual(item.suite.blocked,[{code:'CORE_SUITE_DECLARATION_MISSING'}]);
-    assert.deepEqual(item.suite.components.map(row=>({name:row.name,version:row.version,active:row.active})),names.map((name,i)=>({name,version:physicallyInstalled?versions[i]:null,active:physicallyInstalled})));
-    assert.equal(item.suite.version,physicallyInstalled?versions[0]:null);
+    assert.deepEqual(item.suite.components.map(row=>({name:row.name,version:row.version,active:row.active})),names.map((name,i)=>({name,version:physicallyInstalled?versions[i]:null,active:false})));
+    assert.equal(item.suite.version,null, 'separate member packages have no selected bundle version');
     const discovery=await h.get(probePath,{origin:'https://market.example','x-test-auth':undefined});assert.equal(discovery.status,200);assert.equal(discovery.json.suite,undefined);assert.deepEqual(Object.keys(discovery.json).sort(),(available?['client','ready','installTarget','traceId']:['client','ready','installTarget','error','traceId']).sort());assert.ok(!JSON.stringify(discovery.json).includes(h.profile));
   }
   assert.equal(h.calls.length,0);assert.deepEqual(h.service.events().events,[]);
