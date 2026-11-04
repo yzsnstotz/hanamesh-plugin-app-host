@@ -65,8 +65,9 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
   const runtimeApi=async name=>injected[name]??(await defaults())[name];
   async function installed(packageNameValue){const root=join(profileDir,'node_modules',...packageNameValue.split('/')),pkg=await json(join(root,'package.json'));const appFile=typeof pkg.hanamesh?.app==='string'?pkg.hanamesh.app:'app.json';return{pkg,definition:validateDefinition(await json(join(root,appFile)))};}
   const commandPath=command=>[dirname(command),...(process.platform==='win32'?(process.env.PATH??process.env.Path??'').split(delimiter):['/opt/homebrew/bin','/usr/local/bin','/usr/bin','/bin'])].join(delimiter);
-  async function run(args){try{requireCondition(cliAvailable,'DSH_CLI_UNAVAILABLE','The official dsh plugin CLI is unavailable in this host.',{need:['nodeBinary','dshBin']},503);
-    const options={cwd:profileDir,workerNode:supervisorNode,env:safeGitEnv({HOME:process.env.HOME,DSH_HOME:process.env.DSH_HOME,LANG:process.env.LANG??'C.UTF-8',PATH:commandPath(nodeBinary??desktopLauncher.command)})},tail=['plugin','--profile',profileName,...args];
+  const run=args=>runCli(['plugin','--profile',profileName,...args]);
+  async function runCli(tail){try{requireCondition(cliAvailable,'DSH_CLI_UNAVAILABLE','The official dsh plugin CLI is unavailable in this host.',{need:['nodeBinary','dshBin']},503);
+    const options={cwd:profileDir,workerNode:supervisorNode,env:safeGitEnv({HOME:process.env.HOME,DSH_HOME:process.env.DSH_HOME,LANG:process.env.LANG??'C.UTF-8',PATH:commandPath(nodeBinary??desktopLauncher.command)})};
     if(launcherAvailable)options.env=safeGitEnv({...options.env,DSH_HOME:desktopLauncher.home,PATH:commandPath(desktopLauncher.command)});
     const result=await spawn(launcherAvailable?desktopLauncher.command:nodeBinary,launcherAvailable?tail:[...(desktopCli?['--expose-internals',fileURLToPath(new URL('./desktop-cli.js',import.meta.url)),desktopCli.entry,desktopCli.runtimeDir,desktopCli.supportDir]:[dshBin]),...tail],options);
     const clean=text=>redact(stripVTControlCharacters(String(text??''))).replace(/(https?:\/\/)[^/\s@]+@/g,'$1[REDACTED]@').slice(-2000);
@@ -142,7 +143,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
     catch(error){emit({type:'library.install-failed',...(item.id?{itemId:item.id}:{}),packageName:name,kind,...(item.installTarget?{installTarget:item.installTarget}:{}),code:error.code??'INSTALL_FAILED',...(error.recovery?{recovery:error.recovery}:{})});throw error;}
   }
   let suitePlan;
-  const suiteProvider=coreSuitePlan??createCoreSuiteAdapter({core:coreService,registry:registry??'https://registry.npmjs.org',suiteSourceMode,suiteSourceService});
+  const suiteProvider=coreSuitePlan??createCoreSuiteAdapter({core:coreService,registry,profileName,suiteSourceMode,suiteSourceService});
   async function previewSuite(){
     const next=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider});
     suitePlan={...next,planId:randomUUID()};return structuredClone(suitePlan);
@@ -158,7 +159,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       requireCondition(suitePlan?.planId===planId,'SUITE_PLAN_CHANGED','升级确认已变化，请重新查看并确认。',{},409);
       const confirmed=suitePlan;suitePlan=undefined;
       const fresh=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider});
-      const identity=plan=>JSON.stringify({sourceBinding:plan.sourceBinding,bundle:plan.bundle,components:plan.components,declarationId:plan.declarationId,registry:plan.registry,selectedUpgrade:plan.selectedUpgrade,physicalBaseline:plan.physicalBaseline});
+      const identity=plan=>JSON.stringify({installation:plan.installation,sourceBinding:plan.sourceBinding,bundle:plan.bundle,components:plan.components,declarationId:plan.declarationId,registry:plan.registry,selectedUpgrade:plan.selectedUpgrade,physicalBaseline:plan.physicalBaseline});
       requireCondition(identity(fresh)===identity(confirmed),'SUITE_PLAN_CHANGED','套件声明或版本已变化，请重新查看并确认。',{},409);
       requireCondition(fresh.available,'SUITE_NO_UPDATE','当前没有兼容新版。',{},409);
       const before=await readSuiteStatus(profileDir);
@@ -168,7 +169,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       requireCondition(identity(executing)===identity(confirmed),'SUITE_PLAN_CHANGED','执行前套件安装包来源或声明已变化，请重新查看并确认。',{},409);
       emit({type:'library.install-started',itemId:'hanamesh:suite-upgrade',packageName:SUITE_BUNDLE,kind:'suite-upgrade'});
       try{
-        await run(['add','--save-exact','--strict-peer-dependencies',`--registry=${fresh.registry??registry??'https://registry.npmjs.org'}`,`${SUITE_BUNDLE}@${fresh.bundle.to}`]);
+        await runCli(fresh.installation.args);
         const actual=await readSuiteStatus(profileDir);
         const saved=await json(join(profileDir,'package.json'));
         requireCondition(actual.status==='installed'&&actual.version===fresh.bundle.to&&saved.dependencies?.[SUITE_BUNDLE]===fresh.bundle.to&&fresh.components.every((c,i)=>actual.components[i]?.version===c.to),'INSTALL_READBACK_MISMATCH','套件升级后的版本或启用状态不符，请完全退出后按补齐命令修复。',{},502);

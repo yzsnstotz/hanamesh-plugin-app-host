@@ -241,3 +241,5 @@ Actions runs on the standard public/free `macos-15` arm64 runner because the exi
 ## Core 公开套件声明的测试依赖
 
 源码测试通过 `@hanamesh/core/suite` 读取 Core 单源公开命令。`@hanamesh/core` 是仓库声明的 devDependency，按 npm 版本范围 `^0.3.30` 从公开 npm 安装，冻结 pnpm 锁记录实际版本与 SRI；许可证记录见 `docs/LICENSES.json`。Core 不成为运行时依赖或 bundled 包。
+
+套件升级的执行定义来自可信 Cordis Core 声明 `upgrade.installation:{name,version,command,args}`；AppHost将实际profile与可选registry交给Core，使用返回的完整argv，不自行加flag、解析命令前缀或补默认npm源。缺定义时具名拒绝，参数纳入确认快照。该数据接口避免AppHost在Core新版本发布前依赖未发布SDK。

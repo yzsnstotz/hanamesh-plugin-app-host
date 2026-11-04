@@ -71,10 +71,19 @@ test('scoped suite names keep repository and component ids, reject old npm decla
 });
 
 
-test('missing published repair version remains null while bare and range commands are rejected',async()=>{
+test('repair rendering belongs to Core and a missing upgrade definition is refused',async()=>{
  const source=declaration();source.installCommand=null;
  assert.equal((await adapter({core:provider(source),registry})()).installCommand,null);
- for(const command of ['dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh','dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@latest','dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@^1.2.3']){
-  source.installCommand=command;await assert.rejects(adapter({core:provider(source),registry})(),{code:'CORE_SUITE_DECLARATION_INVALID'});
+ source.installCommand='Core-owned future command';
+ assert.equal((await adapter({core:provider(source),registry})()).installCommand,source.installCommand);
+ for(const installation of [undefined,null,{name:'foreign',version:'0.1.1',command:'opaque',args:['plugin']},{name:'@hanamesh/hanamesh',version:'latest',command:'opaque',args:['plugin']},{name:'@hanamesh/hanamesh',version:'0.1.1',command:'opaque',args:[]}]){
+  source.upgrades[0].installation=installation;await assert.rejects(adapter({core:provider(source),registry})(),{code:'CORE_SUITE_DECLARATION_INVALID'});
  }
+});
+
+test('AppHost forwards its actual profile and asks Core to declare the registry when DSH supplies none',async()=>{
+ const requests=[],value=declaration();
+ const get=adapter({core:()=>service,profileName:'work'});
+ const service={protocolVersion:'1',getSuiteDeclaration:async request=>{requests.push(request);return value;}};
+ assert.equal((await get()).registry,value.registry);assert.deepEqual(requests,[{profile:'work'}]);
 });

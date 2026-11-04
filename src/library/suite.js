@@ -39,13 +39,11 @@ const exact=value=>typeof value==='string'&&semver.valid(value)===value;
 const digest=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
 const nullableText=value=>value===null||text(value);
 const invalid=()=>requireCondition(false,'CORE_SUITE_DECLARATION_INVALID','Core 套件声明无法用于精确安装。',{},503);
-function exactInstallCommand(value){
-  if(value===null)return true;
-  const prefix=`dsh plugin --profile desktop add --save-exact ${SUITE_BUNDLE}@`;
-  return typeof value==='string'&&value.startsWith(prefix)&&exact(value.slice(prefix.length));
+function validInstallation(value,version){
+  return object(value)&&value.name===SUITE_BUNDLE&&value.version===version&&text(value.command)&&Array.isArray(value.args)&&value.args.length>0&&value.args.every(text);
 }
 function validateDeclaration(value){
-  if(!object(value)||value.schemaVersion!==1||!text(value.checkedAt)||!exactInstallCommand(value.installCommand)||!digest(value.declarationId)||!text(value.nodeVersion)||!nullableText(value.registry)||!(value.bundleVersion===null||exact(value.bundleVersion))||!['complete','incomplete','unknown'].includes(value.completeness))invalid();
+  if(!object(value)||value.schemaVersion!==1||!text(value.checkedAt)||!nullableText(value.installCommand)||!digest(value.declarationId)||!text(value.nodeVersion)||!nullableText(value.registry)||!(value.bundleVersion===null||exact(value.bundleVersion))||!['complete','incomplete','unknown'].includes(value.completeness))invalid();
   if(value.completeness==='complete'&&!exact(value.bundleVersion))invalid();
   const manifest=value.manifest;
   if(!object(manifest)||manifest.schemaVersion!==1||!text(manifest.id)||!object(manifest.bundle)||manifest.bundle.name!==SUITE_BUNDLE||!text(manifest.bundle.repository)||!object(manifest.core)||manifest.core.name!==SUITE_PACKAGES[0].name||!exact(manifest.core.version)||!text(manifest.core.repository)||!Array.isArray(manifest.components)||manifest.components.length!==2)invalid();
@@ -61,6 +59,7 @@ function validateDeclaration(value){
   if(!Object.values(value.peerFacts).every(nullableText)||!Object.values(value.metadataDigests).every(text))invalid();
   for(const upgrade of value.upgrades){
     if(!object(upgrade)||!object(upgrade.bundle)||!text(upgrade.bundle.id)||upgrade.bundle.moduleName!==SUITE_BUNDLE||!exact(upgrade.bundle.version)||!text(upgrade.bundle.repository)||!digest(upgrade.bundle.metadataDigest)||!text(upgrade.registry)||!Array.isArray(upgrade.targets)||upgrade.targets.length!==3)invalid();
+    if(!validInstallation(upgrade.installation,upgrade.bundle.version))invalid();
     const targets=new Set();
     for(const row of upgrade.targets){if(!object(row)||!text(row.id)||!SUITE_PACKAGES.some(p=>p.name===row.moduleName)||targets.has(row.moduleName)||!exact(row.version)||!text(row.repository)||!digest(row.metadataDigest))invalid();targets.add(row.moduleName);}
   }
@@ -76,7 +75,7 @@ export function readSuiteSourceState(source){
   return{protocolVersion:state.protocolVersion,status:state.status,selection:state.selection,registry:state.registry,archiveCount:state.archiveCount,lastError:state.lastError};
 }
 /** Consume only the optional protocol-1 Cordis method and the public C-CORE section D DTO. */
-export function createCoreSuiteAdapter({core=()=>undefined,registry,suiteSourceMode=()=>'configured',suiteSourceService=()=>undefined}={}){
+export function createCoreSuiteAdapter({core=()=>undefined,registry,suiteSourceMode=()=>'configured',suiteSourceService=()=>undefined,profileName}={}){
   const current=()=>{const value=core();return value?.protocolVersion==='1'&&typeof value.getSuiteDeclaration==='function'?value:undefined;};
   // AppHost-local service identity only: Core protocol 1 supplies no revision/generation.
   const instances=new WeakMap();
@@ -101,17 +100,17 @@ export function createCoreSuiteAdapter({core=()=>undefined,registry,suiteSourceM
   }
   const get=async()=>{
     const binding=sourceBinding();
-    const declaration=await read({registry:binding.registry});
+    const declaration=await read({...(binding.registry===undefined?{}:{registry:binding.registry}),...(profileName===undefined?{}:{profile:profileName})});
     requireCondition(JSON.stringify(sourceBinding())===JSON.stringify(binding),'SUITE_PLAN_CHANGED','套件安装包来源已变化，请重新查看并确认。',{},409);
     requireCondition(declaration.completeness==='complete','CORE_SUITE_CURRENT_INCOMPLETE','Core 套件完整性：'+declaration.completeness,{completeness:declaration.completeness,blocked:declaration.blocked},409);
     let expected;try{const url=new URL(binding.registry);url.pathname=url.pathname.replace(/\/$/,'')+'/';expected=url.href;}catch{}
-    requireCondition(expected&&declaration.registry===expected,'CORE_SUITE_SOURCE_MISMATCH','Core 声明来源与执行 registry 不符。',{blocked:declaration.blocked},409);
+    requireCondition(text(declaration.registry)&&(binding.registry===undefined||declaration.registry===expected),'CORE_SUITE_SOURCE_MISMATCH','Core 声明来源与执行 registry 不符。',{blocked:declaration.blocked},409);
     requireCondition(declaration.upgrades.length>0,'CORE_SUITE_NO_COMPATIBLE_TUPLE','Core 未提供可执行升级组合。',{blocked:declaration.blocked},409);
     // The first displayed Core tuple is the presentation default; App-host never ranks versions.
     const selectedUpgrade=declaration.upgrades[0];
     requireCondition(selectedUpgrade.registry===declaration.registry,'CORE_SUITE_SOURCE_MISMATCH','Core 升级组合来源与执行 registry 不符。',{},409);
     const components=SUITE_PACKAGES.map(({name,label})=>{const from=declaration.installed.find(row=>row.moduleName===name).actualVersion;if(!exact(from))invalid();return{name,label,from,to:selectedUpgrade.targets.find(row=>row.moduleName===name).version};});
-    return{available:true,bundle:{name:SUITE_BUNDLE,from:declaration.bundleVersion,to:selectedUpgrade.bundle.version},components,installCommand:declaration.installCommand,sourceBinding:binding,declarationId:declaration.declarationId,registry:declaration.registry,selectedUpgrade,physicalBaseline:declaration.installed,upgrades:declaration.upgrades,blocked:declaration.blocked};
+    return{available:true,bundle:{name:SUITE_BUNDLE,from:declaration.bundleVersion,to:selectedUpgrade.bundle.version},components,installation:selectedUpgrade.installation,installCommand:declaration.installCommand,sourceBinding:binding,declarationId:declaration.declarationId,registry:declaration.registry,selectedUpgrade,physicalBaseline:declaration.installed,upgrades:declaration.upgrades,blocked:declaration.blocked};
   };
   Object.defineProperty(get,'unavailable',{get:()=>current()?null:CORE_SUITE_DECLARATION_MISSING});
   get.readFacts=async()=>{
@@ -132,7 +131,7 @@ export async function prepareSuiteUpgrade({coreSuitePlan}={}){
   const plan=await coreSuitePlan();
   requireCondition(plan!==undefined&&plan!==null,'CORE_SUITE_DECLARATION_MISSING',CORE_SUITE_DECLARATION_MISSING,{},503);
   const invalid=()=>requireCondition(false,'CORE_SUITE_DECLARATION_INVALID','Core 套件声明无法用于精确安装。',{},503);
-  if(typeof plan!=='object'||Array.isArray(plan)||typeof plan.available!=='boolean'||!object(plan.bundle)||plan.bundle.name!==SUITE_BUNDLE||!exact(plan.bundle.from)||!exact(plan.bundle.to)||!exactInstallCommand(plan.installCommand)||!Array.isArray(plan.components)||plan.components.length!==SUITE_PACKAGES.length)invalid();
+  if(typeof plan!=='object'||Array.isArray(plan)||typeof plan.available!=='boolean'||!object(plan.bundle)||plan.bundle.name!==SUITE_BUNDLE||!exact(plan.bundle.from)||!exact(plan.bundle.to)||!nullableText(plan.installCommand)||!validInstallation(plan.installation,plan.bundle.to)||!Array.isArray(plan.components)||plan.components.length!==SUITE_PACKAGES.length)invalid();
   const rows=new Map();
   for(const row of plan.components){
     if(!row||typeof row!=='object'||!SUITE_PACKAGES.some(p=>p.name===row.name)||rows.has(row.name)||typeof row.from!=='string'||semver.valid(row.from)!==row.from||typeof row.to!=='string'||semver.valid(row.to)!==row.to)invalid();

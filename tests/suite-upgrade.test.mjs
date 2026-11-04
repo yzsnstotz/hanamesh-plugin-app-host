@@ -1,4 +1,4 @@
-import {writeSuiteProfile} from './fixtures/core-suite-declaration.mjs';
+import {writeSuiteProfile,installation} from './fixtures/core-suite-declaration.mjs';
 import {formatSuiteInstallCommand} from '@hanamesh/core/suite';
 const SUITE_INSTALL_COMMAND=formatSuiteInstallCommand('0.1.1');
 import test from 'node:test';
@@ -10,12 +10,12 @@ import {SUITE_PACKAGES,readSuiteStatus,prepareSuiteUpgrade} from '../src/library
 async function profile(t,prefix='suite-'){const root=await scratch(prefix);const versions={'@hanamesh/core':'0.3.11','@hanamesh/usage':'0.2.0-rc.34','@hanamesh/dsh-app-host':'0.6.3'};const dependencies={};for(const {name} of SUITE_PACKAGES){dependencies[name]=versions[name];const p=join(root,'node_modules',name);await mkdir(p,{recursive:true});await writeFile(join(p,'package.json'),JSON.stringify({name,version:versions[name]}));}await writeSuiteProfile(root,versions);return root;}
 const targets={'@hanamesh/core':'0.3.12','@hanamesh/usage':'0.2.0-rc.35','@hanamesh/dsh-app-host':'0.6.4'};
 // Internal normalized execution-port double; public C-CORE DTO coverage is in core-suite-public.test.mjs.
-const coreSuitePlan=async()=>({available:true,bundle:{name:'@hanamesh/hanamesh',from:'0.1.0',to:'0.1.1'},installCommand:SUITE_INSTALL_COMMAND,components:SUITE_PACKAGES.map(p=>({name:p.name,label:p.label,from:({'@hanamesh/core':'0.3.11','@hanamesh/usage':'0.2.0-rc.34','@hanamesh/dsh-app-host':'0.6.3'})[p.name],to:targets[p.name]}))});
+const coreSuitePlan=async()=>({available:true,installation:structuredClone(installation),bundle:{name:'@hanamesh/hanamesh',from:'0.1.0',to:'0.1.1'},installCommand:SUITE_INSTALL_COMMAND,components:SUITE_PACKAGES.map(p=>({name:p.name,label:p.label,from:({'@hanamesh/core':'0.3.11','@hanamesh/usage':'0.2.0-rc.34','@hanamesh/dsh-app-host':'0.6.3'})[p.name],to:targets[p.name]}))});
 test('suite discovery reads one selected bundle and its three exact physical children; unreadable is unknown',async t=>{const root=await profile(t);assert.equal((await readSuiteStatus(root)).status,'installed');assert.equal((await readSuiteStatus(root)).components.length,3);assert.equal((await readSuiteStatus(join(root,'missing'))).status,'unknown');const p=JSON.parse(await import('node:fs/promises').then(m=>m.readFile(join(root,'package.json'),'utf8')));p.dsh.profile.bundles.pop();await writeFile(join(root,'package.json'),JSON.stringify(p));assert.equal((await readSuiteStatus(root)).status,'incomplete');assert.ok(!SUITE_INSTALL_COMMAND.includes('brand'));});
 test('only explicit current upgrade confirmation can invoke the official CLI; ordinary protected install remains denied',async t=>{
   const root=await profile(t,'legal-brand-profile-'),{createLibraryInstaller}=await import('../src/library/install.js');assert.ok(root.includes('brand'));let writes=0;
   const installer=createLibraryInstaller({profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'official-dsh.js'),registry:'https://registry.example.test',coreSuitePlan,fetchImpl:async()=>assert.fail('suite plan is provided by Core'),spawn:async(_command,args)=>{
-    writes++;assert.ok(args.includes('--save-exact'));assert.ok(args.includes('--registry=https://registry.example.test'));assert.ok(args.includes('--strict-peer-dependencies'));assert.deepEqual(args,[join(root,'official-dsh.js'),'plugin','--profile','desktop','add','--save-exact','--strict-peer-dependencies','--registry=https://registry.example.test','@hanamesh/hanamesh@0.1.1']);
+    writes++;assert.deepEqual(args,[join(root,'official-dsh.js'),...installation.args]);
     for(const {name} of SUITE_PACKAGES)await writeFile(join(root,'node_modules',name,'package.json'),JSON.stringify({name,version:targets[name]}));
     await writeSuiteProfile(root,targets,'0.1.1');return{code:0};
   }});
@@ -61,10 +61,10 @@ test('suite failure UI shows partial versions and the repair command without cla
 });
 
 
-test('ordinary registry alignment preserves the existing default for the separate Core suite upgrade path',async t=>{
+test('suite execution uses Core argv with no AppHost registry default or extra flags',async t=>{
  const root=await profile(t),{createLibraryInstaller}=await import('../src/library/install.js');
  const installer=createLibraryInstaller({profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'official-dsh.js'),coreSuitePlan,fetchImpl:async()=>assert.fail('suite uses Core plan'),spawn:async(_command,args)=>{
-  assert.ok(args.includes('--registry=https://registry.npmjs.org'),'suite default registry remains unchanged');
+  assert.deepEqual(args,[join(root,'official-dsh.js'),...installation.args]);
   for(const {name} of SUITE_PACKAGES)await writeFile(join(root,'node_modules',name,'package.json'),JSON.stringify({name,version:targets[name]}));
   await writeSuiteProfile(root,targets,'0.1.1');return{code:0};
  }});
@@ -90,4 +90,13 @@ test('D1 bundle status resolves physical children inside a strict transitive dep
  for(const {name}of SUITE_PACKAGES)await rename(join(root,'node_modules',name),join(nested,name.split('/')[1]));
  assert.equal((await readSuiteStatus(root)).status,'installed');
  await writeFile(join(nested,'usage','package.json'),JSON.stringify({name:'@hanamesh/usage',version:'0.3.0'}));assert.equal((await readSuiteStatus(root)).status,'incomplete');
+});
+
+test('Core command text is opaque and Core argv changes invalidate confirmation',async t=>{
+ const root=await profile(t),{createLibraryInstaller}=await import('../src/library/install.js');let changed=false,writes=0;
+ const provider=async()=>({...await coreSuitePlan(),installCommand:'future Core rendering',installation:{...installation,command:'future Core rendering',args:changed?[...installation.args,'--core-new-option']:installation.args}});
+ const installer=createLibraryInstaller({profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.js'),coreSuitePlan:provider,spawn:async()=>{writes++;return{code:0}}});
+ const plan=await installer.prepareSuiteUpgrade();changed=true;
+ await assert.rejects(installer.upgradeSuite({planId:plan.planId}),{code:'SUITE_PLAN_CHANGED'});assert.equal(writes,0);
+ await assert.rejects(prepareSuiteUpgrade({coreSuitePlan:async()=>({...await coreSuitePlan(),installation:undefined})}),{code:'CORE_SUITE_DECLARATION_INVALID'});
 });

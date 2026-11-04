@@ -231,7 +231,7 @@ Storage space budget is archive bytes + twice measured regular-file payload (new
 
 ## B17 套件安装包来源（2026-10-21 候选）
 
-AppHost 自有设置页「套件安装包来源」，公开同源端点 `GET|POST /hanamesh/library/suite-source`。GET 无参数，返回 `{mode, configuredRegistry, observation, traceId}`；`mode` 为 `configured|core`。`configured` 是唯一新增默认：继续使用原 `library.registry`（未设仍为 `https://registry.npmjs.org`）。市场目录 `library.sources` 的未设播种、显式空数组、自定义及已保存值均独立保持；目录 manifest URL 不是 npm registry。
+AppHost 自有设置页「套件安装包来源」，公开同源端点 `GET|POST /hanamesh/library/suite-source`。GET 无参数，返回 `{mode, configuredRegistry, observation, traceId}`；`mode` 为 `configured|core`。`configured` 是唯一新增默认：使用显式 `library.registry`，未设时请求Core声明实际来源。市场目录 `library.sources` 的未设播种、显式空数组、自定义及已保存值均独立保持；目录 manifest URL 不是 npm registry。
 
 POST 严格只接受 `{mode:'configured'}` 或 `{mode:'core'}`，不接受 registry、版本或其他字段/查询参数。沿用精确 Host、同源 Origin、workspace-v1、Connection admission、逐操作 authorization、JSON/65536 字节及 no-store 规则。选择存自己的 `hanamesh_library` 单镜像可选 `suiteSource:{mode}`；未存值不改旧记录。来源、目录和网站交接设置按接收顺序串行读改写整个镜像，成功持久化后才发布新内存状态；保存失败 `500/SUITE_SOURCE_SAVE_FAILED`，旧选择和其他字段保持；关闭等待已排队写入。
 
@@ -239,7 +239,7 @@ GET 的 `observation` 为 `{observable:false,code}` 或 `{observable:true,state}
 
 明确选择 core 后，预览、确认、紧接执行之前各自重新读取当前 source 和 Core `getSuiteDeclaration({registry})`，并在异步声明返回后复核来源。`ready` 仅表示来源可读；兼容性仍唯一由 Core declaration 决定。disabled/failed/disposed 或无有效 registry 为 `409/CORE_SUITE_SOURCE_NOT_READY`；不缓存 ready、不回退配置 registry、不挑最新、不重试。沿用 declarationId、精确 tuple/metadata digest/repository、物理已装 baseline 和本人 planId。URL、selection、选择模式或提供服务的对象身份变化均终止原确认；新预览仍须本人确认。服务对象身份是 AppHost 内存内 opaque token，**不是 Core 的 generation/revision**；protocol 1 没有该事实或 watch，不能声称观察到两次读取间完全消失又恢复原状的事件。
 
-最后执行仍调用现有官方 CLI `add --save-exact --strict-peer-dependencies --registry=<声明原址>`，精确三组件；正常市场外部包路径不变。正在执行时源连接丢失由实际 CLI/输运终态报告，不靠重试/退出屏障维持源。Core B17 服务只来自候选 `c5e1a7373b9896c385f14f79a64bb277f43bde5c` 的公开能力；无 Core 运行时 import，无 Desktop hook/bootstrap、三锁或先于插件加载的服务。源码/真实 Cordis+JSON domain（AUTH_DOUBLE）与正常包验证不等同真实原生安装或 owner 验收。
+最后调用现有官方 CLI，完整 argv 来自Core的升级 installation，安装一个精确总包；正常市场外部包路径不变。正在执行时源连接丢失由实际 CLI/输运终态报告，不靠重试/退出屏障维持源。Core B17 服务只来自候选 `c5e1a7373b9896c385f14f79a64bb277f43bde5c` 的公开能力；无 Core 运行时 import，无 Desktop hook/bootstrap、三锁或先于插件加载的服务。源码/真实 Cordis+JSON domain（AUTH_DOUBLE）与正常包验证不等同真实原生安装或 owner 验收。
 
 公开类型位于 `@hanamesh/dsh-app-host/dsh` 的 `SuiteSourceMode/CoreSuiteSourceState/SuiteSourceSettings/SuiteSourceSettingsInput`；页面导出 `SuiteSourceSettingsSection`。回归：`suite-source.test.mjs`、`handoff-integration.test.mjs` B17-CORDIS，变异 M84–M89（M61 检查全部后续读取被错误缓存）。
 
@@ -257,3 +257,5 @@ B17 review repair（同0.6.8候选）：`AppHost` 未注入 `runtimeLedgerReader
 ## 0.6.16 市场查询来源与诊断（原协议1）
 
 A2 0.6.22：普通插件必须有 Indexer 已审核的 installMethods 和 oneClickInstall.allowed:true；仅执行其 npm 精确版本或完整 GitHub SHA。缺目标具名拒绝，不根据包名查可变版本标签。CLI 使用显式 library.registry（若有），否则保留宿主原生 registry 配置。删除普通插件按包名内部直装方法、元数据查询及其专用设置/规则加载。套件仅透传 Core installCommand。安装失败保留脱敏 CLI/读回诊断及补偿结果；精确版本发布后即可原生验收。
+
+A2 0.6.22：升级tuple必须带Core生成的installation（name/version/command/args），name/version与该tuple一致。AppHost传实际profile和可选配置来源；未配置来源由Core显式声明。CLI直接执行args；confirmation同时绑定该定义。installCommand是Core的可空修复展示文本，不解析命令前缀。旧Core缺定义不回退自拼。
