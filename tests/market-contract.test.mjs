@@ -12,7 +12,6 @@ import * as appHost from '../src/dsh.js';
 import { AppHost, AtomicFileStore } from '../src/index.js';
 import { createLibraryService } from '../src/library/service.js';
 import { createLibraryInstaller } from '../src/library/install.js';
-import {fixtureRegistryManager,fixtureRegistryRules} from './helpers.mjs';
 import { createLibraryHttpHandler } from '../src/library/routes.js';
 import { clientHarness, fakeClock, settle } from './fixtures/client-ui-harness.mjs';
 import { definition, http, until } from './helpers.mjs';
@@ -20,7 +19,7 @@ import { definition, http, until } from './helpers.mjs';
 // Evidence: SOURCE/FIXTURE plus a real local app process. CLI, catalog and auth are
 // named counterparts; this never proves the native Desktop or owner acceptance.
 const runRoot = resolve(import.meta.dirname, '../..');
-const catalogFixture = resolve('tests/fixtures/catalog/provider-page.json');
+const catalogFixture = resolve('tests/fixtures/catalog/reviewed-page.json');
 const appTarget = { itemId: 'com.hanamesh.vibe-trading', packageName: '@hanamesh/app-vibe-trading', contractVersion: '1' };
 const pluginTarget = { itemId: 'com.hanamesh.utility-plugin', packageName: '@hanamesh/utility-plugin', contractVersion: '1' };
 const probePath = '/hanamesh/library/install-target';
@@ -55,7 +54,7 @@ async function provider(t, { available = true, gate, cliFails = false, readbackV
   await host.init();
   // Official CLI counterpart writes a temporary profile; it never invokes dsh,
   // changes DSH_HOME, or installs into the user's profile.
-  const installer = available ? createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,
+  const installer = available ? createLibraryInstaller({
     profileDir: profile, profileName: 'market-contract', dataRoot,
     nodeBinary: process.execPath, dshBin: join(root, 'fixture-dsh-bin.js'),
     fetchImpl: async () => new Response(JSON.stringify({ version: '1.2.3' })),
@@ -208,7 +207,7 @@ test('CM06: accepted duplicate requests share one operation, finish with exact p
   assert.equal(first.json.installed, undefined, 'acceptance is not installation completion');
   await until(() => h.service.events().events.some(e => e.type === 'library.install-done' && e.operationId === first.json.operationId));
   assert.equal(h.calls.filter(c => c.args[4] === 'add').length, 1);
-  assert.deepEqual(h.calls[0].args.slice(1), ['plugin', '--profile', 'market-contract', 'add', '--save-exact', '--registry=https://registry.npmjs.org/', appTarget.packageName + '@1.2.3']);
+  assert.deepEqual(h.calls[0].args.slice(1), ['plugin', '--profile', 'market-contract', 'add', '--save-exact',  appTarget.packageName + '@1.2.3']);
   const feed = await h.get('/hanamesh/library/events?after=0');
   const done = feed.json.events.find(e => e.operationId === first.json.operationId && e.type === 'library.install-done');
   assert.deepEqual([done.result.packageName, done.result.version, done.result.kind], [appTarget.packageName, '1.2.3', 'application']);
@@ -400,9 +399,7 @@ test('MP03 market failure shows the release-age cause and DSH upgrade action wit
  const alert=m.h.find(n=>n.props?.role==='alert'&&JSON.stringify(n).includes('ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION'));
  assert.ok(alert,'show the exact pnpm category without opening details');
  const visible=JSON.stringify(alert);for(const spec of ['@ai-workbench/connect@0.7.37','@ai-workbench/remote-agent@0.8.29','@ai-workbench/workbench@0.1.3'])assert.ok(visible.includes(spec),'list affected package '+spec+' in the alert');
- assert.match(visible,/默认.*24 小时/,'explain the default age rule without overriding the actual cutoff');
- assert.match(visible,/DSH 0\.2\.0-rc\.2.*pnpm 11\.7\.0.*同名多条白名单只认第一条/);
- assert.match(visible,/DSH 设置/);assert.match(visible,/等待/);assert.match(visible,/cutoff/);
+ assert.match(visible,/DSH 设置/);assert.match(visible,/精确版本/);
  const details=m.h.find(n=>n.type==='details'&&n.children.some(child=>child?.type==='pre'&&child.children.includes(diagnostic)));
  assert.ok(details,'retain the original package/version/cutoff diagnostic in expandable details');
  assert.equal(m.calls.filter(c=>c.path==='/hanamesh/library/install').length,1,'never retry a policy rejection');
@@ -425,20 +422,4 @@ test('MD04 uncoded install failure shows its sanitized original phase/type/messa
  assert.match(m.text(),/LIBRARY_OPERATION_FAILED/);assert.match(m.text(),/安装前状态未被改动/);
  assert.ok(m.h.find(n=>n.type==='details'&&n.children.some(child=>child?.type==='pre'&&child.children.includes(diagnostic))),'the exact safe failure reaches the existing technical-details surface');
  assert.equal(m.calls.filter(c=>c.path==='/hanamesh/library/install').length,1,'no hidden retries');assert.doesNotMatch(m.text(),/发布时间检查未通过/,'an uncoded exception is not reclassified as a pnpm policy failure');
-});
-
-
-test('MD15 named registry failures show an actionable source or network instruction and retain technical details',async t=>{
- for(const [failureCode,action] of [
-  ['REGISTRY_LOOKUP_FAILED',/检查 DSH 源设置与网络/],
-  ['REGISTRY_LOOKUP_TIMEOUT',/registry 查询超过 30 秒/],
-  ['REGISTRY_CONFIG_UNAVAILABLE',/检查客户端插件管理器/]
- ]){
-  const diagnostic='Phase: registry fetch\nAppHostError ['+failureCode+']: fixture refusal';
-  const m=await market(t,{failed:true,recoveryStatus:'not-needed',diagnostic,failureCode});
-  await m.h.module.openInstallTarget(appTarget);await settle();await m.h.click('确认安装');await m.clock.advance(1000);
-  assert.match(m.text(),action);assert.match(m.text(),/安装前状态未被改动/);
-  assert.ok(m.h.find(n=>n.type==='details'&&n.children.some(child=>child?.type==='pre'&&child.children.includes(diagnostic))));
-  assert.equal(m.calls.filter(c=>c.path==='/hanamesh/library/install').length,1,'the person must explicitly request another attempt');
- }
 });

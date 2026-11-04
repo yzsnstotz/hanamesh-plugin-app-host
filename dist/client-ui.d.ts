@@ -17,7 +17,10 @@ export function LibraryOverlay(props?:{embedded?:boolean,preferredSubsectionId?:
 export function MarketConflictNotice():unknown;
 /** Identifiers only; metadata and confirmation are owned by the client's market. */
 /** rc.8: `contractVersion` optionally declares the install-target contract the caller speaks; absent means v1, any other value is refused with CONTRACT_VERSION_UNSUPPORTED. */
-export interface InstallTarget {itemId?:string;packageName?:string;contractVersion?:'1';}
+export type PackageInstallTarget =
+  | {source:'npm';name:string;version:string;allowBuild:string[]}
+  | {source:'github';repo:string;ref:string;path:string|null;packageName:string;allowBuild:string[]};
+export interface InstallTarget {itemId?:string;packageName?:string;contractVersion?:'1';installTarget?:PackageInstallTarget;}
 export interface InstallTargetReceipt {status:'confirmation-required'|'installing'|'already-installed'|'superseded';itemId?:string;packageName?:string;}
 /** Show/resolve a target without installing. Resolves once confirmation is ready; rejects with a visible market error. */
 export function openInstallTarget(input:InstallTarget):Promise<InstallTargetReceipt>;

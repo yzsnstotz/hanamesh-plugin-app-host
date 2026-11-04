@@ -73,7 +73,7 @@ export const Config = z.object({
     sources:z.union([z.array(z.any()),z.const(undefined)]),
     /** Locations are inferred from the verified Desktop argv/profile or plain DSH (see library/locate.js). */
     profileDir:z.string(),profileName:z.string(),dshBin:z.string(),
-    registry:z.string(),allowPrerelease:z.boolean(),
+    registry:z.string(),
     /** Publicly named event history capacity; a lost cursor reports resetRequired. */
     eventRetention:z.number().default(512),
     /** Explicit official CLI readers; unset means unknown, never inferred from PATH or private files. */
@@ -236,8 +236,6 @@ export async function apply(ctx, config) {
       locations.inferred.map(key=>[key,key==='sources'?locations.sources.map(source=>source.manifestUrl):locations[key]]))));
     // Exact-save capability comes from the host's public package metadata. Older managers use the public CLI
     // for installs and preserve restart-required; applications and compensation also use that CLI.
-    let pluginManager;
-    optional('pluginManager', service => { pluginManager=service; });
     let dshBin=locations.dshBin;
     if(!dshBin&&locations.profileDir&&!desktop)try{dshBin=createRequire(join(locations.profileDir,'package.json')).resolve('@deepseek-ai/dsh/lib/bin.js');}catch{dshBin=undefined;}
     const cliUsable=Boolean(locations.desktopLauncher||dshBin&&(!desktop||locations.desktopCli||config.library?.dshBin));
@@ -245,9 +243,9 @@ export async function apply(ctx, config) {
     if(locations.profileDir&&locations.profileName){
       provisionApi=await import('@hanamesh/lib-provision');
       installer=nodeBinding(()=>nodeRuntime.executable,nodeBinary=>createLibraryInstaller({profileDir:locations.profileDir,profileName:locations.profileName,dataRoot,
-        ...(cliUsable?{nodeBinary,dshBin,desktopCli:locations.desktopCli,desktopLauncher:locations.desktopLauncher}:{}),pluginManagerVersion:locations.pluginManagerVersion,profileWriter,registryRules:locations.pluginManagerRegistry?()=>import(pathToFileURL(locations.pluginManagerRegistry).href):undefined,
-        registry:libraryConfig.registry,allowPrerelease:libraryConfig.allowPrerelease,provision:provisionApi.provision,remove:provisionApi.remove,ledger:provisionApi.ledger,
-        coreService:()=>coreService,suiteSourceService:()=>suiteSourceService,suiteSourceMode:()=>library?.suiteSourceSettings().mode??'configured',pluginManager:()=>pluginManager,emit:event=>library?.emit(event)}));
+        ...(cliUsable?{nodeBinary,dshBin,desktopCli:locations.desktopCli,desktopLauncher:locations.desktopLauncher}:{}),pluginManagerVersion:locations.pluginManagerVersion,profileWriter,
+        registry:libraryConfig.registry,provision:provisionApi.provision,remove:provisionApi.remove,ledger:provisionApi.ledger,
+        coreService:()=>coreService,suiteSourceService:()=>suiteSourceService,suiteSourceMode:()=>library?.suiteSourceSettings().mode??'configured',emit:event=>library?.emit(event)}));
     }
     /** What a person must do so the library can install, in their words (C-MARKET probe `error.need`). */
     const unavailable=()=>{

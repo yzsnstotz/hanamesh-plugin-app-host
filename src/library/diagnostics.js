@@ -27,7 +27,6 @@ export function installationDiagnostic(error){
     cause=field(cause,'cause');
   }
   // Only known installer fields, never arbitrary details/stack/response objects.
-  if(error instanceof AppHostError&&error.code==='REGISTRY_LOOKUP_FAILED'&&Number.isInteger(error.details?.status))lines.push(`Registry HTTP status: ${error.details.status}`);
   if(error instanceof AppHostError&&error.code==='DSH_PLUGIN_FAILED'){
     lines.push(`CLI exit: ${Number.isInteger(error.details?.code)?error.details.code:'unknown'}; signal: ${clean(error.details?.signal,80)||'none'}`);
     lines.push(`stderr: ${clean(error.details?.stderr)||'<empty>'}`);

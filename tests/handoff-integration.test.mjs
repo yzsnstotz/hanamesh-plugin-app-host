@@ -20,7 +20,7 @@ import { scratch, http, until } from './helpers.mjs';
 
 const cliFixture=new URL('./fixtures/profile-cli.mjs',import.meta.url).pathname;
 const SITE = 'https://market.hanamesh.com', TOKEN = 'browser-session';
-const catalogFixture = resolve(import.meta.dirname, 'fixtures/catalog/provider-page.json');
+const catalogFixture = resolve(import.meta.dirname, 'fixtures/catalog/reviewed-page.json');
 const item = { itemId: 'com.hanamesh.utility-plugin', packageName: '@hanamesh/utility-plugin' };
 async function freePort() {
   const server = createNetServer(); await new Promise(r => server.listen(0, '127.0.0.1', r));
@@ -49,10 +49,9 @@ async function boot(t, options = {}) {
   await writeFile(join(profile, 'package.json'), JSON.stringify({ name: 'profile', dependencies: {}, dsh: { profile: { bundles: [] } } }));
   const managerPackage=join(profile,'node_modules/@deepseek-ai/dsh-plugin-manager');
   await mkdir(managerPackage,{recursive:true});await writeFile(join(managerPackage,'package.json'),JSON.stringify({name:'@deepseek-ai/dsh-plugin-manager',version:'0.2.1-alpha.2',type:'module',exports:{'./package.json':'./package.json','./registry':'./registry.js'}}));
-  await writeFile(join(managerPackage,'registry.js'),await readFile(new URL('./fixtures/dsh-registry-0.2.0-rc.2.js',import.meta.url)));
   const registry = createServer((req, res) => {
     const known = req.url === '/' + encodeURIComponent(item.packageName) + '/latest';
-    res.writeHead(known ? 200 : 404, { 'content-type': 'application/json' }); res.end(JSON.stringify(known ? { version: '1.0.0' } : {}));
+    res.writeHead(known ? 200 : 404, { 'content-type': 'application/json' }); res.end(JSON.stringify(known ? { version: '1.2.3' } : {}));
   });
   await new Promise(r => registry.listen(0, '127.0.0.1', r)); t.after(() => new Promise(r => registry.close(r)));
   const ctx = new Context(), manager = pluginManager(profile);

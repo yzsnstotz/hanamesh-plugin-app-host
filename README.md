@@ -1,6 +1,6 @@
 0.6.21 候选：普通市场和网站交接消费 Indexer 的固定 GitHub SHA/子目录/包名/构建名单。客户端沿原确认页展示来源、完整 commit 与本机构建提示；确认回传同一目标，目录更新不得换 SHA。执行仍走受控官方 DSH CLI / pnpm，读回精确来源与启用项后报告需完全退出重开；没有改上游或另写安装器。详见 [安装目标](docs/INSTALL_TARGET.md)。初轮已完成隔离 DSH、网站及真实 DTO 验收；本轮 R25 另修未匹配固定目标时的拒绝与退休目录版本字段，仍待复审，不宣称已发布。
 
-0.6.16 候选：普通市场通过注入的宿主 pluginManager.registries() 读取源事实，并按宿主锚点/版本守卫加载公开 ./registry 规则模块；AppHost 不声明、安装或捆绑 manager。发布依赖/peer闭包与0.6.15一致。pnpm自有源(null)不显式传--registry，配置镜像则传同一源；查询30秒具名超时，脱敏原诊断同进UI和日志。
+0.6.22 候选：普通插件只执行目录固定目标；缺 installMethods 即拒绝。套件安装命令只消费 Core，删除普通包名的元数据查询和规则加载。
 
 0.6.15 候选：市场保留官方 CLI 的 stdout/stderr 真实失败原因并脱敏，在卡片与安装确认的技术详情中显示。正文显示 pnpm 真实错误类别；宿主发布时间检查失败时列出受影响包与实际 cutoff；HanaMesh 总包安装/升级使用精确发布版本，发布后即可验收；不修改 profile、pnpm 供应链策略或安装执行路径。
 
@@ -98,7 +98,7 @@ CLI-8：未配置来源的新用户默认请求 HanaMesh 视图（`https://marke
 >
 > rc.19（2026-09-21）：网关不再只认 cookie——嵌入式 webview（HanaMesh 桌面 Tauri/WKWebView、开了跟踪防护的 WebView2）里应用 iframe 相对壳的顶层 origin 是第三方，`SameSite=Strict` 的引导 cookie 被丢弃，303 之后每个请求都 403（响应带 `frame-ancestors 'none'`）→ 用户看到空白 iframe（2026-09-21 桌面 rc.4 + Vibe 实测）。rc.19 在 cookie 缺席时改用 Fetch Metadata：`sec-fetch-site: same-origin`（应用自身子资源/XHR）、或 `same-site` + `iframe` + 父 origin referer（引导后的框架导航）、或应用 origin 的 WebSocket 握手，且必须已有一张为仍在有效期 lease 消费过的引导票；cross-site / `none`（地址栏）一律拒绝。H15 三条测试；浏览器直开仍走 cookie。
 >
-> rc.18（2026-09-20）：应用库卡片跟踪安装/补齐运行时/卸载操作——按钮进入「…中…」，订阅 `/hanamesh/library/events` 直到 `-done`/`-failed`，失败时在卡片上显示错误码与可读原因（如 `REGISTRY_LOOKUP_FAILED`：应用包不在当前 registry），并提供「重试安装」。用户 2026-09-20 实测：点安装无任何反应。宿主逻辑不变。
+> rc.18（2026-09-20）：应用库卡片跟踪安装/补齐运行时/卸载操作——按钮进入「…中…」，订阅 `/hanamesh/library/events` 直到 `-done`/`-failed`，失败时在卡片上显示错误码与可读原因（如 `NOT_INSTALLABLE`：目录没有审核过的固定目标），并提供「重试安装」。用户 2026-09-20 实测：点安装无任何反应。宿主逻辑不变。
 
 **交付状态：rc.3 用户 ACCEPTED 2026-09-13；rc.4–rc.12 为增量 🧪；rc.13 只补上架前提（MIT 许可证、`repository` 字段、DSH peer 精确钉 `0.1.5-alpha.1`）；rc.14 删除客户端里对 `hanameshCore` 的死读取（浏览器侧 cordis 上下文不含宿主服务，该读取恒为 null，且把「未安装 HanaMesh Core」误显给已装用户）——本包对 Core 现在零引用，Core 状态只在 Core 自己的设置段；仍待用户验收。**
 
@@ -240,4 +240,4 @@ Actions runs on the standard public/free `macos-15` arm64 runner because the exi
 
 ## Core 公开套件声明的测试依赖
 
-源码测试通过 `@hanamesh/core/suite` 读取 Core 单源公开命令。`@hanamesh/core` 是仓库声明的 devDependency，按 npm 版本范围 `^0.3.28` 从公开 npm 安装，冻结 pnpm 锁记录实际版本与 SRI；许可证记录见 `docs/LICENSES.json`。Core 不成为运行时依赖或 bundled 包。
+源码测试通过 `@hanamesh/core/suite` 读取 Core 单源公开命令。`@hanamesh/core` 是仓库声明的 devDependency，按 npm 版本范围 `^0.3.30` 从公开 npm 安装，冻结 pnpm 锁记录实际版本与 SRI；许可证记录见 `docs/LICENSES.json`。Core 不成为运行时依赖或 bundled 包。

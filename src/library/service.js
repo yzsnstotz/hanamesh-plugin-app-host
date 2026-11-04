@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { AppHostError, requireCondition, SerialQueue } from '../errors.js';
 import { loadCatalog, isApplication, itemKind, upgradeAvailable, validateManifestUrl } from './catalog.js';
 import { scanInstalled, scanInstalledPlugins, snapshotProfileDependencies, readProfileManifest } from './installed.js';
-import {packageInstallTarget,installTargetName,sameInstallTarget,catalogPackageTargets,pinnedGithubSpec,catalogInstallationAllowed} from './github-target.js';
+import {packageInstallTarget,installTargetName,sameInstallTarget,catalogPackageTargets,pinnedGithubSpec} from './github-target.js';
 import {SUITE_BUNDLE,SUITE_TARGET,SUITE_PACKAGES,readSuiteStatus,CORE_SUITE_DECLARATION_MISSING,readSuiteSourceState} from './suite.js';
 import { PROTECTED_PACKAGES } from './install.js';
 import { handoffSettings } from './handoff.js';
@@ -80,11 +80,11 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
     requireCondition(itemId===undefined||(text(itemId,160)&&!/[\u0000-\u001f\u007f]/.test(itemId)),'INVALID_INPUT','itemId is invalid.');
     requireCondition(packageName===undefined||(text(packageName,214)&&PACKAGE_NAME.test(packageName)),'INVALID_INPUT','packageName is invalid.');
     async function resolved(found,source){
-      requireCondition(catalogInstallationAllowed(found),'NOT_INSTALLABLE','The catalog has not approved one-click installation.',{reason:found.oneClickInstall?.reason});
+      requireCondition(found.oneClickInstall?.allowed===true,'NOT_INSTALLABLE','The catalog has not approved one-click installation.',{reason:found.oneClickInstall?.reason??'fixed-install-target-required'});
       const targets=catalogPackageTargets(found),selected=targets.find(target=>expected?sameInstallTarget(target,expected):packageName===undefined||installTargetName(target)===packageName);
       requireCondition(!expected||selected,'CATALOG_CHANGED','The reviewed installation source or build permission changed. Review the current target again.',{},409);
-      requireCondition(selected||(found.installMethods===undefined&&found.package?.registry==='npm'),'NOT_INSTALLABLE','This catalog entry has no fixed package installation target for the requested package.',{reason:'fixed-install-target-required'});
-      const name=selected?installTargetName(selected):found.package.name;
+      requireCondition(selected,'NOT_INSTALLABLE','This catalog entry has no fixed package installation target for the requested package.',{reason:'fixed-install-target-required'});
+      const name=installTargetName(selected);
       requireCondition(!protectedPackage(name),'PACKAGE_DENIED','The HanaMesh suite is not managed through the market.',{},403);
       const rows=[...await installedPlugins(),...await installed()],row=rows.find(value=>value.packageName===name)??null;
       let upgrade=npmUpgradeAvailable(selected,row);
@@ -92,7 +92,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
         const saved=await readProfileManifest(config.profileDir);
         upgrade=saved.dependencies[name]!==pinnedGithubSpec(selected.repo,selected.ref,selected.path)||row.active===false;
       }
-      const item={...found,...(selected?{package:{registry:selected.source,name},installTarget:selected}:{}),installed:row,upgradeAvailable:upgrade};
+      const item={...found,package:{registry:selected.source,name},installTarget:selected,installed:row,upgradeAvailable:upgrade};
       return{contractVersion:INSTALL_TARGET_CONTRACT_VERSION,source,item:{...item,kind:itemKind(item)}};
     }
     const packageMatches=row=>row.package?.name===packageName||(row.installMethods??[]).some(method=>method.target&&(method.target.packageName??method.target.name)===packageName);

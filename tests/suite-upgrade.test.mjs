@@ -1,5 +1,6 @@
 import {writeSuiteProfile} from './fixtures/core-suite-declaration.mjs';
-const SUITE_INSTALL_COMMAND='dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@0.1.1';
+import {formatSuiteInstallCommand} from '@hanamesh/core/suite';
+const SUITE_INSTALL_COMMAND=formatSuiteInstallCommand('0.1.1');
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
@@ -18,7 +19,7 @@ test('only explicit current upgrade confirmation can invoke the official CLI; or
     for(const {name} of SUITE_PACKAGES)await writeFile(join(root,'node_modules',name,'package.json'),JSON.stringify({name,version:targets[name]}));
     await writeSuiteProfile(root,targets,'0.1.1');return{code:0};
   }});
-  await assert.rejects(installer.installPlugin({packageName:'@hanamesh/core'}),{code:'PACKAGE_DENIED'});
+  await assert.rejects(installer.install({installTarget:{source:'npm',name:'@hanamesh/core',version:'0.3.32',allowBuild:[]}}),{code:'PACKAGE_DENIED'});
   await assert.rejects(installer.upgradeSuite({planId:'forged'}),{code:'SUITE_PLAN_CHANGED'});assert.equal(writes,0);
   const plan=await installer.prepareSuiteUpgrade();assert.equal(writes,0,'preview is read-only');
   const result=await installer.upgradeSuite({planId:plan.planId});assert.equal(writes,1);assert.equal(result.status,'restart-required');assert.deepEqual(result.components.map(c=>c.to),Object.values(targets));
@@ -78,7 +79,7 @@ test('D1 legacy direct members are incomplete and a changed bundle lock refuses 
  await writeSuiteProfile(root,{'@hanamesh/core':'0.3.11','@hanamesh/usage':'0.2.0-rc.34','@hanamesh/dsh-app-host':'0.6.3'});
  const {createLibraryInstaller}=await import('../src/library/install.js');let writes=0;
  const installer=createLibraryInstaller({profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.js'),coreSuitePlan,spawn:async()=>{writes++;return{code:0}}});
- await assert.rejects(installer.installPlugin({packageName:'@hanamesh/hanamesh'}),{code:'PACKAGE_DENIED'});
+ await assert.rejects(installer.install({installTarget:{source:'npm',name:'@hanamesh/hanamesh',version:'0.1.3',allowBuild:[]}}),{code:'PACKAGE_DENIED'});
  const plan=await installer.prepareSuiteUpgrade();await writeSuiteProfile(root,{'@hanamesh/core':'0.3.11','@hanamesh/usage':'0.2.0-rc.34','@hanamesh/dsh-app-host':'0.6.3'},'0.1.5');
  await assert.rejects(installer.upgradeSuite({planId:plan.planId}),{code:'SUITE_PLAN_CHANGED'});assert.equal(writes,0);
 });

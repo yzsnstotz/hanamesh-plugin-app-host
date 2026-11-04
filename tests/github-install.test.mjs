@@ -199,3 +199,25 @@ test('floating refs and parameter injection never become a DSH install spec',()=
     assert.throws(()=>pinnedGithubSpec('acme/plugin',sha,path),{code:'INVALID_INPUT'});
   }
 });
+
+
+test('A2 missing installMethods refuses every installation entry before registry or CLI access',async t=>{
+  const root=await scratch('a2-missing-methods-'),fixture=join(root,'catalog.json');
+  const template=JSON.parse(await readFile(new URL('./fixtures/catalog/hanamesh-view-v1.json',import.meta.url),'utf8')).page;
+  const item={...template.items[0],oneClickInstall:{allowed:true,reason:null}};delete item.installMethods;
+  await writeFile(fixture,JSON.stringify({...template,items:[item],page:{}}));
+  let state={schema:1,revision:0,sources:[]},installs=0;
+  const service=await createLibraryService({domain:{global:{get:async()=>state,set:async next=>{state=next;}},close:async()=>{}},host:{list:()=>({apps:[]}),instanceList:()=>[]},config:{fixture},installer:{ready:true,install:async()=>{installs++;return{status:'restart-required'};}}}).init();
+  t.after(()=>service.close());
+  await assert.rejects(service.resolveTarget({itemId:item.id}),{code:'NOT_INSTALLABLE'});
+  await assert.rejects(service.install({itemId:item.id}),{code:'NOT_INSTALLABLE'});
+  await assert.rejects(service.installPlugin({packageName:item.package.name}),{code:'NOT_INSTALLABLE'});
+  assert.equal(installs,0);
+});
+
+test('A2 installer refuses absent exact target before any profile or process mutation',async()=>{
+  const root=await scratch('a2-no-target-');let calls=0;
+  const installer=createLibraryInstaller({profileDir:root,profileName:'isolated',dataRoot:join(root,'data'),nodeBinary:process.execPath,dshBin:'/fixture/dsh/bin.js',fetchImpl:async()=>{calls++;throw Error('unexpected registry lookup');},spawn:async()=>{calls++;return{code:0};}});
+  await assert.rejects(installer.install({id:'unreviewed',package:{registry:'npm',name:'dsh-example'}}),{code:'NOT_INSTALLABLE'});
+  assert.equal(calls,0);
+});

@@ -133,7 +133,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "registryLookupTimeout": "registry 查询超过 30 秒；检查 DSH 源设置与网络后手动重试",
     "registryConfigUnavailable": "DSH 未提供可读的源配置；检查客户端插件管理器，展开技术详情",
     "copy125": "DSH 安装命令失败，请展开技术详情查看原始原因",
-    "installAgeRejected": "宿主的依赖发布时间检查未通过（默认需发布满 24 小时，以技术详情中的 cutoff 为准）。已知 DSH 0.2.0-rc.2 内置 pnpm 11.7.0 对同名多条白名单只认第一条。请在 DSH 设置中检查当前版本并升级 DSH，或等待受影响版本满足规则后手动重试。",
+    "installAgeRejected": "宿主的依赖发布时间检查未通过。请核对安装目标包含精确版本并保留技术详情；若仍失败，请在 DSH 设置中检查并升级 DSH。",
     "installAffectedPackages": "受影响包：",
     "copy126": "当前宿主未提供安装参数（profile / node 路径）",
     "copy127": "目录里已没有这一项，刷新后重试",
@@ -438,7 +438,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "registryLookupTimeout": "Registry lookup exceeded 30 seconds. Check DSH source settings and network, then retry manually",
     "registryConfigUnavailable": "DSH did not expose readable registry configuration. Check the client plugin manager and expand technical details",
     "copy125": "DSH installation failed. Expand Technical details for the original cause",
-    "installAgeRejected": "The host rejected a dependency's release age (the default requires 24 hours since publication; see the actual cutoff in Technical details). Known issue: pnpm 11.7.0 bundled with DSH 0.2.0-rc.2 only recognizes the first allowlist entry for a package name. Check your version in DSH Settings and upgrade DSH, or wait until the affected versions meet the rule before trying again manually.",
+    "installAgeRejected": "The host rejected a dependency release-age check. Verify the exact installation target and retain Technical details. If it still fails, check and upgrade DSH in Settings.",
     "installAffectedPackages": "Affected packages: ",
     "copy126": "This host has not provided installation parameters (profile / Node path)",
     "copy127": "This item is no longer in the catalog. Refresh before trying again",
@@ -841,12 +841,12 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
         defaults&&names?h('div',null,h('h3',null,t('设置名称与默认值')),h('dl',null,...['enabled','ports','allowedOrigins','ttlMs','pollMs'].flatMap(key=>[h('dt',{key:key+'-name'},names[key]),h('dd',{key:key+'-value'},Array.isArray(defaults[key])?defaults[key].join(', '):typeof defaults[key]==='boolean'?(defaults[key]?t('开'):t('关')):String(defaults[key]))]))):null,
         value?.rules?h('div',null,h('h3',null,t('固定规则（不能关）')),h('ul',null,...value.rules.map(row=>h('li',{key:row.rule},t(row.rule),h('br',null),h('small',null,t('为什么：')+t(row.why)))))):null));
   }
-  const FAILURE_REASONS={...CORE_SUITE_FAILURES,INSTALL_READBACK_MISMATCH:t('安装命令返回成功，但 profile 读回的版本与固定版本不一致'),REGISTRY_LOOKUP_FAILED:t('无法查询 DSH 配置的 registry；检查 DSH 源设置与网络，展开技术详情后手动重试'),REGISTRY_LOOKUP_TIMEOUT:t('registry 查询超过 30 秒；检查 DSH 源设置与网络后手动重试'),REGISTRY_CONFIG_UNAVAILABLE:t('DSH 未提供可读的源配置；检查客户端插件管理器，展开技术详情'),DSH_PLUGIN_FAILED:t('DSH 安装命令失败，请展开技术详情查看原始原因'),LIBRARY_INSTALL_UNAVAILABLE:t('当前宿主未提供安装参数（profile / node 路径）'),CATALOG_ITEM_MISSING:t('目录里已没有这一项，刷新后重试'),UNSTABLE_VERSION:t('registry 上的最新版是预发布版（rc），客户端未允许安装预发布版'),RUNTIME_ARCHIVE_UNAVAILABLE:t('运行时归档下载失败，检查网络或来源'),OPERATION_TIMEOUT:t('10 分钟内没有结果，可稍后重试'),PACKAGE_DENIED:t('HanaMesh 套件自身不能从市场安装或卸载'),INSTANCE_IN_USE:t('先关闭该应用的所有视图再卸载')};
+  const FAILURE_REASONS={...CORE_SUITE_FAILURES,INSTALL_READBACK_MISMATCH:t('安装命令返回成功，但 profile 读回的版本与固定版本不一致'),DSH_PLUGIN_FAILED:t('DSH 安装命令失败，请展开技术详情查看原始原因'),LIBRARY_INSTALL_UNAVAILABLE:t('当前宿主未提供安装参数（profile / node 路径）'),CATALOG_ITEM_MISSING:t('目录里已没有这一项，刷新后重试'),RUNTIME_ARCHIVE_UNAVAILABLE:t('运行时归档下载失败，检查网络或来源'),OPERATION_TIMEOUT:t('10 分钟内没有结果，可稍后重试'),PACKAGE_DENIED:t('HanaMesh 套件自身不能从市场安装或卸载'),INSTANCE_IN_USE:t('先关闭该应用的所有视图再卸载')};
   const failureReason=(code,details)=>{
     const diagnostic=code==='DSH_PLUGIN_FAILED'?details?.diagnostic??'':'',pnpmCode=diagnostic.match(/\bERR_PNPM_[A-Z0-9_]+\b/)?.[0];
     if(pnpmCode==='ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION'){
       const packages=[...new Set([...diagnostic.matchAll(/((?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*@\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)\s+was published\b/g)].map(match=>match[1]))];
-      return pnpmCode+' · '+t('宿主的依赖发布时间检查未通过（默认需发布满 24 小时，以技术详情中的 cutoff 为准）。已知 DSH 0.2.0-rc.2 内置 pnpm 11.7.0 对同名多条白名单只认第一条。请在 DSH 设置中检查当前版本并升级 DSH，或等待受影响版本满足规则后手动重试。')+(packages.length?' '+t('受影响包：')+packages.join(', '):'');
+      return pnpmCode+' · '+t('宿主的依赖发布时间检查未通过。请核对安装目标包含精确版本并保留技术详情；若仍失败，请在 DSH 设置中检查并升级 DSH。')+(packages.length?' '+t('受影响包：')+packages.join(', '):'');
     }
     return(pnpmCode?pnpmCode+' · ':'')+(t(FAILURE_REASONS[code])??t('详细原因见宿主日志'));
   };

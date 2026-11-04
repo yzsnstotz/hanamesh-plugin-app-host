@@ -14,6 +14,7 @@ import { installationStatusCors, serveInstallationStatus } from './installation-
  */
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
+import {sameInstallTarget} from './github-target.js';
 import { AppHostError, requireCondition } from '../errors.js';
 
 export const HANDOFF_STATES = Object.freeze(['pending', 'shown', 'confirmed', 'installed', 'cancelled', 'failed']);
@@ -35,7 +36,7 @@ export const HANDOFF_RULES = Object.freeze([
   { rule: '只有「允许交接的网站」里的网站能探测本客户端、交接安装、读交接状态；别的网站什么也读不到', why: '否则任何网页都能知道你装了什么客户端、缺什么，用来识别你' },
   { rule: '网站交接只会在应用库里弹出确认；只有你点「确认安装」才会安装', why: '网站不能替你决定装什么' },
   { rule: '交接状态只给发起它的那个网站看', why: '一个网站不能读另一个网站的交接' },
-  { rule: `交接请求体不超过 ${HANDOFF_BODY_MAX_BYTES} 字节`, why: '合法请求只有插件 id、包名、合约版本三项，最长不到 500 字节；更大的一定不是交接' },
+  { rule: `交接请求体不超过 ${HANDOFF_BODY_MAX_BYTES} 字节`, why: '交接只包含目录身份、合约版本及已审核的结构化安装目标；正文上限为 4096 字节，不接受来源命令' },
   { rule: '端口在 1024–65535 之间、互不重复，至少一个', why: '1024 以下要管理员权限；没有端口就没有地方让网站找到' },
   { rule: '网站必须写成来源（协议 + 域名 [+ 端口]），http 只允许 127.0.0.1 / localhost', why: '浏览器按来源校验；明文 http 的公网网站可被中间人冒充' },
   { rule: `轮询间隔是 1–${TIMER_MAX_MS} 毫秒的整数，作废时间必须大于轮询间隔`, why: '计时器超过上限会立即触发；作废早于第一次轮询，交接永远不会被看到' },
@@ -75,6 +76,7 @@ export function createHandoffQueue({ ttlMs = () => HANDOFF_DEFAULTS.ttlMs, now =
   const publish = record => { for (const listener of listeners) { try { listener(view(record)); } catch (error) { onError('hanamesh-app-host handoff: subscriber failed', error); } } };
   const view = record => ({ handoffId: record.handoffId, state: record.state, origin: record.origin,
     ...(record.itemId ? { itemId: record.itemId } : {}), ...(record.packageName ? { packageName: record.packageName } : {}),
+    ...(record.target.installTarget ? {installTarget:structuredClone(record.target.installTarget)} : {}),
     ...(record.displayName ? { displayName: record.displayName } : {}), ...(record.result ? { result: record.result } : {}),
     ...(record.error ? { error: record.error } : {}), createdAt: record.createdAt, updatedAt: record.updatedAt });
   const move = (record, state, extra = {}) => {
@@ -97,7 +99,7 @@ export function createHandoffQueue({ ttlMs = () => HANDOFF_DEFAULTS.ttlMs, now =
   return Object.freeze({
     create({ origin, target, item, alreadyInstalled }) {
       expire();
-      const at = now(), record = { handoffId: randomUUID(), state: 'pending', origin, target,
+      const at = now(), record = { handoffId: randomUUID(), state: 'pending', origin, target:structuredClone({...target,...(item.installTarget?{installTarget:item.installTarget}:{})}),
         itemId: item.id, packageName: item.package?.name, displayName: item.displayName, createdAt: at, updatedAt: at };
       records.set(record.handoffId, record);
       if (alreadyInstalled) move(record, 'installed', { result: { status: 'already-installed' } }); else publish(record);
@@ -132,6 +134,7 @@ export function createHandoffQueue({ ttlMs = () => HANDOFF_DEFAULTS.ttlMs, now =
       const name = event?.packageName ?? event?.result?.packageName; if (!name) return;
       for (const record of records.values()) {
         if (record.packageName !== name || !['shown', 'confirmed'].includes(record.state)) continue;
+        if(record.target.installTarget&&(!event.installTarget&&!event.result?.installTarget||!sameInstallTarget(record.target.installTarget,event.installTarget??event.result?.installTarget)))continue;
         if (event.type === 'library.install-started') move(record, 'confirmed');
         else if (event.type === 'library.install-done') move(record, 'installed', { result: { status: event.status ?? event.result?.status } });
         else if (event.type === 'library.install-failed') move(record, 'failed', { error: { code: event.code ?? 'INSTALL_FAILED', message: '安装失败' } });

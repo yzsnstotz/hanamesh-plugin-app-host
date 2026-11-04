@@ -1,0 +1,141 @@
+{
+  "schemaVersion": "hanamesh.catalog.v1",
+  "items": [
+    {
+      "id": "com.hanamesh.vibe-trading",
+      "name": "@hanamesh/app-vibe-trading",
+      "displayName": "Vibe Trading",
+      "summary": "HanaMesh Vibe 交易应用。",
+      "categories": [
+        "hanamesh-app",
+        "finance"
+      ],
+      "package": {
+        "registry": "npm",
+        "name": "@hanamesh/app-vibe-trading"
+      },
+      "publisher": {
+        "name": "HanaMesh"
+      },
+      "itemId": "com.hanamesh.vibe-trading",
+      "packageName": "@hanamesh/app-vibe-trading",
+      "catalogKind": "application",
+      "source": {
+        "sourceId": "awesome",
+        "sourceRef": "example/app",
+        "sourceLinks": [
+          {
+            "sourceId": "awesome",
+            "sourceRef": "example/app",
+            "sourceUrl": "https://awesome.example/app",
+            "firstSeenAt": "2026-10-11T00:00:00.000Z",
+            "lastSeenAt": "2026-10-11T00:00:00.000Z"
+          }
+        ]
+      },
+      "oneClickInstall": {
+        "allowed": true,
+        "reason": null
+      },
+      "installMethods": [
+        {
+          "channel": "hanamesh",
+          "kind": "npm",
+          "spec": "@hanamesh/app-vibe-trading",
+          "command": null,
+          "allowBuild": [],
+          "sourceId": "awesome",
+          "sourceRef": "com.hanamesh.vibe-trading",
+          "target": {
+            "source": "npm",
+            "name": "@hanamesh/app-vibe-trading",
+            "version": "1.2.3",
+            "allowBuild": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "com.example.repository-only",
+      "name": "repository-only",
+      "displayName": "Repository only",
+      "summary": "只有源码仓库，不能由应用库安装。",
+      "categories": [
+        "hanamesh-app"
+      ],
+      "publisher": {
+        "name": "Example"
+      },
+      "itemId": "com.example.repository-only",
+      "packageName": null,
+      "catalogKind": "entry",
+      "source": {
+        "sourceId": "awesome",
+        "sourceRef": "example/app",
+        "sourceLinks": [
+          {
+            "sourceId": "awesome",
+            "sourceRef": "example/app",
+            "sourceUrl": "https://awesome.example/app",
+            "firstSeenAt": "2026-10-11T00:00:00.000Z",
+            "lastSeenAt": "2026-10-11T00:00:00.000Z"
+          }
+        ]
+      }
+    },
+    {
+      "id": "com.hanamesh.utility-plugin",
+      "name": "@hanamesh/utility-plugin",
+      "displayName": "Utility plugin",
+      "summary": "普通 DSH 插件，不是 HanaMesh 应用。",
+      "categories": [
+        "utility"
+      ],
+      "package": {
+        "registry": "npm",
+        "name": "@hanamesh/utility-plugin"
+      },
+      "publisher": {
+        "name": "HanaMesh"
+      },
+      "itemId": "com.hanamesh.utility-plugin",
+      "packageName": "@hanamesh/utility-plugin",
+      "catalogKind": "plugin",
+      "source": {
+        "sourceId": "awesome",
+        "sourceRef": "example/app",
+        "sourceLinks": [
+          {
+            "sourceId": "awesome",
+            "sourceRef": "example/app",
+            "sourceUrl": "https://awesome.example/app",
+            "firstSeenAt": "2026-10-11T00:00:00.000Z",
+            "lastSeenAt": "2026-10-11T00:00:00.000Z"
+          }
+        ]
+      },
+      "oneClickInstall": {
+        "allowed": true,
+        "reason": null
+      },
+      "installMethods": [
+        {
+          "channel": "hanamesh",
+          "kind": "npm",
+          "spec": "@hanamesh/utility-plugin",
+          "command": null,
+          "allowBuild": [],
+          "sourceId": "awesome",
+          "sourceRef": "com.hanamesh.utility-plugin",
+          "target": {
+            "source": "npm",
+            "name": "@hanamesh/utility-plugin",
+            "version": "1.2.3",
+            "allowBuild": []
+          }
+        }
+      ]
+    }
+  ],
+  "page": {}
+}

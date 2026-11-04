@@ -11,14 +11,13 @@ import { mkdir, writeFile, rm, realpath, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { join, resolve } from 'node:path';
 import { createLibraryInstaller, PROTECTED_PACKAGES } from '../src/library/install.js';
-import {fixtureRegistryManager,fixtureRegistryRules} from './helpers.mjs';
 import { scanInstalledPlugins, snapshotProfileDependencies, readProfileManifest } from '../src/library/installed.js';
 import { createLibraryService } from '../src/library/service.js';
 import { createLibraryHttpHandler, LIBRARY_ROUTES } from '../src/library/routes.js';
 import { compareVersions, upgradeAvailable, itemKind } from '../src/library/catalog.js';
 import { http, until, scratch } from './helpers.mjs';
 
-const fixture=resolve('tests/fixtures/catalog/provider-page.json');
+const fixture=resolve('tests/fixtures/catalog/reviewed-page.json');
 const appDefinition={id:'vibe',name:'Vibe',singleInstanceOnly:true,deployments:[{id:'local',dataId:'data-v1',mode:'owned',command:'/bin/sh',args:['-c','exec','{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:'Vibe'}}]};
 async function profileFixture(t,{dependencies,bundles=['@deepseek-ai/dsh-base','@deepseek-ai/dsh-web-app'],packages={}}){
   const root=await realpath(await scratch('hm-market-'));t.after(()=>rm(root,{recursive:true,force:true}));
@@ -35,29 +34,24 @@ async function recordAdd(profileDir,args){
   const pkgPath=join(dir,'package.json');let pkg={name};try{pkg=JSON.parse(await readFile(pkgPath,'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;}
   await writeFile(pkgPath,JSON.stringify({...pkg,version}));
 }
-function installerDouble(profile,{calls=[],events=[],latest='1.0.0'}={}){
-  return{calls,events,installer:createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:profile.profile,profileName:'web',dataRoot:profile.dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/lib/bin.js',
-    fetchImpl:async url=>{calls.push({fetch:String(url)});return new Response(JSON.stringify({version:latest}),{headers:{'content-type':'application/json'}});},
+function installerDouble(profile,{calls=[],events=[]}={}){
+  return{calls,events,installer:createLibraryInstaller({profileDir:profile.profile,profileName:'web',dataRoot:profile.dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/lib/bin.js',
     spawn:async(command,args,options)=>{calls.push({command,args,options});await recordAdd(profile.profile,args);return{code:0,stdout:'',stderr:''};},
     provision:async()=>{throw new Error('a plugin never provisions a runtime');},remove:async()=>{throw new Error('a plugin has no owned runtime');},emit:event=>events.push(event)})};
 }
-const plugin={id:'27a67a57',name:'dsh-plugin-tether',displayName:'dsh-tether',summary:'s',latestVersion:'0.1.17',categories:['remote'],package:{registry:'npm',name:'dsh-plugin-tether'},publisher:{name:'zexadev'}};
+const plugin={id:'27a67a57',name:'dsh-plugin-tether',displayName:'dsh-tether',summary:'s',installTarget:{source:'npm',name:'dsh-plugin-tether',version:'0.1.17',allowBuild:[]},oneClickInstall:{allowed:true,reason:null},installMethods:[],categories:['remote'],package:{registry:'npm',name:'dsh-plugin-tether'},publisher:{name:'zexadev'}};
 
 test('AH-M01: a catalog plugin installs through the same `dsh plugin add --save-exact` path as an application, reads no app.json and provisions nothing',async t=>{
-  const profile=await profileFixture(t,{dependencies:{}});const{calls,events,installer}=installerDouble(profile,{latest:'0.1.17'});
-  assert.equal(itemKind(plugin),'plugin');
+  const profile=await profileFixture(t,{dependencies:{}});const{calls,events,installer}=installerDouble(profile);
+  assert.equal(itemKind({...plugin,installMethods:[{channel:'hanamesh',target:plugin.installTarget}]}),'plugin');
   const result=await installer.install(plugin);
-  assert.deepEqual(result,{status:'restart-required',kind:'plugin',packageName:'dsh-plugin-tether',version:'0.1.17'});
-  assert.match(calls[0].fetch,/\/dsh-plugin-tether\/latest$/);
-  assert.equal(calls[1].options.env.GIT_CONFIG_NOSYSTEM,'1');
-  assert.equal(calls[1].options.env.GIT_CONFIG_VALUE_1,'!gh auth git-credential');
-  assert.deepEqual({...calls[1],options:{cwd:calls[1].options.cwd}},{command:'/opt/node/bin/node',args:['/opt/dsh/lib/bin.js','plugin','--profile','web','add','--save-exact','--registry=https://registry.npmjs.org/','dsh-plugin-tether@0.1.17'],options:{cwd:profile.profile}});
-  assert.equal(calls.length,2);
+  assert.deepEqual(result,{status:'restart-required',kind:'plugin',packageName:'dsh-plugin-tether',version:'0.1.17',installTarget:plugin.installTarget});
+  assert.equal(calls[0].options.env.GIT_CONFIG_NOSYSTEM,'1');
+  assert.equal(calls[0].options.env.GIT_CONFIG_VALUE_1,'!gh auth git-credential');
+  assert.deepEqual({...calls[0],options:{cwd:calls[0].options.cwd}},{command:'/opt/node/bin/node',args:['/opt/dsh/lib/bin.js','plugin','--profile','web','add','--save-exact','dsh-plugin-tether@0.1.17'],options:{cwd:profile.profile}});
+  assert.equal(calls.length,1);
   assert.deepEqual(events.map(event=>event.type),['library.install-started','library.install-done']);
   assert.equal(events[1].kind,'plugin');
-  // By package name (the rc.28 plugins/install seat) — identical command.
-  const byName=await installer.installPlugin({packageName:'dsh-plugin-tether'});
-  assert.equal(byName.version,'0.1.17');assert.deepEqual(calls[3].args.slice(-3),['--save-exact','--registry=https://registry.npmjs.org/','dsh-plugin-tether@0.1.17']);
   // Repository-only entries stay browse-only.
   await assert.rejects(installer.install({id:'r',name:'r',displayName:'r',summary:'s',categories:['tools'],repository:{url:'https://example.com'}}),{code:'NOT_INSTALLABLE'});
 });
@@ -70,8 +64,8 @@ test('AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite
   assert.deepEqual([...PROTECTED_PACKAGES].sort(),['@hanamesh/core','@hanamesh/dsh-app-host','@hanamesh/hanamesh','@hanamesh/usage','hanamesh-brand']);
   for(const name of PROTECTED_PACKAGES){
     await assert.rejects(installer.uninstallPlugin({packageName:name}),{code:'PACKAGE_DENIED'});
-    await assert.rejects(installer.installPlugin({packageName:name}),{code:'PACKAGE_DENIED'});
-    await assert.rejects(installer.install({...plugin,package:{registry:'npm',name}}),{code:'PACKAGE_DENIED'});
+    await assert.rejects(installer.install({...plugin,installTarget:{...plugin.installTarget,name}}),{code:'PACKAGE_DENIED'});
+    await assert.rejects(installer.install({...plugin,installTarget:{...plugin.installTarget,name}}),{code:'PACKAGE_DENIED'});
   }
   for(const name of ['../escape','Not-Lower','']){await assert.rejects(installer.uninstallPlugin({packageName:name}),{code:'PACKAGE_DENIED'});}
   assert.equal(calls.length,1,'no DSH command ran for a refused name');
@@ -115,10 +109,10 @@ test('AH-M05: the market listing annotates every entry with kind / installed row
   const service=await createLibraryService({domain,host,config:{fixture,profileDir:profile.profile},dataRoot:profile.dataRoot,ledgerReader:async()=>({schema:1,items:{}})}).init();
   const page=await service.list({category:''});
   const byId=Object.fromEntries(page.items.map(item=>[item.id,item]));
-  assert.equal(byId['com.hanamesh.vibe-trading'].kind,'application');assert.equal(byId['com.hanamesh.vibe-trading'].installed.state,'registered');assert.equal(byId['com.hanamesh.vibe-trading'].upgradeAvailable,false);
+  assert.equal(byId['com.hanamesh.vibe-trading'].kind,'application');assert.equal(byId['com.hanamesh.vibe-trading'].installed.state,'registered');assert.equal(byId['com.hanamesh.vibe-trading'].upgradeAvailable,true);
   assert.equal(byId['com.example.repository-only'].kind,'listing');assert.equal(byId['com.example.repository-only'].installed,null);
   assert.equal(byId['com.hanamesh.utility-plugin'].kind,'plugin');assert.equal(byId['com.hanamesh.utility-plugin'].installed.state,'installed');assert.equal(byId['com.hanamesh.utility-plugin'].installed.version,'0.9.0');
-  assert.equal(byId['com.hanamesh.utility-plugin'].upgradeAvailable,false,'legacy display metadata cannot authorize an upgrade without a reviewed fixed target');
+  assert.equal(byId['com.hanamesh.utility-plugin'].upgradeAvailable,true,'upgrade follows the reviewed fixed target');
   assert.deepEqual(page.categories,['finance','hanamesh-app','utility']);
   assert.deepEqual(page.plugins.map(row=>row.packageName),['@hanamesh/utility-plugin']);
   assert.deepEqual(page.installed.map(row=>row.packageName),['@hanamesh/app-vibe-trading']);
@@ -154,7 +148,7 @@ test('AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall /
   await assert.rejects(service.installPlugin({packageName:'not-in-catalog'}),{code:'CATALOG_ITEM_MISSING'});
   const started=await service.installPlugin({packageName:'@hanamesh/utility-plugin'});assert.equal(started.status,'started');
   await until(()=>service.events().events.some(event=>event.type==='library.install-done'&&event.operationId===started.operationId));
-  assert.deepEqual(calls.at(-1).args.slice(-3),['--save-exact','--registry=https://registry.npmjs.org/','@hanamesh/utility-plugin@1.0.0']);
+  assert.deepEqual(calls.at(-1).args.slice(-2),['--save-exact','@hanamesh/utility-plugin@1.2.3']);
   const removed=await service.uninstallPlugin({packageName:'dsh-plugin-tether'});
   await until(()=>service.events().events.some(event=>event.type==='library.uninstall-done'&&event.operationId===removed.operationId));
   assert.deepEqual(calls.at(-1).args.slice(-2),['remove','dsh-plugin-tether']);

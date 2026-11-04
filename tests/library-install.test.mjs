@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { mkdir, writeFile, readFile, rm, access, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createLibraryInstaller } from '../src/library/install.js';
-import {fixtureRegistryManager,fixtureRegistryRules} from './helpers.mjs';
 import { scratch } from './helpers.mjs';
 
 async function installedPackage(profile){const root=join(profile,'node_modules','@hanamesh','app-vibe-trading');await mkdir(root,{recursive:true});
@@ -12,14 +11,14 @@ async function installedPackage(profile){const root=join(profile,'node_modules',
 
 test('AH-L04/L05: install uses explicit Node + DSH argv, exact stable registry version, then provisions the declared item',async()=>{
   const profile=await scratch('hm-library-install-'),dataRoot=join(profile,'data');const calls=[],events=[];
-  const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
+  const installer=createLibraryInstaller({profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
     fetchImpl:async()=>new Response(JSON.stringify({version:'1.2.3'}),{headers:{'content-type':'application/json'}}),
     spawn:async(command,args,options)=>{calls.push({command,args,options});await installedPackage(profile);await writeFile(join(profile,'package.json'),JSON.stringify({dependencies:{'@hanamesh/app-vibe-trading':'1.2.3'}}));return{code:0,stdout:'ok',stderr:''};},
     provision:async(manifest,options)=>{calls.push({manifest,options});return[{item:'runtime',action:'installed'}];},remove:async()=>{},ledger:async()=>({schema:1,items:{}}),emit:event=>events.push(event)});
-  const result=await installer.install({id:'vibe-item',categories:['hanamesh-app'],package:{registry:'npm',name:'@hanamesh/app-vibe-trading'}});
+  const result=await installer.install({id:'vibe-item',categories:['hanamesh-app'],package:{registry:'npm',name:'@hanamesh/app-vibe-trading'},installTarget:{source:'npm',name:'@hanamesh/app-vibe-trading',version:'1.2.3',allowBuild:[]}});
   assert.equal(calls[0].options.env.GIT_CONFIG_NOSYSTEM,'1');
   assert.equal(calls[0].options.env.GIT_CONFIG_VALUE_1,'!gh auth git-credential');
-  assert.deepEqual({...calls[0],options:{cwd:calls[0].options.cwd}},{command:'/opt/node/bin/node',args:['/opt/dsh/bin.js','plugin','--profile','p3','add','--save-exact','--registry=https://registry.npmjs.org/','@hanamesh/app-vibe-trading@1.2.3'],options:{cwd:profile}});
+  assert.deepEqual({...calls[0],options:{cwd:calls[0].options.cwd}},{command:'/opt/node/bin/node',args:['/opt/dsh/bin.js','plugin','--profile','p3','add','--save-exact','@hanamesh/app-vibe-trading@1.2.3'],options:{cwd:profile}});
   assert.equal(calls[1].options.root,join(dataRoot,'runtimes','vibe'));
   assert.deepEqual(calls[1].options.only,['runtime']);
   assert.equal(result.status,'restart-required');
@@ -29,7 +28,7 @@ test('AH-L04/L05: install uses explicit Node + DSH argv, exact stable registry v
 test('AH-L06: uninstall removes the package and owned runtime but preserves application data',async()=>{
   const profile=await scratch('hm-library-remove-'),dataRoot=join(profile,'data');await installedPackage(profile);
   const kept=join(dataRoot,'principal','vibe','local','data-v1','single','user.db');await mkdir(join(kept,'..'),{recursive:true});await writeFile(kept,'keep');
-  const calls=[];const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
+  const calls=[];const installer=createLibraryInstaller({profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
     fetchImpl:async()=>{throw new Error('unused');},spawn:async(command,args,options)=>{calls.push({command,args,options});return{code:0,stdout:'',stderr:''};},
     provision:async()=>[],remove:async(item,options)=>calls.push({item,options}),emit:()=>{}});
   const result=await installer.uninstall({packageName:'@hanamesh/app-vibe-trading',appId:'vibe',runtimeItem:'runtime',running:false});
@@ -44,7 +43,7 @@ test('AH-RI01: uninstall clears generated Python bytecode left by provision remo
   const runtimeRoot=join(dataRoot,'runtimes','vibe'),target=join(runtimeRoot,'vibe-trading');
   const cache=join(target,'python','lib','__pycache__');await mkdir(cache,{recursive:true});
   const bytecode=join(cache,'module.cpython-311.pyc');await writeFile(bytecode,'generated');
-  const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
+  const installer=createLibraryInstaller({profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
     spawn:async()=>({code:0,stdout:'',stderr:''}),remove:async()=>({target,kept:['python/lib/__pycache__/module.cpython-311.pyc']})});
   await installer.uninstall({packageName:'@hanamesh/app-vibe-trading',appId:'vibe',runtimeItem:'runtime',running:false});
   await assert.rejects(stat(bytecode),{code:'ENOENT'});
@@ -55,7 +54,7 @@ test('AH-RI02: uninstall preserves unknown runtime residue and reports incomplet
   const profile=await scratch('hm-library-residue-'),dataRoot=join(profile,'data');
   const target=join(dataRoot,'runtimes','vibe','vibe-trading');await mkdir(target,{recursive:true});
   const other=join(target,'user.txt');await writeFile(other,'keep');
-  const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
+  const installer=createLibraryInstaller({profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
     spawn:async()=>({code:0,stdout:'',stderr:''}),remove:async()=>({target,kept:['user.txt']})});
   await assert.rejects(installer.uninstall({packageName:'@hanamesh/app-vibe-trading',appId:'vibe',runtimeItem:'runtime',running:false}),error=>error.code==='RUNTIME_RESIDUE');
   await access(other);
@@ -76,9 +75,9 @@ const registry=async()=>new Response(JSON.stringify({version:'2.0.0'}),{headers:
 test('AH-RB01: a failed install keeps its original error; a failed compensation is reported with residue and kept originals, never as restored',async()=>{
   const profile=await scratch('hm-library-recovery-'),dataRoot=join(profile,'data');
   await writeFile(join(profile,'package.json'),JSON.stringify({dependencies:{}}));await writeFile(join(profile,'pnpm-lock.yaml'),'{}');
-  const events=[];const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
+  const events=[];const installer=createLibraryInstaller({profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
     fetchImpl:registry,spawn:cliDouble(profile,{failing:new Set(['remove'])}),ledger:async()=>({schema:1,items:{}}),emit:event=>events.push(event)});
-  await assert.rejects(installer.install({id:'x',categories:['hanamesh-app'],package:{registry:'npm',name:'@fixture/broken-app'}},{operationId:'op-1'}),error=>error.code==='INVALID_DEFINITION'&&error.recovery.status==='failed');
+  await assert.rejects(installer.install({id:'x',categories:['hanamesh-app'],package:{registry:'npm',name:'@fixture/broken-app'},installTarget:{source:'npm',name:'@fixture/broken-app',version:'2.0.0',allowBuild:[]}},{operationId:'op-1'}),error=>error.code==='INVALID_DEFINITION'&&error.recovery.status==='failed');
   const failed=events.find(event=>event.type==='library.install-failed');
   assert.equal(failed.code,'INVALID_DEFINITION');assert.equal(failed.recovery.error.code,'DSH_PLUGIN_FAILED');
   assert.deepEqual(failed.recovery.residue.map(row=>row.item).sort(),['dependency','lockfile','module']);
@@ -89,9 +88,9 @@ test('AH-RB01: a failed install keeps its original error; a failed compensation 
 test('AH-RB02: market installs and their compensations never interleave profile writes inside one host',async()=>{
   const profile=await scratch('hm-library-serial-'),dataRoot=join(profile,'data');
   await writeFile(join(profile,'package.json'),JSON.stringify({dependencies:{}}));await writeFile(join(profile,'pnpm-lock.yaml'),'{}');
-  const order=[];const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,pluginManager:fixtureRegistryManager,profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
+  const order=[];const installer=createLibraryInstaller({profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
     fetchImpl:registry,spawn:cliDouble(profile,{order}),ledger:async()=>({schema:1,items:{}})});
-  const results=await Promise.allSettled(['@fixture/a','@fixture/b'].map(name=>installer.install({id:name,categories:['hanamesh-app'],package:{registry:'npm',name}})));
+  const results=await Promise.allSettled(['@fixture/a','@fixture/b'].map(name=>installer.install({id:name,categories:['hanamesh-app'],package:{registry:'npm',name},installTarget:{source:'npm',name,version:'2.0.0',allowBuild:[]}})));
   assert.deepEqual(results.map(result=>[result.status,result.reason?.recovery?.status]),[['rejected','restored'],['rejected','restored']]);
   assert.deepEqual(order,['start add','end add','start remove','end remove','start add','end add','start remove','end remove']);
 });
@@ -107,8 +106,8 @@ for(const {id,phase,ownRegistry} of [
   await installedPackage(profile);await writeFile(join(profile,'package.json'),manifest);await writeFile(join(profile,'pnpm-lock.yaml'),lock);
   const appPath=join(profile,'node_modules',...name.split('/'),'app.json'),originalDefinition=await readFile(appPath);
   const cli=cliDouble(profile),provisionError=Object.assign(new Error('fixture runtime provisioning failed'),{code:'FIXTURE_PROVISION_FAILED'});
-  const installer=createLibraryInstaller({registryRules:fixtureRegistryRules,
-    pluginManager:ownRegistry?()=>({registries:async()=>({registry:null,fallbackRegistries:[],resolved:privateRegistry})}):fixtureRegistryManager,
+  const installer=createLibraryInstaller({
+    pluginManager:ownRegistry?()=>({registries:async()=>({registry:null,fallbackRegistries:[],resolved:privateRegistry})}):()=>({}),
     registry:ownRegistry?null:privateRegistry,profileDir:profile,profileName:'p3',dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/bin.js',
     fetchImpl:async url=>{fetches.push(String(url));return await registry();},
     spawn:async(command,args,options)=>{
@@ -119,7 +118,7 @@ for(const {id,phase,ownRegistry} of [
       if(phase==='provision'||args.at(-1)===`${name}@1.2.3`)await writeFile(appPath,originalDefinition);
       return result;
     },provision:async()=>{throw provisionError;},ledger:async()=>({schema:1,items:{}}),emit:event=>events.push(event)});
-  await assert.rejects(installer.install({id:'private-app',categories:['hanamesh-app'],package:{registry:'npm',name}}),error=>{
+  await assert.rejects(installer.install({id:'private-app',categories:['hanamesh-app'],package:{registry:'npm',name},installTarget:{source:'npm',name,version:'2.0.0',allowBuild:[]}}),error=>{
     if(phase==='provision')assert.equal(error,provisionError);else assert.equal(error.code,'INVALID_DEFINITION');
     assert.equal(error.recovery.status,'restored');assert.equal(error.recovery.previousVersion,'1.2.3');
     assert.equal(error.recovery.stage,phase);assert.deepEqual(error.recovery.residue,[]);
@@ -130,7 +129,7 @@ for(const {id,phase,ownRegistry} of [
     [...prefix,'--save-exact',...registryArgs,`${name}@2.0.0`],
     [...prefix,...registryArgs,'--save-exact',`${name}@1.2.3`],
   ]);
-  assert.deepEqual(fetches,[`${privateRegistry}${encodeURIComponent(name)}/latest`]);
+  assert.deepEqual(fetches,[],'exact target does not trigger registry lookup');
   assert.equal(await readFile(join(profile,'package.json'),'utf8'),manifest);
   assert.equal(await readFile(join(profile,'pnpm-lock.yaml'),'utf8'),lock);
   assert.equal(JSON.parse(await readFile(join(profile,'node_modules',...name.split('/'),'package.json'),'utf8')).version,'1.2.3');

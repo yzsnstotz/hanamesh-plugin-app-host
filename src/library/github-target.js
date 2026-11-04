@@ -34,7 +34,7 @@ export function packageInstallTarget(value){
 
 export const installTargetName=target=>target.source==='github'?target.packageName:target.name;
 export const sameInstallTarget=(left,right)=>JSON.stringify(packageInstallTarget(left))===JSON.stringify(packageInstallTarget(right));
-export const catalogInstallationAllowed=item=>item?.installMethods===undefined?item?.oneClickInstall?.allowed!==false:item?.oneClickInstall?.allowed===true;
+export const catalogInstallationAllowed=item=>Array.isArray(item?.installMethods)&&item?.oneClickInstall?.allowed===true;
 export function catalogPackageTargets(item){
   if(!catalogInstallationAllowed(item))return[];
   return (item.installMethods??[]).filter(method=>['hanamesh','dsh'].includes(method.channel)&&method.target)

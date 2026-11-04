@@ -17,8 +17,6 @@
 
 钉版本 DSH 没有向插件公开 profile 目录或 profile 名。桌面壳通过 overlay 显式给出 `library.profileDir`（绝对路径）、`library.profileName`、`library.dshBin` 与 `nodeBinary`，显式值永远优先。**纯 DSH CLI profile（rc.26）** 下缺省值按 `CONTRACT.md`「应用库配置」推断：`profileDir` 来自本包自身真实安装位置所属的 profile、`profileName` 为其目录名、`dshBin` 只取启动本进程的 `@deepseek-ai/dsh/lib/bin.js`、`nodeBinary` 只在非 Electron 进程取 `process.execPath`。Electron 下仍必须由 dsh-runtime/core 提供绝对 `nodeBinary`；应用库不会在 Electron 里回退到 `process.execPath`。
 
-安装先向 registry 的 `latest` 端点复核精确稳定版本，再用显式 Node 执行 DSH 自己的 `bin.js plugin --profile <name> add --save-exact <package>@<version>`。成功后读取包内 `app.json`；如果描述符声明 runtime，则调用随包内联的锁定 `@hanamesh/lib-provision@0.1.0-rc.3`。生产默认拒绝 prerelease；隔离 Verdaccio 验收可显式设 `allowPrerelease: true`。
-
 rc.10：add 之后的读回、定义校验或 provision 失败按基线补偿（新装 `dsh plugin remove`、升级 `dsh plugin add` 原规格，runtime 按 ownership 回收或按原定义重供），逐项读回后在 `library.install-failed` 的 `recovery` 里报告 `not-needed`/`restored`/`failed`；详见 `INSTALL_TARGET.md`「安装失败后的恢复」。
 
 安装/卸载完成只返回 `restart-required`，绝不静默重启 DSH。卸载只删除包与 lib-provision 账本认领的 runtime 文件，保留 `<dataRoot>` 下应用数据；彻底删除需用户手动处理对应数据目录。
@@ -56,11 +54,7 @@ Both SOURCE fixture sets and suites ship as `@hanamesh/dsh-app-host/catalog/suit
 
 市场只显示一张官方、不计分的「HanaMesh 套件」卡。完整性只显示 Core 的 `completeness`，同时展示 `installed` 的要求范围、实际版本、状态和 `blocked` 的具名原因；Core 缺席或读取失败时完整性为 unknown，并保留物理包版本供诊断。Core、使用记录、应用库不再分别作为普通可安装卡。品牌插件只属于 HanaMesh 自有客户端。
 
-DSH 首次安装或缺组件时，完全退出客户端后执行同一行，再重新打开：
-
-```sh
-dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.21' '@hanamesh/usage@0.3.0-rc.6' '@hanamesh/dsh-app-host@0.6.14'
-```
+DSH 首次安装使用公开 Core 精确发布元数据中的 `hanameshSuiteInstall.command`；已运行客户端的修复命令使用 Core 声明 `installCommand`。两者由 Core 同一格式器提供，只安装总包的精确版本，完全退出后安装并重新打开。缺命令显示具名不可用，不自造组件命令。
 
 套件版本范围、是否完整、候选来源及兼容/升级规则唯一属于 Core。App-host 只读物理安装版本，不能用它们推导兼容或安装许可；不自行读取 npm latest、计算组件组合、校验候选宿主 peers 或持有 Core 的版本范围副本。普通安装/卸载接口继续拒绝套件包。
 
@@ -87,12 +81,7 @@ HanaMesh 视图原样保留可选 `official:boolean`（包括 false）与 C-INDE
 
 ## 0.6.16 · 安装查询来源与失败诊断
 
-市场通过公开 `pluginManager.registries()` 读取 DSH 的首选源、顺序 fallback 和 pnpm 已解析的源；从宿主自己的安装锚点按既有版本守卫定位 `exports['./registry']`，动态加载其公开 `registryPlan` / `attributeFailure`，不读取私有配置或发明兜底源。`library.registry` 若显式设置，沿用 DSH 对请求源的规则（外部私有源单独使用）。查询 latest 成功后，精确版本及同一源选择传入原受控CLI：显式配置源用 `add --save-exact --registry=<source>`，DSH的pnpm自有源(null)沿原生语义不传 `--registry`，保留scope源和认证配置；缺公开源能力或 pnpm 自有源无法解析，明确 `REGISTRY_CONFIG_UNAVAILABLE`，不猜 npmjs。DSH rc.2、alpha.2、rc.3 均公开这些端口。
-
-整个查询（配置读取、配置源顺序查询、JSON 读回）共享 30000ms 上限。到期 abort 并报 `REGISTRY_LOOKUP_TIMEOUT`，不重试、不在超时后继续 fallback。只有 DSH 规则允许的网络/未找到失败才查询其已配置后继源；HTTP 认证/权限拒绝及无效 JSON 不换源。包版本稳定性策略、受控 CLI、读回、补偿、restart-required 行为保留。
-
-原生 lookup 异常包为 `REGISTRY_LOOKUP_FAILED`，原 Error 保留于 cause；已知具名码保留。`library.*-failed.details.diagnostic` 最多4001字符，含脱敏异常类型/消息/cause.code 与实际 registry configuration/fetch/readback、CLI run、profile readback 阶段；CLI 非零另含 exit、signal 与 stderr/输出摘要。同一摘要及 operationId 写宿主 logger.warn（logger失效时安全console），UI已有可展开技术详情显示，并提示检查 DSH 源设置/网络后手动重试。不记录请求头、正文、环境、stack 或任意 details；不猜历史丢失的原错。
-
-规则模块只由宿主公开exports提供；普通DSH用与manager版本查询相同createRequire(anchor)，Desktop限已证明的runtimeDir与匹配版本。没有新增manager依赖/peer、没有生产规则副本；无法定位/加载规则或端口不完整均REGISTRY_CONFIG_UNAVAILABLE。钉SHA的rc.2规则仅位于tests/fixtures，不进入发布包。
-
 D1: DSH suite installation and upgrades use only @hanamesh/hanamesh. Core owns the bundle metadata and exact three dependency targets. A confirmed strict CLI add changes the bundle once; readback checks its saved version, activation and locked physical children. The suite display version is the bundle version. Ordinary market install/remove denies the bundle.
+
+
+A2 0.6.22：普通插件必须有 Indexer 已审核的 installMethods 和 oneClickInstall.allowed:true；仅执行其 npm 精确版本或完整 GitHub SHA。缺目标具名拒绝，不根据包名查可变版本标签。CLI 使用显式 library.registry（若有），否则保留宿主原生 registry 配置。删除普通插件按包名内部直装方法、元数据查询及其专用设置/规则加载。套件仅透传 Core installCommand。安装失败保留脱敏 CLI/读回诊断及补偿结果；精确版本发布后即可原生验收。

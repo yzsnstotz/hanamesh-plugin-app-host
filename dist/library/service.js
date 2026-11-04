@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { AppHostError, requireCondition, SerialQueue } from '../errors.js';
 import { loadCatalog, isApplication, itemKind, upgradeAvailable, validateManifestUrl } from './catalog.js';
-import { scanInstalled, scanInstalledPlugins, snapshotProfileDependencies } from './installed.js';
+import { scanInstalled, scanInstalledPlugins, snapshotProfileDependencies, readProfileManifest } from './installed.js';
+import {packageInstallTarget,installTargetName,sameInstallTarget,catalogPackageTargets,pinnedGithubSpec} from './github-target.js';
 import {SUITE_BUNDLE,SUITE_TARGET,SUITE_PACKAGES,readSuiteStatus,CORE_SUITE_DECLARATION_MISSING,readSuiteSourceState} from './suite.js';
 import { PROTECTED_PACKAGES } from './install.js';
 import { handoffSettings } from './handoff.js';
@@ -15,6 +16,7 @@ const text=(value,max)=>typeof value==='string'&&value.length>0&&value.length<=m
 const RESTART_STATES=new Set(['installed-not-loaded','uninstalled-not-unloaded']);
 const protectedPackage=name=>PROTECTED_PACKAGES.includes(name);
 const present=row=>row&&['registered','installed','installed-not-loaded'].includes(row.state);
+const npmUpgradeAvailable=(target,row)=>Boolean(target?.source==='npm'&&row?.version&&row.state!=='uninstalled-not-unloaded'&&upgradeAvailable(target.version,row.version));
 
 /**
  * `client`: which client this host is ('dsh' | 'hanamesh', see client-identity.js). `unavailable`: when there is no
@@ -64,45 +66,59 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
     requireCondition(input&&typeof input==='object'&&!Array.isArray(input),'INVALID_INPUT','Only itemId and packageName are accepted.');
     // rc.8: optional install-target contract declaration. Absent keeps the v1 semantics; anything but '1' is refused explicitly, before field checks.
     requireCondition(input.contractVersion===undefined||input.contractVersion===INSTALL_TARGET_CONTRACT_VERSION,'CONTRACT_VERSION_UNSUPPORTED','This market does not implement the requested install-target contract version.',{supported:[INSTALL_TARGET_CONTRACT_VERSION]});
-    requireCondition(Object.keys(input).every(key=>['itemId','packageName','contractVersion'].includes(key)),'INVALID_INPUT','Only itemId and packageName are accepted.');
+    requireCondition(Object.keys(input).every(key=>['itemId','packageName','contractVersion','installTarget'].includes(key)),'INVALID_INPUT','Only catalog identity and package installation target are accepted.');
     const{itemId,packageName}=input;
+    const expected=input.installTarget===undefined?undefined:packageInstallTarget(input.installTarget);
+    requireCondition(!expected||itemId!==undefined,'INVALID_INPUT','A structured installation target requires itemId.');
     if(itemId===SUITE_TARGET){
-      requireCondition(packageName===undefined,'INVALID_INPUT','套件升级不接受包名或任意替换参数。');
+      requireCondition(packageName===undefined&&!expected,'INVALID_INPUT','套件升级不接受包名或任意替换参数。');
       requireCondition(typeof installer?.prepareSuiteUpgrade==='function','SUITE_UPGRADE_UNAVAILABLE','当前客户端还不支持安全套件升级，请使用补齐命令。',{},503);
       const plan=await installer.prepareSuiteUpgrade();
-      return{contractVersion:'1',source:{kind:'suite',manifestUrl:'https://github.com/yzsnstotz'},item:{id:SUITE_TARGET,displayName:'HanaMesh 套件',kind:'suite-upgrade',package:{registry:'npm',name:SUITE_BUNDLE},latestVersion:plan.bundle.to,installed:{state:'installed',version:suiteStatus.version},upgradeAvailable:plan.available,suiteUpgrade:plan}};
+      return{contractVersion:'1',source:{kind:'suite',manifestUrl:'https://github.com/yzsnstotz'},item:{id:SUITE_TARGET,displayName:'HanaMesh 套件',kind:'suite-upgrade',package:{registry:'npm',name:SUITE_BUNDLE},installed:{state:'installed',version:suiteStatus.version},upgradeAvailable:plan.available,suiteUpgrade:plan}};
     }
     requireCondition(itemId!==undefined||packageName!==undefined,'INVALID_INPUT','itemId or packageName is required.');
     requireCondition(itemId===undefined||(text(itemId,160)&&!/[\u0000-\u001f\u007f]/.test(itemId)),'INVALID_INPUT','itemId is invalid.');
     requireCondition(packageName===undefined||(text(packageName,214)&&PACKAGE_NAME.test(packageName)),'INVALID_INPUT','packageName is invalid.');
+    async function resolved(found,source){
+      requireCondition(found.oneClickInstall?.allowed===true,'NOT_INSTALLABLE','The catalog has not approved one-click installation.',{reason:found.oneClickInstall?.reason??'fixed-install-target-required'});
+      const targets=catalogPackageTargets(found),selected=targets.find(target=>expected?sameInstallTarget(target,expected):packageName===undefined||installTargetName(target)===packageName);
+      requireCondition(!expected||selected,'CATALOG_CHANGED','The reviewed installation source or build permission changed. Review the current target again.',{},409);
+      requireCondition(selected,'NOT_INSTALLABLE','This catalog entry has no fixed package installation target for the requested package.',{reason:'fixed-install-target-required'});
+      const name=installTargetName(selected);
+      requireCondition(!protectedPackage(name),'PACKAGE_DENIED','The HanaMesh suite is not managed through the market.',{},403);
+      const rows=[...await installedPlugins(),...await installed()],row=rows.find(value=>value.packageName===name)??null;
+      let upgrade=npmUpgradeAvailable(selected,row);
+      if(selected?.source==='github'&&row){
+        const saved=await readProfileManifest(config.profileDir);
+        upgrade=saved.dependencies[name]!==pinnedGithubSpec(selected.repo,selected.ref,selected.path)||row.active===false;
+      }
+      const item={...found,package:{registry:selected.source,name},installTarget:selected,installed:row,upgradeAvailable:upgrade};
+      return{contractVersion:INSTALL_TARGET_CONTRACT_VERSION,source,item:{...item,kind:itemKind(item)}};
+    }
+    const packageMatches=row=>row.package?.name===packageName||(row.installMethods??[]).some(method=>method.target&&(method.target.packageName??method.target.name)===packageName);
     let cursor;const seen=new Set(),matches=new Map();
     do{
-      const page=await catalog({q:packageName??'',category:'',cursor});
-      const found=page.items.find(row=>(itemId===undefined||row.id===itemId)&&(packageName===undefined||row.package?.name===packageName));
+      const page=await catalog({q:itemId===undefined?packageName??'':'',category:'',cursor});
+      const found=page.items.find(row=>(itemId===undefined||row.id===itemId)&&(packageName===undefined||packageMatches(row)));
       if(found&&itemId===undefined&&page.schemaVersion==='hanamesh.catalog.v1'){
         for(const row of page.items.filter(row=>row.package?.name===packageName))matches.set(row.id,{row,source:page.source});
         requireCondition(matches.size<=1,'CATALOG_TARGET_AMBIGUOUS','Choose an itemId: this npm name belongs to multiple catalog identities.',{packageName},409);
       }else if(found){
-        requireCondition(found.package?.registry==='npm','NOT_INSTALLABLE','This catalog entry cannot be installed.');
-        requireCondition(!protectedPackage(found.package.name),'PACKAGE_DENIED','The HanaMesh suite is not managed through the market.',{},403);
-        const rows=[...await installedPlugins(),...await installed()],row=rows.find(value=>value.packageName===found.package.name)??null;
-        return{contractVersion:INSTALL_TARGET_CONTRACT_VERSION,source:page.source,item:{...found,kind:itemKind(found),installed:row,upgradeAvailable:Boolean(row?.version&&row.state!=='uninstalled-not-unloaded'&&upgradeAvailable(found.latestVersion,row.version))}};
+        return await resolved(found,page.source);
       }
       cursor=page.page?.nextCursor;
       requireCondition(!cursor||!seen.has(cursor),'INVALID_CURSOR','Catalog cursor repeated.');if(cursor)seen.add(cursor);
     }while(cursor);
     if(matches.size===1){
       const{row:found,source}=matches.values().next().value;
-      requireCondition(!protectedPackage(found.package.name),'PACKAGE_DENIED','The HanaMesh suite is not managed through the market.',{},403);
-      const rows=[...await installedPlugins(),...await installed()],row=rows.find(value=>value.packageName===found.package.name)??null;
-      return{contractVersion:INSTALL_TARGET_CONTRACT_VERSION,source,item:{...found,kind:itemKind(found),installed:row,upgradeAvailable:Boolean(row?.version&&row.state!=='uninstalled-not-unloaded'&&upgradeAvailable(found.latestVersion,row.version))}};
+      return await resolved(found,source);
     }
     throw new AppHostError('CATALOG_ITEM_MISSING','The market catalog does not contain this target.',{},404);
   }
   function installItem(item){
-    const key=item.package.name;if(installing.has(key))return installing.get(key);
+    const key=item.package.name;if(installing.has(key)){const prior=installing.get(key);requireCondition(JSON.stringify(prior.target)===JSON.stringify(item.installTarget),'CATALOG_CHANGED','Another installation of this package is using a different reviewed target.',{},409);return prior.started;}
     const started=operation('install',async operationId=>{try{return await markLive(await installer.install(item,{operationId}));}finally{installing.delete(key);}});
-    installing.set(key,started);return started;
+    installing.set(key,{started,target:item.installTarget});return started;
   }
   async function findByPackage(packageName){
     requireCondition(text(packageName,214)&&PACKAGE_NAME.test(packageName),'INVALID_INPUT','packageName is required.');
@@ -120,9 +136,9 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       const page=await catalog({q,category,cursor});const installedRows=await installed();const pluginRows=await installedPlugins();
       suiteStatus={...await suiteFacts(),...(suiteStatus.restartRequired?{restartRequired:true}:{}),...(suiteStatus.upgradeError?{upgradeError:suiteStatus.upgradeError}:{})};
       const byPackage=new Map([...pluginRows,...installedRows].map(row=>[row.packageName,row]));
-      let items=page.items.filter(item=>!protectedPackage(item.package?.name)).map(item=>{const row=byPackage.get(item.package?.name)??null;const kind=itemKind(item);
-        return{...item,kind,application:isApplication(item),installed:row,upgradeAvailable:Boolean(row&&row.version&&row.state!=='uninstalled-not-unloaded'&&upgradeAvailable(item.latestVersion,row.version))};});
-      if(config.profileDir&&!cursor&&(!category||category==='plugin')&&(!q||'hanamesh 套件'.includes(q.toLowerCase())))items.unshift({id:'hanamesh:suite',displayName:'HanaMesh 套件',summary:'官方 · 不计分。Core、使用记录与应用库一次装齐。',kind:'suite',official:true,latestVersion:suiteStatus.version,installed:suiteStatus.status==='installed'?{state:'installed',version:suiteStatus.version}:null,suite:suiteStatus,...((installer?.suiteUpgradeUnavailable??suiteStatus.suiteUpgradeUnavailable)?{suiteUpgradeUnavailable:installer?.suiteUpgradeUnavailable??suiteStatus.suiteUpgradeUnavailable}:{})});
+      let items=page.items.map(item=>{const selected=catalogPackageTargets(item)[0];return selected?{...item,installTarget:selected,package:{registry:selected.source,name:installTargetName(selected)}}:item;}).filter(item=>!protectedPackage(item.package?.name)).map(item=>{const row=byPackage.get(item.package?.name)??null;const kind=itemKind(item);
+        return{...item,kind,application:isApplication(item),installed:row,upgradeAvailable:npmUpgradeAvailable(item.installTarget,row)};});
+      if(config.profileDir&&!cursor&&(!category||category==='plugin')&&(!q||'hanamesh 套件'.includes(q.toLowerCase())))items.unshift({id:'hanamesh:suite',displayName:'HanaMesh 套件',summary:'官方 · 不计分。Core、使用记录与应用库一次装齐。',kind:'suite',official:true,installed:suiteStatus.status==='installed'?{state:'installed',version:suiteStatus.version}:null,suite:suiteStatus,...((installer?.suiteUpgradeUnavailable??suiteStatus.suiteUpgradeUnavailable)?{suiteUpgradeUnavailable:installer?.suiteUpgradeUnavailable??suiteStatus.suiteUpgradeUnavailable}:{})});
       const categories=[...new Set(page.items.flatMap(item=>item.categories??[]))].sort();
       return{source:page.source,items,categories,installed:installedRows,plugins:pluginRows,restartRequired:[...pluginRows,...installedRows].some(row=>RESTART_STATES.has(row.state)),...(bootSnapshotError?{restartBaseline:{known:false,code:bootSnapshotError}}:{}),page:page.page};},
     sources(){return{sources:structuredClone(state.sources),revision:state.revision};},
@@ -154,7 +170,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       requireCondition(input&&Object.keys(input).length===1&&typeof input.planId==='string','INVALID_INPUT','Only the current planId is accepted.');
       return await operation('install',async()=>{try{const result=await installer.upgradeSuite(input);suiteStatus={...await suiteFacts(),restartRequired:true};return result;}catch(error){if(error.details?.stage!=='suite-upgrade')throw error;const actual=await readSuiteStatus(config.profileDir);suiteStatus={...await suiteFacts(),restartRequired:true,upgradeError:error.code??'SUITE_UPGRADE_FAILED'};error.details={...error.details,stage:'suite-upgrade',actual,command:error.details.command};emit({type:'library.install-failed',packageName:SUITE_BUNDLE,code:error.code??'SUITE_UPGRADE_FAILED',details:{stage:'suite-upgrade',actual,command:error.details.command}});throw error;}});
     },
-    async install(input){requireCondition(input?.itemId!==SUITE_TARGET,'SUITE_CONFIRMATION_REQUIRED','请在客户端确认完整升级计划。',{},403);requireInstaller('Install requires absolute profileDir, nodeBinary, dshBin and profileName.');const{item}=await resolveTarget(input??{});if(present(item.installed)&&!item.upgradeAvailable)return{status:'already-installed',itemId:item.id,packageName:item.package.name};return await installItem(item);},
+    async install(input){requireCondition(input?.itemId!==SUITE_TARGET,'SUITE_CONFIRMATION_REQUIRED','请在客户端确认完整升级计划。',{},403);requireInstaller('Install requires absolute profileDir, nodeBinary, dshBin and profileName.');const{item}=await resolveTarget(input??{});requireCondition(item.installTarget?.source!=='github'||input.installTarget,'INVALID_INPUT','Confirm the displayed fixed GitHub installation target before installing.');if(present(item.installed)&&!item.upgradeAvailable)return{status:'already-installed',itemId:item.id,packageName:item.package.name};return await installItem(item);},
     async provision(input){requireInstaller('Runtime provision is unavailable.');
       // LIB-PROVISION-INPUT: a missing field is the caller's error (400), not an internal TypeError inside the operation.
       requireCondition(text(input?.appId,160),'INVALID_INPUT','appId is required.');requireCondition(text(input?.packageName,214)&&PACKAGE_NAME.test(input.packageName),'INVALID_INPUT','packageName is required.');requireCondition(text(input?.runtimeItem,160),'INVALID_INPUT','runtimeItem is required.');
