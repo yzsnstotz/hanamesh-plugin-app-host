@@ -52,13 +52,12 @@ function validateDeclaration(value){
     if(!object(row)||!text(row.id)||!SUITE_PACKAGES.some(p=>p.name===row.moduleName)||installed.has(row.moduleName)||!text(row.requiredRange)||!text(row.repository)||!(row.actualVersion===null||exact(row.actualVersion))||!nullableText(row.actualRepository)||!text(row.status)||(row.runningVersion!==undefined&&!exact(row.runningVersion)))invalid();
     installed.set(row.moduleName,row);
   }
-  for(const row of value.blocked)if(!object(row)||!text(row.code)||(row.coreVersion!==undefined&&!text(row.coreVersion))||(row.bundleVersion!==undefined&&!exact(row.bundleVersion))||(row.moduleName!==undefined&&!text(row.moduleName)))invalid();
+  for(const row of value.blocked)if(!object(row)||!text(row.code)||(row.bundleVersion!==undefined&&!exact(row.bundleVersion))||(row.moduleName!==undefined&&!text(row.moduleName)))invalid();
   if(!Object.values(value.peerFacts).every(nullableText)||!Object.values(value.metadataDigests).every(text))invalid();
   for(const upgrade of value.upgrades){
-    if(!object(upgrade)||!object(upgrade.bundle)||!text(upgrade.bundle.id)||upgrade.bundle.moduleName!==SUITE_BUNDLE||!exact(upgrade.bundle.version)||!text(upgrade.bundle.repository)||!digest(upgrade.bundle.metadataDigest)||!exact(upgrade.coreVersion)||!text(upgrade.registry)||!digest(upgrade.manifestDigest)||!Array.isArray(upgrade.targets)||upgrade.targets.length!==3)invalid();
+    if(!object(upgrade)||!object(upgrade.bundle)||!text(upgrade.bundle.id)||upgrade.bundle.moduleName!==SUITE_BUNDLE||!exact(upgrade.bundle.version)||!text(upgrade.bundle.repository)||!digest(upgrade.bundle.metadataDigest)||!text(upgrade.registry)||!Array.isArray(upgrade.targets)||upgrade.targets.length!==3)invalid();
     const targets=new Set();
     for(const row of upgrade.targets){if(!object(row)||!text(row.id)||!SUITE_PACKAGES.some(p=>p.name===row.moduleName)||targets.has(row.moduleName)||!exact(row.version)||!text(row.repository)||!digest(row.metadataDigest))invalid();targets.add(row.moduleName);}
-    if(upgrade.targets.find(row=>row.moduleName===SUITE_PACKAGES[0].name).version!==upgrade.coreVersion)invalid();
   }
   return structuredClone(value);
 }
