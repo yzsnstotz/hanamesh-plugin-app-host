@@ -1,4 +1,4 @@
-const SUITE_INSTALL_COMMAND='dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh';
+const SUITE_INSTALL_COMMAND='dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@0.1.1';
 // Public C-CORE section D DTO fixture. This is not a Core runtime integration receipt.
 export const registry='https://registry.example.test/';
 export const names=['@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host'];

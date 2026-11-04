@@ -39,8 +39,13 @@ const exact=value=>typeof value==='string'&&semver.valid(value)===value;
 const digest=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
 const nullableText=value=>value===null||text(value);
 const invalid=()=>requireCondition(false,'CORE_SUITE_DECLARATION_INVALID','Core 套件声明无法用于精确安装。',{},503);
+function exactInstallCommand(value){
+  if(value===null)return true;
+  const prefix=`dsh plugin --profile desktop add --save-exact ${SUITE_BUNDLE}@`;
+  return typeof value==='string'&&value.startsWith(prefix)&&exact(value.slice(prefix.length));
+}
 function validateDeclaration(value){
-  if(!object(value)||value.schemaVersion!==1||!text(value.checkedAt)||!text(value.installCommand)||!digest(value.declarationId)||!text(value.nodeVersion)||!nullableText(value.registry)||!(value.bundleVersion===null||exact(value.bundleVersion))||!['complete','incomplete','unknown'].includes(value.completeness))invalid();
+  if(!object(value)||value.schemaVersion!==1||!text(value.checkedAt)||!exactInstallCommand(value.installCommand)||!digest(value.declarationId)||!text(value.nodeVersion)||!nullableText(value.registry)||!(value.bundleVersion===null||exact(value.bundleVersion))||!['complete','incomplete','unknown'].includes(value.completeness))invalid();
   if(value.completeness==='complete'&&!exact(value.bundleVersion))invalid();
   const manifest=value.manifest;
   if(!object(manifest)||manifest.schemaVersion!==1||!text(manifest.id)||!object(manifest.bundle)||manifest.bundle.name!==SUITE_BUNDLE||!text(manifest.bundle.repository)||!object(manifest.core)||manifest.core.name!==SUITE_PACKAGES[0].name||!exact(manifest.core.version)||!text(manifest.core.repository)||!Array.isArray(manifest.components)||manifest.components.length!==2)invalid();
@@ -127,7 +132,7 @@ export async function prepareSuiteUpgrade({coreSuitePlan}={}){
   const plan=await coreSuitePlan();
   requireCondition(plan!==undefined&&plan!==null,'CORE_SUITE_DECLARATION_MISSING',CORE_SUITE_DECLARATION_MISSING,{},503);
   const invalid=()=>requireCondition(false,'CORE_SUITE_DECLARATION_INVALID','Core 套件声明无法用于精确安装。',{},503);
-  if(typeof plan!=='object'||Array.isArray(plan)||typeof plan.available!=='boolean'||!object(plan.bundle)||plan.bundle.name!==SUITE_BUNDLE||!exact(plan.bundle.from)||!exact(plan.bundle.to)||!text(plan.installCommand)||!Array.isArray(plan.components)||plan.components.length!==SUITE_PACKAGES.length)invalid();
+  if(typeof plan!=='object'||Array.isArray(plan)||typeof plan.available!=='boolean'||!object(plan.bundle)||plan.bundle.name!==SUITE_BUNDLE||!exact(plan.bundle.from)||!exact(plan.bundle.to)||!exactInstallCommand(plan.installCommand)||!Array.isArray(plan.components)||plan.components.length!==SUITE_PACKAGES.length)invalid();
   const rows=new Map();
   for(const row of plan.components){
     if(!row||typeof row!=='object'||!SUITE_PACKAGES.some(p=>p.name===row.name)||rows.has(row.name)||typeof row.from!=='string'||semver.valid(row.from)!==row.from||typeof row.to!=='string'||semver.valid(row.to)!==row.to)invalid();

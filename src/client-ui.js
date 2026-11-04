@@ -147,6 +147,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy135": "检测不到",
     "copy136": "（未启用）",
     "copy137": "。请完全退出客户端，使用补齐命令（仅 macOS / Linux 终端；Windows 安全命令暂未提供）修复并重新打开：",
+    "copy302": "。请完全退出客户端，重新读取总包发布版本后修复并重新打开。",
     "copy138": "；但应用库没能读回 profile（",
     "copy139": "），已安装列表可能仍显示「需重启」",
     "copy140": "；安装前状态未被改动（已逐项读回）",
@@ -454,6 +455,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy135": "Not available",
     "copy136": " (disabled)",
     "copy137": ". Fully quit the client and run the repair command (macOS / Linux terminal only; no safe Windows command is supplied), then reopen: ",
+    "copy302": ". Fully quit the client, read the published bundle version again, repair and reopen.",
     "copy138": "; the market could not read the profile (",
     "copy139": "), so the installed list may still show Restart required",
     "copy140": "; the pre-install state is unchanged (each item read back)",
@@ -849,7 +851,7 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
     return(pnpmCode?pnpmCode+' · ':'')+(t(FAILURE_REASONS[code])??t('详细原因见宿主日志'));
   };
   const operationNotice=op=>op?h('div',null,h('p',{role:op.failed?'alert':'status',className:op.failed?'hm-library-failed':'hm-library-ok',style:{overflowWrap:'anywhere'}},t(op.text)),op.diagnostic?h('details',null,h('summary',null,t('技术详情')),h('pre',{style:{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}},op.diagnostic)):null):null;
-  const suiteRecoveryText=details=>details?.stage==='suite-upgrade'?t('；升级未完成，部分组件可能已改变。当前读回：')+(details.actual?.components?.map(c=>c.label+' '+(c.version??t('检测不到'))+(c.active?'':t('（未启用）'))).join('；')||t('检测不到'))+t('。请完全退出客户端，使用补齐命令（仅 macOS / Linux 终端；Windows 安全命令暂未提供）修复并重新打开：')+details.command:'';
+  const suiteRecoveryText=details=>details?.stage==='suite-upgrade'?t('；升级未完成，部分组件可能已改变。当前读回：')+(details.actual?.components?.map(c=>c.label+' '+(c.version??t('检测不到'))+(c.active?'':t('（未启用）'))).join('；')||t('检测不到'))+(details.command?t('。请完全退出客户端，使用补齐命令（仅 macOS / Linux 终端；Windows 安全命令暂未提供）修复并重新打开：')+details.command:t('。请完全退出客户端，重新读取总包发布版本后修复并重新打开。')):'';
   /** pluginManager applied it, but the profile could not be read back: the installed list may still say 「需重启」. */
   const baselineText=result=>result?.restartBaseline?.updated===false?t('；但应用库没能读回 profile（')+result.restartBaseline.code+t('），已安装列表可能仍显示「需重启」'):'';
   /** rc.10 install recovery result: only an item-by-item readback that matched the baseline is shown as restored. */

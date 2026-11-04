@@ -1,6 +1,6 @@
 0.6.16 候选：普通市场通过注入的宿主 pluginManager.registries() 读取源事实，并按宿主锚点/版本守卫加载公开 ./registry 规则模块；AppHost 不声明、安装或捆绑 manager。发布依赖/peer闭包与0.6.15一致。pnpm自有源(null)不显式传--registry，配置镜像则传同一源；查询30秒具名超时，脱敏原诊断同进UI和日志。
 
-0.6.15 候选：市场保留官方 CLI 的 stdout/stderr 真实失败原因并脱敏，在卡片与安装确认的技术详情中显示。正文显示 pnpm 真实错误类别；宿主发布时间检查失败时列出受影响包，说明默认 24 小时与实际 cutoff，并提示到 DSH 设置检查版本、升级 DSH 或等待后手动重试；不修改 profile、pnpm 供应链策略或安装执行路径。
+0.6.15 候选：市场保留官方 CLI 的 stdout/stderr 真实失败原因并脱敏，在卡片与安装确认的技术详情中显示。正文显示 pnpm 真实错误类别；宿主发布时间检查失败时列出受影响包与实际 cutoff；HanaMesh 总包安装/升级使用精确发布版本，发布后即可验收；不修改 profile、pnpm 供应链策略或安装执行路径。
 
 官方桌面 0.2.0-rc.2 自带 pnpm 11.7.0 对同一包的多条精确 `minimumReleaseAgeExclude` 只采用首条，旧版条目会遮住后列新版，整份 lockfile 检查因而可阻断无关插件安装。本机桌面 0.2.1-rc.3 自带的 pnpm 11.28.5 已合并这些条目，相同样本通过；未推定首次修复版本。请通过官方渠道升级 DSH，保留失败的技术详情；AppHost 不绕过该检查。见 [兼容说明](docs/DSH_COMPATIBILITY.md)。
 
