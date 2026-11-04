@@ -10,6 +10,7 @@ const abort=()=>controller.abort();
 for(const signal of ['SIGINT','SIGTERM'])process.once(signal,abort);
 try{
   const result=await spawnGitSafe(command==='node'?process.execPath:command,args,{stdio:'inherit',signal:controller.signal});
+  if(result.code!==0)console.error(JSON.stringify({event:'guarded-command-failed',command,code:result.code,signal:result.signal}));
   process.exitCode=result.code??1;
 }catch(error){
   console.error(error.code??'GIT_GUARD_FAILED');process.exitCode=1;
