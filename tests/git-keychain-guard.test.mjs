@@ -136,12 +136,12 @@ test('GIT13 caller death during supervisor startup leaves no unowned trace windo
  assert.deepEqual(await readdir(h.tmp),[],'supervisor owns every trace from creation through disconnect');
 });
 
-test('GIT14 copied first-install line installs the exact scoped npm tuple without a Git helper prefix',async t=>{
- const {SUITE_INSTALL_COMMAND}=await import('@hanamesh/core/suite');const h=await fixture(t);
+test('GIT14 public Core formatter installs one exact bundle without a Git helper prefix',async t=>{
+ const {formatSuiteInstallCommand}=await import('@hanamesh/core/suite');const command=formatSuiteInstallCommand('0.1.3');const h=await fixture(t);
  const dsh=join(h.bin,'dsh');await writeFile(dsh,'#!'+process.execPath+'\nprocess.stdout.write(JSON.stringify({env:process.env,args:process.argv.slice(2)}));');await chmod(dsh,0o700);
- const child=spawn('/bin/sh',['-c',SUITE_INSTALL_COMMAND],{env:h.env,stdio:['ignore','pipe','pipe']});let stdout='',stderr='';child.stdout.on('data',chunk=>stdout+=chunk);child.stderr.on('data',chunk=>stderr+=chunk);
+ const child=spawn('/bin/sh',['-c',command],{env:h.env,stdio:['ignore','pipe','pipe']});let stdout='',stderr='';child.stdout.on('data',chunk=>stdout+=chunk);child.stderr.on('data',chunk=>stderr+=chunk);
  assert.equal(await new Promise(resolve=>child.once('close',resolve)),0,stderr);const actual=JSON.parse(stdout);
- assert.deepEqual(actual.args,['plugin','--profile','desktop','add','--save-exact','@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host']);
+ assert.deepEqual(actual.args,['plugin','--profile','desktop','add','--save-exact','@hanamesh/hanamesh@0.1.3']);
  for(const key of [...Object.keys(keys),'GIT_CONFIG_PARAMETERS'])assert.equal(actual.env[key],h.env[key],'npm line leaves caller Git environment untouched: '+key);
  assert.deepEqual(await h.readCalls(),[],'npm line does not invoke Git credential helpers');
 });

@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {randomUUID} from 'node:crypto';
 import {validateCatalogManifest,validateProviderPage,loadCatalog} from '../src/library/catalog.js';
 import {createLibraryService} from '../src/library/service.js';
+import {reviewedNpmItem} from './fixtures/catalog/reviewed-item.mjs';
 const manifest={manifestVersion:'1.0.0',providerId:'com.hanamesh.market',name:'SOURCE catalog',attribution:{name:'SOURCE',url:'https://hanamesh.com'},transport:{kind:'https-json',endpoint:'https://catalog.hanamesh.com/v1/plugins',method:'GET'},query:{supported:['q','cursor','limit'],defaultLimit:50,maxLimit:50,sorts:[]}};
 const page=JSON.parse(await readFile(new URL('./fixtures/catalog/provider-page.json',import.meta.url)));
 test('CAT-V01: valid same-major catalog minor/patch/prerelease/build inputs preserve the original shape and optional additions',async()=>{
@@ -101,7 +102,7 @@ test('CAT-H04: anonymous fetch keeps view=hanamesh and documented query fields, 
   assert.equal(result.source.manifestUrl, hana.manifestUrl);
 });
 test('CAT-H05: exact target crosses substring matches, duplicate npm identities and empty nonterminal pages without losing provenance', async t => {
-  const intended = hana.page.items[0];
+  const intended = reviewedNpmItem(hana.page.items[0]);
   const substring = {...structuredClone(intended), id: '00000000-0000-4000-8000-000000000003', itemId: '00000000-0000-4000-8000-000000000003', packageName: intended.packageName + '-extra', package: {...intended.package, name: intended.packageName + '-extra'}};
   const samePackage = {...structuredClone(intended), id: '00000000-0000-4000-8000-000000000004', itemId: '00000000-0000-4000-8000-000000000004'};
   const source = hanaSource({pages: [{...hana.page, items: [substring, samePackage]}, hana.empty, {...hana.page, items: [intended]}]});

@@ -8,14 +8,14 @@ import {clientHarness,fakeClock,settle} from './fixtures/client-ui-harness.mjs';
 
 async function library(t,installer){
   let state={schema:1,revision:0,sources:[]};
-  const service=await createLibraryService({domain:{global:{get:async()=>state,set:async next=>{state=next;}},close:async()=>{}},host:{list:()=>({apps:[]}),instanceList:()=>[]},config:{fixture:resolve('tests/fixtures/catalog/provider-page.json')},installer}).init();
+  const service=await createLibraryService({domain:{global:{get:async()=>state,set:async next=>{state=next;}},close:async()=>{}},host:{list:()=>({apps:[]}),instanceList:()=>[]},config:{fixture:resolve('tests/fixtures/catalog/reviewed-page.json')},installer}).init();
   t.after(()=>service.close());return service;
 }
 test('IT01: target resolves package or item against the market catalog; untrusted version/URL and mismatched identities are rejected before installation',async t=>{
   const service=await library(t);
   assert.equal(typeof service.resolveTarget,'function','market exposes its own resolver');
   const result=await service.resolveTarget({packageName:'@hanamesh/utility-plugin'});
-  assert.equal(result.item.id,'com.hanamesh.utility-plugin');assert.equal(result.item.latestVersion,'1.0.0');assert.equal(result.item.kind,'plugin');assert.equal(result.source.kind,'fixture');
+  assert.equal(result.item.id,'com.hanamesh.utility-plugin');assert.equal(result.item.installTarget.version,'1.2.3');assert.equal(result.item.kind,'plugin');assert.equal(result.source.kind,'fixture');
   assert.equal((await service.resolveTarget({itemId:result.item.id})).item.package.name,'@hanamesh/utility-plugin');
   for(const input of [{},{itemId:result.item.id,packageName:'wrong-package'},{packageName:'../escape'},{packageName:'@hanamesh/utility-plugin',version:'9.0.0'},{itemId:result.item.id,url:'https://evil.example/pkg.tgz'}])await assert.rejects(service.resolveTarget(input));
   assert.equal(service.events().events.length,0);

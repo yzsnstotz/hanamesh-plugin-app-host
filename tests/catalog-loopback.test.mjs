@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {validateManifestUrl, validateCatalogManifest, loadCatalog} from '../src/library/catalog.js';
 import {createLibraryService} from '../src/library/service.js';
+import {reviewedNpmItem} from './fixtures/catalog/reviewed-item.mjs';
 const fixture=JSON.parse(await readFile(new URL('./fixtures/catalog/hanamesh-view-v1.json',import.meta.url),'utf8'));
 const origins=['http://127.0.0.1','http://127.0.0.1:1','http://127.0.0.1:65535','http://[::1]','http://[::1]:49231','http://localhost','http://LOCALHOST:49232'];
 test('CAT-LOOP shipped source schema accepts canonical local attribution homepage and endpoint',async()=>{
@@ -48,7 +49,7 @@ test('CAT-LOOP origin includes exact host scheme and port; no endpoint or redire
  }
 });
 test('CAT-LOOP local exact target retains directory ID and never installs or maps by package',async t=>{
- const origin='http://127.0.0.1:49231',intended=fixture.page.items[0],service=createLibraryService({domain:{global:{get:async()=>({revision:0,sources:[{manifestUrl:origin+'/catalog-source.json?view=hanamesh'}]}),set:async()=>{}},close:async()=>{}},host:{instanceList:()=>[]},config:{fetchImpl:async url=>Response.json(new URL(url).pathname==='/catalog-source.json'?manifest(origin):fixture.page)}});
+ const origin='http://127.0.0.1:49231',intended=reviewedNpmItem(fixture.page.items[0]),reviewedPage={...fixture.page,items:[intended,...fixture.page.items.slice(1)]},service=createLibraryService({domain:{global:{get:async()=>({revision:0,sources:[{manifestUrl:origin+'/catalog-source.json?view=hanamesh'}]}),set:async()=>{}},close:async()=>{}},host:{instanceList:()=>[]},config:{fetchImpl:async url=>Response.json(new URL(url).pathname==='/catalog-source.json'?manifest(origin):reviewedPage)}});
  await service.init();t.after(()=>service.close());
  const result=await service.resolveTarget({itemId:intended.itemId,packageName:intended.packageName});assert.equal(result.item.id,intended.itemId);assert.equal(result.source.manifestUrl,origin+'/catalog-source.json?view=hanamesh');assert.deepEqual(service.events().events,[]);
  await assert.rejects(service.resolveTarget({itemId:'same-package-different-directory',packageName:intended.packageName}),{code:'CATALOG_ITEM_MISSING'});
