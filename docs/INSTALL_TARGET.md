@@ -10,7 +10,7 @@ type PackageInstallTarget =
   | {source:'github';repo:string;ref:string;path:string|null;packageName:string;allowBuild:string[]};
 ```
 
-GitHub ref 必须是收录时固定的完整 40 位 SHA，不在安装时解析分支。结构化目标必须带 itemId；App-host 从自己的启用目录 installMethods 解析并逐字段核对，整个条目 oneClickInstall.allowed=false 时拒绝，不能换用同名 npm 包。条目带 installMethods 而未选中匹配目标时，返回 NOT_INSTALLABLE / details.reason=fixed-install-target-required，不得退回 package 展示名去装 npm latest；只有未提供 installMethods 的条目保留原标准 npm 路径。HanaMesh 视图拒绝退休的 latestVersion/license，确认页不显示版本行，升级按钮不拼目录版本；npm 升级按 installTarget.version 与已装实际版本比较。GET target/导航片段将 installTarget JSON 编码；POST install/网站 handoff 使用对象。响应 item.installTarget 是客户端确认回传的预期目标。目录 SHA、路径或构建许可变化会拒绝 CATALOG_CHANGED，必须重新查看；不能在确认之后自动换目标。
+GitHub ref 必须是收录时固定的完整 40 位 SHA，不在安装时解析分支。结构化目标必须带 itemId；App-host 从自己的启用目录 installMethods 解析并逐字段核对，整个条目 oneClickInstall.allowed=false 时拒绝，不能换用同名 npm 包。条目必须提供 installMethods 和 oneClickInstall.allowed:true，并选中匹配的固定目标；缺 installMethods、未获准或无匹配目标时返回 NOT_INSTALLABLE / details.reason=fixed-install-target-required（或提供方具名原因），不得退回 package 展示名解析可变版本。HanaMesh 视图拒绝退休的 latestVersion/license，确认页不显示版本行，升级按钮不拼目录版本；npm 升级按 installTarget.version 与已装实际版本比较。GET target/导航片段将 installTarget JSON 编码；POST install/网站 handoff 使用对象。响应 item.installTarget 是客户端确认回传的预期目标。目录 SHA、路径或构建许可变化会拒绝 CATALOG_CHANGED，必须重新查看；不能在确认之后自动换目标。
 
 确认沿现有市场表面，展示完整仓库、commit、子目录；allowBuild 非空时单列「会在本机执行构建脚本」和名单，并说明 pnpm 会保存许可。取消或预览不执行 CLI。本人确认后，仅调用原受控 `dsh plugin --profile <profile> add --save-exact [--allow-build=<项>…] github:owner/repo#<SHA>[&path:<目录>]`，每段都是独立 argv，不执行来源 command。npm 目标直接使用收录时固定的精确版本，不在安装时再解析版本。
 
@@ -96,7 +96,7 @@ node node_modules/@hanamesh/dsh-app-host/dist/install-target/run.js consumer --u
 一次安装（应用或插件、新装或升级）按以下顺序进行，同一宿主内同一时间只有一个 profile 写者（安装、补偿、卸载、provision 串行；`dsh plugin` 自己按每条命令加 profile 写锁）：
 
 1. **基线**：profile `package.json` 里本包的规格、`dsh.profile.bundles`、`pnpm-lock.yaml`、`node_modules` 实际解析的版本；provision 前再记 runtime 根的 lib-provision ledger。
-2. 官方 `dsh plugin add --save-exact <包>@<registry latest>`。
+2. 官方 `dsh plugin add --save-exact <包>@<审核目标精确版本>`；GitHub 使用目录中的完整40位SHA和已确认构建许可。
 3. **读回**：profile 规格与实际解析版本都等于固定版本才继续，否则 `INSTALL_READBACK_MISMATCH`。
 4. 应用：读 `app.json` 校验定义 → 随包 lib-provision 供给声明的 runtime。
 
@@ -111,7 +111,7 @@ node node_modules/@hanamesh/dsh-app-host/dist/install-target/run.js consumer --u
 
 `checks` 逐项列出 dependency、module、bundle、lockfile、bundles 与 `runtime:<item>` 的 expected/actual/ok。别的写者在此期间改动的其他依赖永不撤销，lockfile 因此无法证明已恢复时报 `CONCURRENT_PROFILE_WRITE`。未认领文件与 `<dataRoot>` 下的应用数据从不删除。失败不会自动重试。
 
-补偿的 `add` / `install` 沿用本次 latest 查询与正向安装选中的同一 registry：显式源继续传 `--registry=<source>`，pnpm 自有源（`null`）继续省略该参数。回滚不会重新选源、查询 latest 或退到默认公共源；`remove` 参数保持原样。恢复动作列表保留原包操作摘要，不加入 registry URL。
+补偿的 `add` / `install` 沿用本次正向安装选中的同一 registry：显式源继续传 `--registry=<source>`，pnpm 自有源（`null`）继续省略该参数。回滚不会重新选源、重新解析版本或退到默认公共源；`remove` 参数保持原样。恢复动作列表保留原包操作摘要，不加入 registry URL。
 
 市场显示：`安装失败：<原码>（原因）` 后接 `已恢复到安装前状态（已逐项读回）` / `已恢复到原版本 x（已逐项读回）` / `安装前状态未被改动（已逐项读回）`；`failed` 显示 `恢复失败：<码>，未恢复：<项>，安装前原件：<目录>。未安装成功，也未回到安装前状态，需要人工处理`，不会显示为成功或「已回滚」。
 

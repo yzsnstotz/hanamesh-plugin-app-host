@@ -8,7 +8,7 @@ D-214: verification is trusted producer/client-view configuration, never a Targe
 
 # 安全与运行边界
 
-0.6.21 GitHub 安装候选（R25 修复）：仅消费 Indexer 的完整 SHA/包名/子目录/构建许可，且与 App-host 当前启用目录逐字段核对。条目存在 installMethods 时必须选中其中的固定目标；没有匹配目标即 NOT_INSTALLABLE，不从 npm 展示名回退解析 latest。HanaMesh 视图拒绝退休的 latestVersion/license，确认页和升级按钮不显示目录版本；npm 升级只比较固定目标 version 与已装实际版本。网站或客户端的 installTarget 是预期值，不是任意执行源；未知字段、浮动 ref、参数注入/越界目录拒绝，套件保护名单同样适用于 Git 包。既有确认回传完整目标，目录变更不得偷换 SHA 或放行额外脚本。官方 CLI 用 argv，不执行采集来源的 shell command；受控独立 Node、Git helper 与监测边界不变。脚本许可由 pnpm 管理并可能持久化，安装失败保留具体 build-permissions 残留，不手改策略、不冒充恢复。仍不是 OS 沙箱。
+0.6.22 固定目标安装（A2）：仅消费 Indexer 的完整 SHA/包名/子目录/构建许可，且与 App-host 当前启用目录逐字段核对。条目必须有 installMethods 和 oneClickInstall.allowed:true，并选中其中的固定目标；缺方法、未获准或无匹配目标即 NOT_INSTALLABLE，不从 npm 展示名回退解析 latest。HanaMesh 视图拒绝退休的 latestVersion/license，确认页和升级按钮不显示目录版本；npm 升级只比较固定目标 version 与已装实际版本。网站或客户端的 installTarget 是预期值，不是任意执行源；未知字段、浮动 ref、参数注入/越界目录拒绝，套件保护名单同样适用于 Git 包。既有确认回传完整目标，目录变更不得偷换 SHA 或放行额外脚本。官方 CLI 用 argv，不执行采集来源的 shell command；受控独立 Node、Git helper 与监测边界不变。脚本许可由 pnpm 管理并可能持久化，安装失败保留具体 build-permissions 残留，不手改策略、不冒充恢复。仍不是 OS 沙箱。
 
 ## 可信边界
 

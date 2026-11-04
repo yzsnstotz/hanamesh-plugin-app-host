@@ -35,7 +35,7 @@ export async function apply(ctx, config = {}) {
 }
 ```
 
-预发布版本只用于隔离验收且不得成为 `latest`；应用库生产路径只接受 registry `latest` 返回的稳定精确版本。发布者必须同时保留 npm 包完整性、runtime 三方来源与 sha256、以及与 app-host 精确 peer 版本对应的可复核构建记录。
+预发布版本只用于隔离验收且不得成为 `latest`；应用库安装路径只接受启用目录 installMethods 给出的审核精确版本，且条目 oneClickInstall.allowed:true；不在安装时读取可变标签。发布者必须同时保留 npm 包完整性、runtime 三方来源与 sha256、以及与 app-host 精确 peer 版本对应的可复核构建记录。
 
 ## Existing configuration and original upstream archives (D-230)
 
