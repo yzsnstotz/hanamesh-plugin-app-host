@@ -28,7 +28,11 @@ test('D26: single-use challenge authorization, scope isolation, expiry and cooki
  const forwarded=await http(data+'/',{headers});assert.equal(forwarded.status,200);assert.deepEqual(forwarded.body,(await http(origin+'/')).body);
  for(const h of [{},{'sec-fetch-site':'cross-site',referer:child+'/'},{'sec-fetch-site':'same-origin'},{'sec-fetch-site':'same-origin',referer:new URL(other).origin+'/'},{origin:'null',...headers},{origin:'dsh-app://app','sec-fetch-site':'cross-site'}])assert.equal((await http(data+'/',{headers:h})).status,403);
  assert.equal((await http(new URL(other).origin+'/',{headers:{'sec-fetch-site':'same-origin',referer:new URL(other).origin+'/'}})).status,403);
- active.delete('a');assert.equal((await http(data+'/',{headers})).status,403);g.revokeInactive();
+ // Revocation closes this origin. Wait for that completion instead of racing
+ // a new connection against the 50ms expiry callback and expecting HTTP 403.
+ const revoked=g.children.get('a');active.delete('a');g.revokeInactive();await revoked.close();
+ assert.equal(g.children.has('a'),false);assert.equal(revoked.server.listening,false);
+ await assert.rejects(http(data+'/',{headers}),{code:'ECONNREFUSED'});
 });
 import {setup,input,leaseInput} from './helpers.mjs';
 import {createHttpHandler} from '../src/routes.js';
