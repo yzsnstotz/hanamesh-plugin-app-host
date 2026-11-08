@@ -5,11 +5,21 @@ import {stat,realpath,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {dirname,isAbsolute,delimiter} from 'node:path';
 import {AppHostError} from '../errors.js';
-const fail=code=>{throw new AppHostError(code,'The configured official installation reader could not complete.',{},503)};
-export const SUPPORTED_READER_VERSIONS=Object.freeze({claude:'2.1.301 (Claude Code)',codex:'codex-cli 0.162.1'});
+import semver from 'semver';
+export const INSTALLATION_MANAGER_ENV_KEYS=Object.freeze(['VOLTA_HOME','ASDF_DATA_DIR','MISE_DATA_DIR','FNM_DIR','NVM_DIR','NVM_HOME','NVM_SYMLINK','PNPM_HOME']);
+const fail=code=>{throw new AppHostError(code,'The automatically discovered official installation reader could not complete.',{},503)};
+export const MINIMUM_READER_VERSIONS=Object.freeze({claude:'2.1.301',codex:'0.162.1'});
+export function readerVersionFailure(channel,output){
+ const pattern=channel==='claude'?/^(\d+\.\d+\.\d+) \(Claude Code\)$/:/^codex-cli (\d+\.\d+\.\d+)$/;
+ const version=pattern.exec(output.trim())?.[1];
+ if(!version||semver.valid(version)!==version)return 'AGENT_READER_VERSION_INVALID';
+ return semver.gte(version,MINIMUM_READER_VERSIONS[channel])?null:'AGENT_READER_VERSION_UNSUPPORTED';
+}
 export function validReader(value){
  if(!value||typeof value!=='object'||Array.isArray(value))return false;
- const keys=['executable','home','configDir','pluginName','marketplace','marketplaceUrl','timeoutMs','maxOutputBytes'];
+ const keys=['executable','home','configDir','pluginName','marketplace','marketplaceUrl','timeoutMs','maxOutputBytes','nodeScript','runtimeEnv'];
+ if(value.nodeScript!==undefined&&typeof value.nodeScript!=='boolean')return false;
+ if(value.runtimeEnv!==undefined&&(!value.runtimeEnv||typeof value.runtimeEnv!=='object'||Array.isArray(value.runtimeEnv)||!Object.entries(value.runtimeEnv).every(([key,path])=>INSTALLATION_MANAGER_ENV_KEYS.includes(key)&&typeof path==='string'&&isAbsolute(path)&&!/[\x00-\x1f]/.test(path))))return false;
  if(Object.keys(value).some(key=>!keys.includes(key))||!['executable','home','configDir'].every(key=>typeof value[key]==='string'&&isAbsolute(value[key])&&!/[\x00-\x1f]/.test(value[key])))return false;
  if(!['pluginName','marketplace'].every(key=>typeof value[key]==='string'&&/^[a-z0-9][a-z0-9._-]{0,127}$/.test(value[key])))return false;
  try{const url=new URL(value.marketplaceUrl);if(url.protocol!=='https:'||url.username||url.password||url.hash||url.search||url.href!==value.marketplaceUrl)return false}catch{return false}
@@ -17,20 +27,21 @@ export function validReader(value){
 }
 export async function runOfficialInstallationCommand({channel,reader,args,signal,workerNode}){
  if(signal?.aborted)fail('INSTALLATION_STATUS_CANCELLED');
- if(process.platform==='win32')fail('AGENT_READER_PLATFORM_UNSUPPORTED');
- if(!validReader(reader))fail('AGENT_READER_CONFIG_INVALID');
+ if(!validReader(reader))fail('AGENT_READER_DISCOVERY_INVALID');
  const nodeRuntime=guardNodeBinary({workerNode});if(!nodeRuntime)fail('AGENT_READER_NODE_REQUIRED');
  for(const path of [reader.home,reader.configDir]){let value;try{value=await stat(path)}catch{fail('AGENT_PROFILE_UNAVAILABLE')}if(!value.isDirectory())fail('AGENT_PROFILE_UNAVAILABLE')}
  const temporaryRoot=await realpath(tmpdir());let cwd;
  // An exact configuration directory is explicit. Inherited model/API tokens, proxy, shell startup and askpass are absent.
- const env={PATH:[dirname(nodeRuntime),'/usr/bin','/bin','/usr/local/bin'].join(delimiter),HOME:reader.home,USERPROFILE:reader.home,
-  ...(channel==='claude'?{CLAUDE_CONFIG_DIR:reader.configDir,CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC:'1',DISABLE_AUTOUPDATER:'1'}:{CODEX_HOME:reader.configDir}),
-  GIT_TERMINAL_PROMPT:'0',GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:'/dev/null',GIT_CONFIG_COUNT:'1',GIT_CONFIG_KEY_0:'credential.helper',GIT_CONFIG_VALUE_0:''};
+ const systemRoot=process.platform==='win32'?(process.env.SystemRoot??'C:\\Windows'):undefined;
+ const env={...reader.runtimeEnv,PATH:[dirname(nodeRuntime),dirname(reader.executable),...(systemRoot?[systemRoot,`${systemRoot}\\System32`]:['/usr/bin','/bin','/usr/local/bin'])].join(delimiter),HOME:reader.home,USERPROFILE:reader.home,
+  ...(systemRoot?{SystemRoot:systemRoot,LOCALAPPDATA:process.env.LOCALAPPDATA??`${reader.home}\\AppData\\Local`,APPDATA:process.env.APPDATA??`${reader.home}\\AppData\\Roaming`}:{}),
+  ...(channel==='claude'?{CLAUDE_CONFIG_DIR:reader.configDir,CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC:'1',DISABLE_AUTOUPDATER:'1'}:channel==='codex'?{CODEX_HOME:reader.configDir}:{}),
+  GIT_TERMINAL_PROMPT:'0',GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:systemRoot?'NUL':'/dev/null',GIT_CONFIG_COUNT:'1',GIT_CONFIG_KEY_0:'credential.helper',GIT_CONFIG_VALUE_0:''};
  try{return await new Promise((resolve,reject)=>{
   if(signal?.aborted){reject(new AppHostError('INSTALLATION_STATUS_CANCELLED','Installation read was cancelled.',{},499));return}
-  const child=fork(new URL('./installation-worker.js',import.meta.url),[],{cwd:temporaryRoot,env,execPath:nodeRuntime,execArgv:[],detached:true,stdio:['ignore','pipe','pipe','ipc']});
+  const child=fork(new URL('./installation-worker.js',import.meta.url),[],{cwd:temporaryRoot,env,execPath:nodeRuntime,execArgv:[],detached:process.platform!=='win32',stdio:['ignore','pipe','pipe','ipc']});
   const chunks=[];let total=0,stderr=false,fault,exited=false,message;
-  const kill=code=>{fault??=code;if(!exited&&child.pid){child.kill('SIGTERM')}};
+  const kill=code=>{fault??=code;if(!exited&&child.pid){if(process.platform==='win32'){if(child.connected)child.send({abort:true},()=>{})}else child.kill('SIGTERM')}};
   const abort=()=>kill('INSTALLATION_STATUS_CANCELLED');signal?.addEventListener('abort',abort,{once:true});
   const timer=setTimeout(()=>kill('AGENT_READER_TIMEOUT'),reader.timeoutMs);
   child.stdout.on('data',chunk=>{total+=chunk.length;if(total>reader.maxOutputBytes)kill('AGENT_READER_OUTPUT_LIMIT');else chunks.push(chunk)});
@@ -42,7 +53,7 @@ export async function runOfficialInstallationCommand({channel,reader,args,signal
    if(fault||message?.error||message?.result!==0||stderr)reject(new AppHostError(fault??message?.error??(stderr?'AGENT_READER_DIAGNOSTIC':'AGENT_READER_FAILED'),'The configured official reader did not return a complete clean result.',{},503));
    else resolve(Buffer.concat(chunks).toString('utf8'));
   });
-  if(child.connected)child.send({executable:reader.executable,args,temporaryRoot,env},()=>{});
+  if(child.connected)child.send({executable:reader.nodeScript?nodeRuntime:reader.executable,args:reader.nodeScript?[reader.executable,...args]:args,temporaryRoot,env},()=>{});
   if(signal?.aborted)abort();
  })}finally{if(cwd)await rm(cwd,{recursive:true,force:true})}
 }

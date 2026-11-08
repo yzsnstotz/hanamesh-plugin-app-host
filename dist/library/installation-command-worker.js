@@ -1,7 +1,8 @@
 /** Live command-group anchor. Its separate reaper removes the cwd only after this group has ended. */
-import {spawn} from 'node:child_process';
+import {spawn,spawnSync} from 'node:child_process';
+import {join} from 'node:path';
 let started=false,reported=false;
-const stopOwnedGroup=()=>process.kill(-process.pid,'SIGKILL');
+const stopOwnedGroup=()=>{if(process.platform==='win32'){spawnSync(join(process.env.SystemRoot,'System32','taskkill.exe'),['/pid',String(process.pid),'/T','/F'],{stdio:'ignore',windowsHide:true});process.exit(1)}else process.kill(-process.pid,'SIGKILL')};
 function report(payload){
  if(reported)return;reported=true;
  if(process.connected){try{process.send(payload,error=>{if(error)stopOwnedGroup()})}catch{stopOwnedGroup()}}else stopOwnedGroup();

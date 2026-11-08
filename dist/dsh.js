@@ -76,8 +76,6 @@ export const Config = z.object({
     registry:z.string(),
     /** Publicly named event history capacity; a lost cursor reports resetRequired. */
     eventRetention:z.number().default(512),
-    /** Explicit official CLI readers; unset means unknown, never inferred from PATH or private files. */
-    installationReaders:z.union([z.any(),z.const(undefined)]),
     /** Website → client handoff listener (library/handoff.js). Unset fields use the defaults shown in the library
      *  settings page, where they can also be changed (saved values win over this config). */
     handoff:z.object({enabled:z.boolean(),ports:z.union([z.array(z.number()),z.const(undefined)]),
@@ -260,7 +258,7 @@ export async function apply(ctx, config) {
     };
     const identity=await detectClient({desktop});
     if(typeof ctx.logger?.info==='function')ctx.logger.info('hanamesh-app-host library: client %s (%s)',identity.client,identity.evidence);
-    library=createLibraryService({domain:{global:libraryDomain.global,close:closeLibraryDomain},host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer,client:identity.client,unavailable,suiteSourceService:()=>suiteSourceService,installationStatus:nodeStatusBinding(()=>nodeRuntime.executable,workerNode=>createInstallationStatusReader({client:identity.client,core:()=>coreService,workerNode,readers:libraryConfig.installationReaders})),logger:ctx.logger});
+    library=createLibraryService({domain:{global:libraryDomain.global,close:closeLibraryDomain},host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer,client:identity.client,unavailable,suiteSourceService:()=>suiteSourceService,installationStatus:nodeStatusBinding(()=>nodeRuntime.executable,workerNode=>createInstallationStatusReader({client:identity.client,core:()=>coreService,workerNode})),logger:ctx.logger});
     own('library', () => library.close());
     await library.init();
     // rc.27: app bundles register plain `app.json` (no package name); the installed scan knows which npm package ships

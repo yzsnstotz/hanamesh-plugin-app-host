@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {declaration,core} from './fixtures/core-suite-declaration.mjs';
 const module=await import('../src/library/installation-status.js').catch(e=>{if(e.code==='ERR_MODULE_NOT_FOUND')return{};throw e});
-function reader(options={}){assert.equal(typeof module.createInstallationStatusReader,'function');return module.createInstallationStatusReader(options)}
+function reader(options={}){assert.equal(typeof module.createInstallationStatusReader,'function');const {readers={},...rest}=options;return module.createInstallationStatusReader({discoverReader:async({channel})=>{if(readers[channel])return readers[channel];throw Object.assign(new Error('not found'),{code:'AGENT_READER_UNAVAILABLE'})},...rest})}
 const configured={executable:'/official/cli',home:'/configured/user',configDir:'/configured/user/config',pluginName:'hanamesh',marketplace:'registered-suite',marketplaceUrl:'https://market.example/plugins.git',timeoutMs:2000,maxOutputBytes:20000};
 function official(channel,installed=true,extra={}){const id='hanamesh@registered-suite';return channel==='claude'?{version:'2.1.301 (Claude Code)',plugins:installed?[{id,version:'0.1.0',scope:'user',enabled:true,installPath:'/private/never-return',...extra}]:[],marketplaces:[{name:'registered-suite',source:'url',url:configured.marketplaceUrl}]}:{version:'codex-cli 0.162.1',plugins:{installed:installed?[{pluginId:id,name:'hanamesh',marketplaceName:'registered-suite',version:'0.1.0',installed:true,enabled:true,marketplaceSource:{sourceType:'git',source:configured.marketplaceUrl},...extra}]:[],available:[]},marketplaces:{marketplaces:[{name:'registered-suite',marketplaceSource:{sourceType:'git',source:configured.marketplaceUrl}}]}}}
 function command(channel,values,calls=[]){return async({args,signal})=>{calls.push(args);signal.throwIfAborted();if(args.includes('--version'))return values.version;return JSON.stringify(args.includes('marketplace')?values.marketplaces:values.plugins)}}
@@ -22,8 +22,8 @@ for(const channel of ['claude','codex'])test(`${channel} official list matches q
  if(channel==='codex')assert.equal(observation(result,'codex','desktop-app').reason.code,'CODEX_DESKTOP_SCOPE_UNOBSERVABLE');
 });
 test('missing registration/reader/config, unsupported CLI and malformed list never become absence',async()=>{
- assert.equal(observation(await reader()(),'claude').reason.code,'AGENT_READER_NOT_CONFIGURED');
- for(const [config,runCommand,expected]of [[{...configured,pluginName:undefined},async()=>assert.fail('no read'),'AGENT_READER_CONFIG_INVALID'],[configured,async()=> 'codex-cli 99.0.0','AGENT_READER_VERSION_UNSUPPORTED'],[configured,async({args})=>args.includes('--version')?'codex-cli 0.162.1':'','AGENT_INVENTORY_INVALID'],[configured,async()=>{throw new Error('private token')},'AGENT_READER_FAILED']]){const result=await reader({readers:{codex:config},runCommand})();assert.equal(observation(result,'codex','agent-cli').reason.code,expected);assert.equal(observation(result,'codex','agent-cli').status,'unknown');assert.doesNotMatch(JSON.stringify(result),/private token/)}
+ assert.equal(observation(await reader()(),'claude').reason.code,'AGENT_READER_UNAVAILABLE');
+ for(const [config,runCommand,expected]of [[{...configured,pluginName:undefined},async()=>assert.fail('no read'),'AGENT_READER_DISCOVERY_INVALID'],[configured,async()=> 'codex-cli 0.162.0','AGENT_READER_VERSION_UNSUPPORTED'],[configured,async({args})=>args.includes('--version')?'codex-cli 0.162.1':'','AGENT_INVENTORY_INVALID'],[configured,async()=>{throw new Error('private token')},'AGENT_READER_FAILED']]){const result=await reader({readers:{codex:config},runCommand})();assert.equal(observation(result,'codex','agent-cli').reason.code,expected);assert.equal(observation(result,'codex','agent-cli').status,'unknown');assert.doesNotMatch(JSON.stringify(result),/private token/)}
 });
 test('late Core results and agent work are cancelled without a cached installed response',async()=>{
  let release;const read=reader({core:()=>({protocolVersion:'1',getSuiteDeclaration:()=>new Promise(r=>release=r)})});const c=new AbortController();const pending=read({signal:c.signal});c.abort();await assert.rejects(pending,{code:'INSTALLATION_STATUS_CANCELLED'});release(declaration());read.close();await assert.rejects(read(),{code:'INSTALLATION_STATUS_CANCELLED'});
@@ -42,4 +42,13 @@ test('Codex per-install marketplace provenance cannot be replaced by the current
  const value=official('codex');value.plugins.installed[0].marketplaceSource={sourceType:'git',source:'https://other.example/unrelated.git'};
  const read=reader({readers:{codex:configured},runCommand:command('codex',value)});let row=observation(await read(),'codex','agent-cli');assert.equal(row.status,'unknown','conflicting installed provenance must not report installed');assert.equal(row.reason.code,'AGENT_MARKETPLACE_SOURCE_MISMATCH');
  delete value.plugins.installed[0].marketplaceSource;row=observation(await read(),'codex','agent-cli');assert.equal(row.status,'unknown');assert.equal(row.reason.code,'AGENT_MARKETPLACE_SOURCE_UNAVAILABLE');
+});
+for(const [channel,newer,lower,malformed]of [['claude','2.1.319 (Claude Code)','2.1.300 (Claude Code)','2.1.319'],['codex','codex-cli 0.167.0','codex-cli 0.162.0','other-cli 0.167.0']])test(`AH1 ${channel} minimum version and JSON schema gate`,async()=>{
+ const value=official(channel);value.version=newer;
+ const read=reader({readers:{[channel]:configured},runCommand:command(channel,value)});
+ assert.equal(observation(await read(),channel,'agent-cli').status,'installed','newer official CLI must pass');
+ value.version=channel==='claude'?'99.0.0 (Claude Code)':'codex-cli 99.0.0';assert.equal(observation(await read(),channel,'agent-cli').status,'installed','no upper bound');
+ value.version=lower;assert.equal(observation(await read(),channel,'agent-cli').reason.code,'AGENT_READER_VERSION_UNSUPPORTED');
+ value.version=malformed;assert.equal(observation(await read(),channel,'agent-cli').reason.code,'AGENT_READER_VERSION_INVALID');
+ value.version=newer;value.plugins={unexpected:[]};assert.equal(observation(await read(),channel,'agent-cli').reason.code,'AGENT_INVENTORY_INVALID');
 });

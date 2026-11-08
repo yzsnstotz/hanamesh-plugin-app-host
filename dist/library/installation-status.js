@@ -2,7 +2,8 @@
 import semver from 'semver';
 import {AppHostError} from '../errors.js';
 import {SUITE_BUNDLE,createCoreSuiteAdapter,SUITE_PACKAGES} from './suite.js';
-import {SUPPORTED_READER_VERSIONS,validReader,runOfficialInstallationCommand} from './installation-cli.js';
+import {readerVersionFailure,validReader,runOfficialInstallationCommand} from './installation-cli.js';
+import {discoverOfficialReader} from './installation-discovery.js';
 const object=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const exact=x=>typeof x==='string'&&semver.valid(x)===x?x:null;
 const reason=(code,message,action)=>({code,message,action});
@@ -48,11 +49,11 @@ function parseInventory(channel,plugins,marketplaces,target){
  return{status:failed?'incomplete':'installed',version,components:[{name:target.pluginName,version,active:row.enabled}],
   reason:failed?reason(channel==='claude'?'AGENT_PLUGIN_LOAD_FAILED':'AGENT_PLUGIN_PAYLOAD_MISSING','官方清单报告插件负载或加载问题。','在该官方客户端的插件详情中检查并修复。'):version===null?reason('AGENT_VERSION_UNAVAILABLE','已确认该作用域的安装记录，但实际版本未知。','在该官方客户端插件详情中核对实际版本。'):null};
 }
-const failureCodes=new Set(['AGENT_READER_UNAVAILABLE','AGENT_READER_PERMISSION_DENIED','AGENT_READER_PLATFORM_UNSUPPORTED','AGENT_READER_NODE_REQUIRED','AGENT_PROFILE_UNAVAILABLE','AGENT_READER_TIMEOUT','AGENT_READER_OUTPUT_LIMIT','AGENT_READER_CLEANUP_FAILED','AGENT_READER_DIAGNOSTIC','AGENT_READER_FAILED','AGENT_INVENTORY_INVALID','AGENT_INVENTORY_CONFLICT','AGENT_MARKETPLACE_SOURCE_MISMATCH','AGENT_MARKETPLACE_SOURCE_UNAVAILABLE','AGENT_SCOPE_UNOBSERVABLE']);
-/** Trusted static configuration only; `core` is the optional public protocol-1 Cordis service accessor. */
-export function createInstallationStatusReader({client='dsh',core=()=>undefined,readers={},workerNode,runCommand=runOfficialInstallationCommand}={}){
+const failureCodes=new Set(['AGENT_SHELL_ENV_UNAVAILABLE','AGENT_READER_DISCOVERY_INVALID','AGENT_READER_ENTRYPOINT_UNAVAILABLE','AGENT_READER_UNAVAILABLE','AGENT_READER_PERMISSION_DENIED','AGENT_READER_NODE_REQUIRED','AGENT_PROFILE_UNAVAILABLE','AGENT_READER_TIMEOUT','AGENT_READER_OUTPUT_LIMIT','AGENT_READER_CLEANUP_FAILED','AGENT_READER_DIAGNOSTIC','AGENT_READER_FAILED','AGENT_INVENTORY_INVALID','AGENT_INVENTORY_CONFLICT','AGENT_MARKETPLACE_SOURCE_MISMATCH','AGENT_MARKETPLACE_SOURCE_UNAVAILABLE','AGENT_SCOPE_UNOBSERVABLE']);
+/** Automatic current-user discovery only; `core` is the optional public protocol-1 Cordis service accessor. */
+export function createInstallationStatusReader({client='dsh',core=()=>undefined,workerNode,runCommand=runOfficialInstallationCommand,discoverReader=discoverOfficialReader}={}){
  if(!['dsh','hanamesh'].includes(client))throw new TypeError('client must be dsh or hanamesh');
- const settings=structuredClone(readers??{}),active=new Set();let closed=false;
+ const active=new Set();let closed=false;
  const suite=createCoreSuiteAdapter({core});
  async function runtime(signal){
   const row=base(client,'current-runtime','responding-runtime',client==='dsh'?'当前响应的 DSH runtime':'当前响应的 HanaMesh 客户端 runtime');
@@ -64,20 +65,20 @@ export function createInstallationStatusReader({client='dsh',core=()=>undefined,
   }catch(error){if(signal.aborted)throw interrupted();const code=['CORE_SUITE_DECLARATION_MISSING','CORE_SUITE_DECLARATION_INVALID'].includes(error.code)?error.code:'CORE_SUITE_READ_FAILED';return unknown(row,code,code==='CORE_SUITE_DECLARATION_MISSING'?'本 runtime 未提供 Core 套件声明方法。':'本次 Core 套件声明读取失败。','启用支持 protocol 1 getSuiteDeclaration 的 Core，查看其设置并重新检测。')}
  }
  async function agent(channel,signal){
-  const initial=agentBase(channel),config=settings[channel];
-  if(config===undefined)return unknown(initial,'AGENT_READER_NOT_CONFIGURED','尚未配置该渠道的官方只读清单读取器。','在 AppHost library.installationReaders 中配置官方命令、用户资料、登记目标与读取预算后重新检测。');
-  if(!validReader(config))return unknown(initial,'AGENT_READER_CONFIG_INVALID','官方读取器缺少有效的显式配置。','核对 library.installationReaders 的绝对路径、登记插件名/市场来源和必填读取预算。');
-  const row={...initial,identity:{pluginName:config.pluginName,marketplace:config.marketplace}};
-  const invoke=args=>abortable(runCommand({channel,reader:config,args,signal,workerNode}),signal);
+  const initial=agentBase(channel);let row=initial;
   try{
-   const version=(await invoke(['--version'])).trim();
-   if(version!==SUPPORTED_READER_VERSIONS[channel])return unknown(row,'AGENT_READER_VERSION_UNSUPPORTED','该官方 CLI 版本尚未验证此读取协议。','使用提供方正文列明的支持版本，或先核实新版本官方清单协议。');
+   const config=await abortable(discoverReader({channel,signal,workerNode}),signal);
+   if(!validReader(config))throw new AppHostError('AGENT_READER_DISCOVERY_INVALID','Invalid automatic reader.',{},503);
+   row={...initial,identity:{pluginName:config.pluginName,marketplace:config.marketplace}};
+   const invoke=args=>abortable(runCommand({channel,reader:config,args,signal,workerNode}),signal);
+   const versionFailure=readerVersionFailure(channel,await invoke(['--version']));
+   if(versionFailure)return unknown(row,versionFailure,versionFailure==='AGENT_READER_VERSION_INVALID'?'官方 CLI 版本输出格式无效。':'官方 CLI 低于支持的最低版本。','通过官方渠道升级 Claude Code 至 2.1.301 或以上、Codex CLI 至 0.162.1 或以上，再重新检测。');
    const suffix=channel==='codex'?['--disable','remote_plugin']:[];
    const text=await invoke(['plugin','list','--json',...suffix]);
    const sourceText=await invoke(['plugin','marketplace','list','--json',...suffix]);
    let plugins,marketplaces;try{plugins=JSON.parse(text);marketplaces=JSON.parse(sourceText)}catch{inventoryError()}
    return{...row,...parseInventory(channel,plugins,marketplaces,config)};
-  }catch(error){if(signal.aborted||error.code==='INSTALLATION_STATUS_CANCELLED')throw interrupted();const code=failureCodes.has(error.code)?error.code:'AGENT_READER_FAILED';return unknown(row,code,'本次官方清单读取未能提供完整且一致的安装事实。','在对应官方 CLI 的已配置用户资料中检查插件与市场清单、权限或诊断，修复后显式重检。')}
+  }catch(error){if(signal.aborted||error.code==='INSTALLATION_STATUS_CANCELLED')throw interrupted();const code=failureCodes.has(error.code)?error.code:'AGENT_READER_FAILED';const messages={AGENT_READER_UNAVAILABLE:'未在当前用户的 PATH 或常见安装位置找到官方 CLI。',AGENT_SHELL_ENV_UNAVAILABLE:'登录 shell 的 PATH 未能读取。',AGENT_PROFILE_UNAVAILABLE:'当前用户的官方资料目录不存在或不可访问。',AGENT_READER_TIMEOUT:'本次官方只读检测超时。',AGENT_INVENTORY_INVALID:'官方清单 JSON 不符合受支持的格式。',AGENT_READER_DISCOVERY_INVALID:'自动发现的官方 CLI 信息无效。',AGENT_READER_ENTRYPOINT_UNAVAILABLE:'已发现 Windows 命令入口，但官方 npm 程序文件缺失。'};return unknown(row,code,messages[code]??'本次官方清单读取未能提供完整且一致的安装事实。','在终端确认官方 CLI 可运行，并在其用户级插件页面检查清单、权限和市场来源后重新检测。')}
  }
  const read=async({signal}={})=>{
   if(closed||signal?.aborted)throw interrupted();const controller=new AbortController();active.add(controller);const combined=signal?AbortSignal.any([signal,controller.signal]):controller.signal;

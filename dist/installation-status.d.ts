@@ -1,13 +1,5 @@
 /** Advertised metadata only. Discovery performs no installation read. */
 export const INSTALLATION_STATUS_CAPABILITY:Readonly<{contract:'hanamesh.installation-status';contractVersion:'1';path:'/hanamesh/library/installation-status'}>;
-export interface InstallationReaderConfig {
- /** Absolute official executable and explicitly selected user/config directories. Never supplied by a website. */
- executable:string;home:string;configDir:string;
- /** Identity and exact HTTPS marketplace URL from the registered AgentPluginDTO. */
- pluginName:string;marketplace:string;marketplaceUrl:string;
- /** Required positive bounded operation budgets. No product default is inferred. */
- timeoutMs:number;maxOutputBytes:number;
-}
 export interface InstallationStatusRequest {contractVersion:'1';consent:'read-installations'}
 export interface InstallationObservation {
  channel:'hanamesh'|'dsh'|'claude'|'codex';

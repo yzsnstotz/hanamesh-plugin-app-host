@@ -12,6 +12,11 @@ test('official child receives only named read arguments and a credential-free ex
 });
 for(const [name,code,patch,expected]of [['stderr',`process.stderr.write('secret private path');console.log('{}')`,{},'AGENT_READER_DIAGNOSTIC'],['nonzero',`process.exit(1)`,{},'AGENT_READER_FAILED'],['overflow',`process.stdout.write('x'.repeat(10000));setInterval(()=>{},1000)`,{maxOutputBytes:100},'AGENT_READER_OUTPUT_LIMIT'],['timeout',`setInterval(()=>{},1000)`,{timeoutMs:60},'AGENT_READER_TIMEOUT']])test(`official reader ${name} is named unknown material, never parsed as absence`,async t=>{const{reader}=await setup(t,code);await assert.rejects(invoke({...reader,...patch}),e=>{assert.equal(e.code,expected);assert.doesNotMatch(e.message,/secret|private path/);return true})});
 test('a missing configured profile is not initialized or interpreted as an empty inventory',async t=>{const{root,reader}=await setup(t,'console.log("[]")');const configDir=join(root,'missing-profile');await assert.rejects(invoke({...reader,configDir}),{code:'AGENT_PROFILE_UNAVAILABLE'});await assert.rejects(readFile(configDir),{code:'ENOENT'})});
+test('automatic manager environment carries only named path variables and rejects credential keys',async t=>{
+ const {root,reader}=await setup(t,'console.log(JSON.stringify({volta:process.env.VOLTA_HOME,secret:process.env.API_KEY}))');
+ const value=JSON.parse(await invoke({...reader,runtimeEnv:{VOLTA_HOME:root}}));assert.deepEqual(value,{volta:root});
+ await assert.rejects(invoke({...reader,runtimeEnv:{API_KEY:'never-inherit'}}),{code:'AGENT_READER_DISCOVERY_INVALID'});
+});
 test('cancellation kills the exact owned read process and rejects without output',async t=>{
  const root=await scratch('installation-cancel-test-');t.after(()=>rm(root,{recursive:true,force:true}));const record=join(root,'pid');
  const{reader}=await setup(t,`(await import('node:fs')).writeFileSync(${JSON.stringify(record)},String(process.pid));setInterval(()=>{},1000)`);

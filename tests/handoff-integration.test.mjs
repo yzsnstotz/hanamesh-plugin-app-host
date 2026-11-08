@@ -168,6 +168,8 @@ test('N16-7: real DSH JSON storage preserves pollMs after unloading and reopenin
 });
 
 test('IS-CORDIS: the real plugin advertises a consented fresh Core reader on both listeners without install auth or side effects',async t=>{
+ const agentHome=await scratch('is-agent-home-'),previous={HOME:process.env.HOME,CLAUDE_CONFIG_DIR:process.env.CLAUDE_CONFIG_DIR,CODEX_HOME:process.env.CODEX_HOME};
+ process.env.HOME=agentHome;process.env.CLAUDE_CONFIG_DIR=join(agentHome,'.claude');process.env.CODEX_HOME=join(agentHome,'.codex');t.after(()=>{for(const [key,value]of Object.entries(previous)){if(value===undefined)delete process.env[key];else process.env[key]=value}});
  const{declaration}=await import('./fixtures/core-suite-declaration.mjs');let value=declaration(),calls=0;
  const service={protocolVersion:'1',getSuiteDeclaration:async(...args)=>{assert.deepEqual(args,[],'status facts never request a registry plan');calls++;return value}};
  const h=await boot(t,{core:service});const before=calls;
