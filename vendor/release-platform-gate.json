@@ -1,43 +1,49 @@
 {
   "name": "@hanamesh/release-platform-gate",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "sourceRepository": "https://github.com/yzsnstotz/hanamesh-docs.git",
   "sourcePath": "tools/release-platform-gate",
-  "sourceRef": "fix/pk2-platform-optional-contract-20261109",
-  "sourceCommit": "285bc01e424255285ecf050c56e837e4cde939a8",
-  "reviewCommit": null,
-  "reviewDocs": null,
-  "archiveSha256": "6f1acd41eb51f4faa27e8fe285dfea84c62670824da36f99738c5f2290b49348",
+  "sourceRef": "fix/pg1-leoventory-installer-risk-20261109",
+  "sourceCommit": "95e54102f9380ea2e8e4d8a2e36eacd387c3f7e7",
+  "reviewTargetCommit": "95e54102f9380ea2e8e4d8a2e36eacd387c3f7e7",
+  "reviewCommit": "95e54102f9380ea2e8e4d8a2e36eacd387c3f7e7",
+  "reviewDocs": "a24716374e2d35b8dfaa21131ae654f8b141ba67",
+  "reviewReport": "prd/2026-11-09-R119b复审.md",
+  "reviewStatus": "PASS",
+  "archiveSha256": "caf78747649b1dd37cbe9ba331351c81f94a48dc9e779aee83c75336140068d1",
   "invariant": "DSH_PNPM_PLATFORM_CLOSURE",
   "disableable": false,
   "dependencyShapeContract": "dependency-shapes-v1",
+  "platformClosureContract": "optional-platform-paths-v1",
+  "installationRiskContract": "dsh-pnpm-platform-exit-v1",
   "payload": [
     {
       "path": "package.json",
-      "sha256": "8943aacb7ff35b00332d18a4427ef82392eaa57319b9298ec3e23bedca9f210c"
+      "sha256": "d29a7ca1c32963bd29e16734cd34731399422b96351cac1a2d6502a1a1908f3e"
     },
     {
       "path": "DEPENDENCY_SHAPES.md",
-      "sha256": "3b810a0b63f2644da40b2b1006797314e109e4c4e2fec4231a8cf1517e64ca52"
+      "sha256": "2cf3110ddf91df05dc86f6d7fd21800c26b6357f1bbee772daf5f399ccb9f86c"
+    },
+    {
+      "path": "INSTALLATION_RISK.md",
+      "sha256": "5cea093882ecd9f977d6ae749ee2f6344e79f22f8631966b7a9febc7d05f2c53"
     },
     {
       "path": "README.md",
-      "sha256": "cd52100e652d17f29bb82ca42d51fa531419a6500fa7978f1941d42e5bdf066a"
+      "sha256": "cee53a9797f7d20e5fa9d4458a565e67c972c952e287fa904e32134323631242"
     },
     {
       "path": "cli.mjs",
-      "sha256": "f2c32cc1378f132c288984aadffd9f9ecacec9519fba28e12baa53df73350622"
+      "sha256": "d9c44cc9ac3334648949053613a932ae978b634aa40701a652250a6e41648575"
     },
     {
       "path": "index.mjs",
-      "sha256": "70f5149e77225e3a5aaef6e4a6cdf29358e7dd231fc8e21765ecde14de507eda"
+      "sha256": "12447f26659e40e37e86476db5322132e35477bbf82c6ced56e15d6e8f50390d"
     },
     {
       "path": "release.mjs",
-      "sha256": "e48c8367eb5786e526e7834b8bdf780ded3227b3abbd03fe3282ea4de721a258"
+      "sha256": "02df94ce4debad788e17fcbf51f2ba43c43a04de0164b04712615df7ec5064da"
     }
-  ],
-  "reviewTargetCommit": "285bc01e424255285ecf050c56e837e4cde939a8",
-  "reviewStatus": "SELF_TEST_PASS_PENDING_INDEPENDENT_REVIEW",
-  "platformClosureContract": "optional-platform-paths-v1"
+  ]
 }

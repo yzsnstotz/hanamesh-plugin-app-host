@@ -72,7 +72,7 @@ test('NPM-APPHOST-01: actual packed manifest keeps devkit development-only and t
     for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies', 'devDependencies']) {
       for (const [name, spec] of Object.entries(manifest[field] ?? {})) {
         if(field==='devDependencies'&&name==='@hanamesh/devkit')assert.equal(spec,'^0.2.6');
-        else if(field==='devDependencies'&&name==='@hanamesh/release-platform-gate')assert.equal(spec,'file:vendor/hanamesh-release-platform-gate-0.1.11.tgz');
+        else if(field==='devDependencies'&&name==='@hanamesh/release-platform-gate')assert.equal(spec,'file:vendor/hanamesh-release-platform-gate-0.1.12.tgz');
         else if(field==='devDependencies'&&name==='@hanamesh/core'){
           assert.equal(spec,'file:vendor/hanamesh-core-0.3.33.tgz');
           const proof=JSON.parse(await readFile(new URL('../vendor/core-fixture.json',import.meta.url),'utf8'));

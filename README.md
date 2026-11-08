@@ -234,27 +234,14 @@ Actions runs on the standard public/free `macos-15` arm64 runner because the exi
 
 ## 发布检查：平台依赖闭包（不可关闭）
 
-`DSH_PNPM_PLATFORM_CLOSURE` 是正确性不变量，Mac/Windows/Linux 同样适用：DSH 自带 pnpm 11.7.0 处理不适用平台 optional 子包时可能安装完不退出，导致 DSH 持续等待。正常 tarball、bundled 包及完整锁定依赖闭包的根/必需路径含 os/cpu/libc 即拒绝；完整可选子图按 optional-platform-paths-v1 核对真实清单/冻结元数据及所有平台工件，缺绑定的平台 optional 声明仍拒绝，报具体包名/路径；缺闭包证据也拒绝。不能以开关、超时、重试、omit-optional 或静默兜底绕过；应改用单包内含多平台文件的中立依赖。
+共享 `@hanamesh/release-platform-gate` **0.1.12** 已经 R119b 复审 PASS，来源 `hanamesh-docs/tools/release-platform-gate` 分支 `fix/pg1-leoventory-installer-risk-20261109`，提交 `95e54102f9380ea2e8e4d8a2e36eacd387c3f7e7`。正常工具 tgz SHA256 `caf78747649b1dd37cbe9ba331351c81f94a48dc9e779aee83c75336140068d1`；七载荷摘要、复审提交及冻结 SRI 见 `vendor/release-platform-gate.json`、`vendor/SHA256SUMS` 和锁。它仅为 devDependency，不进入运行时或产品 bundle。
 
-运行 `npm run release:check` 正常打包并检查；发布仅用 `npm run release:publish`，发布已检查的同一 tarball。直接目录 npm publish 会被 prepublishOnly 明确拒绝。开发工具 `@hanamesh/release-platform-gate` 仅 devDependency，先按接线请求复制经 SHA 固定的正常工具包并更新冻结锁；CI 必须接入这个发布门。详细输出包含不可关闭的原因、正常包/锁 SHA 和扫描路径；absent optional peer 按 npm 定义列明，不等同 optionalDependencies。
+`DSH_PNPM_PLATFORM_CLOSURE` 是不可关闭的正确性不变量（disableable:false）。历史 DSH bundled pnpm 11.7.0 位于 pnpm#12297 风险系列，修复收录于 pnpm 11.23.0。原始 HanaMesh 挂起进程首错仍未找回，不能宣称历史身份/归因已闭合。合法 optional 平台字段和完整强 SRI 也不能独自证明安装器会退出。
 
-历史共享门曾升级到 R2 PASS 的 0.1.10，原正常工具 tar SHA256 为 `c72010c96a5f22e36d65f6c1fd850e583dead7e843644eba1657b4416d9cbd0d`；最终 main 来源见 `vendor/release-platform-gate.json`。本仓接线仍须 R1 独审，不等于 npm 发布放行，本次不发布。
+根及必需路径的 os/cpu/libc 继续 PLATFORM_FIELD 拒绝；可选子图先完整核锁、实际归档、名称/版本/范围/peer、选择器一致与强 SRI，再按 `dsh-pnpm-platform-exit-v1` 核安装矩阵。所有平台工件均扫描，不按检查机过滤。缺矩阵为 INSTALLATION_TARGETS_REQUIRED，旧风险组合为 PNPM_PLATFORM_HANG_RISK，未审组合为 INSTALLATION_TARGET_UNSUPPORTED；混入一个安全目标不能洗绿旧组合。未知依赖形态仍 UNSUPPORTED_DEPENDENCY_SHAPE，输出 shape / why / action / contract；有限 dependency-shapes-v1 与 INSTALLATION_RISK.md 均随正常工具包交付。没有 skip/关闭开关、环境推断、重试、超时、omit-optional 或白名单绕过。
 
-`verify:pack` 原有 tarball 参数保持；正常消费者验证之后通过共享公开 checkRelease 核对同一个归档，CI沿该入口必经硬门，不另打一个包代替原包。接线没有复制扫描实现。
+本次发布资格的完整目标明确保存在 `release/installation-targets.json`：DSH **0.2.2-rc.1 / pnpm 11.28.5 / darwin-arm64、linux-arm64**。这是 R119b 有退出证据的两个组合，不是检查机自动选择，也不把公开宽 peer 范围当作已通过的安装矩阵；其他宿主/安装器/架构不计入本次资格，旧组合仍拒绝。开发冻结安装的 pnpm 10.33.0 不是 bundled 11.28.5 的实装证据；后续 GT19 两机门必须核实际 pnpm 版本和完整闭包。
 
-有限依赖形态合同为正常开发工具包中的 `DEPENDENCY_SHAPES.md`（dependency-shapes-v1）：支持 registry/git/file/link/tarball/workspace/bundled/vendor 的明确子集，不能当作 npm/pnpm 的无限全集。合同外一律 `UNSUPPORTED_DEPENDENCY_SHAPE`，逐项公开 `package/path/shape/why/action/contract`；缓存、bundle、环境变量或额外 CLI 开关都不能绕过准入。已知缺证据、冻结漂移、完整性和平台违规仍各自具名拒绝，不能以“任意失败”代替正确理由。
+`release:check` 与 `release:publish` 都显式传同一 `--installation-targets release/installation-targets.json`；`verify:pack` 在原消费者验证后通过共享公开 `checkRelease({installationTargets:...})` 检查同一归档，没有复制扫描实现或捕获忽略门错误。
 
-发布说明：DSH 内置 pnpm 11.7.0 处理不适用平台 optional 子包时可能安装后不退出，使 DSH 一直等安装结束；因此本门是正确性不变量（`disableable:false`），没有关闭开关。所有 OS/CPU/libc 的必需安装路径必须中立；可选平台子图仍须完整闭包与强 SRI，不能用本机已装、omit-optional、ignore-scripts、超时、重试、放宽断言或改客户端代替。每次 PASS/FAIL 的 JSON/receipt 都包含触发背景和不能关闭的 reason；release:check 正常 pack，release:publish 只发布同一已检查且再核 SHA 的 tar。源码目录发布由 prepublishOnly 拒绝，CI 的 verify:pack/preflight 必经该门；无可失败 job 或旁路入口。
-
-历史提供方 main 提交 `13ec0db3bc6aa6b6235f2105d3f0a6b998855ff5`，与 R2 审过的 0.1.10 正常包6载荷逐字一致；来源/归档摘要见 `vendor/release-platform-gate.json`。
-
-## Core 公开套件声明的测试依赖
-
-源码测试通过 `@hanamesh/core/suite` 读取 Core 单源公开命令。`@hanamesh/core` 是仓库声明的 devDependency，按 npm 版本范围 `^0.3.30` 从公开 npm 安装，冻结 pnpm 锁记录实际版本与 SRI；许可证记录见 `docs/LICENSES.json`。Core 不成为运行时依赖或 bundled 包。
-
-套件升级的执行定义来自可信 Cordis Core 声明 `upgrade.installation:{name,version,command,args}`；AppHost将实际profile与可选registry交给Core，使用返回的完整argv，不自行加flag、解析命令前缀或补默认npm源。缺定义时具名拒绝，参数纳入确认快照。该数据接口避免AppHost在Core新版本发布前依赖未发布SDK。
-
-
-### PK2 · DSH 0.2.2-rc.1 平台门更新
-
-现行门为 0.1.11，来源 `285bc01e424255285ecf050c56e837e4cde939a8`，正常归档 SHA256 `6f1acd41eb51f4faa27e8fe285dfea84c62670824da36f99738c5f2290b49348`，详见 vendor/release-platform-gate.json。新审查契约 optional-platform-paths-v1 按必需/可选路径遍历；完整可选平台子图逐工件核锁/真实清单/强 SRI，必需路径、缺证据、未知形态与关闭开关继续拒绝。此前“所有 os/cpu/libc 字段无条件拒绝”的描述仅代表 0.1.10 历史策略。作者门通过不冒称独立审查或 Windows/Linux 真机通过；本轮不发布 npm。
+运行 `npm run release:check` 产生正常归档并核验；`release:publish` 只发布同一已检查且复核 SHA 的 tar。`prepublishOnly` 的 source-guard 拒绝源码目录直接发布。CI 的既有 verify:pack / preflight 必经此门；无 continue-on-error 或旁路。此接线提交没有执行 npm publish、tag、部署或产品真机发布验收。
