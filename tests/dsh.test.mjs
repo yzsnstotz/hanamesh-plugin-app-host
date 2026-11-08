@@ -15,7 +15,7 @@ import * as storageDomain from '@deepseek-ai/dsh-storage-domain';
 import WebServer from '@deepseek-ai/dsh-host-webserver';
 import SessionStore from '@deepseek-ai/dsh-session';
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection';
-import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl';
+import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl';
 import * as appHost from '../src/dsh.js';
 import { definition, temporary, http, until, pidAlive } from './helpers.mjs';
 import {declaration as coreDeclaration,core as suiteCore,names as suiteNames,versions as suiteVersions} from './fixtures/core-suite-declaration.mjs';

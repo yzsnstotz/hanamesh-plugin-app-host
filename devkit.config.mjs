@@ -110,10 +110,10 @@ export async function verifyAppHostPack(tarball){
     if(prior.peers===undefined)delete process.env.npm_config_auto_install_peers;else process.env.npm_config_auto_install_peers=prior.peers;
   }
   // Explicit consumer closure; these remain transitive host peers, not AppHost declarations.
-  const peers=Object.fromEntries(Object.keys(pkg.peerDependencies).map(name=>[name,pkg.devDependencies[name]??(name.startsWith('@deepseek-ai/dsh-')?'0.2.1-alpha.2':name==='react'?'18.3.1':pkg.peerDependencies[name])]))
+  const peers=Object.fromEntries(Object.keys(pkg.peerDependencies).map(name=>[name,pkg.devDependencies[name]??(name.startsWith('@deepseek-ai/dsh-')?'0.2.2-rc.1':name==='react'?'18.3.1':pkg.peerDependencies[name])]))
   Object.assign(peers,{
-    '@deepseek-ai/dsh-storage':'0.2.1-alpha.2',
-    '@deepseek-ai/dsh-scope':'0.2.1-alpha.2'});
+    '@deepseek-ai/dsh-storage':'0.2.2-rc.1',
+    '@deepseek-ai/dsh-scope':'0.2.2-rc.1'});
   await verifyPack({...options,consumer:{packageJson:{private:true,type:'module',dependencies:{...peers,
     '@hanamesh/dsh-app-host':`file:${options.tarball}`}},
     javascript:"import assert from 'node:assert/strict';import{createRequire}from'node:module';import{apply}from'@hanamesh/dsh-app-host/dsh';assert.equal(typeof apply,'function');const require=createRequire(import.meta.url);assert.throws(()=>require.resolve('@hanamesh/devkit'),{code:'MODULE_NOT_FOUND'});"+'\n'+runtimeLedgerJavascript,
