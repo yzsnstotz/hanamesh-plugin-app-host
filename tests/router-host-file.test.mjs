@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, writeFile, rm, stat } from 'node:fs/promises';
@@ -12,7 +13,7 @@ test('AH-R01/AK09: locked app-host file policies preserve rotated files and remo
   t.after(async()=>{await host.dispose();await rm(root,{recursive:true,force:true});});
   const entry={path:'auth/test.json',base:'dataDir',projection:'file',kind:'grant',providers:['openai-chatgpt'],format:'oauth-cli-kit'};
   host.register({id:'file-test',name:'File Test',singleInstanceOnly:true,deployments:[{id:'local',dataId:'data-v1',mode:'owned',command:process.execPath,
-    args:[new URL('./fixtures/file-app.mjs',import.meta.url).pathname,'port={{port}}','data={{dataDir}}'],env:{},envAllowlist:[],credentialEnv:[entry],embedding:'direct',
+    args:[fileURLToPath(new URL('./fixtures/file-app.mjs', import.meta.url)),'port={{port}}','data={{dataDir}}'],env:{},envAllowlist:[],credentialEnv:[entry],embedding:'direct',
     readiness:{path:'/health',status:200,bodyIncludes:'AK_FILE_READY'},startTimeoutMs:4000,stopGraceMs:60,gateway:{cookieAllowlist:[]}}]});await host.init();
   const state={schema:1,apps:{}},domain={global:{get:()=>structuredClone(state),set:async next=>Object.assign(state,structuredClone(next))}};
   const provider={version:1,providers:async()=>[{id:'openai-chatgpt',riskNotice:{summary:'fixture',details:[],revokeHint:'fixture'}}],

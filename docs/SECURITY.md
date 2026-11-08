@@ -93,3 +93,8 @@ B17 候选的套件来源选择仅在 AppHost 自有同源已准入设置端点�
 0.6.16：只消费 DSH 公开源事实和公开排序/后继许可规则，不读 .npmrc、凭据、私有服务字段；配置源与受控 CLI 使用同一选择；null项沿用pnpm自有配置，不显式传registry。30秒上限只用于本次安装前查询，超时终止且不重试；配置源的顺序由 DSH 决定。诊断只投影脱敏的类型/消息/code/cause链及已知CLI字段，同时进既有UI和宿主日志；URL用户信息、全部查询值、Authorization/Cookie、token/secret均删除，限4001字符，不传任意details/stack/响应正文。
 
 公开registry规则只从已证明的宿主manager安装位置加载，复用原版本守卫；不安装第二份manager、不复制生产规则、不从任意浏览器路径加载模块。tests/fixtures的原始MIT规则与SHA/许可证只作测试，不进发布包。
+
+
+## Local snapshot publication on Windows
+
+The optional local `AtomicFileStore` flushes the newly written snapshot file, closes it, then renames it within the same directory on every platform. On Linux and macOS it additionally opens and synchronizes the containing directory before acknowledging publication. Node does not provide the directory-open/fsync operation on Windows, so that extra directory flush is not attempted there. Windows still publishes a complete file image and retains real process-kill/crash-cut checks; this does not promise that the renamed directory entry survives power loss or an OS/storage crash. A file-sync failure is never ignored, and a failure after rename remains `COMMIT_UNCERTAIN`. The normal DSH storage-domain bridge keeps its provider's publication contract.

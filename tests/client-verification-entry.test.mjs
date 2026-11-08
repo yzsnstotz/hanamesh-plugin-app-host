@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {mkdtemp, mkdir, cp, readFile, rm} from 'node:fs/promises';
 import {createServer} from 'node:http';
 import {spawnSync} from 'node:child_process';
-import {resolve, join} from 'node:path';
+import {resolve, join, relative, isAbsolute, sep} from 'node:path';
 import {createHash} from 'node:crypto';
 import {createLibraryHttpHandler} from '../src/library/routes.js';
 import {registeredClient} from './fixtures/registered-client-harness.mjs';
@@ -18,7 +18,8 @@ before(async () => {
   // Build a fresh copy of this module's own source with its unchanged actual
   // producer. Do not hand-patch a bundle or force verification props in a harness.
   const scratch = resolve(process.env.HANAMESH_APPHOST_RUN_DIR ?? cardRoot, 'tmp');
-  assert.ok(scratch.startsWith(cardRoot + '/'), 'build scratch must belong to this card');
+  const ownedPath = relative(cardRoot, scratch);
+  assert.ok(ownedPath && !isAbsolute(ownedPath) && ownedPath !== '..' && !ownedPath.startsWith('..' + sep), 'build scratch must belong to this card');
   await mkdir(scratch, {recursive: true});
   buildRoot = await mkdtemp(join(scratch, 'verification-entry-'));
   for (const mode of ['release', 'verification']) {

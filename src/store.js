@@ -219,8 +219,14 @@ export class AtomicFileStore {
         await this.checkpoint('snapshot-temp-fsynced', copy(image));
         await fd.close(); fd = undefined;
         await rename(temp, this.path); renamed = true;
-        const directory = await open(dirname(this.path), constants.O_RDONLY);
-        try { await directory.sync(); } finally { await directory.close(); }
+        // Node cannot open a directory for fsync on Windows. The completed
+        // file sync and same-directory rename still publish one whole image;
+        // only POSIX additionally synchronizes the directory entry. Do not
+        // reinterpret an arbitrary POSIX fsync failure as success.
+        if (process.platform !== 'win32') {
+          const directory = await open(dirname(this.path), constants.O_RDONLY);
+          try { await directory.sync(); } finally { await directory.close(); }
+        }
         await this.checkpoint('snapshot-published', copy(image));
       } catch (e) {
         // Post-rename failure is an ambiguous commit, not a guaranteed rollback.

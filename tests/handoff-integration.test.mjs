@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 /**
  * Website handoff through the REAL plugin entry (src/dsh.js) on a real Cordis root with the pinned DSH storage and web
  * server: dsh.js starts the listener from library.handoff settings, wires the authenticated client routes and links the
@@ -18,7 +19,7 @@ import WebServer from '@deepseek-ai/dsh-host-webserver';
 import * as appHost from '../src/dsh.js';
 import { scratch, http, until } from './helpers.mjs';
 
-const cliFixture=new URL('./fixtures/profile-cli.mjs',import.meta.url).pathname;
+const cliFixture=fileURLToPath(new URL('./fixtures/profile-cli.mjs', import.meta.url));
 const SITE = 'https://market.hanamesh.com', TOKEN = 'browser-session';
 const catalogFixture = resolve(import.meta.dirname, 'fixtures/catalog/reviewed-page.json');
 const item = { itemId: 'com.hanamesh.utility-plugin', packageName: '@hanamesh/utility-plugin' };

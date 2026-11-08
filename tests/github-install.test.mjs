@@ -5,7 +5,7 @@ import {createLibraryInstaller} from '../src/library/install.js';
 import {createLibraryService} from '../src/library/service.js';
 import {scratch} from './helpers.mjs';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
-import {join} from 'node:path';
+import {join, resolve} from 'node:path';
 import {loadClient} from '../src/install-target/harness.js';
 import {createHandoffQueue} from '../src/library/handoff.js';
 import {createLibraryHttpHandler} from '../src/library/routes.js';
@@ -13,6 +13,7 @@ import {createServer} from 'node:http';
 import {validate,loadContract} from '../src/install-target/suite.js';
 import {createReferenceConsumer} from '../src/install-target/fixtures/reference-consumer.js';
 
+const fixtureDshBin=resolve('fixture/dsh/bin.js');
 const sha='0123456789abcdef0123456789abcdef01234567';
 test('GitHub installs use a full immutable commit, including monorepo subdirectories',()=>{
   assert.equal(pinnedGithubSpec('Tang-mm95/dsh-kdocs-connector',sha),`github:Tang-mm95/dsh-kdocs-connector#${sha}`);
@@ -23,7 +24,7 @@ const target={source:'github',repo:'acme/mono',ref:sha,path:'plugins/demo',packa
 test('a collected npm target installs its exact version without resolving latest again',async()=>{
   const profile=await scratch('npm-collected-'),calls=[];
   const selected={source:'npm',name:'dsh-demo',version:'1.2.3',allowBuild:[]};
-  const installer=createLibraryInstaller({profileDir:profile,profileName:'isolated',dataRoot:join(profile,'data'),nodeBinary:process.execPath,dshBin:'/fixture/dsh/bin.js',
+  const installer=createLibraryInstaller({profileDir:profile,profileName:'isolated',dataRoot:join(profile,'data'),nodeBinary:process.execPath,dshBin:fixtureDshBin,
     fetchImpl:async()=>{assert.fail('a collected exact npm target must not resolve latest');},spawn:async(_command,args)=>{
       calls.push(args);const dir=join(profile,'node_modules','dsh-demo');await mkdir(dir,{recursive:true});
       await writeFile(join(dir,'package.json'),JSON.stringify({name:'dsh-demo',version:'1.2.3'}));
@@ -35,7 +36,7 @@ test('a collected npm target installs its exact version without resolving latest
 });
 test('GitHub installer passes the pinned source, subdirectory and reviewed build list to the official CLI without a registry lookup',async()=>{
   const profile=await scratch('github-cli-'),calls=[];
-  const installer=createLibraryInstaller({profileDir:profile,profileName:'isolated',dataRoot:join(profile,'data'),nodeBinary:process.execPath,dshBin:'/fixture/dsh/bin.js',
+  const installer=createLibraryInstaller({profileDir:profile,profileName:'isolated',dataRoot:join(profile,'data'),nodeBinary:process.execPath,dshBin:fixtureDshBin,
     fetchImpl:async()=>{assert.fail('GitHub installation must not ask npm latest or resolve a branch');},
     spawn:async(command,args)=>{
       calls.push({command,args});
@@ -45,7 +46,7 @@ test('GitHub installer passes the pinned source, subdirectory and reviewed build
       return{code:0,stdout:'',stderr:''};
     }});
   const result=await installer.install({id:'demo',installTarget:target});
-  assert.deepEqual(calls,[{command:process.execPath,args:['/fixture/dsh/bin.js','plugin','--profile','isolated','add','--save-exact','--allow-build=sharp',`github:acme/mono#${sha}&path:plugins/demo`]}]);
+  assert.deepEqual(calls,[{command:process.execPath,args:[fixtureDshBin,'plugin','--profile','isolated','add','--save-exact','--allow-build=sharp',`github:acme/mono#${sha}&path:plugins/demo`]}]);
   assert.equal(result.status,'restart-required');assert.equal(result.commit,sha);assert.equal(result.packageName,'dsh-demo');
 });
 
@@ -60,7 +61,7 @@ test('a branch advancing after collection cannot change the SHA passed to the na
   branchHead='b'.repeat(40);
   assert.notEqual((await (await fetch(branchUrl)).json()).sha,collected.ref,'branch really advanced in the source fixture');
   const profile=await scratch('github-branch-advanced-'),calls=[];
-  const installer=createLibraryInstaller({profileDir:profile,profileName:'isolated',dataRoot:join(profile,'data'),nodeBinary:process.execPath,dshBin:'/fixture/dsh/bin.js',
+  const installer=createLibraryInstaller({profileDir:profile,profileName:'isolated',dataRoot:join(profile,'data'),nodeBinary:process.execPath,dshBin:fixtureDshBin,
     fetchImpl:async()=>assert.fail('installation must not resolve the updated branch'),
     spawn:async(_command,args)=>{
       const spec=args.at(-1);calls.push(spec);
@@ -76,7 +77,7 @@ test('a branch advancing after collection cannot change the SHA passed to the na
 
 test('a failed GitHub install reports persisted build permissions as residue instead of claiming restoration',async()=>{
   const profile=await scratch('github-policy-'),policy=join(profile,'pnpm-workspace.yaml');
-  const installer=createLibraryInstaller({profileDir:profile,profileName:'isolated',dataRoot:join(profile,'data'),nodeBinary:process.execPath,dshBin:'/fixture/dsh/bin.js',
+  const installer=createLibraryInstaller({profileDir:profile,profileName:'isolated',dataRoot:join(profile,'data'),nodeBinary:process.execPath,dshBin:fixtureDshBin,
     spawn:async()=>{await writeFile(policy,'allowBuilds:\n  sharp: true\n');return{code:1,stdout:'',stderr:'build failed'};}});
   await assert.rejects(installer.install({id:'demo',installTarget:target}),error=>{
     assert.equal(error.code,'DSH_PLUGIN_FAILED');assert.equal(error.recovery.status,'failed');
@@ -88,7 +89,7 @@ test('a failed GitHub install reports persisted build permissions as residue ins
 test('GitHub installation rejects a different saved SHA or an inactive bundle after CLI exit zero',async()=>{
   for(const active of [true,false]){
     const profile=await scratch('github-readback-');
-    const installer=createLibraryInstaller({profileDir:profile,profileName:'isolated',dataRoot:join(profile,'data'),nodeBinary:process.execPath,dshBin:'/fixture/dsh/bin.js',spawn:async(_command,args)=>{
+    const installer=createLibraryInstaller({profileDir:profile,profileName:'isolated',dataRoot:join(profile,'data'),nodeBinary:process.execPath,dshBin:fixtureDshBin,spawn:async(_command,args)=>{
       if(args.includes('add')){
         const dir=join(profile,'node_modules','dsh-demo');await mkdir(dir,{recursive:true});
         await writeFile(join(dir,'package.json'),JSON.stringify({name:'dsh-demo',version:'1.0.0',dsh:{bundle:{patch:'./patch.yml'}}}));
@@ -102,7 +103,7 @@ test('GitHub installation rejects a different saved SHA or an inactive bundle af
 
 test('GitHub package identity cannot replace protected HanaMesh suite packages',async()=>{
   const profile=await scratch('github-protected-');let spawned=0;
-  const installer=createLibraryInstaller({profileDir:profile,profileName:'isolated',dataRoot:join(profile,'data'),nodeBinary:process.execPath,dshBin:'/fixture/dsh/bin.js',spawn:async()=>{spawned++;return{code:0};}});
+  const installer=createLibraryInstaller({profileDir:profile,profileName:'isolated',dataRoot:join(profile,'data'),nodeBinary:process.execPath,dshBin:fixtureDshBin,spawn:async()=>{spawned++;return{code:0};}});
   await assert.rejects(installer.install({id:'demo',installTarget:{...target,packageName:'@hanamesh/core'}}),{code:'PACKAGE_DENIED'});
   assert.equal(spawned,0);
 });
@@ -217,7 +218,7 @@ test('A2 missing installMethods refuses every installation entry before registry
 
 test('A2 installer refuses absent exact target before any profile or process mutation',async()=>{
   const root=await scratch('a2-no-target-');let calls=0;
-  const installer=createLibraryInstaller({profileDir:root,profileName:'isolated',dataRoot:join(root,'data'),nodeBinary:process.execPath,dshBin:'/fixture/dsh/bin.js',fetchImpl:async()=>{calls++;throw Error('unexpected registry lookup');},spawn:async()=>{calls++;return{code:0};}});
+  const installer=createLibraryInstaller({profileDir:root,profileName:'isolated',dataRoot:join(root,'data'),nodeBinary:process.execPath,dshBin:fixtureDshBin,fetchImpl:async()=>{calls++;throw Error('unexpected registry lookup');},spawn:async()=>{calls++;return{code:0};}});
   await assert.rejects(installer.install({id:'unreviewed',package:{registry:'npm',name:'dsh-example'}}),{code:'NOT_INSTALLABLE'});
   assert.equal(calls,0);
 });

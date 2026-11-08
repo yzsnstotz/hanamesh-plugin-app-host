@@ -36,7 +36,7 @@ test('AH-D04: upstream Desktop argv and manifests infer profile, CLI and workspa
 
 
 test('AH-D06: Desktop primary runtime manifest selects an executable standalone Node and reserved-profile CLI',async t=>{
-  const h=await layout(t),payload=h.argv[4],node=join(payload,'dependencies/node/bin/node');
+  const h=await layout(t),payload=h.argv[4],node=join(payload,'dependencies/node/bin',process.platform==='win32'?'node.exe':'node');
   await mkdir(join(payload,'dependencies/node/bin'),{recursive:true});await symlink(process.execPath,node);
   await writeFile(join(payload,'runtime.json'),JSON.stringify({desktopVersion:'0.2.1-alpha.2',platform:process.platform,arch:process.arch,node:process.versions.node,python:'3.13.0',pythonPackages:{}}));
   await writeFile(join(h.runtime,'node_modules/@deepseek-ai/dsh-desktop-host/lib/cli.js'),'export async function runDesktopCli() {}');

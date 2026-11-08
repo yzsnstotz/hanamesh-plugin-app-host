@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -61,7 +62,7 @@ test('AH-K5-2: configured nodeBinary must be absolute and executable', async t =
 test('AH-K5-3: guardian refuses an Electron runtime with exit 78 and a typed event', async () => {
   const guardian = new URL('../src/guardian.js', import.meta.url);
   const preload = new URL('./fixtures/fake-electron.mjs', import.meta.url);
-  const child = spawn(process.execPath, ['--import', preload.pathname, guardian.pathname], {
+  const child = spawn(process.execPath, ['--import', fileURLToPath(preload), fileURLToPath(guardian)], {
     stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
   });
   const messages = [];

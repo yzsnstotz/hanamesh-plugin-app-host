@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {join} from 'node:path';
@@ -51,7 +52,7 @@ test('MN07 provider/network failure is visible with original cause and never ret
 });
 test('MN08 X03 real SIGKILL after verification cannot publish a ready pointer',async t=>{
  const {writeFile,readFile}=await import('node:fs/promises');const {spawn}=await import('node:child_process');const root=await temporary(),file=join(root,'image.json');await writeFile(file,JSON.stringify({schema:1,revision:0,settings:null,active:null}));
- const child=spawn(process.execPath,[new URL('./fixtures/managed-node-crash-worker.mjs',import.meta.url).pathname,root],{stdio:['ignore','pipe','pipe','ipc']});let stderr='';child.stderr.on('data',d=>stderr+=d);
+ const child=spawn(process.execPath,[fileURLToPath(new URL('./fixtures/managed-node-crash-worker.mjs', import.meta.url)),root],{stdio:['ignore','pipe','pipe','ipc']});let stderr='';child.stderr.on('data',d=>stderr+=d);
  t.after(()=>{if(child.exitCode===null&&child.signalCode===null)child.kill('SIGKILL');});
  const checkpoint=await new Promise((resolve,reject)=>{child.once('message',resolve);child.once('error',reject);child.once('exit',()=>reject(new Error('worker exited before checkpoint '+stderr)));});
  assert.equal(checkpoint.point,'node-verified-before-binding');const exited=new Promise(r=>child.once('exit',(code,signal)=>r({code,signal})));child.kill('SIGKILL');assert.equal((await exited).signal,'SIGKILL');

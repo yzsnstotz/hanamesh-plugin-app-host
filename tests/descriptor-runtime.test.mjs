@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
@@ -47,7 +48,7 @@ test('AH-P03: host launches the executable selected by the validated runtime and
   const target = join(dataRoot, 'runtimes', 'vibe', 'vibe-runtime');
   await mkdir(join(target, 'bin'), { recursive: true });
   const launcher = join(target, 'bin', 'vibe');
-  const fixture = new URL('./fixtures/app.mjs', import.meta.url).pathname;
+  const fixture = fileURLToPath(new URL('./fixtures/app.mjs', import.meta.url));
   await writeFile(launcher, `#!/bin/sh\nexec ${JSON.stringify(process.execPath)} ${JSON.stringify(fixture)} "$@"\n`);
   await chmod(launcher, 0o755);
   const host = new AppHost({
@@ -90,7 +91,7 @@ test('AH-P04: missing, stale or non-executable runtime fails closed as RUNTIME_M
 test('AH-P05: default reader launches a real runtime from the public provision ledger without injection',async t=>{
  const root=await temporary(),dataRoot=join(root,'data'),runtimeRoot=join(dataRoot,'runtimes','vibe'),target=join(runtimeRoot,'vibe-runtime');
  await mkdir(join(target,'bin'),{recursive:true});await mkdir(join(runtimeRoot,'.provision'),{recursive:true});
- const launcher=join(target,'bin','vibe'),fixture=new URL('./fixtures/app.mjs',import.meta.url).pathname;
+ const launcher=join(target,'bin','vibe'),fixture=fileURLToPath(new URL('./fixtures/app.mjs', import.meta.url));
  await writeFile(launcher,`#!/bin/sh\nexec ${JSON.stringify(process.execPath)} ${JSON.stringify(fixture)} "$@"\n`);await chmod(launcher,0o755);
  const entry={version:'0.1.15',sha256:'a'.repeat(64),platform:`${process.platform}-${process.arch}`,installedAt:new Date().toISOString(),target,installTo:'vibe-runtime',source:'local'};
  await writeFile(join(runtimeRoot,'.provision','ledger.json'),JSON.stringify({schema:1,items:{'vibe-runtime':entry}}));
