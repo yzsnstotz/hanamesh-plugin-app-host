@@ -2,11 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
-import { readFile,writeFile,access,rm,mkdir,mkdtemp } from 'node:fs/promises';
+import { readFile,writeFile,access,rm,mkdir } from 'node:fs/promises';
 import { join,resolve } from 'node:path';
-import {tmpdir} from 'node:os';
 import { createHttpHandler } from '../src/index.js';
-import { setup,definition,temporary,until,pidAlive,delay } from './helpers.mjs';
+import { setup,definition,temporary,until,pidAlive,delay,scratch } from './helpers.mjs';
 async function chrome(t){
   let binary;
   // HM_CHROMIUM names an isolated Chromium binary on hosts without a system one (e.g. a Playwright cache on macOS).
@@ -14,7 +13,7 @@ async function chrome(t){
   for(const candidate of candidates)try{await access(candidate);binary=candidate;break;}catch{}
   if(!binary){t.skip('REAL_BROWSER unavailable: isolated Chromium binary was not found.');return null;}
   // Chromium creates Unix sockets below TMPDIR; nested test roots can exceed their OS path limit.
-  const root=await mkdtemp(join(process.platform==='win32'?tmpdir():'/tmp','hm-chrome-')),profile=join(root,'chromium-profile');
+  const root=await scratch('b-',{short:true}),profile=join(root,'chromium-profile');
   const home=join(root,'home'),tmp=join(root,'tmp'),cache=join(root,'cache');
   for(const path of [home,tmp,cache])await mkdir(path,{recursive:true});
   // Q329: no inherited personal HOME, credentials or keychain authorization.

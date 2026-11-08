@@ -7,5 +7,6 @@ import { scratch, temporary } from '../helpers.mjs';
 test('fails after making scratch directories', async () => {
   await writeFile(join(await scratch('probe-'), 'file'), 'x');
   await temporary();
+  console.log('SHORT_SCRATCH:'+await scratch('probe-',{short:true}));
   throw new Error('intentional failure');
 });

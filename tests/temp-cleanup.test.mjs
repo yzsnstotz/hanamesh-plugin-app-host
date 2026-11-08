@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdir, readdir, readFile, rm } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, lstat } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { scratch } from './helpers.mjs';
 
@@ -27,6 +27,9 @@ test('a failing test process still removes every scratch directory it made', asy
   });
   assert.notEqual(child.status, 0, 'the child test really failed');
   assert.match(child.stdout, /intentional failure/);
+  const short=child.stdout.match(/SHORT_SCRATCH:([^\r\n]+)/)?.[1];
+  assert.ok(short,'the failing process made a short scratch directory');
+  await assert.rejects(lstat(short),{code:'ENOENT'},'short scratch roots are removed on failure too');
   assert.deepEqual(await readdir(tmp), [], 'nothing left in the child TMPDIR');
   await rm(tmp, { recursive: true, force: true });
 });

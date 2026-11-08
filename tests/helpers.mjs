@@ -10,12 +10,15 @@ export const parentOrigin='http://127.0.0.1:49123';
 export const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 // Every test directory lives under one root per test process, removed when that process exits — passed, failed or
 // thrown. Tests never call mkdtemp on the system temp dir themselves (tests/temp-cleanup.test.mjs guards this).
-let processRoot,processRootPath;
-export async function scratch(prefix='t-'){
-  processRoot??=realpath(tmpdir()).then(base=>mkdtemp(join(base,`hm-app-host-${process.pid}-`))).then(path=>processRootPath=path);
-  return await mkdtemp(join(await processRoot,prefix));
+const processRoots=new Map(),ownedProcessRoots=new Set();
+export async function scratch(prefix='t-',{short=false}={}){
+  const key=short?'short':'default';
+  if(!processRoots.has(key))processRoots.set(key,realpath(short&&process.platform!=='win32'?'/tmp':tmpdir())
+    .then(base=>mkdtemp(join(base,short?`hm-${process.pid}-`:`hm-app-host-${process.pid}-`)))
+    .then(path=>{ownedProcessRoots.add(path);return path;}));
+  return await mkdtemp(join(await processRoots.get(key),prefix));
 }
-process.on('exit',()=>{if(processRootPath)rmSync(processRootPath,{recursive:true,force:true});});
+process.on('exit',()=>{for(const path of ownedProcessRoots)rmSync(path,{recursive:true,force:true});});
 export async function temporary(){return await scratch('t-');}
 export function definition({id='example',single=true,extra={},embedding='direct'}={}){
   const args=[fixture,'port={{port}}','data={{dataDir}}','runtimeId={{runtimeId}}','instanceId={{instanceId}}',
