@@ -52,7 +52,8 @@ export async function runOfficialInstallationCommand({channel,reader,args,signal
   GIT_TERMINAL_PROMPT:'0',GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:systemRoot?'NUL':'/dev/null',GIT_CONFIG_COUNT:'1',GIT_CONFIG_KEY_0:'credential.helper',GIT_CONFIG_VALUE_0:''};
  try{return await new Promise((resolve,reject)=>{
   if(signal?.aborted){reject(new AppHostError('INSTALLATION_STATUS_CANCELLED','Installation read was cancelled.',{},499));return}
-  const child=fork(new URL('./installation-worker.js',import.meta.url),[],{cwd:temporaryRoot,env,execPath:nodeRuntime,execArgv:[],detached:process.platform!=='win32',stdio:['ignore','pipe','pipe','ipc']});
+  // The reaper must survive caller death on Windows too; libuv kills non-detached children with their creator.
+  const child=fork(new URL('./installation-worker.js',import.meta.url),[],{cwd:temporaryRoot,env,execPath:nodeRuntime,execArgv:[],detached:true,windowsHide:true,stdio:['ignore','pipe','pipe','ipc']});
   const chunks=[];let total=0,stderr=false,fault,exited=false,message;
   const kill=code=>{fault??=code;if(!exited&&child.pid){if(process.platform==='win32'){if(child.connected)child.send({abort:true},()=>{})}else child.kill('SIGTERM')}};
   const abort=()=>kill('INSTALLATION_STATUS_CANCELLED');signal?.addEventListener('abort',abort,{once:true});

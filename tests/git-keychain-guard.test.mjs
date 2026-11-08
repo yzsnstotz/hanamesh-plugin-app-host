@@ -4,6 +4,7 @@ import {mkdir,writeFile,readFile,chmod,rm,readdir,copyFile} from 'node:fs/promis
 import {join,dirname,delimiter} from 'node:path';
 import {existsSync} from 'node:fs';
 import {fileURLToPath,pathToFileURL} from 'node:url';
+import {setImmediate as observeNextTurn} from 'node:timers/promises';
 import {spawn} from 'node:child_process';
 import {scratch,waitForFixtureFile} from './helpers.mjs';
 import {createLibraryInstaller} from '../src/library/install.js';
@@ -31,6 +32,17 @@ async function fixture(t){
  const env={PATH:[bin,dirname(process.execPath),...(windows?(process.env.PATH??'').split(delimiter):['/usr/bin','/bin'])].join(delimiter),SystemRoot:process.env.SystemRoot,USERPROFILE:home,TEMP:tmp,TMP:tmp,HOME:home,TMPDIR:tmp,FIXTURE_CALLS:calls,GIT_CONFIG_SYSTEM:system,
   GIT_CONFIG_GLOBAL:global,GIT_CONFIG_PARAMETERS:"'credential.helper=should-be-cleared'",GIT_CONFIG_COUNT:'3',GIT_CONFIG_KEY_2:'credential.helper',GIT_CONFIG_VALUE_2:'should-be-cleared'};
  return {root,bin,tmp,env,calls,readCalls:async()=>(await readFile(calls,'utf8').catch(e=>e.code==='ENOENT'?'':Promise.reject(e))).trim().split('\n').filter(Boolean)};
+}
+async function observeOwnedCleanup(root,pid,deadline){
+ // Windows caller termination cannot acknowledge its surviving IPC reaper.
+ // Observe both exact facts within the original one-second cleanup allowance.
+ while(true){
+  let alive=false;if(pid)try{process.kill(pid,0);alive=true}catch(error){if(error.code!=='ESRCH')throw error}
+  const entries=await readdir(root);
+  if(!alive&&entries.length===0)return;
+  assert.ok(Date.now()<deadline,'owned PID and all private trace roots must disappear within the existing cleanup deadline');
+  await observeNextTurn();
+ }
 }
 const input='protocol=https\nhost=fixture.invalid\nusername=fixture\npassword=fixture-only\n\n';
 test('GIT01 every DSH CLI installer receives the full safe Git environment after minimal env rebuilding',async t=>{
@@ -90,6 +102,7 @@ test('GIT07 parent SIGTERM ends the owned child and deletes its monitor',async t
  t.after(()=>{if(runner.exitCode===null&&runner.signalCode===null)runner.kill('SIGKILL');});
  let childPid;for(let i=0;i<100;i++){try{childPid=Number(await readFile(ready,'utf8'));break;}catch{}await new Promise(r=>setTimeout(r,20));}
  assert.ok(childPid,'guarded child started');const done=new Promise(resolve=>runner.once('close',resolve));runner.kill('SIGTERM');const exitCode=await done;if(windows){assert.equal(exitCode,null);assert.equal(runner.signalCode,'SIGTERM');}else assert.equal(exitCode,1);
+ if(windows)await observeOwnedCleanup(h.tmp,childPid,Date.now()+1000);
  assert.throws(()=>process.kill(childPid,0),{code:'ESRCH'});assert.deepEqual(await readdir(h.tmp),[],'SIGTERM trace cleanup');
 });
 test('GIT08 unsafe live manager environment refuses before mutation and reports why',async t=>{
@@ -123,7 +136,8 @@ for(const stopSignal of ['SIGTERM','SIGKILL'])test(`GIT11 ${stopSignal} of an ou
  let childPid;t.after(()=>{if(runner.exitCode===null&&runner.signalCode===null)runner.kill('SIGKILL');if(childPid)try{process.kill(childPid,'SIGKILL');}catch{}});
  for(let i=0;i<100;i++){try{childPid=Number(await readFile(ready,'utf8'));break;}catch{}await new Promise(r=>setTimeout(r,20));}
  assert.ok(childPid,'nested install started');const done=new Promise(resolve=>runner.once('close',resolve));runner.kill(stopSignal);await done;
- let alive=true;for(let i=0;i<50;i++){try{process.kill(childPid,0);}catch{alive=false;break;}await new Promise(r=>setTimeout(r,20));}
+ await observeOwnedCleanup(h.tmp,childPid,Date.now()+1000);
+ let alive=true;try{process.kill(childPid,0)}catch(error){if(error.code==='ESRCH')alive=false;else throw error}
  assert.equal(alive,false,'nested detached install must stop when its caller dies');assert.deepEqual(await readdir(h.tmp),[],'both monitor roots removed');
 });
 test('GIT12 even helper-safe host environment cannot bypass the owned monitor through in-process manager',async t=>{

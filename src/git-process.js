@@ -48,7 +48,7 @@ export async function spawnGitSafe(command,args,options={}){
  try{
   if(signal?.aborted)throw Object.assign(new Error('Guarded command aborted.'),{name:'AbortError',code:'ABORT_ERR'});
   const stdio=options.stdio==='inherit'?['ignore','inherit','inherit','ipc']:['ignore','pipe','pipe','ipc'];
-  worker=fork(new URL('./git-worker.js',import.meta.url),[],{cwd:options.cwd,env:safeGitEnv(options.env??process.env),execArgv:[],execPath:nodeRuntime,detached:process.platform!=='win32',stdio});
+  worker=fork(new URL('./git-worker.js',import.meta.url),[],{cwd:options.cwd,env:safeGitEnv(options.env??process.env),execArgv:[],execPath:nodeRuntime,detached:true,windowsHide:true,stdio});
   worker.stdout?.on('data',chunk=>{stdout=(stdout+chunk.toString(encoding)).slice(-4*1024*1024);});
   worker.stderr?.on('data',chunk=>{stderr=(stderr+chunk.toString(encoding)).slice(-4*1024*1024);});
   signal?.addEventListener('abort',abort,{once:true});
