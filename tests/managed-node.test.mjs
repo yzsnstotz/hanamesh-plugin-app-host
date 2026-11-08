@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {join} from 'node:path';
-import {createNodeRuntime} from '../src/node-runtime/service.js';
+import {createNodeRuntime,probeStandaloneNode} from '../src/node-runtime/service.js';
 import {nodeBinding} from '../src/library/node-binding.js';
 import {temporary} from './helpers.mjs';
 async function rig(t, extra={}){
@@ -68,9 +68,13 @@ test('MN09 Node delegates share one profile writer, including operations accepte
  firstDone();await Promise.all([one,two]);assert.equal(calls.length,2);assert.equal(calls[0].command,process.execPath);assert.equal(calls[1].command,binary);
  const source=await (await import('node:fs/promises')).readFile(new URL('../src/dsh.js',import.meta.url),'utf8');assert.match(source,/pluginManagerVersion:locations\.pluginManagerVersion,profileWriter,/,'real DSH entry passes the shared writer to every delegate');
 });
-test('MN10 existing Linux external Node remains supported; managed preparation and Windows stay unavailable',async t=>{
- const {runtime:r}=await rig(t,{platform:'linux-x64',initialBinary:'/configured/standalone-node'});assert.equal(r.executable,'/configured/standalone-node');assert.equal(r.status().supported,false);
- const {runtime:w}=await rig(t,{platform:'win32-x64',initialBinary:'/configured/standalone-node'});assert.equal(w.executable,undefined);assert.equal(w.status().ready,false);
+test('MN10 existing Linux and Windows x64 external Node support CLI while managed preparation stays unavailable',async t=>{
+ for(const platform of ['linux-x64','win32-x64']){
+  const probes=[],{runtime:r,calls}=await rig(t,{platform,initialBinary:process.execPath,probe:async(binary,options)=>{probes.push({binary,options});}});
+  assert.equal(r.executable,process.execPath);assert.equal(r.status().ready,true);assert.equal(r.status().supported,false);
+  assert.deepEqual(probes,[{binary:process.execPath,options:{platform}}],'external runtime must be verified for the exact selected OS/CPU');
+  await assert.rejects(r.plan({}),{code:'NODE_PLATFORM_UNSUPPORTED'});assert.throws(()=>r.prepare({planId:'no-windows-plan',confirm:true}),{code:'NODE_PLATFORM_UNSUPPORTED'});assert.equal(calls.length,0);
+ }
 });
 test('MN11 cancellation during atomic publication is explicitly refused; disk and live binding agree',async t=>{
  const root=await temporary();let image={schema:1,revision:0,settings:null,active:null},sha,commit,release;
@@ -88,4 +92,12 @@ test('MN13 failed preparation cannot start a new operation until lock cleanup ha
  const {runtime:r}=await rig(t,{provision:async()=>{throw new Error('source failure');},lockFactory:()=>({acquire:async()=>{},release:async()=>{cleanup();await gate;}})});
  const p=await r.plan({});r.prepare({planId:p.planId,confirm:true});await cleaning;assert.equal(r.status().operation.state,'failed');await assert.rejects(r.plan({}),{code:'NODE_IN_USE'});
  release();await r.settled();assert.ok((await r.plan({})).planId);
+});
+
+test('MN14 actual standalone Node probe preserves version, platform and architecture checks',async()=>{
+ const platform=process.platform+'-'+process.arch;
+ const actual=await probeStandaloneNode(process.execPath,{platform,version:process.versions.node});
+ assert.equal(actual.version,process.versions.node);assert.equal(actual.platform,process.platform);assert.equal(actual.arch,process.arch);assert.equal(actual.electron,null);
+ await assert.rejects(probeStandaloneNode(process.execPath,{platform:process.platform+'-'+(process.arch==='x64'?'arm64':'x64')}),{code:'NODE_NOT_STANDALONE'});
+ await assert.rejects(probeStandaloneNode(process.execPath,{platform,version:'24.99.99'}),{code:'NODE_NOT_STANDALONE'});
 });

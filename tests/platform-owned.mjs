@@ -28,6 +28,6 @@ export async function assertOwnedPlatformRejection(host, request, {principal = '
     assert.equal(snapshot.leases.find(item => item.viewId === request.viewId && item.principalId === principal)?.status, 'failed');
     assert.ok(snapshot.events.some(event => event.type === 'instance.failed' && event.instanceId === instance.id && event.code === 'PLATFORM_UNSUPPORTED'));
   }
-  assert.deepEqual(host.logTail(instance.id), []);
+  assert.deepEqual(host.logTail(instance.id,50,principal), []);
   return instance;
 }

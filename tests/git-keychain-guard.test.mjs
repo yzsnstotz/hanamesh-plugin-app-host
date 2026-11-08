@@ -10,7 +10,8 @@ import {createLibraryInstaller} from '../src/library/install.js';
 const windows=process.platform==='win32';
 const git=windows?(process.env.PATH??'').split(delimiter).map(dir=>join(dir,'git.exe')).find(existsSync):'/usr/bin/git';
 assert.ok(git,'real Git installation required');
-const shell=windows?join(dirname(dirname(git)),'bin','bash.exe'):'/bin/sh';
+const shell=windows?[dirname(git),dirname(dirname(git)),dirname(dirname(dirname(git)))].flatMap(root=>[join(root,'bin','bash.exe'),join(root,'usr','bin','bash.exe')]).find(existsSync):'/bin/sh';
+assert.ok(shell,'real Git Bash installation required for shell formatter fixture');
 const portable=path=>windows?path.replaceAll('\\','/'):path;
 const policy=await import('../src/git-process.js').catch(error=>{if(error.code!=='ERR_MODULE_NOT_FOUND')throw error;return{};});
 const keys={GIT_CONFIG_NOSYSTEM:'1',GIT_TERMINAL_PROMPT:'0',GIT_CONFIG_COUNT:'2',GIT_CONFIG_KEY_0:'credential.helper',GIT_CONFIG_VALUE_0:'',GIT_CONFIG_KEY_1:'credential.helper',GIT_CONFIG_VALUE_1:'!gh auth git-credential'};
@@ -88,7 +89,7 @@ test('GIT07 parent SIGTERM ends the owned child and deletes its monitor',async t
  const runner=spawn(process.execPath,[fileURLToPath(new URL('../scripts/safe-git.mjs',import.meta.url)),process.execPath,script],{env:h.env,stdio:['ignore','pipe','pipe']});
  t.after(()=>{if(runner.exitCode===null&&runner.signalCode===null)runner.kill('SIGKILL');});
  let childPid;for(let i=0;i<100;i++){try{childPid=Number(await readFile(ready,'utf8'));break;}catch{}await new Promise(r=>setTimeout(r,20));}
- assert.ok(childPid,'guarded child started');const done=new Promise(resolve=>runner.once('close',resolve));runner.kill('SIGTERM');const exitCode=await done;assert.equal(exitCode,1);
+ assert.ok(childPid,'guarded child started');const done=new Promise(resolve=>runner.once('close',resolve));runner.kill('SIGTERM');const exitCode=await done;if(windows){assert.equal(exitCode,null);assert.equal(runner.signalCode,'SIGTERM');}else assert.equal(exitCode,1);
  assert.throws(()=>process.kill(childPid,0),{code:'ESRCH'});assert.deepEqual(await readdir(h.tmp),[],'SIGTERM trace cleanup');
 });
 test('GIT08 unsafe live manager environment refuses before mutation and reports why',async t=>{

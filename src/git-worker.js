@@ -3,17 +3,24 @@ import {spawn,spawnSync,fork} from 'node:child_process';
 import {existsSync,mkdtempSync,writeFileSync,rmSync,realpathSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {dirname,join,basename} from 'node:path';
+import {createWindowsJob} from './windows-job.js';
 import {observeGitTrace} from './git-process.js';
-let monitor,directory,timer,done=false,started=false,anchor;
-function finish(payload){
+let monitor,directory,timer,done=false,started=false,anchor,anchorClosed,windowsJob,jobStarting,jobController;
+async function finish(payload){
  if(done)return;done=true;clearInterval(timer);
  if(process.platform==='win32'&&anchor){
-  anchor.once('close',()=>finalize(payload));
-  const stopped=spawnSync(join(process.env.SystemRoot,'System32','taskkill.exe'),['/PID',String(anchor.pid),'/T','/F'],{stdio:'ignore',windowsHide:true});
-  if(stopped.status!==0)payload={error:{code:'GIT_TREE_CLEANUP_FAILED'}};
-  return;
+  try{
+   if(!windowsJob){jobController?.abort();try{await jobStarting}catch{}}
+   if(windowsJob)await windowsJob.stop();else if(anchor.exitCode===null&&anchor.signalCode===null)anchor.kill('SIGKILL');
+   await anchorClosed;
+  }catch{payload={error:{code:'GIT_TREE_CLEANUP_FAILED'}};}
  }
  finalize(payload);
+}
+async function commandResult(payload){
+ if(done)return;
+ if(!payload.error){try{while(!done&&await windowsJob.active()>1)await new Promise(resolve=>setTimeout(resolve,5));}catch{void finish({error:{code:'GIT_TREE_CLEANUP_FAILED'}});return;}}
+ if(!done)void finish(payload);
 }
 function finalize(payload){
  try{monitor?.check(true);}catch(error){payload={error:{code:error.code??'GIT_TRACE_INVALID'}};}
@@ -28,7 +35,7 @@ function abort(code='ABORT_ERR'){finish({error:{code,...(code==='ABORT_ERR'?{nam
 process.once('disconnect',()=>abort());
 process.once('SIGTERM',()=>abort());process.once('SIGINT',()=>abort());
 if(!process.connected)process.exit(1);
-process.on('message',request=>{
+process.on('message',async request=>{
  if(request.abort)return abort();if(request.timeout)return abort('ETIMEDOUT');
  if(started)return;started=true;
  try{
@@ -51,7 +58,12 @@ process.on('message',request=>{
   }
   if(process.platform==='win32'){
    anchor=fork(new URL('./git-command-worker.js',import.meta.url),[],{cwd:options.cwd,env:options.env,execArgv:[],stdio:['ignore','inherit','inherit','ipc']});
-   anchor.once('message',finish);anchor.once('error',error=>finish({error:{code:error.code??'SPAWN_FAILED'}}));
+   anchorClosed=new Promise(resolve=>anchor.once('close',resolve));
+   anchor.once('message',value=>{void commandResult(value)});anchor.once('error',error=>{void finish({error:{code:error.code??'SPAWN_FAILED'}})});
+   jobController=new AbortController();
+   jobStarting=createWindowsJob({pid:anchor.pid,env:options.env,cwd:options.cwd,signal:jobController.signal});
+   windowsJob=await jobStarting;
+   if(done)return;
    anchor.send({command,args,options});
    timer=setInterval(()=>{try{monitor.check();}catch(error){finish({error:{code:error.code??'GIT_TRACE_INVALID'}});}},25);
    return;

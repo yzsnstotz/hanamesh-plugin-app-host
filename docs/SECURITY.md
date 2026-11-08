@@ -101,3 +101,6 @@ The optional local `AtomicFileStore` flushes the newly written snapshot file, cl
 
 
 On Windows the optional Coding OAuth Gateway **file** source remains unreachable: Node's POSIX mode bits cannot establish a private Windows ACL, so AppHost rejects that source before reading its contents. `chmod(0600)` is never treated as ACL proof. The authenticated HTTP provider is the supported alternative; no secret is silently imported from an unverified file.
+
+
+An explicitly configured existing standalone Node on Windows x64 may be used by the controlled CLI supervisor. It is executed only for the fixed Node probe, with an empty PATH, bounded output and a two-second deadline; the response must match the selected OS/architecture, Node 24 version floor and absence of Electron. That external selection does not enable managed downloads/preparation or owned application launch.

@@ -62,9 +62,16 @@ jobs:
       - name: Verify fixed packages and toolchain
         run: |
           shasum -a 256 --check vendor/SHA256SUMS
-          node -e "if(process.version !== 'v24.13.1' || process.platform !== 'darwin' || process.arch !== 'arm64') process.exit(1)"
-          test -x "$HM_CHROMIUM"
-          test "$(pnpm --version)" = '10.33.0'
+          node -e "console.log(JSON.stringify({gate:'FIXED_NODE_TOOLCHAIN',version:process.version,platform:process.platform,arch:process.arch,executable:process.execPath}));if(process.version !== 'v24.13.1' || process.platform !== 'darwin' || process.arch !== 'arm64') process.exit(1)"
+          if test -x "$HM_CHROMIUM"; then
+            echo "FIXED_CHROMIUM_EXECUTABLE: $HM_CHROMIUM"
+          else
+            echo "FIXED_CHROMIUM_EXECUTABLE_MISSING: $HM_CHROMIUM"
+            exit 1
+          fi
+          ci_pnpm_version="$(pnpm --version)"
+          echo "FIXED_PNPM_VERSION: $ci_pnpm_version"
+          test "$ci_pnpm_version" = '10.33.0'
       - name: Install with the frozen pnpm lockfile
         run: node scripts/safe-git.mjs pnpm install --frozen-lockfile
       - name: Check four mandatory source gates

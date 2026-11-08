@@ -2,7 +2,8 @@
 import {fork,spawnSync} from 'node:child_process';
 import {mkdtempSync,realpathSync,rmSync,lstatSync} from 'node:fs';
 import {join} from 'node:path';
-let started=false,finishing=false,finalized=false,directory,anchor,anchorExited=false,payload;
+import {createWindowsJob} from '../windows-job.js';
+let started=false,finishing=false,finalized=false,directory,anchor,anchorExited=false,payload,windowsJob,jobStarting,jobController,stopping;
 function groupMetadata(){
  const result=spawnSync('/bin/ps',['-axo','pid=,pgid=,uid=,stat='],{encoding:'utf8',stdio:['ignore','pipe','ignore']});
  if(result.status!==0)throw new Error('Owned group metadata is unavailable.');
@@ -14,7 +15,7 @@ function groupMetadata(){
  return rows.filter(row=>row.pgid===anchor.pid);
 }
 async function confirmOwnedGroupGone(){
- if(process.platform==='win32'||!anchor)return;
+ if(process.platform==='win32'){if(stopping)await stopping;return}if(!anchor)return;
  // Observe only the PGID created by this anchor, never send another termination
  // signal after its PID could be reused. close(anchor) alone does not reap descendants.
  const deadline=Date.now()+1000;const observed=new Set();
@@ -53,13 +54,23 @@ async function finalize(){
 }
 function finish(value){
  if(finishing)return;finishing=true;payload=value;
- if(anchor&&!anchorExited){
-  // The IPC anchor deliberately stays alive after command completion. Kill only its still-owned group.
-  try{if(process.platform==='win32'){
-   const result=spawnSync(join(process.env.SystemRoot,'System32','taskkill.exe'),['/pid',String(anchor.pid),'/T','/F'],{stdio:'ignore',windowsHide:true});
-   if(result.status!==0)payload={error:'AGENT_READER_FAILED'};
-  }else process.kill(-anchor.pid,'SIGKILL')}catch{payload={error:'AGENT_READER_FAILED'}}
- }else if(!anchor)finalize();
+ if(anchor&&(process.platform==='win32'||!anchorExited)){
+  // The anchor is not released until the entire exact command ownership has ended.
+  if(process.platform==='win32'){
+   stopping=(async()=>{
+    if(!windowsJob){jobController?.abort();try{await jobStarting}catch{};try{anchor.kill('SIGKILL')}catch(error){if(error.code!=='ESRCH')throw error}}
+    else await windowsJob.stop();
+   })();
+   stopping.catch(()=>{payload={error:'AGENT_READER_CLEANUP_FAILED'}});
+  }else try{process.kill(-anchor.pid,'SIGKILL')}catch{payload={error:'AGENT_READER_FAILED'}}
+ }else if(!anchor)void finalize();
+}
+async function commandResult(value){
+ if(finishing)return;
+ if(process.platform==='win32'&&!value.error){
+  try{while(!finishing){if(await windowsJob.active()<=1)break;await new Promise(resolve=>setTimeout(resolve,5));}if(finishing)return;}catch{finish({error:'AGENT_READER_FAILED'});return}
+ }
+ finish(value);
 }
 process.once('disconnect',()=>finish({error:'INSTALLATION_STATUS_CANCELLED'}));
 process.once('SIGTERM',()=>finish({error:'INSTALLATION_STATUS_CANCELLED'}));
@@ -77,10 +88,15 @@ process.on('message',request=>{
   const env={...request.env,TMPDIR:directory,TMP:directory,TEMP:directory};
   anchor=fork(new URL('./installation-command-worker.js',import.meta.url),[],{cwd:directory,env,execArgv:[],detached:process.platform!=='win32',stdio:['ignore','pipe','pipe','ipc']});
   anchor.stdout.pipe(process.stdout,{end:false});anchor.stderr.pipe(process.stderr,{end:false});
-  anchor.on('message',value=>finish(value));
+  anchor.on('message',value=>{void commandResult(value)});
   anchor.once('exit',()=>{anchorExited=true});
   anchor.once('error',()=>{if(!finishing){finishing=true;payload={error:'AGENT_READER_UNAVAILABLE'}}});
-  anchor.once('close',()=>{if(!finishing){finishing=true;payload={error:'AGENT_READER_FAILED'}}finalize()});
-  anchor.send({executable:request.executable,args:request.args},error=>{if(error)finish({error:'AGENT_READER_UNAVAILABLE'})});
+  anchor.once('close',()=>{if(!finishing)finish({error:'AGENT_READER_FAILED'});void finalize()});
+  const launch=()=>{if(!finishing)anchor.send({executable:request.executable,args:request.args},error=>{if(error)finish({error:'AGENT_READER_UNAVAILABLE'})});};
+  if(process.platform==='win32'){
+   jobController=new AbortController();
+   jobStarting=createWindowsJob({pid:anchor.pid,env,cwd:request.temporaryRoot,signal:jobController.signal});
+   void jobStarting.then(job=>{windowsJob=job;if(!finishing)launch();},()=>finish({error:'AGENT_READER_UNAVAILABLE'}));
+  }else launch();
  }catch{finish({error:'AGENT_READER_UNAVAILABLE'})}
 });
