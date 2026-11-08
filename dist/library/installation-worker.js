@@ -36,7 +36,7 @@ process.on('message',request=>{
   if(!process.connected){finish({error:'INSTALLATION_STATUS_CANCELLED'});return}
   directory=mkdtempSync(join(realpathSync(request.temporaryRoot),'hanamesh-installation-read-'));
   process.send({directory},error=>{if(error)finish({error:'INSTALLATION_STATUS_CANCELLED'})});
-  const env={...request.env,XDG_CONFIG_HOME:join(directory,'config'),XDG_CACHE_HOME:join(directory,'cache'),XDG_STATE_HOME:join(directory,'state'),TMPDIR:directory,TMP:directory,TEMP:directory};
+  const env={...request.env,TMPDIR:directory,TMP:directory,TEMP:directory};
   anchor=fork(new URL('./installation-command-worker.js',import.meta.url),[],{cwd:directory,env,execArgv:[],detached:process.platform!=='win32',stdio:['ignore','pipe','pipe','ipc']});
   anchor.stdout.pipe(process.stdout,{end:false});anchor.stderr.pipe(process.stderr,{end:false});
   anchor.on('message',value=>finish(value));

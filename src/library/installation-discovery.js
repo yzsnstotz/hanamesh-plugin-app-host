@@ -5,7 +5,8 @@ import {homedir,userInfo} from 'node:os';
 import {join,isAbsolute} from 'node:path';
 import semver from 'semver';
 import {AppHostError} from '../errors.js';
-import {runOfficialInstallationCommand,INSTALLATION_MANAGER_ENV_KEYS} from './installation-cli.js';
+import {guardNodeBinary} from '../git-process.js';
+import {runOfficialInstallationCommand,INSTALLATION_ENV_KEYS,installationEnvironment} from './installation-cli.js';
 
 // Existing installation-command fixture budgets; automatic selection adds no retry or longer deadline.
 export const INSTALLATION_READ_BUDGET=Object.freeze({timeoutMs:2000,maxOutputBytes:20000});
@@ -20,28 +21,33 @@ async function versions(root,suffix){
  return entries.filter(entry=>(entry.isDirectory()||entry.isSymbolicLink())&&semver.valid(entry.name.replace(/^v/,''))).sort((a,b)=>semver.rcompare(a.name.replace(/^v/,''),b.name.replace(/^v/,''))).map(entry=>join(root,entry.name,...suffix));
 }
 
-/** VS Code's login/interactive shell pattern, extracting PATH alone, never `env` or startup output. */
-export async function readLoginPath({home=homedir(),env=process.env,signal,workerNode,timeoutMs=INSTALLATION_READ_BUDGET.timeoutMs}={}){
+/** VS Code's framed login-shell environment pattern, narrowed to named infrastructure paths only. */
+export async function readLoginEnvironment({home=homedir(),env=process.env,signal,workerNode,timeoutMs=INSTALLATION_READ_BUDGET.timeoutMs}={}){
  const shell=env.SHELL??userInfo().shell;
  if(!absolute(shell))throw failure('AGENT_SHELL_ENV_UNAVAILABLE');
- const output=await runOfficialInstallationCommand({channel:'shell',reader:{executable:shell,home,configDir:home,...AGENT_INSTALLATION_TARGET,...INSTALLATION_READ_BUDGET,timeoutMs},
-  args:['-ilc',`printf '\\0HANAMESH_PATH\\0%s\\0' "$PATH"`],signal,workerNode});
- const parts=output.split('\0HANAMESH_PATH\0');
+ const node=guardNodeBinary({workerNode});if(!node)throw failure('AGENT_READER_NODE_REQUIRED');
+ const quote=value=>"'"+value.replaceAll("'","'\\''")+"'";
+ const script=`const env={};for(const key of ${JSON.stringify(INSTALLATION_ENV_KEYS)})if(process.env[key]!==undefined)env[key]=process.env[key];process.stdout.write('\\0HANAMESH_ENV\\0'+JSON.stringify(env)+'\\0');`;
+ const output=await runOfficialInstallationCommand({channel:'shell',reader:{executable:shell,home,configDir:home,...AGENT_INSTALLATION_TARGET,...INSTALLATION_READ_BUDGET,timeoutMs,runtimeEnv:installationEnvironment(env)},
+  args:['-ilc',`${quote(node)} -e ${quote(script)}`],signal,workerNode});
+ const parts=output.split('\0HANAMESH_ENV\0');
  if(parts.length!==2||!parts[1].includes('\0'))throw failure('AGENT_SHELL_ENV_UNAVAILABLE');
- const path=parts[1].split('\0')[0];if(/[\x00-\x1f]/.test(path))throw failure('AGENT_SHELL_ENV_UNAVAILABLE');return path;
+ let value;try{value=JSON.parse(parts[1].split('\0')[0])}catch{throw failure('AGENT_SHELL_ENV_UNAVAILABLE')}
+ if(!value||typeof value!=='object'||Array.isArray(value)||typeof value.PATH!=='string'||!Object.entries(value).every(([key,path])=>INSTALLATION_ENV_KEYS.includes(key)&&typeof path==='string'&&!/[\x00-\x1f]/.test(path)))throw failure('AGENT_SHELL_ENV_UNAVAILABLE');
+ return installationEnvironment(value);
 }
+export async function readLoginPath(options){return(await readLoginEnvironment(options)).PATH}
 
 /** Select once: inherited PATH, login PATH, then documented layouts; never try another CLI after execution. */
 export async function discoverOfficialReader({channel,home=process.env.HOME??process.env.USERPROFILE??homedir(),env=process.env,platform=process.platform,
- systemBinDirs=platform==='win32'?[]:['/opt/homebrew/bin','/usr/local/bin','/home/linuxbrew/.linuxbrew/bin','/usr/bin','/bin'],loginPath=readLoginPath,signal,workerNode}={}){
+ systemBinDirs=platform==='win32'?[]:['/opt/homebrew/bin','/usr/local/bin','/home/linuxbrew/.linuxbrew/bin','/usr/bin','/bin'],loginPath,signal,workerNode}={}){
  if(!['claude','codex'].includes(channel)||!absolute(home))throw failure('AGENT_PROFILE_UNAVAILABLE');
  signal?.throwIfAborted();
  const configDir=env[channel==='claude'?'CLAUDE_CONFIG_DIR':'CODEX_HOME']??join(home,channel==='claude'?'.claude':'.codex');
  if(!absolute(configDir))throw failure('AGENT_PROFILE_UNAVAILABLE');
  const appData=env.APPDATA??join(home,'AppData','Roaming'),local=env.LOCALAPPDATA??join(home,'AppData','Local');
- const nvm=env.NVM_DIR??join(home,'.nvm'),fnm=env.FNM_DIR??join(home,'.local','share','fnm'),asdf=env.ASDF_DATA_DIR??join(home,'.asdf'),mise=env.MISE_DATA_DIR??join(home,'.local','share','mise');
- const runtimeEnv=Object.fromEntries(INSTALLATION_MANAGER_ENV_KEYS.filter(key=>absolute(env[key])).map(key=>[key,env[key]]));
- const reader={home,configDir,...AGENT_INSTALLATION_TARGET,...INSTALLATION_READ_BUDGET,...(Object.keys(runtimeEnv).length?{runtimeEnv}:{})};
+ const runtimeEnv=installationEnvironment(env,platform);
+ const reader={home,configDir,...AGENT_INSTALLATION_TARGET,...INSTALLATION_READ_BUDGET,runtimeEnv};
  const find=async dirs=>{for(const dir of unique(dirs)){
   signal?.throwIfAborted();
   for(const name of platform==='win32'?[`${channel}.exe`,`${channel}.cmd`]:[channel]){
@@ -66,9 +72,10 @@ export async function discoverOfficialReader({channel,home=process.env.HOME??pro
  let selected=await find(split(env.PATH??env.Path,platform));if(selected)return selected;
  let shellError;
  if(platform!=='win32'){
-  try{selected=await find(split(await loginPath({home,env,signal,workerNode}),platform));if(selected)return selected}
+  try{const resolved=loginPath?{PATH:await loginPath({home,env,signal,workerNode})}:await readLoginEnvironment({home,env,signal,workerNode});Object.assign(runtimeEnv,resolved);selected=await find(split(resolved.PATH,platform));if(selected)return selected}
   catch(error){if(signal?.aborted)throw error;shellError=error}
  }
+ const nvm=runtimeEnv.NVM_DIR??join(home,'.nvm'),fnm=runtimeEnv.FNM_DIR??join(runtimeEnv.XDG_DATA_HOME??join(home,'.local','share'),'fnm'),asdf=runtimeEnv.ASDF_DATA_DIR??join(home,'.asdf'),mise=runtimeEnv.MISE_DATA_DIR??join(runtimeEnv.XDG_DATA_HOME??join(home,'.local','share'),'mise');
  const fixed=[join(home,'.local','bin'),...(channel==='claude'?[join(home,'.claude','local'),join(home,'.claude','local','node_modules','.bin')]:[]),
   env.CODEX_INSTALL_DIR,env.NVM_BIN,env.NVM_SYMLINK,env.FNM_MULTISHELL_PATH,
   ...[env.npm_config_prefix,env.NPM_CONFIG_PREFIX,join(home,'.npm-global'),join(home,'.npm')].filter(absolute).map(root=>platform==='win32'?root:join(root,'bin')),

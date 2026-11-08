@@ -64,3 +64,12 @@ test('parent death stops active directory writers before removing their neutral 
   assert.equal(exists,false,'all writers must stop before the surviving owner removes the neutral cwd');
  }finally{if(caller?.exitCode===null&&caller?.signalCode===null)caller.kill('SIGKILL');if(observed){try{process.kill(observed.anchor,'SIGTERM')}catch{}await rm(observed.cwd,{recursive:true,force:true})}await rm(root,{recursive:true,force:true})}
 });
+
+test('R115 infrastructure PATH and XDG directories survive the supervisor without credential inheritance',async t=>{
+ const {root,reader}=await setup(t,'console.log(JSON.stringify({path:process.env.PATH,config:process.env.XDG_CONFIG_HOME,data:process.env.XDG_DATA_HOME,cache:process.env.XDG_CACHE_HOME,state:process.env.XDG_STATE_HOME,temporary:process.env.TMPDIR}))');
+ const {delimiter}=await import('node:path'),manager=join(root,'manager-bin');
+ const runtimeEnv={PATH:[manager,'/usr/bin','/bin'].join(delimiter),XDG_CONFIG_HOME:join(root,'custom-config'),XDG_DATA_HOME:join(root,'custom-data'),XDG_CACHE_HOME:join(root,'custom-cache'),XDG_STATE_HOME:join(root,'custom-state')};
+ const value=JSON.parse(await invoke({...reader,runtimeEnv}));assert.ok(value.path.split(delimiter).includes(manager),'selected manager remains resolvable');
+ for(const [field,key]of [['config','XDG_CONFIG_HOME'],['data','XDG_DATA_HOME'],['cache','XDG_CACHE_HOME'],['state','XDG_STATE_HOME']])assert.equal(value[field],runtimeEnv[key],'user XDG value must survive');
+ const defaults=JSON.parse(await invoke(reader));for(const field of ['config','data','cache','state'])assert.equal(defaults[field],undefined,'unset XDG must retain OS defaults');assert.notEqual(value.temporary,root,'owned temporary cwd remains separate');
+});

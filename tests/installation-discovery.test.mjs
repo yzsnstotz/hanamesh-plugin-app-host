@@ -63,7 +63,7 @@ test('AH1 version-manager choice is newest Node SemVer, profiles honor existing 
  const reader=await discovery.discoverOfficialReader({channel:'codex',...o});assert.equal(reader.executable,join(link,'codex'));assert.equal(reader.configDir,o.env.CODEX_HOME);
 });
 test('AH1 login PATH reads only framed PATH, strips inherited credentials, and times out without raw output',async t=>{
- const home=await fixture(t),shell=await executable(join(home,'shell'),`process.stdout.write('startup noise\\0HANAMESH_PATH\\0'+process.env.HOME+'/custom\\0');if(process.env.API_KEY)process.exit(2)`);
+ const home=await fixture(t),shell=await executable(join(home,'shell'),`process.stdout.write('startup noise\\0HANAMESH_ENV\\0'+JSON.stringify({PATH:process.env.HOME+'/custom'})+'\\0');if(process.env.API_KEY)process.exit(2)`);
  const value=await discovery.readLoginPath({home,env:{SHELL:shell,PATH:'/usr/bin:/bin',API_KEY:'never-inherit'}});
  assert.equal(value,home+'/custom');
  await executable(shell,`setInterval(()=>{},1000)`);
