@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
-import { readFile,writeFile,access,rm,mkdir } from 'node:fs/promises';
+import { readFile,writeFile,access,rm,mkdir,mkdtemp } from 'node:fs/promises';
 import { join,resolve } from 'node:path';
+import {tmpdir} from 'node:os';
 import { createHttpHandler } from '../src/index.js';
 import { setup,definition,temporary,until,pidAlive,delay } from './helpers.mjs';
 async function chrome(t){
@@ -12,7 +13,8 @@ async function chrome(t){
   const candidates=[process.env.HM_CHROMIUM,'/usr/bin/chromium','/usr/bin/chromium-browser','/usr/bin/google-chrome'].filter(Boolean);
   for(const candidate of candidates)try{await access(candidate);binary=candidate;break;}catch{}
   if(!binary){t.skip('REAL_BROWSER unavailable: isolated Chromium binary was not found.');return null;}
-  const root=await temporary(),profile=join(root,'chromium-profile');
+  // Chromium creates Unix sockets below TMPDIR; nested test roots can exceed their OS path limit.
+  const root=await mkdtemp(join(process.platform==='win32'?tmpdir():'/tmp','hm-chrome-')),profile=join(root,'chromium-profile');
   const home=join(root,'home'),tmp=join(root,'tmp'),cache=join(root,'cache');
   for(const path of [home,tmp,cache])await mkdir(path,{recursive:true});
   // Q329: no inherited personal HOME, credentials or keychain authorization.
@@ -25,7 +27,7 @@ async function chrome(t){
     const exited=new Promise(r=>processHandle.once('exit',r));process.kill(-processHandle.pid,signal);await exited;
   };
   t.after(async()=>{await kill('SIGKILL');await rm(root,{recursive:true,force:true});});
-  const activePort=await until(async()=>{const text=await readFile(join(profile,'DevToolsActivePort'),'utf8');return text.trim().split('\n');},{timeout:12000});
+  const activePort=await until(async()=>{const text=await readFile(join(profile,'DevToolsActivePort'),'utf8');return text.trim().split('\n');},{timeout:12000}).catch(error=>{throw new Error(error.message+'; Chromium startup stderr: '+stderr.slice(-2000));});
   const socket=new WebSocket(`ws://127.0.0.1:${activePort[0]}${activePort[1]}`);await new Promise((resolve,reject)=>{socket.addEventListener('open',resolve,{once:true});socket.addEventListener('error',reject,{once:true});});
   t.after(()=>socket.close());let id=0;const pending=new Map();
   socket.addEventListener('message',event=>{const m=JSON.parse(event.data),request=pending.get(m.id);if(!request)return;pending.delete(m.id);clearTimeout(request.timer);m.error?request.reject(new Error(JSON.stringify(m.error))):request.resolve(m.result);});
