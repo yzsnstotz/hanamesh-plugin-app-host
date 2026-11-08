@@ -97,7 +97,9 @@ test('H09: attach close, stopAll and dispose never signal the external process',
     readiness:{path:'/health',status:200,bodyIncludes:'HANAMESH_FIXTURE'}}]};
   const {host}=await setup(t,{def});
   const signals=[];const originalKill=process.kill;
-  process.kill=function(pid,signal){if(pid===child.pid||pid===-child.pid)signals.push(signal);return originalKill.call(process,pid,signal);};
+  // Signal 0 only probes existence; pidAlive uses that native cross-platform
+  // check. Every delivered signal to the attach process or group is still forbidden.
+  process.kill=function(pid,signal){if((pid===child.pid||pid===-child.pid)&&signal!==0)signals.push(signal);return originalKill.call(process,pid,signal);};
   try{
     const a=await host.open(input('a'));await host.close(leaseInput(a));assert(pidAlive(child.pid));
     await host.open(input('b'));await host.stopAll();assert(pidAlive(child.pid));
@@ -174,7 +176,7 @@ test('AH: host secrets are not inherited; logs redact bearer and JSON secrets',a
 });
 test('AH: confirmed Stop removes a SIGTERM-resistant descendant in its owned group',async t=>{
   if(process.platform==='win32'){
-    const{host}=await setup(t,{def:definition({extra:{descendant:true,ignoreTerm:true}})});const failed=await assertOwnedPlatformRejection(host,input());await host.stop(failed.id,{confirm:true});assert.equal(host.instance(failed.id).status,'stopped');assert.equal(host.instance(failed.id).pid,null);await assert.rejects(readFile(join(failed.dataDir,'descendant.pid')),{code:'ENOENT'});
+    const{host}=await setup(t,{def:definition({extra:{descendant:true,ignoreTerm:true}})});const failed=await assertOwnedPlatformRejection(host,input());const stopped=await host.stop(failed.id,{confirm:true});assert.deepEqual(stopped,failed,'a platform-refused launch remains a terminal failure when Stop has no owned group');assert.equal(host.instance(failed.id).status,'failed');assert.equal(host.instance(failed.id).pid,null);assert(!host.eventsSince().events.some(event=>event.type==='instance.stopped'));await assert.rejects(readFile(join(failed.dataDir,'descendant.pid')),{code:'ENOENT'});
     return;
   }
   const {host}=await setup(t,{def:definition({extra:{descendant:true,ignoreTerm:true}})});const a=await host.open(input());

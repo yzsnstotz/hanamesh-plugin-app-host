@@ -41,9 +41,11 @@ process.on('message',async request=>{
  try{
   let {command,args,options}=request;
   // No caller-owned trace exists before this IPC worker can clean on disconnect.
-  directory=mkdtempSync(join(realpathSync(options.env.TMPDIR??tmpdir()),'hm-git-guard-'));
+  const temporaryRoot=realpathSync(options.env.TMPDIR??tmpdir());
+  const parentRoot=options.env.HM_GIT_GUARD_TMP_ROOT===temporaryRoot&&options.env.HM_GIT_GUARD_PARENT_ROOT?realpathSync(options.env.HM_GIT_GUARD_PARENT_ROOT):temporaryRoot;
+  directory=mkdtempSync(join(parentRoot,'hm-git-guard-'));
   writeFileSync(join(directory,'events.jsonl'),'',{mode:0o600});monitor=observeGitTrace(directory);
-  options.env={...options.env,GIT_TRACE2_EVENT:join(directory,'events.jsonl'),GIT_TRACE_REDACT:'1'};
+  options.env={...options.env,HM_GIT_GUARD_PARENT_ROOT:directory,HM_GIT_GUARD_TMP_ROOT:temporaryRoot,GIT_TRACE2_EVENT:join(directory,'events.jsonl'),GIT_TRACE_REDACT:'1'};
   if(!process.connected)return abort();
   process.send({directory},error=>{if(error)abort();});
   // Native Windows .cmd shims cannot be executed by spawn without a shell.
@@ -61,7 +63,7 @@ process.on('message',async request=>{
    anchorClosed=new Promise(resolve=>anchor.once('close',resolve));
    anchor.once('message',value=>{void commandResult(value)});anchor.once('error',error=>{void finish({error:{code:error.code??'SPAWN_FAILED'}})});
    jobController=new AbortController();
-   jobStarting=createWindowsJob({pid:anchor.pid,env:options.env,cwd:options.cwd,signal:jobController.signal});
+   jobStarting=createWindowsJob({pid:anchor.pid,env:{...options.env,TMPDIR:directory,TMP:directory,TEMP:directory},cwd:options.cwd,signal:jobController.signal});
    windowsJob=await jobStarting;
    if(done)return;
    anchor.send({command,args,options});

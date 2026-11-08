@@ -1,10 +1,11 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {mkdir,writeFile,readFile,rm} from 'node:fs/promises';import{join}from'node:path';
+import {mkdir,writeFile,readFile,readdir,rm} from 'node:fs/promises';import{join}from'node:path';
 import{scratch,waitForFixtureFile}from'./helpers.mjs';
 import{runOfficialInstallationCommand}from'../src/library/installation-cli.js';
 // Interpret test scripts with the pinned Node executable: fresh shebang executables have OS launch latency unrelated to the reader budget.
 async function setup(t,code){const root=await scratch('installation-command-test-');t.after(()=>rm(root,{recursive:true,force:true}));await mkdir(join(root,'profile'));const script=join(root,'official-cli.mjs');await writeFile(script,code);return{root,reader:{executable:process.execPath,home:root,configDir:join(root,'profile'),pluginName:'hanamesh',marketplace:'registered-suite',marketplaceUrl:'https://market.example/plugins.git',timeoutMs:2000,maxOutputBytes:20000}}}
 const invoke=(reader,signal)=>runOfficialInstallationCommand({channel:'codex',reader,args:[join(reader.home,'official-cli.mjs'),'plugin','list','--json','--disable','remote_plugin'],signal});
+async function residue(path){try{const names=await readdir(path);return JSON.stringify({total:names.length,first:names.slice(0,10)})}catch(error){return JSON.stringify({code:error.code})}}
 test('official child receives only named read arguments and a credential-free explicitly scoped environment',async t=>{
  const{reader}=await setup(t,`console.log(JSON.stringify({args:process.argv.slice(2),env:process.env,cwd:process.cwd()}))`);
  const previous=process.env.HANAMESH_TEST_SECRET;process.env.HANAMESH_TEST_SECRET='never-inherit';t.after(()=>{if(previous===undefined)delete process.env.HANAMESH_TEST_SECRET;else process.env.HANAMESH_TEST_SECRET=previous});
@@ -26,10 +27,10 @@ test('cancellation kills the exact owned read process and rejects without output
 });
 test('reader supervisor retains group ownership after CLI leader exits, so the budget closes inherited pipes',async t=>{
  const root=await scratch('installation-exited-leader-');t.after(()=>rm(root,{recursive:true,force:true}));const record=join(root,'children.json');
- const{reader}=await setup(t,`const {spawn}=await import('node:child_process');const fs=await import('node:fs');const child=spawn(process.execPath,['-e',"process.stdout.write('held',()=>process.send({ready:true}));setInterval(()=>process.stdout.write('held'),100)"],{stdio:['ignore','inherit','inherit','ipc']});child.once('message',()=>{fs.writeFileSync(${JSON.stringify(record)},JSON.stringify({leader:process.pid,child:child.pid}));child.disconnect();process.exit(0)});`);
+ const{reader}=await setup(t,`const {spawn}=await import('node:child_process');const fs=await import('node:fs');const child=spawn(process.execPath,['-e',"process.stdout.on('error',error=>{if(error.code!=='EPIPE')throw error});process.stdout.write('held',error=>process.send({ready:!error}));setInterval(()=>{},1000)"],{stdio:['ignore','inherit','inherit','ipc']});child.once('message',value=>{if(value.ready!==true)process.exit(2);fs.writeFileSync(${JSON.stringify(record)},JSON.stringify({leader:process.pid,child:child.pid}));child.disconnect();process.exit(0)});`);
  const pending=invoke({...reader,timeoutMs:1500});const outcome=pending.then(()=>({code:'unexpected-success'}),e=>({code:e.code}));let child;
  try{
-  for(let i=0;i<200;i++){try{child=JSON.parse(await readFile(record,'utf8'));break}catch{await new Promise(r=>setTimeout(r,5))}}assert.ok(child?.child,'the CLI leader actually spawned its pipe-holding child');
+  for(let i=0;i<200;i++){try{child=JSON.parse(await readFile(record,'utf8'));break}catch{await new Promise(r=>setTimeout(r,5))}}assert.ok(child?.child,'the CLI leader actually spawned its pipe-holding child');assert.doesNotThrow(()=>process.kill(child.child,0),'the ready descendant is alive before its reader budget expires');
   const result=await Promise.race([outcome,new Promise(r=>setTimeout(()=>r({code:'SUPERVISOR_DID_NOT_SETTLE'}),3000))]);
   assert.equal(result.code,'AGENT_READER_TIMEOUT','an exited CLI leader must not defeat group cancellation');
   for(let i=0;i<100;i++){try{process.kill(child.child,0);await new Promise(r=>setTimeout(r,5))}catch{child=undefined;break}}assert.equal(child,undefined,'the exact owned pipe-holding child is gone');
@@ -46,7 +47,7 @@ test('parent death disconnects the live anchor and reaps its exact command group
   for(let i=0;i<200;i++){try{process.kill(observed.command,0);await new Promise(r=>setTimeout(r,5))}catch{observed=undefined;break}}
   assert.equal(observed,undefined,'parent IPC disconnect must reap only its owned read group');
   let exists=true;for(let i=0;i<200;i++){try{await readFile(createdCwd)}catch(e){if(e.code==='ENOENT'){exists=false;break}if(e.code!=='EISDIR')throw e}await new Promise(r=>setTimeout(r,5))}
-  assert.equal(exists,false,'parent IPC disconnect must remove its owned neutral directory');
+  assert.equal(exists,false,'parent IPC disconnect must remove its owned neutral directory'+(exists?' '+await residue(createdCwd):''));
  }finally{if(caller?.exitCode===null&&caller?.signalCode===null)caller.kill('SIGKILL');if(observed){try{process.kill(observed.anchor,'SIGTERM')}catch{}}if(createdCwd)await rm(createdCwd,{recursive:true,force:true});await rm(root,{recursive:true,force:true})}
 });
 test('parent death stops active directory writers before removing their neutral cwd',async t=>{
@@ -61,7 +62,7 @@ test('parent death stops active directory writers before removing their neutral 
   let alive=true;for(let i=0;i<200;i++){try{process.kill(observed.command,0);await new Promise(r=>setTimeout(r,5))}catch{alive=false;break}}assert.equal(alive,false,'active writer is terminated');
   // Wait on the directory's disappearance, independently of the command's earlier exit.
   let exists=true;for(let i=0;i<200;i++){try{await readFile(observed.cwd);await new Promise(r=>setTimeout(r,5))}catch(e){if(e.code==='ENOENT'){exists=false;break}if(e.code==='EISDIR')await new Promise(r=>setTimeout(r,5));else throw e}}
-  assert.equal(exists,false,'all writers must stop before the surviving owner removes the neutral cwd');
+  assert.equal(exists,false,'all writers must stop before the surviving owner removes the neutral cwd'+(exists?' '+await residue(observed.cwd):''));
  }finally{if(caller?.exitCode===null&&caller?.signalCode===null)caller.kill('SIGKILL');if(observed){try{process.kill(observed.anchor,'SIGTERM')}catch{}await rm(observed.cwd,{recursive:true,force:true})}await rm(root,{recursive:true,force:true})}
 });
 

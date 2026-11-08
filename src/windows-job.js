@@ -26,5 +26,5 @@ export function createWindowsJob({pid,env,cwd,signal}){
  return ready.then(()=>({
   active:async()=>Number((await send('ACTIVE',/^ACTIVE \d+$/)).slice(7)),
   stop:()=>stopPromise??=(async()=>{try{await send('STOP',/^STOPPED$/)}finally{child.stdin.end();await exit}})(),
- }));
+ }),async error=>{child.stdin.end();await exit;throw error;});
 }

@@ -62,8 +62,10 @@ test('X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while 
   if(process.platform==='win32'){
     const points=[],{host}=await setup(t,{checkpoint:async point=>points.push(point)});
     const failed=await assertOwnedPlatformRejection(host,input('stop-boundary'));
-    await host.stop(failed.id,{confirm:true});
-    assert.equal(host.instance(failed.id).status,'stopped');
+    const stopped=await host.stop(failed.id,{confirm:true});
+    assert.deepEqual(stopped,failed,'stopping an already terminal failed instance cannot claim that a runtime was stopped');
+    assert.equal(host.instance(failed.id).status,'failed');
+    assert.ok(!host.eventsSince().events.some(event=>event.type==='instance.stopped'),'no stop acknowledgement is manufactured without a launched runtime');
     assert.ok(!points.includes('runtime-spawned'),'no owned runtime can run at the stop crash boundary');
     assert.equal(host.instance(failed.id).pid,null);return;
   }

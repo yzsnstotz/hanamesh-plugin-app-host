@@ -7,6 +7,11 @@ const policy=Object.freeze({GIT_CONFIG_NOSYSTEM:'1',GIT_TERMINAL_PROMPT:'0',GIT_
   GIT_CONFIG_KEY_1:'credential.helper',GIT_CONFIG_VALUE_1:'!gh auth git-credential'});
 export function safeGitEnv(base=process.env){
  const env={...base};
+ // Nested guards share ownership only within the same explicitly selected temp root.
+ // A caller choosing a different scratch root starts an independent trace owner.
+ if(!env.HM_GIT_GUARD_PARENT_ROOT&&base.TMPDIR===process.env.TMPDIR&&process.env.HM_GIT_GUARD_PARENT_ROOT){
+  env.HM_GIT_GUARD_PARENT_ROOT=process.env.HM_GIT_GUARD_PARENT_ROOT;env.HM_GIT_GUARD_TMP_ROOT=process.env.HM_GIT_GUARD_TMP_ROOT;
+ }
  for(const key of Object.keys(env))if(/^GIT_CONFIG_(?:COUNT|KEY_\d+|VALUE_\d+|PARAMETERS)$/.test(key)||/^GIT_TRACE/.test(key)||['GIT_ASKPASS','SSH_ASKPASS'].includes(key))delete env[key];
  return {...env,...policy,npm_config_manage_package_manager_versions:'false',pnpm_config_manage_package_manager_versions:'false'};
 }

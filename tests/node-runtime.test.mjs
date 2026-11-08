@@ -71,9 +71,10 @@ test('AH-K5-2: configured nodeBinary must be absolute and executable', async t =
 test('AH-K5-3: guardian refuses an Electron runtime with exit 78 and a typed event', async () => {
   const guardian = new URL('../src/guardian.js', import.meta.url);
   const preload = new URL('./fixtures/fake-electron.mjs', import.meta.url);
-  const child = spawn(process.execPath, ['--import', fileURLToPath(preload), fileURLToPath(guardian)], {
+  const child = spawn(process.execPath, ['--import', preload.href, fileURLToPath(guardian)], {
     stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
   });
+  let stderr='';child.stdout.resume();child.stderr.setEncoding('utf8');child.stderr.on('data',chunk=>{stderr+=chunk;});
   const messages = [];
   child.on('message', message => messages.push(message));
   const exit = await new Promise((resolve, reject) => {
@@ -81,6 +82,6 @@ test('AH-K5-3: guardian refuses an Electron runtime with exit 78 and a typed eve
     child.once('error', reject);
     child.once('exit', (code, signal) => { clearTimeout(timer); resolve({ code, signal }); });
   });
-  assert.deepEqual(exit, { code: 78, signal: null });
+  assert.deepEqual(exit, { code: 78, signal: null },stderr);
   assert(messages.some(message => message?.type === 'guardian.refused' && message.code === 'NODE_RUNTIME_REQUIRED'));
 });

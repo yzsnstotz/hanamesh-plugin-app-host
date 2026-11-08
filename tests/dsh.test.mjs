@@ -19,7 +19,7 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection';
 import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl';
 import * as appHost from '../src/dsh.js';
 import { definition, temporary, http, until, pidAlive } from './helpers.mjs';
-import {assertOwnedPlatformRejection} from './platform-owned.mjs';
+import {assertOwnedPlatformRejection,verifyOwnedPlatformRejection} from './platform-owned.mjs';
 import {declaration as coreDeclaration,core as suiteCore,names as suiteNames,versions as suiteVersions} from './fixtures/core-suite-declaration.mjs';
 
 /** AUTH_DOUBLE for ctx.connection: accepts exactly one bearer, rejects everything else. */
@@ -122,7 +122,7 @@ test('H09/dispose: unloading the plugin removes its routes, stops owned instance
   const host = h.ctx.get('hanameshApps');let inst;
   if(process.platform==='win32'){
     assert.equal(opened.status,400);assert.equal(opened.json.error?.code,'PLATFORM_UNSUPPORTED');
-    inst=await assertOwnedPlatformRejection(host,{appId:'example',deploymentId:'local',viewId:'view-dispose'},{principal:appHost.BROWSER_PRINCIPAL});
+    inst=await verifyOwnedPlatformRejection(host,{appId:'example',deploymentId:'local',viewId:'view-dispose'},{principal:appHost.BROWSER_PRINCIPAL});
   }else{assert.equal(opened.status, 200);inst=await until(() => host.instanceList(appHost.BROWSER_PRINCIPAL).find(i => i.status === 'ready'));assert.ok(pidAlive(inst.pid));}
   await h.fiber.dispose();
   if(process.platform!=='win32')await until(() => !pidAlive(inst.pid));
@@ -158,7 +158,7 @@ test('teardown: a whole-root unload (profile shutdown) never orphans an owned pr
   const host = h.ctx.get('hanameshApps');let inst;
   if(process.platform==='win32'){
     assert.equal(opened.status,400);assert.equal(opened.json.error?.code,'PLATFORM_UNSUPPORTED');
-    inst=await assertOwnedPlatformRejection(host,{appId:'example',deploymentId:'local',viewId:'view-root-unload'},{principal:appHost.BROWSER_PRINCIPAL});
+    inst=await verifyOwnedPlatformRejection(host,{appId:'example',deploymentId:'local',viewId:'view-root-unload'},{principal:appHost.BROWSER_PRINCIPAL});
   }else{assert.equal(opened.status,200);inst=await until(() => host.instanceList(appHost.BROWSER_PRINCIPAL).find(i => i.status === 'ready'));assert.ok(pidAlive(inst.pid));}
   await h.ctx.fiber.dispose();
   if(process.platform!=='win32')await until(() => !pidAlive(inst.pid), { timeout: 8_000 });
@@ -215,7 +215,7 @@ test('AH-U07 (plugin): real Cordis early/absent/late Usage services never turn r
   const opened = await first.post('/apps/open', { appId: 'example', deploymentId: 'local', viewId: 'view-u07' });
   if(process.platform==='win32'){
     assert.equal(opened.status,400);assert.equal(opened.json.error?.code,'PLATFORM_UNSUPPORTED');
-    await assertOwnedPlatformRejection(first.ctx.get('hanameshApps'),{appId:'example',deploymentId:'local',viewId:'view-u07'},{principal:appHost.BROWSER_PRINCIPAL});
+    await verifyOwnedPlatformRejection(first.ctx.get('hanameshApps'),{appId:'example',deploymentId:'local',viewId:'view-u07'},{principal:appHost.BROWSER_PRINCIPAL});
     assert.deepEqual(seat.calls,[],'an unsupported owned launch is never an original usage fact');
     assert.equal((await first.get('/hanamesh/apps')).json.apps[0].packageName,'@hanamesh/app-example');
     assert.deepEqual((await first.get('/hanamesh/router/receipts?appId=example')).json.items,[],'refused launch cannot generate transport receipts');

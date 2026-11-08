@@ -5,7 +5,7 @@
  * real provider. Fixture data is a test catalog and is labelled as such in the market UI.
  */
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { createServer, request } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -95,7 +95,7 @@ export async function sourceRecoveryProfile({recovery},item={}){
   for(const [command,phase,skip] of item.inject??[])profile.fail(command,phase,skip);
   if(item.concurrent)profile.concurrentAdd('@fixture/concurrent','1.0.0');
   // The catalog fixture already supplies the exact reviewed version.
-  const installer=emit=>createLibraryInstaller({profileDir:profile.profileDir,profileName:profile.profileName,dataRoot:profile.dataRoot,nodeBinary:'/source-fixture/bin/node',dshBin:'/source-fixture/dsh/lib/bin.js',
+  const installer=emit=>createLibraryInstaller({profileDir:profile.profileDir,profileName:profile.profileName,dataRoot:profile.dataRoot,nodeBinary:resolve('/source-fixture/bin/node'),dshBin:resolve('/source-fixture/dsh/lib/bin.js'),
     fetchImpl:profile.fetchImpl({[app.packageName]:app.latest,[plugin.packageName]:plugin.latest}),spawn:profile.spawn,provision:profile.provision,remove:profile.remove,ledger:profile.ledger,emit});
   return{profile,target,installer};
 }
