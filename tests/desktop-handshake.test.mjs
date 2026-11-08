@@ -1,3 +1,4 @@
+import { attachDefinition } from './helpers.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {FixedGateway} from '../src/gateway.js';
@@ -38,7 +39,7 @@ import {setup,input,leaseInput} from './helpers.mjs';
 import {createHttpHandler} from '../src/routes.js';
 import {createServer} from 'node:http';
 test('D26: connection authentication and full lease ownership precede challenge issuance; generation and close revoke it',async t=>{
- const {host}=await setup(t,{origin:'dsh-app://app',def:(await import('./helpers.mjs')).definition({embedding:'gateway'})});
+ const {host}=await setup(t,{origin:'dsh-app://app',def:process.platform==='win32'?await attachDefinition(t,{embedding:'gateway'}):(await import('./helpers.mjs')).definition({embedding:'gateway'})});
  const a=await host.open(input('a'),'alice'),b=await host.open(input('b'),'alice');
  const u=new URL(a.uiUrl),challenge=u.pathname.split('/').at(-1);await http(a.uiUrl,{headers:{'sec-fetch-dest':'iframe','sec-fetch-site':'cross-site'}});
  const req={...leaseInput(a),gatewayOrigin:u.origin,challenge};
@@ -69,7 +70,7 @@ test('D26: cookie-less WS exact scoped Origin, denied wrong origins and immediat
  const closed=new Promise(r=>result.socket.once('close',r));active.delete('a');g.revokeInactive();await closed;assert(active.has('b'));
 });
 test('D26: expired challenge and generation recovery revoke pending exchange while another view is live',async t=>{
- const {host}=await setup(t,{origin:'dsh-app://app',def:(await import('./helpers.mjs')).definition({embedding:'gateway'})});
+ const {host}=await setup(t,{origin:'dsh-app://app',def:process.platform==='win32'?await attachDefinition(t,{embedding:'gateway'}):(await import('./helpers.mjs')).definition({embedding:'gateway'})});
  const a=await host.open(input('a'),'alice');await host.open(input('b'),'alice');const u=new URL(a.uiUrl),challenge=u.pathname.split('/').at(-1);
  await http(a.uiUrl,{headers:{'sec-fetch-dest':'iframe'}});const auth=await host.authorizeBootstrap({...leaseInput(a),gatewayOrigin:u.origin,challenge},'alice');
  const recovered=await host.recoverView({viewId:'a',instanceId:a.instance.id,confirm:true},'alice');assert.equal(recovered.lease.generation,a.lease.generation+1);

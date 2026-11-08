@@ -1,10 +1,15 @@
+import { assertOwnedPlatformRejection } from './platform-owned.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import { setup,definition,input,leaseInput,http,pidAlive,until,temporary,external,identity,delay } from './helpers.mjs';
+import { setup,definition,input,leaseInput,http,pidAlive,until,temporary,external,identity,delay,attachDefinition } from './helpers.mjs';
 
 test('H02: eight concurrent opens reserve one actual application process',async t=>{
+  if(process.platform==='win32'){
+    const {host}=await setup(t);const results=await Promise.allSettled(Array.from({length:8},(_,i)=>host.open(input(`view-${i}`))));assert(results.every(r=>r.status==='rejected'&&r.reason.code==='PLATFORM_UNSUPPORTED'));assert.equal(host.instanceList().length,1);assert.equal(host.list().views.length,8);assert(host.list().views.every(v=>v.status==='failed'));const failed=host.instanceList()[0];assert.equal(failed.pid,null);assert.equal(failed.status,'failed');await assert.rejects(readdir(failed.dataDir),{code:'ENOENT'});assert(!host.eventsSince().events.some(e=>e.type==='instance.ready'));
+    return;
+  }
   const {host}=await setup(t);
   let results;
   await assert.doesNotReject(async()=>{results=await Promise.all(Array.from({length:8},(_,i)=>host.open(input(`view-${i}`))));},'single-instance concurrent opens must share ownership without DATA_ROOT_BUSY or SPAWN_FAILED');
@@ -15,6 +20,10 @@ test('H02: eight concurrent opens reserve one actual application process',async 
   console.log('H02 real process evidence:',JSON.stringify({opens:8,pids:[...new Set(pids)]}));
 });
 test('H03: multi-instance applications write genuinely separate data roots',async t=>{
+  if(process.platform==='win32'){
+    const{host}=await setup(t,{def:definition({single:false})});const a=await assertOwnedPlatformRejection(host,input('a'));await assert.rejects(host.open(input('b')),{code:'PLATFORM_UNSUPPORTED'});const b=host.instanceList().find(i=>i.id!==a.id);assert(b);assert.notEqual(a.dataDir,b.dataDir);assert.equal(b.pid,null);await assert.rejects(readdir(b.dataDir),{code:'ENOENT'});assert(host.list().views.every(v=>v.status==='failed'));
+    return;
+  }
   const {host}=await setup(t,{def:definition({single:false})});
   const [a,b]=await Promise.all([host.open(input('a')),host.open(input('b'))]);
   assert.notEqual(a.instance.id,b.instance.id);assert.notEqual(a.instance.dataDir,b.instance.dataDir);
@@ -25,6 +34,10 @@ test('H03: multi-instance applications write genuinely separate data roots',asyn
   await host.close(leaseInput(a));assert(!pidAlive(a.instance.pid));assert(pidAlive(b.instance.pid));assert.equal((await http(b.uiUrl)).status,200);
 });
 test('H04/H05: reopen is idempotent; closing one view does not stop the other',async t=>{
+  if(process.platform==='win32'){
+    const def=await attachDefinition(t),{host}=await setup(t,{def});let a=await host.open(input('a'));for(let i=0;i<3;i++)a=await host.open({...input('a'),leaseToken:a.leaseToken});assert.equal(host.list().views.filter(v=>v.status==='active').length,1);assert.equal(a.lease.generation,1);const b=await host.open(input('b'));assert.equal(a.instance.id,b.instance.id);await host.close(leaseInput(a));assert.equal((await http(b.uiUrl)).status,200);await host.close(leaseInput(b));assert.equal(host.instance(b.instance.id).status,'stopped');assert.equal((await host.close(leaseInput(b))).alreadyClosed,true);assert.equal((await http(def.deployments[0].url)).status,200,'attach never signals its external owner');
+    return;
+  }
   const {host}=await setup(t);let a=await host.open(input('a'));
   for(let i=0;i<3;i++)a=await host.open({...input('a'),leaseToken:a.leaseToken});
   assert.equal(host.list().views.filter(v=>v.status==='active').length,1);assert.equal(a.lease.generation,1);
@@ -34,6 +47,10 @@ test('H04/H05: reopen is idempotent; closing one view does not stop the other',a
   assert.equal((await host.close(leaseInput(b))).alreadyClosed,true);
 });
 test('H06: restart/resume preserves exact view, deployment, data and original-session identities',async t=>{
+  if(process.platform==='win32'){
+    const root=await temporary(),def=await attachDefinition(t,{single:false});const first=await setup(null,{root,def}),a=await first.host.open({...input('a'),originalSessionId:'document-exact-a'}),b=await first.host.open({...input('b'),originalSessionId:'document-exact-b'});await first.host.dispose();const second=await setup(t,{root,def});t.after(()=>rm(root,{recursive:true,force:true}));const rb=await second.host.resume(leaseInput(b)),ra=await second.host.resume(leaseInput(a));assert.equal(ra.instance.id,a.instance.id);assert.equal(rb.instance.id,b.instance.id);assert.notEqual(ra.instance.runtimeId,a.instance.runtimeId);assert.equal(ra.instance.dataDir,a.instance.dataDir);assert.equal(ra.originalSessionId,'document-exact-a');assert.equal(rb.originalSessionId,'document-exact-b');assert.equal(second.host.list().views.filter(v=>v.status==='active').length,2);assert.equal((await http(def.deployments[0].url)).status,200);
+    return;
+  }
   const root=await temporary();
   const def=definition({single:false});const first=await setup(null,{root,def});
   const a=await first.host.open({...input('a'),originalSessionId:'document-exact-a'});
@@ -50,6 +67,10 @@ test('H06: restart/resume preserves exact view, deployment, data and original-se
   console.log('H06 durable slot restore:',JSON.stringify({old:a.instance.id,restored:ra.instance.id,originalSessionId:ra.originalSessionId}));
 });
 test('H07: forged, expired-generation, and cross-principal close cannot decrement another lease',async t=>{
+  if(process.platform==='win32'){
+    const{host}=await setup(t,{def:await attachDefinition(t)}),a=await host.open(input('a'));await assert.rejects(host.close({viewId:'bogus',leaseToken:a.leaseToken}),{code:'LEASE_NOT_OWNED'});await assert.rejects(host.close({...leaseInput(a),leaseToken:'f'.repeat(64)}),{code:'LEASE_NOT_OWNED'});await assert.rejects(host.close(leaseInput(a),'other'),{code:'LEASE_NOT_OWNED'});assert.equal(host.list().views.filter(v=>v.status==='active').length,1);await host.close(leaseInput(a));const reopened=await host.open({...input('a'),leaseToken:a.leaseToken});assert.notEqual(reopened.leaseToken,a.leaseToken);assert.equal(reopened.lease.generation,2);await assert.rejects(host.close(leaseInput(a)),{code:'LEASE_NOT_OWNED'});assert.equal((await http(reopened.uiUrl)).status,200);
+    return;
+  }
   const {host}=await setup(t);const a=await host.open(input('a'));
   await assert.rejects(host.close({viewId:'bogus',leaseToken:a.leaseToken}),{code:'LEASE_NOT_OWNED'});
   await assert.rejects(host.close({...leaseInput(a),leaseToken:'f'.repeat(64)}),{code:'LEASE_NOT_OWNED'});
@@ -60,6 +81,10 @@ test('H07: forged, expired-generation, and cross-principal close cannot decremen
   await assert.rejects(host.close(leaseInput(a)),{code:'LEASE_NOT_OWNED'});assert(pidAlive(reopened.instance.pid));
 });
 test('H08: busy Stop explains occupiers; confirmed stop emits durable notifications for every view',async t=>{
+  if(process.platform==='win32'){
+    const def=await attachDefinition(t),{host}=await setup(t,{def}),a=await host.open(input('a'));await host.open(input('b'));await assert.rejects(host.stop(a.instance.id),e=>e.code==='INSTANCE_IN_USE'&&e.details.views.length===2);await host.stop(a.instance.id,{confirm:true});assert.deepEqual(host.eventsSince().events.filter(e=>e.type==='view.stopped').map(e=>e.viewId).sort(),['a','b']);assert.equal(host.instance(a.instance.id).status,'stopped');assert.equal((await http(def.deployments[0].url)).status,200);
+    return;
+  }
   const {host}=await setup(t);const a=await host.open(input('a'));await host.open(input('b'));
   await assert.rejects(host.stop(a.instance.id),e=>e.code==='INSTANCE_IN_USE'&&e.details.views.length===2);
   assert(pidAlive(a.instance.pid));await host.stop(a.instance.id,{confirm:true});assert(!pidAlive(a.instance.pid));
@@ -81,6 +106,10 @@ test('H09: attach close, stopAll and dispose never signal the external process',
   }finally{process.kill=originalKill;}
 });
 test('H10: expired leases converge without any unload request',async t=>{
+  if(process.platform==='win32'){
+    let now=Date.now();const def=await attachDefinition(t),{host}=await setup(t,{def,ttl:400,sweep:50,clock:()=>now}),a=await host.open(input('a'));assert.equal(host.list().views[0].status,'active');now=a.lease.expiresAt;await until(()=>host.instance(a.instance.id).status==='stopped');assert.equal(host.list().views[0].status,'expired');await assert.rejects(host.heartbeat(leaseInput(a)),{code:'LEASE_EXPIRED'});assert.equal((await http(def.deployments[0].url)).status,200);
+    return;
+  }
   // Starting a real process may take longer than 400 ms under load. Lease time starts
   // advancing only after ready, so this gate measures expiry rather than startup cancellation.
   let now=Date.now();
@@ -92,11 +121,19 @@ test('H10: expired leases converge without any unload request',async t=>{
   await assert.rejects(host.heartbeat(leaseInput(a)),{code:'LEASE_EXPIRED'});
 });
 test('AH: startup cancellation receipt stops the actual child and does not return false-ready',async t=>{
+  if(process.platform==='win32'){
+    const points=[],{host}=await setup(t,{def:definition({extra:{delay:700}}),checkpoint:async p=>points.push(p)});await assertOwnedPlatformRejection(host,input('cancel'),{operation:'beginOpen'});assert.deepEqual(points,['reservation-durable']);assert(!host.list().views.some(v=>v.status==='active'));
+    return;
+  }
   const {host}=await setup(t,{def:definition({extra:{delay:700}})});
   const receipt=await host.beginOpen(input('cancel'));assert.equal(receipt.uiUrl,null);assert.equal(receipt.instance.status,'starting');
   await host.close(leaseInput(receipt));assert.equal(host.instance(receipt.instance.id).status,'stopped');assert(!pidAlive(receipt.instance.pid));
 });
 test('AH: never-ready startup is bounded, cleans up, and supports an explicit retry',async t=>{
+  if(process.platform==='win32'){
+    const def=await attachDefinition(t);def.deployments[0].readiness.path='/forbidden';def.deployments[0].startTimeoutMs=250;const {host}=await setup(t,{def}),receipt=await host.beginOpen(input('never'));await until(()=>host.instance(receipt.instance.id).status==='failed');assert.equal(host.instance(receipt.instance.id).errorCode,'READY_TIMEOUT');assert.equal((await http(def.deployments[0].url)).status,200);const retry=await host.beginOpen({...input('never'),leaseToken:receipt.leaseToken});assert.equal(retry.instance.id,receipt.instance.id);assert.notEqual(retry.instance.runtimeId,receipt.instance.runtimeId);await host.close(leaseInput(retry));
+    return;
+  }
   const def=definition({extra:{neverReady:true}});def.deployments[0].startTimeoutMs=250;
   const {host}=await setup(t,{def});const receipt=await host.beginOpen(input('never'));
   await until(()=>host.instance(receipt.instance.id).status==='failed');assert(!pidAlive(receipt.instance.pid));
@@ -106,10 +143,18 @@ test('AH: never-ready startup is bounded, cleans up, and supports an explicit re
   await host.close(leaseInput(retry));
 });
 test('AH: spontaneous application exit cannot leave ready forever',async t=>{
+  if(process.platform==='win32'){
+    const{host}=await setup(t);const failed=await assertOwnedPlatformRejection(host,input('exit'));assert.equal(failed.errorCode,'PLATFORM_UNSUPPORTED');assert(!host.eventsSince().events.some(e=>e.type==='instance.ready'||e.code==='APP_EXITED'),'no unsupported child may be mistaken for a successfully launched then exited application');
+    return;
+  }
   const {host}=await setup(t);const a=await host.open(input('exit'));await http(a.uiUrl+'/exit');
   await until(()=>host.instance(a.instance.id).status==='failed');assert.equal(host.instance(a.instance.id).errorCode,'APP_EXITED');
 });
 test('AH: disjoint applications launch independently and cannot rebind an existing view',async t=>{
+  if(process.platform==='win32'){
+    const{host}=await setup(t,{def:await attachDefinition(t)});host.register(await attachDefinition(t,{id:'second'}));const[a,b]=await Promise.all([host.open(input('a')),host.open(input('b','second'))]);assert.notEqual(a.instance.id,b.instance.id);assert.notEqual((await identity(a.uiUrl)).pid,(await identity(b.uiUrl)).pid);await assert.rejects(host.open({...input('a','second'),leaseToken:a.leaseToken}),{code:'VIEW_BINDING_CONFLICT'});await assert.rejects(host.resume({viewId:'missing',leaseToken:a.leaseToken}),{code:'LEASE_NOT_OWNED'});
+    return;
+  }
   const {host}=await setup(t);host.register(definition({id:'second'}));
   const [a,b]=await Promise.all([host.open(input('a')),host.open(input('b','second'))]);
   assert.notEqual(a.instance.id,b.instance.id);assert.notEqual(a.instance.pid,b.instance.pid);
@@ -117,6 +162,10 @@ test('AH: disjoint applications launch independently and cannot rebind an existi
   await assert.rejects(host.resume({viewId:'missing',leaseToken:a.leaseToken}),{code:'LEASE_NOT_OWNED'});
 });
 test('AH: host secrets are not inherited; logs redact bearer and JSON secrets',async t=>{
+  if(process.platform==='win32'){
+    const{host}=await setup(t);let resolved=0;host.setCredentialResolver(async()=>{resolved++;return{env:{EXAMPLE_API_KEY:'do-not-inherit'}};});await assertOwnedPlatformRejection(host,input());assert.equal(resolved,0);assert(!JSON.stringify(host.list()).includes('tokenHash'));assert(!JSON.stringify(host.eventsSince()).includes('do-not-inherit'));
+    return;
+  }
   process.env.DSH_TOKEN='do-not-inherit';t.after(()=>delete process.env.DSH_TOKEN);
   const {host}=await setup(t);const a=await host.open(input());assert.equal((await identity(a.uiUrl)).inheritedSecret,null);
   await until(()=>host.logTail(a.instance.id,128).length>=3);
@@ -124,12 +173,20 @@ test('AH: host secrets are not inherited; logs redact bearer and JSON secrets',a
   assert(logs.includes('[REDACTED]'));assert(!JSON.stringify(host.list()).includes('tokenHash'));
 });
 test('AH: confirmed Stop removes a SIGTERM-resistant descendant in its owned group',async t=>{
+  if(process.platform==='win32'){
+    const{host}=await setup(t,{def:definition({extra:{descendant:true,ignoreTerm:true}})});const failed=await assertOwnedPlatformRejection(host,input());await host.stop(failed.id,{confirm:true});assert.equal(host.instance(failed.id).status,'stopped');assert.equal(host.instance(failed.id).pid,null);await assert.rejects(readFile(join(failed.dataDir,'descendant.pid')),{code:'ENOENT'});
+    return;
+  }
   const {host}=await setup(t,{def:definition({extra:{descendant:true,ignoreTerm:true}})});const a=await host.open(input());
   const descendant=await until(async()=>Number(await readFile(join(a.instance.dataDir,'descendant.pid'),'utf8')));
   assert(pidAlive(descendant));await host.stop(a.instance.id,{confirm:true});assert(!pidAlive(a.instance.pid));assert(!pidAlive(descendant));
 });
 
 test('FIX-01: lost receipt recovery is owner-confirmed, fences old credentials and retains exact identity',async t=>{
+  if(process.platform==='win32'){
+    const{host}=await setup(t,{def:await attachDefinition(t)}),a=await host.open(input('lost'));await assert.rejects(host.recoverView({viewId:'lost',instanceId:a.instance.id,confirm:true},'other'),{code:'LEASE_NOT_OWNED'});await assert.rejects(host.recoverView({viewId:'lost',instanceId:a.instance.id}),{code:'RECOVERY_CONFIRM_REQUIRED'});const recovered=await host.recoverView({viewId:'lost',instanceId:a.instance.id,confirm:true});assert.equal(recovered.lease.generation,2);assert.equal(host.list().views.filter(v=>v.status==='active').length,1);await assert.rejects(host.close(leaseInput(a)),{code:'LEASE_NOT_OWNED'});const b=await host.resume(leaseInput(recovered));assert.equal(b.instance.id,a.instance.id);assert.equal((await identity(b.uiUrl)).pid,(await identity(a.uiUrl)).pid);
+    return;
+  }
   const {host}=await setup(t);const a=await host.open(input('lost'));
   await assert.rejects(host.recoverView({viewId:'lost',instanceId:a.instance.id,confirm:true},'other'),{code:'LEASE_NOT_OWNED'});
   await assert.rejects(host.recoverView({viewId:'lost',instanceId:a.instance.id}),{code:'RECOVERY_CONFIRM_REQUIRED'});
@@ -139,6 +196,10 @@ test('FIX-01: lost receipt recovery is owner-confirmed, fences old credentials a
   const b=await host.resume(leaseInput(recovered));assert.equal(b.instance.id,a.instance.id);assert.equal(b.instance.pid,a.instance.pid);
 });
 test('FIX-01 gateway: closed/recovered generations never regain iframe capabilities after reopen',async t=>{
+  if(process.platform==='win32'){
+    const{host}=await setup(t,{def:await attachDefinition(t,{embedding:'gateway'})}),a=await host.open(input('gate-a'));await host.open(input('gate-b'));const boot=await http(a.uiUrl,{headers:{referer:'http://127.0.0.1:49123/','sec-fetch-dest':'iframe'}});assert.equal(boot.status,303);const cookie=boot.headers['set-cookie'][0].split(';')[0],origin=new URL(a.uiUrl).origin;assert.equal((await http(origin,{headers:{cookie}})).status,200);await host.close(leaseInput(a));const again=await host.open({...input('gate-a'),leaseToken:a.leaseToken});assert.equal((await http(origin,{headers:{cookie}})).status,403);const fresh=await http(again.uiUrl,{headers:{referer:'http://127.0.0.1:49123/','sec-fetch-dest':'iframe'}}),freshCookie=fresh.headers['set-cookie'][0].split(';')[0];assert.equal((await http(origin,{headers:{cookie:freshCookie}})).status,200);await host.recoverView({viewId:'gate-a',instanceId:a.instance.id,confirm:true});assert.equal((await http(origin,{headers:{cookie:freshCookie}})).status,403);
+    return;
+  }
   const {host}=await setup(t,{def:definition({embedding:'gateway'})});const a=await host.open(input('gate-a'));await host.open(input('gate-b'));
   const boot=await http(a.uiUrl,{headers:{referer:'http://127.0.0.1:49123/','sec-fetch-dest':'iframe'}});assert.equal(boot.status,303);
   const cookie=boot.headers['set-cookie'][0].split(';')[0],origin=new URL(a.uiUrl).origin;
@@ -150,6 +211,10 @@ test('FIX-01 gateway: closed/recovered generations never regain iframe capabilit
 });
 
 test('AH recovery: tampered data-root bindings cannot redirect application writes',async t=>{
+  if(process.platform==='win32'){
+    const root=await temporary(),def=await attachDefinition(t);const first=await setup(null,{root,def}),a=await first.host.open(input('persisted'));await first.host.dispose();const path=join(root,'sidecar','app-host.json'),snapshot=JSON.parse(await readFile(path,'utf8'));snapshot.instances[0].dataDir=join(root,'outside-approved-layout');const{writeFile}=await import('node:fs/promises');await writeFile(path,JSON.stringify(snapshot));const second=await setup(t,{root,def});t.after(()=>rm(root,{recursive:true,force:true}));await assert.rejects(second.host.resume(leaseInput(a)),{code:'BINDING_PATH_INVALID'});assert(!(await readdir(root)).includes('outside-approved-layout'));
+    return;
+  }
   const {writeFile}=await import('node:fs/promises');const root=await temporary();
   const first=await setup(null,{root});const a=await first.host.open(input('persisted'));await first.host.dispose();
   const path=join(root,'sidecar','app-host.json'),snapshot=JSON.parse(await readFile(path,'utf8'));
@@ -160,6 +225,10 @@ test('AH recovery: tampered data-root bindings cannot redirect application write
 });
 
 test('AH-D1: an upgraded descriptor is adopted by a stopped instance across a host restart',async t=>{
+  if(process.platform==='win32'){
+    const root=await temporary(),def=await attachDefinition(t),first=await setup(null,{root,def}),opened=await first.host.open(input('v1'));await first.host.stop(opened.instance.id,{confirm:true});await first.host.dispose();const upgraded=structuredClone(def);upgraded.name='App example (upgraded)';const second=await setup(t,{root,def:upgraded});t.after(()=>rm(root,{recursive:true,force:true}));const reopened=await second.host.open(input('v2'));assert.equal(reopened.instance.id,opened.instance.id);assert.equal(reopened.instance.status,'ready');assert(second.host.eventsSince().events.some(e=>e.type==='instance.definition-adopted'&&e.instanceId===opened.instance.id));assert.equal((await second.host.open(input('v3'))).instance.id,opened.instance.id);assert.equal(second.host.eventsSince().events.filter(e=>e.type==='instance.definition-adopted').length,1);
+    return;
+  }
   const root=await temporary();
   const first=await setup(null,{root});
   const opened=await first.host.open(input('v1'));

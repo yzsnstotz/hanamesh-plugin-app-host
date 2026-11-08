@@ -6,7 +6,7 @@ import { rm } from 'node:fs/promises';
 import { randomBytes } from 'node:crypto';
 import { connect } from 'node:net';
 import { AppHost, AtomicFileStore, createUsageEvidence, createReceiptLedger, hourBucket, SOURCE_PLUGIN, validateDefinition } from '../src/index.js';
-import { definition, temporary, http, input, leaseInput, parentOrigin } from './helpers.mjs';
+import { definition, temporary, http, input, leaseInput, parentOrigin, attachDefinition } from './helpers.mjs';
 
 // SOURCE/FIXTURE only: actual AppHost, gateway and ledger; a call spy is not Usage implementation.
 function fakeSeat({ consent='granted', mode='ok' }={}) {
@@ -17,6 +17,7 @@ function fakeSeat({ consent='granted', mode='ok' }={}) {
 const GATE={embedding:'gateway'};
 async function hostWith(t,{def=definition(GATE),seat,clock,logger,receipts}={}) {
  const dir=await temporary(),host=new AppHost({store:new AtomicFileStore(join(dir,'sidecar')),dataRoot:join(dir,'data'),parentOrigin,leaseTtlMs:3_600_000,sweepIntervalMs:0,clock});
+ if(process.platform==='win32'){const supplied=def;def=await attachDefinition(t,{id:supplied.id,single:supplied.singleInstanceOnly,embedding:supplied.deployments[0].embedding});if(supplied.packageName)def.packageName=supplied.packageName;}
  host.register(def);await host.init();const evidence=createUsageEvidence({host,seat,logger,receipts,clock,sweepIntervalMs:0});
  t.after(async()=>{evidence.close();await evidence.settle();await host.dispose();await rm(dir,{recursive:true,force:true});});return{host,evidence,dir};
 }

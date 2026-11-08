@@ -1,3 +1,4 @@
+import { assertOwnedPlatformRejection } from './platform-owned.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { stat } from 'node:fs/promises';
@@ -38,6 +39,12 @@ test('AH-C2/C3/C4: resolver values reach the child only for declared names; unde
   const {host,root}=await setup(t,{def:withCredentials()});
   host.setCredentialResolver(async req=>{seen.push(req);return{env:{EXAMPLE_API_KEY:'sk-secret-value-1234',LANGCHAIN_PROVIDER:'example',UNDECLARED_KEY:'nope'},
     files:[{path:'.codex/auth.json',content:'{"tokens":{"access_token":"tok-abcdef-9999"}}'},{path:'auth/openai-codex.json',content:'{"access":"tok-vibe-1111","refresh":"r","expires":1}'},{path:'../escape.txt',content:'x'}],secrets:['tok-abcdef-9999']};});
+  if (process.platform === 'win32') {
+    await assertOwnedPlatformRejection(host, input());
+    assert.deepEqual(seen, [], 'unsupported ownership must not request any credential projection');
+    assert.ok(!host.eventsSince(0).events.some(event => event.type.startsWith('credential.')));
+    return;
+  }
   const opened=await host.open(input());
   assert.equal(seen.length,1);assert.equal(seen[0].appId,'example');assert.equal(seen[0].credentialEnv.length,4);
   const id=await identity(opened.uiUrl);
@@ -61,7 +68,14 @@ test('AH-C2/C3/C4: resolver values reach the child only for declared names; unde
 
 test('AH-C5: a throwing resolver is recorded and never blocks the launch',async t=>{
   const {host}=await setup(t,{def:withCredentials()});
-  host.setCredentialResolver(async()=>{const e=new Error('broker down');e.code='BROKER_DOWN';throw e;});
+  let resolverCalls = 0;
+  host.setCredentialResolver(async()=>{resolverCalls++;const e=new Error('broker down');e.code='BROKER_DOWN';throw e;});
+  if (process.platform === 'win32') {
+    await assertOwnedPlatformRejection(host, input());
+    assert.equal(resolverCalls, 0, 'platform refusal precedes the failing broker');
+    assert.ok(!host.eventsSince(0).events.some(event => event.type.startsWith('credential.')));
+    return;
+  }
   const opened=await host.open(input());
   assert.equal(opened.instance.status,'ready');
   const id=await identity(opened.uiUrl);assert.equal(id.credentialEnv.EXAMPLE_API_KEY,null);
@@ -70,7 +84,14 @@ test('AH-C5: a throwing resolver is recorded and never blocks the launch',async 
 
 test('AH-C6: without a resolver (or after its disposer ran) nothing is injected and no credential event exists',async t=>{
   const {host}=await setup(t,{def:withCredentials()});
-  const dispose=host.setCredentialResolver(async()=>({env:{EXAMPLE_API_KEY:'x'}}));dispose();
+  let resolverCalls=0;
+  const dispose=host.setCredentialResolver(async()=>{resolverCalls++;return {env:{EXAMPLE_API_KEY:'x'}};});dispose();
+  if (process.platform === 'win32') {
+    await assertOwnedPlatformRejection(host, input());
+    assert.equal(resolverCalls,0);
+    assert.ok(!host.eventsSince(0).events.some(event=>event.type.startsWith('credential.')));
+    return;
+  }
   const opened=await host.open(input());
   const id=await identity(opened.uiUrl);assert.equal(id.credentialEnv.EXAMPLE_API_KEY,null);assert.equal(id.homeAuth,null);
   assert.ok(!host.eventsSince(0).events.some(e=>e.type.startsWith('credential.')));
@@ -79,7 +100,20 @@ test('AH-C6: without a resolver (or after its disposer ran) nothing is injected 
 test('AH-C7 (rc.6): file policy — if-absent keeps an app-rotated file, overwrite replaces it, remove deletes it; events name each',async t=>{
   let policy='if-absent',content='{"access":"v1"}';
   const {host}=await setup(t,{def:withCredentials()});
-  host.setCredentialResolver(async()=>({files:[{path:'auth/openai-codex.json',content,policy}]}));
+  let resolverCalls=0;
+  host.setCredentialResolver(async()=>{resolverCalls++;return {files:[{path:'auth/openai-codex.json',content,policy}]};});
+  if (process.platform === 'win32') {
+    let previous;
+    for (const nextPolicy of ['if-absent','overwrite','remove']) {
+      policy=nextPolicy;
+      const failed=await assertOwnedPlatformRejection(host,input('windows-'+policy));
+      if(previous)assert.equal(failed.id,previous.id,'file-policy retries retain their failed reserved identity');
+      previous=failed;
+    }
+    assert.equal(resolverCalls,0,'no file policy is applied before a supported owned runtime exists');
+    assert.ok(!host.eventsSince(0).events.some(event=>event.type.startsWith('credential.')));
+    return;
+  }
   const first=await host.open(input('v1'));
   assert.equal(JSON.parse((await identity(first.uiUrl)).dataAuth).access,'v1');
   await host.stop(first.instance.id,{confirm:true});

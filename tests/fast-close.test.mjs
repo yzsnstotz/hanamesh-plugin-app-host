@@ -1,3 +1,4 @@
+import { assertOwnedPlatformRejection } from './platform-owned.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -8,6 +9,12 @@ test('AH-L11: an exited app closes promptly without spending the unused five-sec
   const def = definition({ extra: { descendant: true } });
   def.deployments[0].stopGraceMs = 5_000;
   const { host } = await setup(t, { def });
+  if (process.platform === 'win32') {
+    await assertOwnedPlatformRejection(host,input());
+    const failed=await assertOwnedPlatformRejection(host,input('reopened'));
+    assert.equal(failed.guardianPid,null,'no guardian exists to spend a TERM grace or hold a runtime lock');
+    return;
+  }
   const opened = await host.open(input());
   const descendant = await until(async () => Number(await readFile(join(opened.instance.dataDir, 'descendant.pid'), 'utf8')));
   assert(pidAlive(opened.instance.pid));

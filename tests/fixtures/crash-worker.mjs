@@ -3,7 +3,7 @@ import { readFile, access } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { AppHost, AtomicFileStore } from '../../src/index.js';
 import { definition,parentOrigin,until } from '../helpers.mjs';
-const [mode,root,point]=process.argv.slice(2);let paused=false;
+const [mode,root,point,attachOrigin]=process.argv.slice(2);let paused=false;
 const alive=pid=>{try{return !execFileSync('ps',['-o','stat=','-p',String(pid)],{encoding:'utf8'}).trim().startsWith('Z');}catch{return false;}};
 // Hold the event loop at the cut: a pending promise alone does not keep Node alive, so without a ref'd
 // handle the worker would exit (code 13) right after the checkpoint and race the parent's SIGKILL.
@@ -25,7 +25,12 @@ const host=new AppHost({store,dataRoot:join(root,'data'),parentOrigin,sweepInter
     if(mode==='boundary-stop'&&at==='runtime-stopped')await pause({at,...lastRuntime,aliveAtCut:alive(lastRuntime.pid)});
   }});
 try{
-  host.register(definition({extra:{ignoreTerm:true,...(mode==='boundary-reserve'?{spamLogs:true}:{})}}));await host.init();
+  const def=definition({extra:{ignoreTerm:true,...(mode==='boundary-reserve'?{spamLogs:true}:{})}});
+  if(process.platform==='win32'&&mode==='group-stop'){
+    if(!attachOrigin)throw Error('Parent-owned attach fixture origin required.');
+    def.deployments=[{id:'local',dataId:'data-v1',mode:'attach',url:attachOrigin,readiness:{path:'/health',status:200,bodyIncludes:'HANAMESH_FIXTURE'}}];
+  }
+  host.register(def);await host.init();
   const result=await host.open({appId:'example',deploymentId:'local',viewId:'crash-view',originalSessionId:'exact-document'});
   if(mode==='group-stop'||mode==='boundary-stop')await host.stop(result.instance.id,{confirm:true});
   else if(mode==='recovery')await pause({at:'ready',result});

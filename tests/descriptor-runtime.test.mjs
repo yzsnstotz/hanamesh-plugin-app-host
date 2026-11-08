@@ -1,3 +1,4 @@
+import { assertOwnedPlatformRejection } from './platform-owned.mjs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -58,6 +59,10 @@ test('AH-P03: host launches the executable selected by the validated runtime and
   });
   host.register(runtimeDefinition()); await host.init();
   t.after(async () => host.dispose());
+  if (process.platform === 'win32') {
+    await assertOwnedPlatformRejection(host,input('runtime-view','vibe'));
+    return;
+  }
   const opened = await host.open(input('runtime-view', 'vibe'));
   assert.equal(opened.instance.status, 'ready');
   assert.equal((await identity(opened.uiUrl)).dataDir, opened.instance.dataDir);
@@ -82,7 +87,10 @@ test('AH-P04: missing, stale or non-executable runtime fails closed as RUNTIME_M
         runtimeLedgerReader: async () => ({ schema: 1, items }),
       });
       host.register(runtimeDefinition()); await host.init();
-      try { await assert.rejects(host.open(input(`view-${scenario}`, 'vibe')), error => error.code === 'RUNTIME_MISSING'); }
+      try {
+        if(process.platform==='win32')await assertOwnedPlatformRejection(host,input(`view-${scenario}`,'vibe'));
+        else await assert.rejects(host.open(input(`view-${scenario}`, 'vibe')), error => error.code === 'RUNTIME_MISSING');
+      }
       finally { await host.dispose(); }
     });
   }
@@ -97,6 +105,7 @@ test('AH-P05: default reader launches a real runtime from the public provision l
  await writeFile(join(runtimeRoot,'.provision','ledger.json'),JSON.stringify({schema:1,items:{'vibe-runtime':entry}}));
  const {ledger}=await import('@hanamesh/lib-provision');assert.deepEqual((await ledger(runtimeRoot)).items['vibe-runtime'],entry,'the provider public reader sees the valid physical ledger');
  const host=new AppHost({store:new AtomicFileStore(join(root,'sidecar')),dataRoot,parentOrigin:'http://127.0.0.1:49123',sweepIntervalMs:0});t.after(()=>host.dispose());host.register(runtimeDefinition());await host.init();
+ if(process.platform==='win32'){await assertOwnedPlatformRejection(host,input('default-runtime-reader','vibe'));assert.deepEqual((await ledger(runtimeRoot)).items['vibe-runtime'],entry,'refusal cannot mutate the public provision ledger');return;}
  let opened;await assert.doesNotReject(async()=>{opened=await host.open(input('default-runtime-reader','vibe'));},'default public ledger reader must launch the real runtime');assert.equal(opened.instance.status,'ready','default public ledger reader must allow actual runtime startup');assert.equal((await identity(opened.uiUrl)).dataDir,opened.instance.dataDir);
  console.log(JSON.stringify({check:'DEFAULT_RUNTIME_LEDGER_READER',status:'PASS',realOwnedPid:opened.instance.pid,ledgerReaderInjected:false}));
 });

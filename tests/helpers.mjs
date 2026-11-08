@@ -1,5 +1,5 @@
 import { mkdtemp, rm, realpath, readFile } from 'node:fs/promises';
-import { rmSync, watch } from 'node:fs';
+import { rmSync, watch, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { request, createServer } from 'node:http';
@@ -48,18 +48,36 @@ export async function setup(t,{def=definition(),ttl=60_000,sweep=0,root,checkpoi
 }
 export function input(viewId='view-1',appId='example'){return{appId,deploymentId:'local',viewId};}
 export function leaseInput(opened){return{viewId:opened.lease.viewId,leaseToken:opened.leaseToken};}
-export function pidAlive(pid){
-  try{
-    const state=execFileSync('ps',['-o','stat=','-p',String(pid)],{encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim();
-    return Boolean(state)&&!state.startsWith('Z');
-  }catch{return false;}
+function liveProcessStart(pid) {
+  if (!Number.isSafeInteger(pid) || pid <= 1) return null;
+  try { process.kill(pid,0); } catch(error) { if(error.code==='ESRCH')return null; throw error; }
+  if(process.platform==='linux') {
+    try {
+      const stat=readFileSync(`/proc/${pid}/stat`,'utf8'),fields=stat.slice(stat.lastIndexOf(')')+2).split(' ');
+      if(['Z','X'].includes(fields[0]))return null;
+      return `${readFileSync('/proc/sys/kernel/random/boot_id','utf8').trim()}:${fields[19]}`;
+    } catch(error) { if(['ENOENT','ESRCH'].includes(error.code))return null; throw error; }
+  }
+  if(process.platform==='darwin') {
+    try {
+      const fields=execFileSync('/bin/ps',['-o','stat=','-o','lstart=','-p',String(pid)],{encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim().split(/\s+/);
+      return fields.length>=6&&!fields[0].startsWith('Z')?fields.slice(1,6).join(' '):null;
+    } catch(error) { if(typeof error.status==='number')return null;throw error; }
+  }
+  // A Windows PID probe proves existence, never a POSIX group or process identity.
+  return true;
 }
+export function pidAlive(pid){return liveProcessStart(pid)!==null;}
 export function pidMatches(pid, marker){
-  try{
-    const output=execFileSync('ps',['-o','stat=','-o','command=','-p',String(pid)],{encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim();
-    const [state,...command]=output.split(/\s+/);
-    return Boolean(state)&&!state.startsWith('Z')&&command.join(' ').includes(marker);
-  }catch{return false;}
+  const live=liveProcessStart(pid);if(live===null)return false;
+  let evidence;
+  try{evidence=JSON.parse(readFileSync(join(marker,'runtime-evidence.json'),'utf8'));}
+  catch(error){if(error.code==='ENOENT')return false;throw error;}
+  if(evidence.pid!==pid||resolve(evidence.dataDir)!==resolve(marker))return false;
+  if(typeof evidence.processStart==='string'&&typeof live==='string')return evidence.processStart===live;
+  // Unknown identity fails closed for cleanup: an existing matching PID cannot
+  // be reported as reaped merely because the platform lacks a start token.
+  return true;
 }
 export async function until(fn,{timeout=6_000,interval=30}={}){
   const end=Date.now()+timeout;let last;
@@ -87,6 +105,13 @@ export async function external(t){
   t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){const done=new Promise(r=>child.once('exit',r));child.kill('SIGTERM');await done;}await rm(root,{recursive:true,force:true});});
   const origin=`http://127.0.0.1:${port}`;await until(()=>stdout.includes('FIXTURE_READY'));
   return{child,origin,root};
+}
+// Explicit portable HTTP/lease fixture. This remains attach mode and the test
+// that created the external process owns cleanup; AppHost never acquires it.
+export async function attachDefinition(t,{id='example',single=true,embedding='direct'}={}){
+  const {origin}=await external(t);
+  return{id,name:`App ${id}`,singleInstanceOnly:single,deployments:[{id:'local',dataId:'data-v1',mode:'attach',url:origin,
+    embedding,readiness:{path:'/health',status:200,bodyIncludes:'HANAMESH_FIXTURE'}}]};
 }
 export async function identity(origin){return(await http(origin+'/identity')).json;}
 

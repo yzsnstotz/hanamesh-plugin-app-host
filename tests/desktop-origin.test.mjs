@@ -1,3 +1,4 @@
+import { attachDefinition } from './helpers.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {WorkspaceAppClient} from '../src/client.js';
@@ -33,7 +34,7 @@ test('AH-D02: Desktop Referer alone cannot issue a grant or serve app data',asyn
 });
 
 test('AH-D03: app, market and router accept authenticated Desktop forwarding on exact transport only', async t=>{
-  const {host}=await setup(t,{origin:'dsh-app://app',def:definition({embedding:'gateway'})});
+  const {host}=await setup(t,{origin:'dsh-app://app',def:process.platform==='win32'?await attachDefinition(t,{embedding:'gateway'}):definition({embedding:'gateway'})});
   const server=createServer();await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>server.close(r)));
   const transportOrigin=`http://127.0.0.1:${server.address().port}`;
   const auth={parentOrigin:'dsh-app://app',transportOrigin,authenticate:async req=>req.headers.authorization==='Bearer fixture'?{principalId:'fixture'}:null,authorize:async()=>true};

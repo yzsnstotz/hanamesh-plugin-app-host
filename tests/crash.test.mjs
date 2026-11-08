@@ -1,3 +1,4 @@
+import { assertOwnedPlatformRejection } from './platform-owned.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { fork } from 'node:child_process';
@@ -6,11 +7,12 @@ import { rm,readFile } from 'node:fs/promises';
 import { AtomicFileStore } from '../src/index.js';
 import { emptySnapshot } from '../src/store.js';
 import { validateDeclaration } from '../scripts/check-consistency.mjs';
-import { temporary,setup,definition,pidAlive,pidMatches,until,leaseInput } from './helpers.mjs';
+import { temporary,setup,definition,pidAlive,pidMatches,until,leaseInput,external,input } from './helpers.mjs';
 async function killAt(t,mode,point){
   const root=await temporary();let message;
   const initial=new AtomicFileStore(join(root,'sidecar'));await initial.init();await initial.save(emptySnapshot());await initial.close();
-  const child=fork(new URL('./fixtures/crash-worker.mjs',import.meta.url),[mode,root,point??''],{stdio:['ignore','pipe','pipe','ipc']});
+  const attachOrigin=process.platform==='win32'&&mode==='group-stop'?(await external(t)).origin:'';
+  const child=fork(new URL('./fixtures/crash-worker.mjs',import.meta.url),[mode,root,point??'',attachOrigin],{stdio:['ignore','pipe','pipe','ipc']});
   let stderr='';child.stderr.on('data',b=>{stderr+=b;});child.stdout.resume();
   t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){const done=new Promise(r=>child.once('exit',r));child.kill('SIGKILL');await done;}
     const pid=message?.pid??message?.result?.instance?.pid,marker=message?.dataDir??message?.result?.instance?.dataDir;
@@ -44,6 +46,11 @@ for(const point of ['snapshot-temp-fsynced','snapshot-published']){
   });
 }
 test('X03 reserve-launch: SIGKILL after actual process writes leaves a durable owner, never unowned data',async t=>{
+  if(process.platform==='win32'){
+    const points=[],{host}=await setup(t,{checkpoint:async point=>points.push(point)});
+    await assertOwnedPlatformRejection(host,input('reserve-boundary'));
+    assert.deepEqual(points,['reservation-durable'],'reservation must precede platform refusal, with no runtime-spawned crash cut or app data');return;
+  }
   const {snapshot:s,message:m}=await killAt(t,'boundary-reserve');
   const written=JSON.parse(await readFile(join(m.dataDir,'runtime-evidence.json'),'utf8'));assert.equal(written.pid,m.pid);assert(m.aliveAtCut);
   // Mutation must fail HERE for the product invariant, not merely because startup throws.
@@ -52,6 +59,14 @@ test('X03 reserve-launch: SIGKILL after actual process writes leaves a durable o
   console.log('X03 reserve-launch:',JSON.stringify({signal:'SIGKILL',instanceId:m.instanceId,pid:m.pid,appWroteData:true,durableOwner:true,guardianCleanup:true}));
 });
 test('X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while the app is alive',async t=>{
+  if(process.platform==='win32'){
+    const points=[],{host}=await setup(t,{checkpoint:async point=>points.push(point)});
+    const failed=await assertOwnedPlatformRejection(host,input('stop-boundary'));
+    await host.stop(failed.id,{confirm:true});
+    assert.equal(host.instance(failed.id).status,'stopped');
+    assert.ok(!points.includes('runtime-spawned'),'no owned runtime can run at the stop crash boundary');
+    assert.equal(host.instance(failed.id).pid,null);return;
+  }
   const {snapshot:s,message:m}=await killAt(t,'boundary-stop');
   const aliveAfterRestart=pidMatches(m.pid,m.dataDir);
   assert(!(s.instances[0].status==='stopped'&&(m.aliveAtCut||aliveAfterRestart)),
@@ -60,6 +75,15 @@ test('X03 stop-publish: SIGKILL at stop boundary cannot advertise stopped while 
   console.log('X03 stop-publish:',JSON.stringify({signal:'SIGKILL',stateAfterRestart:s.instances[0].status,aliveAtCut:m.aliveAtCut,aliveAfterRestart}));
 });
 test('H12/H06: SIGKILL host, guardian cleanup, fresh host exact-identity resume and persisted app data',async t=>{
+  if(process.platform==='win32'){
+    const root=await temporary(),first=await setup(null,{root});
+    const failed=await assertOwnedPlatformRejection(first.host,{...input('before-restart'),originalSessionId:'exact-document'});
+    await first.host.dispose();const second=await setup(t,{root});
+    assert.equal(second.host.instance(failed.id).status,'failed');
+    const retried=await assertOwnedPlatformRejection(second.host,{...input('after-restart'),instanceId:failed.id,originalSessionId:'exact-document'});
+    assert.equal(retried.id,failed.id);assert.equal(retried.dataDir,failed.dataDir);
+    assert.equal(second.host.list().views.filter(view=>view.status==='active').length,0);return;
+  }
   const {root,message:{result:a}}=await killAt(t,'recovery');await until(()=>!pidMatches(a.instance.pid,a.instance.dataDir));
   const {host}=await setup(null,{root,def:definition({extra:{ignoreTerm:true}})});
   try{
@@ -71,6 +95,15 @@ test('H12/H06: SIGKILL host, guardian cleanup, fresh host exact-identity resume 
   }finally{await host.dispose();}
 });
 test('H12: a stale view from a killed host cannot delay stopping a newly opened view',async t=>{
+  if(process.platform==='win32'){
+    const root=await temporary(),first=await setup(null,{root});
+    const failed=await assertOwnedPlatformRejection(first.host,input('stale'));
+    await first.host.dispose();const second=await setup(t,{root});
+    const current=await assertOwnedPlatformRejection(second.host,input('fresh'));
+    assert.equal(current.id,failed.id);assert.ok(second.host.list().views.every(view=>view.status==='failed'));
+    await assert.rejects(second.host.resume({viewId:'stale',leaseToken:'0'.repeat(64)}),{code:'LEASE_NOT_OWNED'});
+    assert.equal(second.host.instance(failed.id).status,'failed');return;
+  }
   const {root,message:{result:stale}}=await killAt(t,'recovery');await until(()=>!pidMatches(stale.instance.pid,stale.instance.dataDir));
   const {host}=await setup(null,{root,def:definition({extra:{ignoreTerm:true}})});
   try{

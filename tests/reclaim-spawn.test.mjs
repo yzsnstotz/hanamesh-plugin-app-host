@@ -1,13 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
-import {writeFile,readFile,rm,chmod} from 'node:fs/promises';
+import {writeFile,readFile,rm,chmod,access} from 'node:fs/promises';
 import {join} from 'node:path';
 import {spawnOwned,processIdentity} from '../src/runtime.js';
 import {temporary,until,pidAlive} from './helpers.mjs';
 
 test('AH-L07: proven orphan reclamation gets its declared grace before the launch handshake budget',async t=>{
   const dir=await temporary();t.after(()=>rm(dir,{recursive:true,force:true}));
+  if(process.platform==='win32'){
+    const orphan=spawn(process.execPath,['-e','setInterval(()=>{},1000);console.log("READY")'],{stdio:['ignore','pipe','ignore']});
+    await new Promise((resolve,reject)=>{orphan.stdout.once('data',resolve);orphan.once('error',reject);});
+    t.after(()=>{if(orphan.exitCode===null)orphan.kill('SIGKILL');});
+    const lock=join(dir,'.runtime.lock'),record=JSON.stringify({pid:orphan.pid,start:null,id:'windows-unproven',children:[]});await writeFile(lock,record);
+    await assert.rejects(spawnOwned({nodeBinary:process.execPath,command:process.execPath,args:['-e','0'],cwd:dir,dataDir:dir,env:{},stopGraceMs:5000}),{code:'PLATFORM_UNSUPPORTED'});
+    assert(pidAlive(orphan.pid));assert.equal(await readFile(lock,'utf8'),record);return;
+  }
   const orphan=spawn(process.execPath,['-e','process.on("SIGTERM",()=>console.log("ORPHAN_TERM_IGNORED"));setInterval(()=>{},1000);console.log("ORPHAN_READY")'],{detached:true,stdio:['ignore','pipe','ignore']});
   const trace=[];orphan.stdout.on('data',b=>trace.push({at:Date.now(),message:b.toString().trim()}));
   await new Promise((resolve,reject)=>{orphan.stdout.once('data',resolve);orphan.once('error',reject);});
@@ -51,16 +59,19 @@ setInterval(()=>{},1000);`);
 }
 test('AH-L08: hung ownership guardian is bounded by bootstrap plus declared grace and kill confirmation',async t=>{
   const config=await fakeGuardian(t,''),start=Date.now();
+  if(process.platform==='win32'){await assert.rejects(spawnOwned(config),{code:'PLATFORM_UNSUPPORTED'});await assert.rejects(access(join(config.dataDir,'launch-at')),{code:'ENOENT'});assert(Date.now()-start<2000,'platform refusal does not wait for ownership bootstrap');return;}
   await assert.rejects(spawnOwned(config),e=>e.code==='TIMEOUT'&&e.message==='Runtime ownership recovery timed out.');
   assert(Date.now()-start>=7000);assert(Date.now()-start<15000,'hung ownership must not wait indefinitely');
 });
 test('AH-L09: after ownership-ready a hung launcher handshake keeps its independent five second bound',async t=>{
   const config=await fakeGuardian(t,"send({type:'ownership-ready'});"),start=Date.now();
+  if(process.platform==='win32'){await assert.rejects(spawnOwned(config),{code:'PLATFORM_UNSUPPORTED'});await assert.rejects(access(join(config.dataDir,'launch-at')),{code:'ENOENT'});assert(Date.now()-start<2000,'no ownership-ready or launcher handshake is started');return;}
   await assert.rejects(spawnOwned(config),e=>e.code==='TIMEOUT'&&e.message==='Process spawn timed out.');
   assert(Date.now()-start>=4900);assert(Date.now()-start<10000,'hung launcher must not wait indefinitely');
 });
 for(const afterOwnership of [false,true])for(const failure of ['error','exit'])test(`AH-L10: guardian ${failure} ${afterOwnership?'after':'before'} ownership-ready fails immediately`,async t=>{
   const config=await fakeGuardian(t,(afterOwnership?"send({type:'ownership-ready'});":"")+(failure==='error'?"send({type:'error',code:'TEST_EARLY',message:'SYNTHETIC_EARLY_FAILURE'});":"process.exit(1);"));
+  if(process.platform==='win32'){await assert.rejects(spawnOwned(config),{code:'PLATFORM_UNSUPPORTED'});await assert.rejects(access(join(config.dataDir,'launch-at')),{code:'ENOENT'},'unsupported platform cannot reach the synthetic guardian error/exit cut');return;}
   await assert.rejects(spawnOwned(config),e=>e.code===(failure==='error'?'TEST_EARLY':'SPAWN_FAILED'));
   const rejectedAt=Date.now(),launchAt=Number(await readFile(join(config.dataDir,'launch-at'),'utf8'));
   assert(Number.isSafeInteger(launchAt)&&launchAt>0&&launchAt<=rejectedAt,'fixture must record the launch message before failing');

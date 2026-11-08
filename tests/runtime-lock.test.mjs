@@ -1,3 +1,4 @@
+import { assertOwnedPlatformRejection } from './platform-owned.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { fork,spawn } from 'node:child_process';
@@ -21,7 +22,7 @@ test('AH-L01: a runtime lock left by a dead owner is reclaimed (current and lega
   for(const record of [{pid:gone,start:'Thu Jan  1 00:00:00 1970',id:'stale',children:[{pid:await deadPid(),start:'x',command:process.execPath,role:'launcher',group:true}],port:1},{pid:gone,id:'legacy'}]){
     const path=await lockAt(root,record);const lock=new FileLock(path,{reclaimDead:true});
     await lock.acquire();const current=JSON.parse(await readFile(path,'utf8'));
-    assert.equal(current.id,lock.id);assert.equal(current.pid,process.pid);assert.equal(typeof current.start,'string');assert.deepEqual(current.children,[]);
+    assert.equal(current.id,lock.id);assert.equal(current.pid,process.pid);assert.equal(current.start===null&&process.platform==='win32'?null:typeof current.start,process.platform==='win32'?null:'string');assert.deepEqual(current.children,[]);
     await lock.release();assert.equal(await exists(path),false);
   }
   // reclaimDead=false keeps the historical fail-closed behaviour.
@@ -31,7 +32,7 @@ test('AH-L01: a runtime lock left by a dead owner is reclaimed (current and lega
 });
 test('AH-L02: a live owner still blocks, names its pid, and is never signalled',async t=>{
   const root=await temporary();t.after(()=>rm(root,{recursive:true,force:true}));
-  const owner=await idle(t);const live=await processIdentity(owner.pid);assert.equal(typeof live.start,'string');
+  const owner=await idle(t);const live=await processIdentity(owner.pid);assert.equal(live.start===null&&process.platform==='win32'?null:typeof live.start,process.platform==='win32'?null:'string');
   const path=await lockAt(root,{pid:owner.pid,start:live.start,id:'live',children:[],port:4242});
   await assert.rejects(new FileLock(path,{reclaimDead:true}).acquire(),e=>e.code==='DATA_ROOT_BUSY'&&e.details.pid===owner.pid&&e.details.reason==='owner-alive'&&e.details.port===4242);
   // A legacy record without a start token is also treated as live while its pid runs.
@@ -44,7 +45,13 @@ test('AH-L03: same pid with a different start token is a reused pid: reclaimed, 
   const root=await temporary();t.after(()=>rm(root,{recursive:true,force:true}));
   const stranger=await idle(t);const live=await processIdentity(stranger.pid);
   const path=await lockAt(root,{pid:stranger.pid,start:'Thu Jan  1 00:00:00 1970',id:'reused',children:[{pid:stranger.pid,start:'Thu Jan  1 00:00:00 1970',command:process.execPath,role:'app'}]});
-  const lock=new FileLock(path,{reclaimDead:true});await lock.acquire();
+  const lock=new FileLock(path,{reclaimDead:true});
+  if(process.platform==='win32'){
+    await assert.rejects(lock.acquire(),e=>e.code==='DATA_ROOT_BUSY'&&e.details.reason==='owner-alive');
+    assert.equal(live.start,null,'Windows has no proven process start token');
+    assert(pidAlive(stranger.pid));assert.equal(JSON.parse(await readFile(path,'utf8')).id,'reused');return;
+  }
+  await lock.acquire();
   await delay(50);assert(pidAlive(stranger.pid));assert.notEqual(live.start,'Thu Jan  1 00:00:00 1970');
   await lock.release();
   console.log('AH-L03 pid reuse treated as dead:',JSON.stringify({pid:stranger.pid,liveStart:live.start}));
@@ -65,7 +72,14 @@ test('AH-L04: a surviving recorded child blocks unless provably ours; provably-o
   const ours=await idle(t,{ignoreTerm:true});const ourStart=(await processIdentity(ours.pid)).start;
   const exited=new Promise(r=>ours.once('exit',(code,signal)=>r({code,signal})));
   await lockAt(root,{pid:gone,start:'x',id:'orphan3',children:[{pid:unproven.pid,start:'Thu Jan  1 00:00:00 1970',command:process.execPath,role:'launcher'},{pid:ours.pid,start:ourStart,command:process.execPath,role:'app'}]});
-  const lock=new FileLock(path,{reclaimDead:true,orphanGraceMs:60});await lock.acquire();
+  const lock=new FileLock(path,{reclaimDead:true,orphanGraceMs:60});
+  if(process.platform==='win32'){
+    const before=await readFile(path,'utf8');
+    await assert.rejects(lock.acquire(),e=>e.code==='DATA_ROOT_BUSY'&&e.details.reason==='orphan-unproven');
+    assert.equal(await readFile(path,'utf8'),before);assert(pidAlive(ours.pid));assert(pidAlive(unproven.pid));
+    assert.equal(ourStart,null,'absence of a start token cannot authorize termination');return;
+  }
+  await lock.acquire();
   const death=await exited;assert.equal(death.signal,'SIGKILL');assert(pidAlive(unproven.pid),'a reused child pid must not be signalled');
   await lock.release();
   console.log('AH-L04 orphan handling:',JSON.stringify({unproven:unproven.pid,terminated:ours.pid,death}));
@@ -99,6 +113,14 @@ async function orphanedRuntime(t){
   return{root,a,lockPath,launcherPid};
 }
 test('AH-L05: shell tree force-killed -> next open reclaims the stale runtime lock and replaces the orphaned app',async t=>{
+  if(process.platform==='win32'){
+    const stranger=await idle(t),root=await temporary(),path=await lockAt(root,{pid:stranger.pid,start:null,id:'unproven-windows-lock',children:[]});
+    const before=await readFile(path,'utf8');
+    const {host}=await setup(t,{root:join(root,'host')});
+    await assertOwnedPlatformRejection(host,{appId:'example',deploymentId:'local',viewId:'no-windows-orphan-adoption'});
+    assert.equal(await readFile(path,'utf8'),before,'unsupported owned launch cannot reclaim an unproven live Windows runtime lock');
+    assert(pidAlive(stranger.pid));return;
+  }
   const {root,a,lockPath,launcherPid}=await orphanedRuntime(t);
   const {host}=await setup(null,{root,def:definition({extra:{ignoreTerm:true}})});
   try{
@@ -110,6 +132,14 @@ test('AH-L05: shell tree force-killed -> next open reclaims the stale runtime lo
   }finally{await host.dispose();}
 });
 test('AH-L06: shell tree force-killed but the orphan cannot be proven ours -> open keeps failing DATA_ROOT_BUSY with the live pid',async t=>{
+  if(process.platform==='win32'){
+    const stranger=await idle(t),root=await temporary(),path=await lockAt(root,{pid:stranger.pid,start:null,id:'unproven-windows-lock',children:[]});
+    const before=await readFile(path,'utf8');
+    const {host}=await setup(t,{root:join(root,'host')});
+    await assertOwnedPlatformRejection(host,{appId:'example',deploymentId:'local',viewId:'no-windows-orphan-adoption'});
+    assert.equal(await readFile(path,'utf8'),before,'unsupported owned launch cannot reclaim an unproven live Windows runtime lock');
+    assert(pidAlive(stranger.pid));return;
+  }
   const {root,a,lockPath,launcherPid}=await orphanedRuntime(t);
   const record=JSON.parse(await readFile(lockPath,'utf8'));
   record.children=record.children.map(c=>({...c,start:null}));await writeFile(lockPath,JSON.stringify(record));

@@ -1,3 +1,4 @@
+import { assertOwnedPlatformRejection } from './platform-owned.mjs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -12,6 +13,12 @@ test('AH-K5-1: guardian and launcher use the explicit executable Node runtime', 
   assert.equal(typeof runtime.guardianEnvironment, 'function');
   const checkpoints = [];
   const { host } = await setup(t, { nodeBinary: process.execPath, checkpoint: async (point, details) => checkpoints.push({ point, details }) });
+  if(process.platform==='win32'){
+    assert.equal(await runtime.resolveNodeBinary(process.execPath),process.execPath);
+    await assertOwnedPlatformRejection(host,input('k5-explicit'));
+    assert.ok(!checkpoints.some(point=>point.point==='runtime-spawned'),'standalone Node availability cannot widen owned support');
+    return;
+  }
   await host.open(input('k5-explicit'));
   const spawned = checkpoints.find(entry => entry.point === 'runtime-spawned')?.details;
   assert.equal(spawned.nodeBinary, process.execPath);
@@ -27,7 +34,7 @@ test('AH-K5-1: internal runtime environment has only the controlled whitelist', 
   });
   assert.deepEqual(env, {
     DSH_HOME: '/tmp/dsh-k5', HOME: '/tmp/home-k5', LANG: 'ja_JP.UTF-8', TMPDIR: '/tmp/k5',
-    PATH: `${dirname(process.execPath)}:/usr/bin:/bin`,
+    ...(process.platform==='win32'?{PATH:dirname(process.execPath),...((process.env.SystemRoot??process.env.SYSTEMROOT)?{SystemRoot:process.env.SystemRoot??process.env.SYSTEMROOT}:{})}:{PATH:`${dirname(process.execPath)}:/usr/bin:/bin`}),
   });
 });
 
@@ -38,14 +45,16 @@ test('AH-K5-2: Electron self-hosting refuses fallback and persists a failed inst
   Object.defineProperty(process.versions, 'electron', { configurable: true, value: '99.0.0-test' });
   try {
     await assert.rejects(runtime.resolveNodeBinary(), { code: 'NODE_RUNTIME_REQUIRED' });
-    await assert.rejects(host.open(input('k5-electron')), { code: 'NODE_RUNTIME_REQUIRED' });
+    if(process.platform==='win32')await assertOwnedPlatformRejection(host,input('k5-electron'));
+    else await assert.rejects(host.open(input('k5-electron')), { code: 'NODE_RUNTIME_REQUIRED' });
   } finally {
     if (prior) Object.defineProperty(process.versions, 'electron', prior);
     else delete process.versions.electron;
   }
-  const failed = host.instanceList().find(instance => instance.errorCode === 'NODE_RUNTIME_REQUIRED');
+  const expectedCode=process.platform==='win32'?'PLATFORM_UNSUPPORTED':'NODE_RUNTIME_REQUIRED';
+  const failed = host.instanceList().find(instance => instance.errorCode === expectedCode);
   assert.equal(failed?.status, 'failed');
-  assert(host.eventsSince(0).events.some(event => event.type === 'instance.failed' && event.code === 'NODE_RUNTIME_REQUIRED'));
+  assert(host.eventsSince(0).events.some(event => event.type === 'instance.failed' && event.code === expectedCode));
 });
 
 test('AH-K5-2: configured nodeBinary must be absolute and executable', async t => {
@@ -53,7 +62,7 @@ test('AH-K5-2: configured nodeBinary must be absolute and executable', async t =
   await assert.rejects(runtime.resolveNodeBinary('node'), { code: 'NODE_RUNTIME_REQUIRED' });
   const root = await scratch('hm-k5-node-');
   t.after(() => rm(root, { recursive: true, force: true }));
-  const notExecutable = join(root, 'node');
+  const notExecutable = join(root, process.platform==='win32'?'node.exe':'node');
   await writeFile(notExecutable, '#!/bin/sh\nexit 0\n');
   await chmod(notExecutable, 0o600);
   await assert.rejects(runtime.resolveNodeBinary(notExecutable), { code: 'NODE_RUNTIME_REQUIRED' });

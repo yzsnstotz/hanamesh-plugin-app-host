@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { createHttpHandler } from '../src/index.js';
-import { setup,http,input,until } from './helpers.mjs';
+import { setup,http,input,until,attachDefinition } from './helpers.mjs';
 async function api(t){
   let handler;const server=createServer((req,res)=>handler(req,res));await new Promise(r=>server.listen(0,'127.0.0.1',r));
   const origin=`http://127.0.0.1:${server.address().port}`;t.after(()=>new Promise(r=>{server.closeAllConnections();server.close(r);}));
-  const {host}=await setup(t,{origin});handler=createHttpHandler(host,{parentOrigin:origin,authenticate:req=>req.headers.authorization==='Bearer test-owner'?{principalId:'alice'}:req.headers.authorization==='Bearer test-other'?{principalId:'bob'}:null,authorize:()=>true});
+  const {host}=await setup(t,{origin,...(process.platform==='win32'?{def:await attachDefinition(t)}:{})});handler=createHttpHandler(host,{parentOrigin:origin,authenticate:req=>req.headers.authorization==='Bearer test-owner'?{principalId:'alice'}:req.headers.authorization==='Bearer test-other'?{principalId:'bob'}:null,authorize:()=>true});
   const headers={'content-type':'application/json',origin,'x-hanamesh-client':'workspace-v1',authorization:'Bearer test-owner'};
   return{origin,host,headers,post:(path,body,overrides={})=>http(origin+path,{method:'POST',headers:{...headers,...overrides},body:JSON.stringify(body)})};
 }

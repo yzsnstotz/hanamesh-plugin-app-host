@@ -19,12 +19,17 @@ test('AH store: a second live owner is rejected and cannot silently overwrite st
   await assert.rejects(b.init(),{code:'DATA_ROOT_BUSY'});await a.save(emptySnapshot());assert.equal((await a.load()).revision,0);
 });
 test('AH store: corrupt snapshots and symlinked roots fail closed',async t=>{
-  const root=await temporary();t.after(()=>rm(root,{recursive:true,force:true}));await symlink(root,join(root,'link'));await assert.rejects(secureDirectory(join(root,'link','child')));
+  const root=await temporary();t.after(()=>rm(root,{recursive:true,force:true}));await symlink(root,join(root,'link'),process.platform==='win32'?'junction':'dir');await assert.rejects(secureDirectory(join(root,'link','child')));
   assert.throws(()=>validateSnapshot({...emptySnapshot(),leases:[null]}),{code:'CORRUPT_STATE'});
   const s=new AtomicFileStore(join(root,'store'));await s.init();try{await writeFile(s.path,'{invalid');await assert.rejects(s.load());}finally{await s.close();}
 });
 test('AH readiness: unrelated HTTP 200 with the same app marker is not owned readiness',async t=>{
-  const {origin}=await external(t);assert.equal(await ownsLoopbackPort(99999999,Number(new URL(origin).port)),false);
+  const {origin}=await external(t);
+  if(process.platform==='win32'){
+    await assert.rejects(ownsLoopbackPort(99999999,Number(new URL(origin).port)),{code:'PLATFORM_UNSUPPORTED'});
+    await assert.rejects(waitReady(origin,{path:'/health',status:200,bodyIncludes:'HANAMESH_FIXTURE'},{runtime:{mode:'owned',groupId:99999999,isAlive:()=>true},timeoutMs:120,signal:new AbortController().signal}),{code:'PLATFORM_UNSUPPORTED'});return;
+  }
+  assert.equal(await ownsLoopbackPort(99999999,Number(new URL(origin).port)),false);
   await assert.rejects(waitReady(origin,{path:'/health',status:200,bodyIncludes:'HANAMESH_FIXTURE'},
     {runtime:{mode:'owned',groupId:99999999,isAlive:()=>true},timeoutMs:120,signal:new AbortController().signal}),{code:'READY_TIMEOUT'});
 });

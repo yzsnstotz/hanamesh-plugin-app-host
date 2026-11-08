@@ -1,3 +1,4 @@
+import { processIdentity } from '../../src/runtime.js';
 import { createServer } from 'node:http';
 import { writeFile, readFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -5,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 const args=Object.fromEntries(process.argv.slice(2).map(s=>{const p=s.indexOf('=');return[s.slice(0,p),s.slice(p+1)];}));
 const root=args.data;await mkdir(root,{recursive:true});
-const evidence={pid:process.pid,runtimeId:args.runtimeId,instanceId:args.instanceId,dataDir:root,home:process.env.HOME,
+const evidence={pid:process.pid,processStart:(await processIdentity(process.pid))?.start??null,runtimeId:args.runtimeId,instanceId:args.instanceId,dataDir:root,home:process.env.HOME,
   inheritedSecret:process.env.DSH_TOKEN??null,
   credentialEnv:{EXAMPLE_API_KEY:process.env.EXAMPLE_API_KEY??null,LANGCHAIN_PROVIDER:process.env.LANGCHAIN_PROVIDER??null,UNDECLARED_KEY:process.env.UNDECLARED_KEY??null},
   homeAuth:await readFile(join(process.env.HOME??'','.codex','auth.json'),'utf8').catch(()=>null),
