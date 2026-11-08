@@ -22,6 +22,16 @@ export async function resolveNodeBinary(nodeBinary) {
   }
   try { await access(selected, constants.X_OK); }
   catch { throw new AppHostError('NODE_RUNTIME_REQUIRED', 'nodeBinary must be an absolute executable path.'); }
+  if (process.platform === 'win32') {
+    // Windows X_OK only checks existence. Verify the selected native runtime
+    // with a fixed expression before it can become a guardian executable.
+    try {
+      const {stdout} = await exec(selected, ['-p', 'JSON.stringify({node:process.release.name,electron:process.versions.electron??null})'],
+        {timeout:2_000,maxBuffer:1024,windowsHide:true,env:guardianEnvironment(selected)});
+      const result=JSON.parse(stdout);
+      if(result.node!=='node'||result.electron!==null)throw new Error('Not a standalone Node executable.');
+    } catch { throw new AppHostError('NODE_RUNTIME_REQUIRED','nodeBinary must be a standalone executable Node.js runtime.'); }
+  }
   return selected;
 }
 export function guardianEnvironment(nodeBinary, source = process.env) {
@@ -30,7 +40,11 @@ export function guardianEnvironment(nodeBinary, source = process.env) {
     if (typeof source[key] === 'string' && source[key].length) env[key] = source[key];
   }
   if (!env.LANG) env.LANG = 'C.UTF-8';
-  env.PATH = `${dirname(nodeBinary)}:/usr/bin:/bin`;
+  if(process.platform==='win32') {
+    const systemRoot=source.SystemRoot??source.SYSTEMROOT??process.env.SystemRoot??process.env.SYSTEMROOT;
+    if(systemRoot)env.SystemRoot=systemRoot;
+    env.PATH=dirname(nodeBinary);
+  } else env.PATH = `${dirname(nodeBinary)}:/usr/bin:/bin`;
   return env;
 }
 export async function freePort() {

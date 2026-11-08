@@ -22,13 +22,13 @@ async function versions(root,suffix){
 }
 
 /** VS Code's framed login-shell environment pattern, narrowed to named infrastructure paths only. */
-export async function readLoginEnvironment({home=homedir(),env=process.env,signal,workerNode,timeoutMs=INSTALLATION_READ_BUDGET.timeoutMs}={}){
+export async function readLoginEnvironment({home=homedir(),env=process.env,signal,workerNode,timeoutMs=INSTALLATION_READ_BUDGET.timeoutMs,runCommand=runOfficialInstallationCommand}={}){
  const shell=env.SHELL??userInfo().shell;
  if(!absolute(shell))throw failure('AGENT_SHELL_ENV_UNAVAILABLE');
  const node=guardNodeBinary({workerNode});if(!node)throw failure('AGENT_READER_NODE_REQUIRED');
  const quote=value=>"'"+value.replaceAll("'","'\\''")+"'";
  const script=`const env={};for(const key of ${JSON.stringify(INSTALLATION_ENV_KEYS)})if(process.env[key]!==undefined)env[key]=process.env[key];process.stdout.write('\\0HANAMESH_ENV\\0'+JSON.stringify(env)+'\\0');`;
- const output=await runOfficialInstallationCommand({channel:'shell',reader:{executable:shell,home,configDir:home,...AGENT_INSTALLATION_TARGET,...INSTALLATION_READ_BUDGET,timeoutMs,runtimeEnv:installationEnvironment(env)},
+ const output=await runCommand({channel:'shell',reader:{executable:shell,home,configDir:home,...AGENT_INSTALLATION_TARGET,...INSTALLATION_READ_BUDGET,timeoutMs,runtimeEnv:installationEnvironment(env)},
   args:['-ilc',`${quote(node)} -e ${quote(script)}`],signal,workerNode});
  const parts=output.split('\0HANAMESH_ENV\0');
  if(parts.length!==2||!parts[1].includes('\0'))throw failure('AGENT_SHELL_ENV_UNAVAILABLE');

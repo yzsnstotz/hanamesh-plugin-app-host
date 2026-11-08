@@ -19,7 +19,7 @@ const checkScript="console.log(JSON.stringify({version:process.versions.node,pla
 export async function probeStandaloneNode(binary,{platform,version,signal}={}){
  requireCondition(typeof binary==='string'&&isAbsolute(binary),'NODE_BINARY_INVALID','独立 Node 路径必须是绝对路径。');
  await access(binary,constants.X_OK);
- const {stdout}=await run(binary,['-e',checkScript],{env:{PATH:''},maxBuffer:4096,signal});
+ const {stdout}=await run(binary,['-e',checkScript],{env:{PATH:''},timeout:2_000,maxBuffer:4096,signal});
  let actual;try{actual=JSON.parse(stdout);}catch{throw new AppHostError('NODE_NOT_STANDALONE','所选文件没有返回独立 Node 的检查结果；Electron 包装脚本不能代替独立 Node。');}
  requireCondition(actual.electron===null&&/^24\./.test(actual.version)&&(Number(actual.version.split('.')[1])>13||Number(actual.version.split('.')[1])===13&&Number(actual.version.split('.')[2])>=1)&&(!version||actual.version===version)&&`${actual.platform}-${actual.arch}`===platform,'NODE_NOT_STANDALONE','需要当前平台的独立 Node.js 24（24.13.1 或更新）；所选文件的版本、平台或 Electron 检查未通过。');
  return actual;
@@ -47,8 +47,8 @@ export function createNodeRuntime({domain,dataRoot,config={},initialBinary,platf
   requireCondition(next.mode!=='external'||isAbsolute(next.externalBinary),'NODE_BINARY_INVALID','已有独立 Node 路径必须是绝对路径。');
   return {...next,sourceBase:source.href.replace(/\/$/,'')};
  }
- const externalCheck=()=>requireCondition(['darwin-arm64','darwin-x64','linux-arm64','linux-x64'].includes(platform),'NODE_PLATFORM_UNSUPPORTED','当前平台尚未完成独立 Node 的进程守护支持；Windows 不支持本安装流程。');
- const supportedCheck=()=>requireCondition(supported,'NODE_PLATFORM_UNSUPPORTED','一键准备当前仅支持 macOS 13.5 及以上的 arm64 / x64；Windows 安装与进程守护尚未接通。');
+ const externalCheck=()=>requireCondition(['darwin-arm64','darwin-x64','linux-arm64','linux-x64','win32-x64'].includes(platform),'NODE_PLATFORM_UNSUPPORTED','当前平台尚未完成已有独立 Node 的受控 CLI 支持。');
+ const supportedCheck=()=>requireCondition(supported,'NODE_PLATFORM_UNSUPPORTED','一键准备当前仅支持 macOS 13.5 及以上的 arm64 / x64；Windows 受管准备和 owned 应用守护尚未接通。');
  async function publish(next){const whole={...next,revision:state.revision+1};await domain.global.set(whole);state=whole;}
  function manifest(p){return {schema:1,sources:[{id:'confirmed-source',kind:'https',base:new URL(`v${p.version}/`,p.sourceBase+'/').href}],items:[{id:'node',version:p.version,kind:'tar.gz',installTo:'runtime',platforms:{[platform]:{asset:p.asset,sha256:p.sha256,size:p.bytes,strip:1}},verify:{exec:'bin/node',args:['-e',checkScript],expect:JSON.stringify({version:p.version,platform:'darwin',arch:platform.slice(7),electron:null})}}]};}
  async function verifyActive(active,signal,heldLock){
@@ -66,7 +66,7 @@ export function createNodeRuntime({domain,dataRoot,config={},initialBinary,platf
     else if(state.active){supportedCheck();executable=await verifyActive(state.active);}
    }catch(e){operation={id:null,state:'failed',phase:'restore',error:{message:'安装环境尚未就绪：'+causeText(e),code:e.code??'NODE_CHECK_FAILED'}};}
   },
-  status(){return copy({settings,names:NODE_SETTING_NAMES,versions:[...new Set(catalog.archives.map(a=>a.version))],platform,supported,ready:!!executable,executable:executable??null,active:state?.active??null,operation,limitations:'一键准备支持 macOS 13.5+ arm64 / x64；Windows 尚不支持。下载仅在确认后开始；不重试、不切换来源。'});},
+  status(){return copy({settings,names:NODE_SETTING_NAMES,versions:[...new Set(catalog.archives.map(a=>a.version))],platform,supported,ready:!!executable,executable:executable??null,active:state?.active??null,operation,limitations:'一键准备支持 macOS 13.5+ arm64 / x64；Windows x64 可使用已验证的已有独立 Node 运行受控 CLI，受管准备和 owned 应用守护仍不支持。下载仅在确认后开始；不重试、不切换来源。'});},
   async save(input){exact(input,['settings']);idle();const next=validate(input.settings);saving=true;plan=null;
    try{await safeAncestors(next.storageRoot);let external;
     if(next.mode==='external'){externalCheck();await probe(next.externalBinary,{platform});external=next.externalBinary;}

@@ -1,6 +1,6 @@
 import { constants } from 'node:fs';
 import { mkdir, readFile, open, rename, unlink, lstat, realpath } from 'node:fs/promises';
-import { dirname, isAbsolute, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, resolve, parse, sep } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { AppHostError, SerialQueue, copy, requireCondition } from './errors.js';
 import { processIdentity } from './runtime.js';
@@ -42,8 +42,9 @@ export function validateSnapshot(s) {
 // Only use under an explicitly selected local profile root. Reject symlink components.
 export async function secureDirectory(path) {
   requireCondition(isAbsolute(path), 'INVALID_ROOT', 'An absolute data directory is required.');
-  const parts = resolve(path).split('/').filter(Boolean);
-  let current = '/';
+  const absolute = resolve(path), root = parse(absolute).root;
+  const parts = absolute.slice(root.length).split(sep).filter(Boolean);
+  let current = root;
   for (const part of parts) {
     current = join(current, part);
     await mkdir(current, { mode: 0o700 }).catch(e => { if (e.code !== 'EEXIST') throw e; });
@@ -218,8 +219,14 @@ export class AtomicFileStore {
         await this.checkpoint('snapshot-temp-fsynced', copy(image));
         await fd.close(); fd = undefined;
         await rename(temp, this.path); renamed = true;
-        const directory = await open(dirname(this.path), constants.O_RDONLY);
-        try { await directory.sync(); } finally { await directory.close(); }
+        // Node cannot open a directory for fsync on Windows. The completed
+        // file sync and same-directory rename still publish one whole image;
+        // only POSIX additionally synchronizes the directory entry. Do not
+        // reinterpret an arbitrary POSIX fsync failure as success.
+        if (process.platform !== 'win32') {
+          const directory = await open(dirname(this.path), constants.O_RDONLY);
+          try { await directory.sync(); } finally { await directory.close(); }
+        }
         await this.checkpoint('snapshot-published', copy(image));
       } catch (e) {
         // Post-rename failure is an ambiguous commit, not a guaranteed rollback.

@@ -36,9 +36,12 @@ export function createProviderSources({ credentials, apps, llm = () => undefined
     if (!dshHome) return null;
     const path = join(dshHome,'.coding-oauth-gateway.json');
     let fileStat, value;
-    try { fileStat = await stat(path); value = JSON.parse(await readFile(path,'utf8')); } catch { return null; }
-    if ((fileStat.mode & 0o077) !== 0) return { id:'coding-oauth-gateway', source:'coding-oauth-gateway', kind:'api-key',
+    try { fileStat = await stat(path); } catch { return null; }
+    // Node mode bits cannot prove a private Windows ACL. Refuse file-mode
+    // secrets before reading them; the authenticated HTTP provider remains available.
+    if (process.platform === 'win32' || (fileStat.mode & 0o077) !== 0) return { id:'coding-oauth-gateway', source:'coding-oauth-gateway', kind:'api-key',
       displayName:'Coding OAuth Gateway', state:'unreachable' };
+    try { value = JSON.parse(await readFile(path,'utf8')); } catch { return null; }
     const base = { id:'coding-oauth-gateway', source:'coding-oauth-gateway', kind:'api-key', displayName:'Coding OAuth Gateway',
       ...(Array.isArray(value.models) ? { models:value.models } : {}), ...(value.keyHint ? { keyHint:value.keyHint } : {}) };
     if (!value.enabled) return { ...base, state:'gateway-off' };
