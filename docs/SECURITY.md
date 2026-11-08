@@ -1,3 +1,5 @@
+D3（编排11-09授权）：仅公开install-target的有效匿名GET/GET预检对名单外HTTP(S) Origin给精确CORS，披露固定ORIGIN_DENIED与本机拒绝监听存在，不披露客户端能力、安装或允许名单。预检204只使浏览器继续读取拒绝；PNA true响应仅在对应请求头为true时出现。其他接口/Host/凭据/iframe边界不变。详见INSTALL_TARGET.md。
+
 0.6.23：安装状态只在原显式同意之后自动发现当前用户的官方 CLI；不读认证/聊天/配置文件、不修改用户配置。登录 shell 只输出带边界的 PATH，未继承模型/API token；CLI 仍限版本与插件/市场只读清单，版本下限和既有 JSON 校验双门。Windows npm shim 解析至具名官方 JS，绝不经 cmd 执行。详见 INSTALLATION_STATUS.md。
 
 0.6.7 installation-status is a separately consented read capability: exact existing loopback Host/approved Origin, credentials omitted, strict POST body before any reader. Core is authoritative; CLI executable/profile/target/budgets are static trusted settings, never browser input. Official list output is whitelisted and no raw paths, unrelated inventory or errors leave the host. A live detached IPC anchor owns cancellation and parent-disconnect group cleanup; no cached installed answer. See INSTALLATION_STATUS.md for exact protocol and scope limits.

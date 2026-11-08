@@ -1,4 +1,5 @@
 import { installationStatusCors, serveInstallationStatus } from './installation-status-http.js';
+import {serveInstallTargetProbe} from './install-target-http.js';
 import { randomUUID } from 'node:crypto';
 import { AppHostError, requireCondition } from '../errors.js';
 import { controlOrigins } from '../control-origin.js';
@@ -33,16 +34,7 @@ export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,a
       await serveInstallationStatus(req,res,{read:library.installationStatus,maxBodyBytes:HANDOFF_BODY_MAX_BYTES,traceId,cors,send});return;
     }
     if(path==='/hanamesh/library/install-target'){
-      // Match the website handoff policy; same-origin workspace and non-browser local reads remain available.
-      const origin=req.headers.origin;
-      if(origin!==undefined){
-        requireCondition(origin===requestOrigin||origins.acceptsOrigin(origin)||library.handoffSettings().allowedOrigins.includes(origin),'ORIGIN_DENIED','Not available.',undefined,403);
-        cors={'access-control-allow-origin':origin,vary:'Origin','access-control-allow-private-network':'true'};
-      }
-      if(req.method==='OPTIONS'){send(res,204,undefined,{...cors,'access-control-allow-methods':'GET'});return;}
-      requireCondition(req.method==='GET','METHOD_NOT_ALLOWED','Discovery requires GET.',{},405);
-      requireCondition(!url.search,'UNKNOWN_FIELDS','Discovery takes no parameters.');
-      send(res,200,{...library.installTarget(),traceId},cors);return;
+      serveInstallTargetProbe(req,res,{allowedOrigins:[requestOrigin,origins.parent,...library.handoffSettings().allowedOrigins],read:()=>library.installTarget(),traceId,send});return;
     }
     const readOnly=req.method==='GET'&&READ_ROUTES.has(path);
     requireCondition(readOnly||(req.method==='POST'&&!['/hanamesh/library/installedPlugins','/hanamesh/library/target','/hanamesh/library/handoffs'].includes(path)),'METHOD_NOT_ALLOWED','Unsupported library method.',{},405);

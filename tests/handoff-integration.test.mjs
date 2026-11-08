@@ -133,9 +133,9 @@ test('N16-6: both discovery listeners use the current website allowlist without 
   const h = await boot(t), path = '/hanamesh/library/install-target';
   for (const base of [h.origin, h.listener]) {
     const denied = await site(base + path, {headers: {origin: 'https://unapproved.example'}});
-    assert.equal(denied.status, 403);assert.equal(denied.headers.get('access-control-allow-origin'), null);
+    assert.equal(denied.status, 403);assert.equal(denied.headers.get('access-control-allow-origin'), 'https://unapproved.example');
     const body = await denied.json();assert.equal(body.client, undefined);assert.equal(body.ready, undefined);assert.equal(body.installTarget, undefined);
-    const deniedPreflight = await site(base + path, {method:'OPTIONS',headers:{origin:'https://unapproved.example'}});assert.equal(deniedPreflight.status,403);assert.equal(deniedPreflight.headers.get('access-control-allow-origin'),null);
+    const deniedPreflight = await site(base + path, {method:'OPTIONS',headers:{origin:'https://unapproved.example','access-control-request-method':'GET','access-control-request-private-network':'true'}});assert.equal(deniedPreflight.status,204);assert.equal(deniedPreflight.headers.get('access-control-allow-origin'),'https://unapproved.example');assert.equal(deniedPreflight.headers.get('access-control-allow-private-network'),'true');
     assert.equal((await fetch(base + path)).status,200,'non-browser local discovery remains available');
     const invalid = await site(base + path + '?unknown=1');assert.equal(invalid.status,400);assert.equal(invalid.headers.get('access-control-allow-origin'),SITE);
     const allowed = await site(base + path);assert.equal(allowed.status, 200);

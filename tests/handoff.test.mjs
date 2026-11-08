@@ -54,19 +54,19 @@ test('defaults are the owner-approved values and settings are validated only by 
   assert.match(await readFile(new URL('../src/client-ui.js', import.meta.url), 'utf8'), new RegExp(`const HANDOFF_DEFAULT_POLL_MS=${HANDOFF_DEFAULTS.pollMs};`));
 });
 
-test('probe answers client, readiness and need only to allowed websites; any other website learns nothing', async t => {
+test('probe answers client facts only to allowed websites; other valid websites read a constant refusal', async t => {
   const { base } = await start(t, { library: fakeLibrary({ ready: false }) });
   const probe = await fetch(base + '/hanamesh/library/install-target', { headers: { origin: SITE } });
   assert.equal(probe.status, 200); assert.equal(probe.headers.get('access-control-allow-origin'), SITE);
   const body = await probe.json();
   assert.equal(body.client, 'hanamesh'); assert.equal(body.ready, false); assert.deepEqual(body.error.need, [{ need: 'X', how: 'Y' }]);
   const stranger = await fetch(base + '/hanamesh/library/install-target', { headers: { origin: 'https://anything.example' } });
-  assert.equal(stranger.status, 403); assert.equal(stranger.headers.get('access-control-allow-origin'), null);
+  assert.equal(stranger.status, 403); assert.equal(stranger.headers.get('access-control-allow-origin'), 'https://anything.example');
   const hidden = await stranger.text();
   assert.doesNotMatch(hidden, /hanamesh"|ready|need|client/, 'no client, readiness or need in the refusal');
-  const strangerPreflight = await fetch(base + '/hanamesh/library/install-target', { method: 'OPTIONS', headers: { origin: 'https://anything.example', 'access-control-request-private-network': 'true' } });
-  assert.equal(strangerPreflight.headers.get('access-control-allow-origin'), null);
-  assert.equal(strangerPreflight.headers.get('access-control-allow-private-network'), null);
+  const strangerPreflight = await fetch(base + '/hanamesh/library/install-target', { method: 'OPTIONS', headers: { origin: 'https://anything.example', 'access-control-request-method':'GET', 'access-control-request-private-network': 'true' } });
+  assert.equal(strangerPreflight.status,204);assert.equal(strangerPreflight.headers.get('access-control-allow-origin'), 'https://anything.example');
+  assert.equal(strangerPreflight.headers.get('access-control-allow-private-network'), 'true');
   const preflight = await fetch(base + '/hanamesh/library/install-target', { method: 'OPTIONS', headers: { origin: SITE, 'access-control-request-private-network': 'true' } });
   assert.equal(preflight.status, 204); assert.equal(preflight.headers.get('access-control-allow-private-network'), 'true');
   assert.equal(preflight.headers.get('access-control-allow-origin'), SITE);

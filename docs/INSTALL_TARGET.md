@@ -16,7 +16,11 @@ GitHub ref 必须是收录时固定的完整 40 位 SHA，不在安装时解析�
 
 GitHub CLI exit 0 后还须核对 profile 精确保存的 Git spec、模块包名/版本、dsh.bundle 和 profile 启用列表，随后报告 restart-required；重开后由原生 DSH 加载。不自行 clone/build，不改上游，不用进程内安装器。失败补偿沿原 CLI；pnpm-workspace.yaml 若发生变化，恢复报告保留 build-permissions 残留及原文件，不擅自撤销或静默宣称恢复。handoff 事件按完整目标匹配，不能只靠同名包把另一个 SHA 报为成功。
 
-网站发现：DSH 本地路由与交接监听的 `/hanamesh/library/install-target` 都按当前 `library.handoff.allowedOrigins` 回答跨来源 GET / OPTIONS；只回显获准 Origin（Vary: Origin），不使用通配 CORS。未获准来源为 403 ORIGIN_DENIED，正文无客户端能力。正常工作区同源读取、无 Origin 的本机工具读取保留。其余安装/状态路由继续需要各自认证与确认。
+网站发现（0.6.23候选，编排11-09授权D3）：DSH本地与交接监听共用`install-target-http.js`。仅获准来源可读取客户端能力；名单外的有效HTTP/HTTPS来源，对无查询、无Cookie/Authorization、非iframe的精确`GET /hanamesh/library/install-target`，返回精确`Access-Control-Allow-Origin: <请求Origin>`、`Vary: Origin`及固定`403 {"error":{"code":"ORIGIN_DENIED","message":"This website is not allowed to read discovery."}}`。无客户端类型/能力/ready/版本/清单/允许名单/traceId；不调用能力或安装清单读取器。该最小拒绝有意允许网站识别本机存在拒绝它的监听，不代表任何安装或读取授权。无`*`/Allow-Credentials/Set-Cookie。无Origin的本机工具及获准工作区读取保留。
+
+预检：精确同一路径的有效GET预检返回204空正文、精确Origin和`Access-Control-Allow-Methods: GET`，使浏览器能继续GET并读到403；不把403放在预检上。仅请求带`Access-Control-Request-Private-Network: true`时返回`Access-Control-Allow-Private-Network: true`；普通预检和实际GET均不带该响应头。Vary包含Origin、Access-Control-Request-Method、Access-Control-Request-Headers、Access-Control-Request-Private-Network；无Max-Age缓存。请求额外headers、非GET预检、非法PNA值被拒绝且不授CORS；名单外预检必须显式声明GET。获准来源/本机工具的旧OPTIONS缺省method保持可用。依据：[Fetch预检成功状态](https://fetch.spec.whatwg.org/#cors-preflight-fetch)、[Chrome PNA预检](https://developer.chrome.com/blog/private-network-access-preflight)。现代Chrome的[LNA本机访问权限](https://developer.chrome.com/docs/modern-web-guidance/guides/security/local-network-access)独立生效，此响应不绕过浏览器授权。
+
+错误Host、绝对/双斜线/反斜线target、opaque或畸形Origin、名单外凭据/查询/非探测方法、iframe均不获此拒绝CORS例外；installation-status、交接、库存、设置、安装等接口继续原名单/同意/认证与确认规则。
 
 轮询设置：`pollMs` 写入应用库真实 storage domain；保存、卸载再加载后保持。旧记录没有该字段时使用既有配置/默认 1500 ms，不重写其它存储数据。
 
@@ -127,7 +131,7 @@ node node_modules/@hanamesh/dsh-app-host/dist/install-target/run.js consumer --u
 
 ## 本机公开探测与目录消费（D-180）
 
-`GET /hanamesh/library/install-target` 无参数，精确回环 Host、非 iframe，允许跨源匿名只读探测。返回 `{client:'dsh',ready,installTarget:{contract:'hanamesh.install-target',contractVersion:'1',supported:['1'],fragmentPrefix:'#hanamesh-install?'},traceId,error?}`；缺安装器 `ready:false` 且 `error.code='INSTALL_TARGET_UNAVAILABLE'`。只这一项带 `Access-Control-Allow-Origin:*`、no-store，不发 Cookie/Allow-Credentials，不返回 profile、已装行、工作区认证地址、命令或租约。独立 DSH 默认报 dsh；没有真实 Desktop 公开证据时不推断 HanaMesh 品牌。其余控制路径仍按原 DSH 认证与准确同源授权执行。
+`GET /hanamesh/library/install-target` 无参数，精确回环 Host、非 iframe，允许跨源匿名只读探测。返回 `{client:'dsh',ready,installTarget:{contract:'hanamesh.install-target',contractVersion:'1',supported:['1'],fragmentPrefix:'#hanamesh-install?'},traceId,error?}`；缺安装器 `ready:false` 且 `error.code='INSTALL_TARGET_UNAVAILABLE'`。只这一项依本页“网站发现”规则带精确Origin CORS、no-store，不发 Cookie/Allow-Credentials，不返回 profile、已装行、工作区认证地址、命令或租约。独立 DSH 默认报 dsh；没有真实 Desktop 公开证据时不推断 HanaMesh 品牌。其余控制路径仍按原 DSH 认证与准确同源授权执行。
 
 C-WEB-CATALOG 第1版的显式 `catalog-source.json?view=hanamesh` 与 manifest 的 `/v1/plugins?view=hanamesh` 可配置为目录来源。旧无 view 源仍严格按 catalog-major-1，不混 schema 或静默降级。新 DTO 保留 id=itemId、可空 npm 身份及公开 sourceLinks；q 是子串查询，目标按精确身份匹配，空页仍有游标则续翻。只给包名时遍历确认唯一目录身份；多个身份返回409 CATALOG_TARGET_AMBIGUOUS。无 npm 包仅浏览；来源链接/分类/目录版本都不能成为启动或安装权限。CATALOG_CHANGED 中止本轮、不拼代或自动重试，其余提供方公开错误保持原 code；故障不退 fixture。
 

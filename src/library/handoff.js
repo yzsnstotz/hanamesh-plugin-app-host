@@ -1,4 +1,5 @@
 import { installationStatusCors, serveInstallationStatus } from './installation-status-http.js';
+import {serveInstallTargetProbe} from './install-target-http.js';
 /**
  * Website → client install handoff (C-MARKET, 2026-10-15 E/F). Upstream Desktop listens on an OS-assigned port that
  * nothing records, and a browser tab without the launch token gets 401, so a website can neither find nor enter the
@@ -33,7 +34,7 @@ const TIMER_MAX_MS = 2_147_483_647;
 /** Fixed rules (correctness, not policy): listed on the settings page with the reason they cannot be switched off. */
 export const HANDOFF_RULES = Object.freeze([
   { rule: '只在本机 127.0.0.1 上监听，请求的 Host 必须是 127.0.0.1 或 localhost 加监听端口', why: '防止别的机器或 DNS 重绑定的网页冒充本机' },
-  { rule: '只有「允许交接的网站」里的网站能探测本客户端、交接安装、读交接状态；别的网站什么也读不到', why: '否则任何网页都能知道你装了什么客户端、缺什么，用来识别你' },
+  { rule: '只有「允许交接的网站」能读取客户端能力、交接安装和交接状态；未许可网站仅能读取固定的来源拒绝提示', why: '拒绝提示只说明本机监听拒绝了该网站，不透露客户端类型、能力、安装情况或允许名单' },
   { rule: '网站交接只会在应用库里弹出确认；只有你点「确认安装」才会安装', why: '网站不能替你决定装什么' },
   { rule: '交接状态只给发起它的那个网站看', why: '一个网站不能读另一个网站的交接' },
   { rule: `交接请求体不超过 ${HANDOFF_BODY_MAX_BYTES} 字节`, why: '交接只包含目录身份、合约版本及已审核的结构化安装目标；正文上限为 4096 字节，不接受来源命令' },
@@ -168,16 +169,7 @@ export function createHandoffHandler({ library, queue, settings, port }) {
       requireCondition([`127.0.0.1:${bound}`, `localhost:${bound}`].includes(req.headers.host), 'HOST_DENIED', 'Unrecognized request host.', {}, 403);
       const url = new URL(req.url ?? '/', `http://${req.headers.host}`), path = url.pathname, origin = req.headers.origin;
       if (path === '/hanamesh/library/install-target') {
-        // A website not in allowedOrigins gets no CORS grant and no body: it cannot tell which client runs or what it lacks.
-        // Requests without an Origin are not from a website (a person's address bar, a local tool) and are answered.
-        if (origin !== undefined) {
-          requireCondition(settings().allowedOrigins.includes(origin), 'ORIGIN_DENIED', 'Not available.', undefined, 403);
-          cors = { 'access-control-allow-origin': origin, vary: 'Origin', 'access-control-allow-private-network': 'true' };
-        }
-        if (req.method === 'OPTIONS') { send(res, 204, undefined, { ...cors, 'access-control-allow-methods': 'GET' }); return; }
-        requireCondition(req.method === 'GET', 'METHOD_NOT_ALLOWED', 'Discovery requires GET.', {}, 405);
-        requireCondition(!url.search, 'UNKNOWN_FIELDS', 'Discovery takes no parameters.');
-        send(res, 200, { ...library.installTarget(), traceId }, cors); return;
+        serveInstallTargetProbe(req,res,{allowedOrigins:settings().allowedOrigins,read:()=>library.installTarget(),traceId,send});return;
       }
       if(path === '/hanamesh/library/installation-status'){
         cors=installationStatusCors(req,settings().allowedOrigins);
