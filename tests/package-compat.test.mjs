@@ -3,20 +3,21 @@ import assert from 'node:assert/strict';
 import { readFile, mkdir, rm } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
+import {createHash} from 'node:crypto';
 import { DSH_TARGET } from '../src/dsh.js';
 import { scratch } from './helpers.mjs';
 
 test('NPM-APPHOST-01: published metadata admits official rc.2 and alpha.2 with bundled provision source dependency', async () => {
   const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
-  assert.equal(DSH_TARGET, '>=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0');
+  assert.equal(DSH_TARGET, '>=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0');
   assert.equal(pkg.hanamesh.dshTarget, DSH_TARGET);
   assert.equal(pkg.hanamesh.deliveryStatus, undefined);
   assert.equal(pkg.peerDependencies['@deepseek-ai/dsh-storage-domain'], DSH_TARGET);
   for (const name of ['@deepseek-ai/dsh-host-webserver', '@deepseek-ai/dsh-client-connection',
     '@deepseek-ai/dsh-client-ui-renderer', '@deepseek-ai/dsh-client-ui-settings', '@deepseek-ai/dsh-client-locale'])
     assert.equal(pkg.peerDependencies[name], DSH_TARGET, name);
-  assert.equal(pkg.peerDependencies['@deepseek-ai/cordis'], '>=4.0.4 <4.1.0-0 || >=4.0.5-alpha.1 <4.1.0-0');
-  assert.equal(pkg.peerDependencies['@deepseek-ai/schemastery'], '>=3.18.4 <3.19.0-0 || >=3.18.5-alpha.1 <3.19.0-0');
+  assert.equal(pkg.peerDependencies['@deepseek-ai/cordis'], '>=4.0.4 <4.2.0-0 || >=4.0.5-alpha.1 <4.2.0-0');
+  assert.equal(pkg.peerDependencies['@deepseek-ai/schemastery'], '>=3.18.4 <3.20.0-0 || >=3.18.5-alpha.1 <3.20.0-0');
   assert.equal(pkg.peerDependencies.react, '^18.3.1');
   assert.equal(pkg.peerDependencies['@hanamesh/lib-provision'], undefined);
   assert.equal(pkg.dependencies['@hanamesh/lib-provision'],'^0.2.1');
@@ -65,6 +66,14 @@ test('NPM-APPHOST-01: actual packed manifest keeps devkit development-only and t
       for (const [name, spec] of Object.entries(manifest[field] ?? {})) {
         if(field==='devDependencies'&&name==='@hanamesh/devkit')assert.equal(spec,'^0.2.6');
         else if(field==='devDependencies'&&name==='@hanamesh/release-platform-gate')assert.equal(spec,'file:vendor/hanamesh-release-platform-gate-0.1.10.tgz');
+        else if(field==='devDependencies'&&name==='@hanamesh/core'){
+          assert.equal(spec,'file:vendor/hanamesh-core-0.3.33.tgz');
+          const proof=JSON.parse(await readFile(new URL('../vendor/core-fixture.json',import.meta.url),'utf8'));
+          assert.equal(proof.repository,'https://github.com/yzsnstotz/hanamesh-core');assert.equal(proof.version,'0.3.33');
+          assert.match(proof.commit,/^[a-f0-9]{40}$/);
+          assert.equal(createHash('sha256').update(await readFile(new URL('../vendor/hanamesh-core-0.3.33.tgz',import.meta.url))).digest('hex'),proof.sha256);
+          assert.ok(files.every(file=>!file.path.includes('hanamesh-core-0.3.33.tgz')));
+        }
         else if(field==='dependencies'&&name==='@hanamesh/lib-provision')assert.equal(spec,'^0.2.1');
         else assert.doesNotMatch(spec, /^(?:file:|link:)/, `${field}.${name}`);
       }
