@@ -11,6 +11,7 @@ const env={};
 for(const key of ['PATH','Path','SystemRoot','SYSTEMROOT','WINDIR','COMSPEC','PATHEXT','PROCESSOR_ARCHITECTURE','OS','NUMBER_OF_PROCESSORS','LANG','LC_ALL','SHELL'])if(process.env[key])env[key]=process.env[key];
 for(const [key,leaf]of Object.entries({HOME:'home',USERPROFILE:'home',CFFIXED_USER_HOME:'home',DSH_HOME:'dsh',XDG_CONFIG_HOME:'config',XDG_DATA_HOME:'data',XDG_CACHE_HOME:'cache',XDG_STATE_HOME:'state',TMPDIR:'tmp',TMP:'tmp',TEMP:'tmp',npm_config_cache:'npm',CLAUDE_CONFIG_DIR:'claude',CODEX_HOME:'codex'})){env[key]=join(root,leaf);await mkdir(env[key],{recursive:true});}
 Object.assign(env,{CI:'true',npm_config_update_notifier:'false',npm_config_manage_package_manager_versions:'false',pnpm_config_manage_package_manager_versions:'false',COREPACK_ENABLE_AUTO_PIN:'0',GIT_CONFIG_NOSYSTEM:'1',GIT_TERMINAL_PROMPT:'0',GIT_CONFIG_COUNT:'1',GIT_CONFIG_KEY_0:'credential.helper',GIT_CONFIG_VALUE_0:''});
+if(process.platform==='linux')try{await stat('/usr/bin/google-chrome');env.HM_CHROMIUM='/usr/bin/google-chrome';}catch{}
 const bin=dirname(process.execPath);
 async function tool(name,entry){
  for(const dir of [bin,...(process.env.PATH??process.env.Path??'').split(delimiter)]){

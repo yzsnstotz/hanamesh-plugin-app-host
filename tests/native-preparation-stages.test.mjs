@@ -74,6 +74,12 @@ const record = value => appendFileSync(process.env.AH_PREPARATION_TRACE, JSON.st
 
 test('NP01 explicit project stage stops after project preparation without runtime or app registration', async t => {
   const {result,calls} = await (await fixture(t)).run(['--stage=project']);
+  if (process.platform !== 'darwin' || process.arch !== 'arm64') {
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /requires native mac-arm64/);
+    assert.deepEqual(calls.map(row => row.kind), ['preflight'], 'unsupported OS/CPU must refuse before preparation');
+    return;
+  }
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(calls.map(row => row.kind), ['preflight','version-query','project'],
     'project boundary must stop before runtime preparation and system registration');
@@ -81,6 +87,12 @@ test('NP01 explicit project stage stops after project preparation without runtim
 
 test('NP02 independent primary-runtime stage retains default smoke without rebuilding project or registering app', async t => {
   const {result,calls} = await (await fixture(t)).run(['--stage=primary-runtime']);
+  if (process.platform !== 'darwin' || process.arch !== 'arm64') {
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /requires native mac-arm64/);
+    assert.deepEqual(calls.map(row => row.kind), ['preflight'], 'unsupported OS/CPU must refuse before preparation');
+    return;
+  }
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(calls.map(row => row.kind), ['preflight','primary-runtime','default-smoke'],
     'runtime/default smoke must not rebuild the project, query Electron or execute registration');

@@ -36,7 +36,7 @@ const registry=async()=>new Response(JSON.stringify({version:'1.2.3'}));
 
 test('official rc.2 ASAR layout proves the shipped public launcher, profile home, and actual manager version',async t=>{
   const h=await fixture(t);assert.equal(h.desktop.pluginManagerVersion,'0.2.0-rc.2');
-  assert.deepEqual(h.desktop.desktopLauncher,{command:h.launcher,home:h.home});
+  assert.deepEqual(h.desktop.desktopLauncher,process.platform==='darwin'?{command:h.launcher,home:h.home}:undefined, 'only the supported macOS packaged launcher is inferred');
   assert.equal(h.desktop.desktopCli,undefined,'standalone Node cannot import inside ASAR');
   await chmod(h.launcher,0o644);
   const unavailable=await inferDesktopLayout({moduleUrl:pathToFileURL(join(h.own,'lib/dsh.js')).href,argv:[process.execPath,h.entry,h.runtimeDir,h.profileDir,h.payload]});
@@ -60,7 +60,8 @@ test('rc.2 manager is bypassed before mutation; public launcher pins exact versi
   const h=await fixture(t),calls=[];
   const manager={async installBundle(){calls.push('unsupported-manager');throw new Error('rc.2 cannot saveExact');},async removeBundle(){}};
   const installer=createLibraryInstaller({profileDir:h.profileDir,profileName:'desktop',dataRoot:join(h.root,'data'),pluginManager:()=>manager,
-    pluginManagerVersion:h.desktop.pluginManagerVersion,desktopLauncher:h.desktop.desktopLauncher,fetchImpl:registry,
+    pluginManagerVersion:h.desktop.pluginManagerVersion,desktopLauncher:{command:h.launcher,home:h.home},fetchImpl:registry, // trusted launcher fixture; spawn is simulated below
+
     spawn:async(command,args,options)=>{calls.push({command,args,options});await writeInstalled(h.profileDir,'example-notes','1.2.3');return{code:0};}});
   assert.equal(installer.ready,true);assert.equal(installer.live,false);
   assert.deepEqual(await installer.install(item),{status:'restart-required',kind:'plugin',packageName:'example-notes',version:'1.2.3',installTarget:item.installTarget});
@@ -84,7 +85,8 @@ for(const version of ['0.2.0-rc.2',undefined])test(`manager ${version??'unknown'
 test('alpha.2 manager also uses monitored public CLI instead of an unscoped live install',async t=>{
   const h=await fixture(t,'0.2.1-alpha.2');let managerCalls=0,cliCalls=0;
   const installer=createLibraryInstaller({profileDir:h.profileDir,profileName:'desktop',dataRoot:join(h.root,'data'),pluginManagerVersion:h.desktop.pluginManagerVersion,
-    pluginManager:()=>({async installBundle(){managerCalls++;},async removeBundle(){managerCalls++;}}),desktopLauncher:h.desktop.desktopLauncher,fetchImpl:registry,
+    pluginManager:()=>({async installBundle(){managerCalls++;},async removeBundle(){managerCalls++;}}),desktopLauncher:{command:h.launcher,home:h.home},fetchImpl:registry, // trusted launcher fixture; spawn is simulated below
+
     spawn:async()=>{cliCalls++;await writeInstalled(h.profileDir,'example-notes','1.2.3');return{code:0};}});
   assert.equal(installer.live,false);assert.equal((await installer.install(item)).status,'restart-required');assert.equal(managerCalls,0);assert.equal(cliCalls,1);
 });
