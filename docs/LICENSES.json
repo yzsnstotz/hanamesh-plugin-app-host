@@ -282,19 +282,19 @@
       }
     },
     "@hanamesh/release-platform-gate": {
-      "version": "0.1.10",
+      "version": "0.1.11",
       "license": "UNKNOWN: private development tool does not declare a license",
-      "source": "file:vendor/hanamesh-release-platform-gate-0.1.10.tgz",
-      "purpose": "Development-only shared immutable platform gate0.1.10; R2 PASS docs cce1576, source C7a39e4e and same reviewed archive SHA; never runtime or bundled",
+      "source": "file:vendor/hanamesh-release-platform-gate-0.1.11.tgz",
+      "purpose": "Development-only shared immutable optional-platform-paths-v1 gate; source 285bc01e4, 462 author regressions passed, independent review pending; never runtime or bundled",
       "usedAs": [
         "devDependencies"
       ],
       "specs": {
-        "devDependencies": "file:vendor/hanamesh-release-platform-gate-0.1.10.tgz"
+        "devDependencies": "file:vendor/hanamesh-release-platform-gate-0.1.11.tgz"
       },
-      "sourceCommit": "7a39e4e332a2cbb5dcbfddec68383fb5cef39eb8",
-      "archiveSha256": "71545cbb636d3b1a5e7d9fbba728b16e006b8eaf70bc2540038d077df7263a61",
-      "reviewDocs": "cce157612b1390b845ccca3f0632247de9fb3229"
+      "sourceCommit": "285bc01e424255285ecf050c56e837e4cde939a8",
+      "archiveSha256": "6f1acd41eb51f4faa27e8fe285dfea84c62670824da36f99738c5f2290b49348",
+      "reviewDocs": null
     },
     "@hanamesh/core": {
       "version": "0.3.33",
