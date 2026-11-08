@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdir, readdir, readFile, rm, lstat } from 'node:fs/promises';
-import { join, relative, resolve } from 'node:path';
+import { join, relative, resolve, dirname } from 'node:path';
 import { scratch } from './helpers.mjs';
 
 const testsDir = import.meta.dirname;
@@ -19,7 +19,7 @@ test('no test makes its own directory in the system temp dir; they all go throug
   assert.deepEqual(offenders, []);
 });
 
-test('a failing test process still removes every scratch directory it made', async () => {
+test('a failing test process still removes every scratch directory it made', async t => {
   const tmp = await scratch('child-tmp-');
   await mkdir(tmp, { recursive: true });
   const child = spawnSync(process.execPath, ['--test', '--test-reporter=tap', resolve(testsDir, 'fixtures/scratch-failing.mjs')], {
@@ -29,7 +29,10 @@ test('a failing test process still removes every scratch directory it made', asy
   assert.match(child.stdout, /intentional failure/);
   const short=child.stdout.match(/SHORT_SCRATCH:([^\r\n]+)/)?.[1];
   assert.ok(short,'the failing process made a short scratch directory');
-  await assert.rejects(lstat(short),{code:'ENOENT'},'short scratch roots are removed on failure too');
+  // The negative mutation deliberately disables child cleanup. The parent still
+  // owns this exact fixture-created root and removes it even when assertions fail.
+  t.after(()=>rm(dirname(short),{recursive:true,force:true}));
   assert.deepEqual(await readdir(tmp), [], 'nothing left in the child TMPDIR');
+  await assert.rejects(lstat(short),{code:'ENOENT'},'short scratch roots are removed on failure too');
   await rm(tmp, { recursive: true, force: true });
 });
