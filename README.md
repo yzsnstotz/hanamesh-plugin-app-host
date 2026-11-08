@@ -1,3 +1,5 @@
+PX3 跨平台候选：Windows 可以运行插件/公开服务、attach 应用、受控只读 CLI 与普通包安装；`owned` 应用仍在创建进程、数据目录及请求凭据之前明确拒绝 `PLATFORM_UNSUPPORTED`。Windows 单测保留真实 attach 的 HTTP/租约/网关断言，并验证 owned 的持久失败、无进程/文件写入及不消费凭据；这些断言不构成 Windows owned 运行支持。独立 Node 可用不扩大 owned 支持；受管 Node 准备仍遵守原平台限制。Windows 本地快照采用文件 flush 加同目录 rename，不承诺断电后目录项持久；Coding OAuth Gateway 文件源因缺私有 ACL 证明继续拒绝，HTTP 提供方不变。各平台实际结果以本分支 GitHub Actions 矩阵收据为准。
+
 R115返修（同0.6.23候选）：登录shell按退出结果和封装JSON解析成功，忽略正常stderr；所选CLI保留管理器PATH与XDG目录/缺省，不再用空临时XDG隐藏全局版本。真实Bash/asdf/mise启动链回归与工具来源见 [安装状态](docs/INSTALLATION_STATUS.md)。
 
 0.6.23 候选：install-target 对名单外有效网站提供精确CORS的固定403来源拒绝，GET预检以204和按需PNA头支持浏览器读回；不开放能力/清单/安装权限。同意检测后自动发现当前用户的 Claude Code / Codex 官方 CLI，无手动读取器入口；接受不低于 2.1.301 / 0.162.1 且版本格式与清单 JSON 校验通过的版本。安装布局、优先级、只读边界及具名预算见 [安装状态](docs/INSTALLATION_STATUS.md)。

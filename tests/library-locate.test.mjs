@@ -5,7 +5,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile, symlink, realpath, rm } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { DEFAULT_CATALOG_SOURCES, inferDshBin, inferNodeBinary, inferProfileDir, resolveLibraryLocations } from '../src/library/locate.js';
 import { createLibraryService } from '../src/library/service.js';
@@ -13,7 +13,7 @@ import { scanInstalled } from '../src/library/installed.js';
 import { scratch } from './helpers.mjs';
 
 const HANAMESH_SOURCE='https://market.hanamesh.com/catalog-source.json?view=hanamesh';
-const argvDsh=['/opt/node/bin/node','/home/u/.dsh/node_modules/@deepseek-ai/dsh/lib/bin.js','--profile','web'];
+const argvDsh=[resolve('/opt/node/bin/node'),resolve('/home/u/.dsh/node_modules/@deepseek-ai/dsh/lib/bin.js'),'--profile','web'];
 
 /** A `dsh plugin add` profile: package.json written by `dsh plugin`, hoisted node_modules, this package inside. */
 async function profileFixture(t,{link=false,manifest}={}){
@@ -82,30 +82,30 @@ test('AH-L08: profileDir/profileName are inferred from the package\'s own real l
   // With the inferred profileDir the installed scan sees a registered CLI-installed app (the O3 stage-4 symptom).
   const vibe=join(hoisted.profile,'node_modules','@hanamesh','app-vibe-trading');await mkdir(vibe,{recursive:true});
   await writeFile(join(vibe,'package.json'),JSON.stringify({name:'@hanamesh/app-vibe-trading',version:'0.1.0-rc.22',hanamesh:{app:'app.json'}}));
-  await writeFile(join(vibe,'app.json'),JSON.stringify({id:'vibe-trading',name:'Vibe',singleInstanceOnly:true,deployments:[{id:'local',dataId:'data-v1',mode:'owned',command:'/bin/sh',args:['-c','exec','{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:'vibe'}}]}));
+  await writeFile(join(vibe,'app.json'),JSON.stringify({id:'vibe-trading',name:'Vibe',singleInstanceOnly:true,deployments:[{id:'local',dataId:'data-v1',mode:'owned',command:process.execPath,args:['-c','exec','{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:'vibe'}}]}));
   const rows=await scanInstalled({profileDir:resolved.profileDir,host:{list:()=>({apps:[{id:'vibe-trading'}]})},ledgerReader:async()=>({schema:1,items:{}}),dataRoot:join(hoisted.root,'data')});
   assert.deepEqual(rows.map(row=>[row.packageName,row.state]),[['@hanamesh/app-vibe-trading','registered']]);
 });
 
 test('AH-L09: nodeBinary is this process only outside Electron; explicit configuration always wins',async t=>{
-  assert.equal(inferNodeBinary({execPath:'/opt/node/bin/node',versions:{node:'24.13.1'}}),'/opt/node/bin/node');
+  assert.equal(inferNodeBinary({execPath:resolve('/opt/node/bin/node'),versions:{node:'24.13.1'}}),resolve('/opt/node/bin/node'));
   assert.equal(inferNodeBinary({execPath:'/Applications/X.app/Contents/MacOS/X',versions:{node:'24.13.1',electron:'39.0.0'}}),undefined);
   assert.equal(inferNodeBinary({execPath:'node',versions:{}}),undefined);
   const fixture=await profileFixture(t);
   const electron=await resolveLibraryLocations({},{moduleUrl:fixture.moduleUrl,argv:argvDsh,execPath:'/Applications/X.app/Contents/MacOS/X',versions:{electron:'39.0.0'}});
   assert.equal(electron.nodeBinary,undefined);assert.equal(electron.inferred.includes('nodeBinary'),false);
-  const explicit={profileDir:'/srv/shell/profile',profileName:'shell',dshBin:'/srv/shell/dsh/bin.js',sources:[]};
-  const resolved=await resolveLibraryLocations(explicit,{moduleUrl:fixture.moduleUrl,argv:argvDsh,execPath:process.execPath,versions:{},nodeBinary:'/srv/shell/node'});
-  assert.deepEqual(resolved,{...explicit,nodeBinary:'/srv/shell/node',inferred:[]});
+  const explicit={profileDir:resolve('/srv/shell/profile'),profileName:'shell',dshBin:resolve('/srv/shell/dsh/bin.js'),sources:[]};
+  const resolved=await resolveLibraryLocations(explicit,{moduleUrl:fixture.moduleUrl,argv:argvDsh,execPath:process.execPath,versions:{},nodeBinary:resolve('/srv/shell/node')});
+  assert.deepEqual(resolved,{...explicit,nodeBinary:resolve('/srv/shell/node'),inferred:[]});
 });
 
 test('AH-L10: dshBin is taken from argv[1] only when that script is @deepseek-ai/dsh/lib/bin.js',async()=>{
   assert.equal(inferDshBin(argvDsh),argvDsh[1]);
-  assert.equal(inferDshBin(['/opt/node/bin/node','/home/u/tools/dsh/lib/bin.js']),undefined);
-  assert.equal(inferDshBin(['/opt/node/bin/node','/home/u/.dsh/node_modules/@deepseek-ai/dsh/lib/bin.js/../evil.js']),undefined);
-  assert.equal(inferDshBin(['/opt/node/bin/node','node_modules/@deepseek-ai/dsh/lib/bin.js']),undefined);
-  assert.equal(inferDshBin(['/opt/node/bin/node']),undefined);
+  assert.equal(inferDshBin([resolve('/opt/node/bin/node'),resolve('/home/u/tools/dsh/lib/bin.js')]),undefined);
+  assert.equal(inferDshBin([resolve('/opt/node/bin/node'),resolve('/home/u/.dsh/node_modules/@deepseek-ai/dsh/lib/bin.js/../evil.js')]),undefined);
+  assert.equal(inferDshBin([resolve('/opt/node/bin/node'),'node_modules/@deepseek-ai/dsh/lib/bin.js']),undefined);
+  assert.equal(inferDshBin([resolve('/opt/node/bin/node')]),undefined);
   assert.equal(inferDshBin(process.argv),undefined,'the test runner is not the DSH CLI');
-  const resolved=await resolveLibraryLocations({},{moduleUrl:import.meta.url,argv:['/opt/node/bin/node','/x/other.js'],execPath:process.execPath,versions:{}});
+  const resolved=await resolveLibraryLocations({},{moduleUrl:import.meta.url,argv:[resolve('/opt/node/bin/node'),'/x/other.js'],execPath:process.execPath,versions:{}});
   assert.equal(resolved.dshBin,undefined);assert.equal(resolved.inferred.includes('dshBin'),false);
 });

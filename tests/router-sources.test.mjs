@@ -37,6 +37,10 @@ test('AH-R09 file gateway requires mode 0600 and returns the same provider contr
   const home=await scratch('hm-router-file-');t.after(()=>rm(home,{recursive:true,force:true}));const path=join(home,'.coding-oauth-gateway.json');
   await writeFile(path,JSON.stringify({enabled:true,port:18081,models:['file-model'],apiKey:'file-secret',keyHint:'…cret'}),{mode:0o600});
   const sources=createProviderSources({credentials,apps,codingOauth:{mode:'file'},dshHome:home,webOrigin:'http://127.0.0.1:9'});
+  if(process.platform==='win32'){
+    for(const mode of [0o600,0o644]){await chmod(path,mode);assert.equal((await sources.list()).at(-1).state,'unreachable');await assert.rejects(sources.resolve({kind:'provider',providerId:'coding-oauth-gateway'}),{code:'GATEWAY_UNREACHABLE'});}
+    assert.ok(!JSON.stringify(await sources.list()).includes('file-secret'),'chmod cannot prove private ACLs or permit a secret read');return;
+  }
   assert.equal((await sources.list()).at(-1).baseUrl,'http://127.0.0.1:18081/v1');assert.equal((await sources.resolve({kind:'provider',providerId:'coding-oauth-gateway'})).value,'file-secret');
   await chmod(path,0o644);assert.equal((await sources.list()).at(-1).state,'unreachable');
 });

@@ -53,7 +53,10 @@ def observe_electron(c,identity):
  return {k:identity[k] for k in ['pid','start','ppid','pgid']}|{'argv':args,'version':version}
 
 def processes():
- p=subprocess.run(['ps','-axo','pid,ppid,pgid,lstart,command'],text=True,capture_output=True,check=True)
+ if sys.platform=='win32':raise GateError('NATIVE_PROCESS_PLATFORM_UNSUPPORTED')
+ # Metadata only; never collect every user's command-line arguments. Exact
+ # argv checks below apply only to already registered owned process identities.
+ p=subprocess.run(['ps','-axo','pid,ppid,pgid,lstart,comm'],text=True,capture_output=True,check=True)
  result={}
  for line in p.stdout.splitlines()[1:]:
   c=line.strip().split(None,8)
@@ -210,7 +213,7 @@ def run(c):
    # Capture orphaned children only in an already registered exclusive group.
    for item in current.values():
     if item['pgid'] in groups and (item['pid'],item['start']) not in known:
-     if str(root) not in item['command']:raise GateError('UNKNOWN_PROCESS_IN_OWN_GROUP: '+str(item['pid']))
+     if not any(str(root) in arg for arg in process_argv(item['pid'])):raise GateError('UNKNOWN_PROCESS_IN_OWN_GROUP: '+str(item['pid']))
      known[(item['pid'],item['start'])]=item
    for item in known.values():observer.register(item['pid'],item['start'])
    exitEvents.extend(observer.poll())
@@ -226,7 +229,7 @@ def run(c):
    put(evidence/'registry.json',registry)
    for item in alive:
     now=current.get(item['pid'],{})
-    if (now.get('command','').startswith(c['electron']+' ') or now.get('command')==c['electron']) and item['pid'] not in electronProof:
+    if now.get('command')==c['electron'] and item['pid'] not in electronProof:
      electronProof[item['pid']]=observe_electron(c,item)
      record('actual-electron.json',{'processes':list(electronProof.values()),'source':'OS argv, registered PID/start/PPID/PGID and executable version'})
    if p.poll() is not None:

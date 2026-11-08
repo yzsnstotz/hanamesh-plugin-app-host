@@ -1,3 +1,4 @@
+import { assertOwnedPlatformRejection } from './platform-owned.mjs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -20,8 +21,17 @@ test('AH-R01/AK09: locked app-host file policies preserve rotated files and remo
     project:async function(){return{format:'oauth-cli-kit',version:this.version,content:JSON.stringify({access:`fixture-${this.version}`})};}};
   const credentials={describeRecord:async()=>({configured:true,kind:'grant'}),describe:async()=>({configured:false})};
   const router=createRouter({credentials,domain,apps:host,sources:{list:async()=>[],resolve:async()=>undefined},oauth:()=>provider});
-  host.setCredentialResolver(router.credentialResolver);host.subscribe(router.observe);
+  let projections=0;host.setCredentialResolver(async request=>{projections++;return await router.credentialResolver(request);});host.subscribe(router.observe);
   const id='file:dataDir:auth/test.json';await router.grant('file-test',id,{kind:'grant',key:'hanamesh-auth-oauth/openai-chatgpt--app-file-test'},{riskAcknowledged:true});
+  if(process.platform==='win32'){
+    const before=structuredClone(state);
+    await assertOwnedPlatformRejection(host,{appId:'file-test',deploymentId:'local',viewId:'refused-projection'});
+    assert.equal(projections,0,'unsupported ownership cannot project or rotate OAuth files');
+    assert.deepEqual(state,before,'failed owned launch cannot consume the durable grant intent');
+    await router.revoke('file-test',id);
+    await assertOwnedPlatformRejection(host,{appId:'file-test',deploymentId:'local',viewId:'refused-revocation'});
+    assert.equal(projections,0);assert.ok(!host.eventsSince().events.some(event=>event.type.startsWith('credential.')));return;
+  }
   const open=viewId=>host.open({appId:'file-test',deploymentId:'local',viewId});const first=await open('one'),file=join(first.instance.dataDir,'auth','test.json');
   assert.equal(JSON.parse(await readFile(file,'utf8')).access,'fixture-1');assert.equal((await stat(file)).mode&0o777,0o600);await host.stop(first.instance.id,{confirm:true});
   await writeFile(file,'{"access":"app-rotated"}');const second=await open('two');assert.equal(JSON.parse(await readFile(file,'utf8')).access,'app-rotated');await host.stop(second.instance.id,{confirm:true});

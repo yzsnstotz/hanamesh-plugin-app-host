@@ -3,13 +3,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdir, mkdtemp, rm} from 'node:fs/promises';
 import {spawnGitSafe as spawnChecked} from '../src/git-process.js';
-import {resolve} from 'node:path';
+import {resolve,relative,isAbsolute,sep,join} from 'node:path';
+import {execFileSync} from 'node:child_process';
 test('D214 staged-source and pre-spawn reservation gates reject unsafe second admission',async t=>{
  const card=resolve(import.meta.dirname,'../..'),base=resolve(process.env.HANAMESH_APPHOST_RUN_DIR??card,'tmp');
- assert.ok(base.startsWith(card+'/'));await mkdir(base,{recursive:true});const scratch=await mkdtemp(resolve(base,'native-admission-'));
+ const relativeBase=relative(card,base);assert.ok(relativeBase&&!isAbsolute(relativeBase)&&relativeBase!=='..'&&!relativeBase.startsWith('..'+sep));await mkdir(base,{recursive:true});const scratch=await mkdtemp(resolve(base,'native-admission-'));
  try{
   const args=[resolve(import.meta.dirname,'../scripts/native-admission-test.py'),'--source',resolve(import.meta.dirname,'../scripts/native-desktop'),'--scratch',scratch];
-  const result=await spawnChecked('/usr/bin/python3',args,{encoding:'utf8',env:{PATH:process.env.PATH,HOME:process.env.HOME,TMPDIR:process.env.TMPDIR,PYTHONDONTWRITEBYTECODE:'1'},stdio:['ignore','pipe','pipe']});
+  const python=process.platform==='win32'?execFileSync(join(process.env.SystemRoot,'System32','where.exe'),['python.exe'],{encoding:'utf8'}).trim().split(/\r?\n/)[0]:'/usr/bin/python3';
+  const result=await spawnChecked(python,args,{encoding:'utf8',env:{PATH:process.env.PATH,HOME:process.env.HOME,TMPDIR:process.env.TMPDIR,PYTHONDONTWRITEBYTECODE:'1'},stdio:['ignore','pipe','pipe']});
   t.diagnostic(result.stdout+result.stderr);assert.ifError(result.error);assert.equal(result.signal,null);assert.match(result.stderr,/Ran 2 tests/);assert.equal(result.status,0,'native fixed-source and exclusive durable admission must hold');
  }finally{await rm(scratch,{recursive:true,force:true});}
 });

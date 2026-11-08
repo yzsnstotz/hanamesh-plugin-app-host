@@ -18,7 +18,7 @@ import { compareVersions, upgradeAvailable, itemKind } from '../src/library/cata
 import { http, until, scratch } from './helpers.mjs';
 
 const fixture=resolve('tests/fixtures/catalog/reviewed-page.json');
-const appDefinition={id:'vibe',name:'Vibe',singleInstanceOnly:true,deployments:[{id:'local',dataId:'data-v1',mode:'owned',command:'/bin/sh',args:['-c','exec','{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:'Vibe'}}]};
+const appDefinition={id:'vibe',name:'Vibe',singleInstanceOnly:true,deployments:[{id:'local',dataId:'data-v1',mode:'owned',command:process.execPath,args:['-c','exec','{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:'Vibe'}}]};
 async function profileFixture(t,{dependencies,bundles=['@deepseek-ai/dsh-base','@deepseek-ai/dsh-web-app'],packages={}}){
   const root=await realpath(await scratch('hm-market-'));t.after(()=>rm(root,{recursive:true,force:true}));
   const profile=join(root,'profiles','web');await mkdir(profile,{recursive:true});
@@ -35,7 +35,7 @@ async function recordAdd(profileDir,args){
   await writeFile(pkgPath,JSON.stringify({...pkg,version}));
 }
 function installerDouble(profile,{calls=[],events=[]}={}){
-  return{calls,events,installer:createLibraryInstaller({profileDir:profile.profile,profileName:'web',dataRoot:profile.dataRoot,nodeBinary:'/opt/node/bin/node',dshBin:'/opt/dsh/lib/bin.js',
+  return{calls,events,installer:createLibraryInstaller({profileDir:profile.profile,profileName:'web',dataRoot:profile.dataRoot,nodeBinary:resolve('/opt/node/bin/node'),dshBin:resolve('/opt/dsh/lib/bin.js'),
     spawn:async(command,args,options)=>{calls.push({command,args,options});await recordAdd(profile.profile,args);return{code:0,stdout:'',stderr:''};},
     provision:async()=>{throw new Error('a plugin never provisions a runtime');},remove:async()=>{throw new Error('a plugin has no owned runtime');},emit:event=>events.push(event)})};
 }
@@ -48,7 +48,7 @@ test('AH-M01: a catalog plugin installs through the same `dsh plugin add --save-
   assert.deepEqual(result,{status:'restart-required',kind:'plugin',packageName:'dsh-plugin-tether',version:'0.1.17',installTarget:plugin.installTarget});
   assert.equal(calls[0].options.env.GIT_CONFIG_NOSYSTEM,'1');
   assert.equal(calls[0].options.env.GIT_CONFIG_VALUE_1,'!gh auth git-credential');
-  assert.deepEqual({...calls[0],options:{cwd:calls[0].options.cwd}},{command:'/opt/node/bin/node',args:['/opt/dsh/lib/bin.js','plugin','--profile','web','add','--save-exact','dsh-plugin-tether@0.1.17'],options:{cwd:profile.profile}});
+  assert.deepEqual({...calls[0],options:{cwd:calls[0].options.cwd}},{command:resolve('/opt/node/bin/node'),args:[resolve('/opt/dsh/lib/bin.js'),'plugin','--profile','web','add','--save-exact','dsh-plugin-tether@0.1.17'],options:{cwd:profile.profile}});
   assert.equal(calls.length,1);
   assert.deepEqual(events.map(event=>event.type),['library.install-started','library.install-done']);
   assert.equal(events[1].kind,'plugin');
@@ -60,7 +60,7 @@ test('AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite
   const profile=await profileFixture(t,{dependencies:{}});const{calls,installer}=installerDouble(profile);
   const result=await installer.uninstallPlugin({packageName:'dsh-plugin-tether'});
   assert.deepEqual(result,{status:'restart-required',kind:'plugin',packageName:'dsh-plugin-tether'});
-  assert.deepEqual(calls[0].args,['/opt/dsh/lib/bin.js','plugin','--profile','web','remove','dsh-plugin-tether']);
+  assert.deepEqual(calls[0].args,[resolve('/opt/dsh/lib/bin.js'),'plugin','--profile','web','remove','dsh-plugin-tether']);
   assert.deepEqual([...PROTECTED_PACKAGES].sort(),['@hanamesh/core','@hanamesh/dsh-app-host','@hanamesh/hanamesh','@hanamesh/usage','hanamesh-brand']);
   for(const name of PROTECTED_PACKAGES){
     await assert.rejects(installer.uninstallPlugin({packageName:name}),{code:'PACKAGE_DENIED'});

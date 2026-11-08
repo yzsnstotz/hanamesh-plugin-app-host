@@ -1,3 +1,4 @@
+import {fileURLToPath} from 'node:url';
 import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 export function validateDeclaration(c){
@@ -10,4 +11,4 @@ export function validateDeclaration(c){
   for(const b of c.boundaries){assert(typeof b.id==='string'&&!names.has(b.id));names.add(b.id);assert(b.name&&b.why&&b.test);assert(Array.isArray(b.sides)&&b.sides.length===2);assert(b.sides.includes(b.safeDirection));}
   return c;
 }
-if(process.argv[1]===new URL(import.meta.url).pathname){const c=validateDeclaration(JSON.parse(await readFile(new URL('../consistency.json',import.meta.url))));console.log(`X01 PASS: ${c.groups.length} groups, ${c.boundaries.length} boundaries`);}
+if(process.argv[1]===fileURLToPath(import.meta.url)){const c=validateDeclaration(JSON.parse(await readFile(new URL('../consistency.json',import.meta.url))));console.log(`X01 PASS: ${c.groups.length} groups, ${c.boundaries.length} boundaries`);}

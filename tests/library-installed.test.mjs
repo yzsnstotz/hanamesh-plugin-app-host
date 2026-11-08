@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { scanInstalled } from '../src/library/installed.js';
 import { scratch } from './helpers.mjs';
 
-const definition=(id,runtime)=>({id,name:id,singleInstanceOnly:true,deployments:[{id:'local',dataId:'data-v1',mode:'owned',...(runtime?{runtime}:{command:'/bin/sh'}),args:['-c','exec', '{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:id}}]});
+const definition=(id,runtime)=>({id,name:id,singleInstanceOnly:true,deployments:[{id:'local',dataId:'data-v1',mode:'owned',...(runtime?{runtime}:{command:process.execPath}),args:['-c','exec', '{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:id}}]});
 async function addPackage(profile,name,id,runtime){
   const root=join(profile,'node_modules',...name.split('/'));await mkdir(root,{recursive:true});
   await writeFile(join(root,'package.json'),JSON.stringify({name,version:'1.0.0',hanamesh:{app:'app.json'}}));

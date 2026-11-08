@@ -1,8 +1,9 @@
+import { fileURLToPath } from 'node:url';
 // Guarded CLI process integration; own profile fixture only.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile, readFile, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { createLibraryInstaller } from '../src/library/install.js';
 import { detectClient, containingApp } from '../src/library/client-identity.js';
 import { temporary } from './helpers.mjs';
@@ -15,7 +16,7 @@ async function profile(t) {
 const registry = version => async () => ({ ok: true, json: async () => ({ version }) });
 const item = { id: 'example.notes', package: { registry: 'npm', name: 'example-notes' },installTarget:{source:'npm',name:'example-notes',version:'1.2.3',allowBuild:[]} };
 
-const cliFixture=new URL('./fixtures/profile-cli.mjs',import.meta.url).pathname;
+const cliFixture=fileURLToPath(new URL('./fixtures/profile-cli.mjs',import.meta.url));
 test('plugin install and remove use a guarded CLI, exact registry version, and restart-required',async t=>{
  const dir=await profile(t),events=[];let managerCalls=0;
  const installer=createLibraryInstaller({profileDir:dir,profileName:'desktop',dataRoot:dir,fetchImpl:registry('1.2.3'),nodeBinary:process.execPath,dshBin:cliFixture,
@@ -39,10 +40,10 @@ test('without a public CLI even an exact-save manager refuses with the missing m
 });
 
 test('client identity comes from the containing app bundle id only', async () => {
-  assert.equal(containingApp('/Applications/HanaMesh.app/Contents/Resources/app/runtime'), '/Applications/HanaMesh.app');
-  assert.equal(containingApp('/opt/dsh/runtime'), undefined);
+  assert.equal(containingApp(resolve('/Applications/HanaMesh.app/Contents/Resources/app/runtime')), resolve('/Applications/HanaMesh.app'));
+  assert.equal(containingApp(resolve('/opt/dsh/runtime')), undefined);
   assert.deepEqual(await detectClient({}), { client: 'dsh', evidence: 'not-desktop' });
-  const desktop = { runtimeDir: '/Applications/HanaMesh.app/Contents/Resources/app/runtime' };
+  const desktop = { runtimeDir: resolve('/Applications/HanaMesh.app/Contents/Resources/app/runtime') };
   assert.deepEqual(await detectClient({ desktop, readBundleId: async () => 'com.hanamesh.desktop' }), { client: 'hanamesh', evidence: 'bundle-id:com.hanamesh.desktop' });
   assert.equal((await detectClient({ desktop, readBundleId: async () => 'com.deepseek.harness' })).client, 'dsh');
   const unreadable = await detectClient({ desktop, readBundleId: async () => { throw Object.assign(new Error('x'), { code: 'ENOENT' }); } });
@@ -54,7 +55,7 @@ test('live result from an admitted installer updates the service loaded baseline
  const {until}=await import('./helpers.mjs');const dir=await profile(t);
  const cli=createLibraryInstaller({profileDir:dir,profileName:'desktop',dataRoot:dir,nodeBinary:process.execPath,dshBin:cliFixture,fetchImpl:registry('1.0.0')});
  const library=createLibraryService({domain:{global:{get:()=>({schema:1,revision:0,sources:[]}),set:async()=>{}},close:async()=>{}},host:{instanceList:()=>[],list:()=>[]},dataRoot:dir,
-  config:{profileDir:dir,fixture:new URL('./fixtures/catalog/reviewed-page.json',import.meta.url).pathname},
+  config:{profileDir:dir,fixture:fileURLToPath(new URL('./fixtures/catalog/reviewed-page.json',import.meta.url))},
   // Only the admitted public service port reports applied; this is not the production CLI or a real host reload.
   installer:{install:async item=>({...await cli.install(item),status:'applied'})}});
  await library.init();t.after(()=>library.close());await library.install({packageName:'@hanamesh/utility-plugin'});

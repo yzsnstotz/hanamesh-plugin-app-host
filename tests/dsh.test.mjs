@@ -4,6 +4,7 @@
  * stand-in (AUTH_DOUBLE): the real service exists only inside the web profile composition, which the
  * H01 profile run in docs/acceptance/ exercises. Evidence class: REAL_HOST for storage/web/session.
  */
+import {fileURLToPath} from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, rm, readdir, mkdir, writeFile, symlink } from 'node:fs/promises';
@@ -18,6 +19,7 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection';
 import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl';
 import * as appHost from '../src/dsh.js';
 import { definition, temporary, http, until, pidAlive } from './helpers.mjs';
+import {assertOwnedPlatformRejection} from './platform-owned.mjs';
 import {declaration as coreDeclaration,core as suiteCore,names as suiteNames,versions as suiteVersions} from './fixtures/core-suite-declaration.mjs';
 
 /** AUTH_DOUBLE for ctx.connection: accepts exactly one bearer, rejects everything else. */
@@ -36,6 +38,9 @@ test('Core suite public method arrives and unloads through real optional Cordis 
 async function boot(t, { token = 'browser-session', withPlugin = true, applications = [definition()], config = {} } = {}) {
   const root = await temporary();
   const ctx = new Context();
+  // Register ownership immediately: activation failure must still close the real HTTP listener.
+  t.after(async () => { await ctx.fiber?.dispose?.(); await rm(root, { recursive: true, force: true }); });
+  const activationErrors=[];ctx.logger.exporter({export:message=>{if(message.type==='error')activationErrors.push(message.args.map(value=>value instanceof Error?{name:value.name,code:value.code,message:value.message}:String(value)).slice(0,4));}});
   ctx.plugin(Storage);
   ctx.plugin(storageJson, { root: join(root, 'storages') });
   ctx.plugin(storageDomain, { backend: 'json' });
@@ -51,11 +56,10 @@ async function boot(t, { token = 'browser-session', withPlugin = true, applicati
   if (withPlugin) {
     // Tests never bind the real handoff ports (39317…); handoff routes are covered in handoff.test.mjs on random ports.
     fiber = ctx.plugin(appHost, { dataRoot: join(root, 'app-data'), applications, ...config, library: { handoff: { enabled: false }, ...config.library } });
-    await until(() => ctx.get('hanameshApps') !== undefined);
+    try{await until(() => ctx.get('hanameshApps') !== undefined);}catch(error){throw new Error('AppHost activation did not provide hanameshApps: '+JSON.stringify(activationErrors).slice(-6000),{cause:error});}
   }
   const headers = { origin, authorization: `Bearer ${token}`, 'content-type': 'application/json', 'x-hanamesh-client': 'workspace-v1' };
   const merge = overrides => Object.fromEntries(Object.entries({ ...headers, ...overrides }).filter(([, v]) => v !== undefined));
-  t.after(async () => { await ctx.fiber?.dispose?.(); await rm(root, { recursive: true, force: true }); });
   return { ctx, root, origin, fiber, headers,
     post: (path, body, overrides = {}) => http(origin + path, { method: 'POST', headers: merge(overrides), body: JSON.stringify(body) }),
     get: (path, overrides = {}) => http(origin + path, { headers: merge(overrides) }) };
@@ -84,8 +88,8 @@ test('H11: lease/instance state lands in the storage-domain sidecar and DSH stil
   const handle = await persistence.create(session.header);
   await handle.flush(); await handle.close?.();
   const opened = await h.post('/apps/open', { appId: 'example', deploymentId: 'local', viewId: 'view-h11' });
-  assert.equal(opened.status, 200, JSON.stringify(opened.json));
-  const ready = await until(async () => (await h.get('/hanamesh/apps')).json.instances.find(i => i.status === 'ready'));
+  if(process.platform==='win32'){assert.equal(opened.json.error?.code,'PLATFORM_UNSUPPORTED');assert.equal(opened.status,400);}else assert.equal(opened.status, 200, JSON.stringify(opened.json));
+  const ready = await until(async () => (await h.get('/hanamesh/apps')).json.instances.find(i => i.status === (process.platform==='win32'?'failed':'ready')));
   assert.equal(ready.appId, 'example');
   // (1) sidecar: the whole snapshot is ONE storage-domain global in the json backend's unit file.
   const files = await readdir(join(h.root, 'storages'));
@@ -95,6 +99,7 @@ test('H11: lease/instance state lands in the storage-domain sidecar and DSH stil
   const snapshot = stored.global ?? stored;
   assert.equal(snapshot.instances.length, 1); assert.equal(snapshot.leases.length, 1);
   assert.equal(snapshot.leases[0].viewId, 'view-h11'); assert.ok(!('leaseToken' in snapshot.leases[0]));
+  if(process.platform==='win32'){assert.equal(snapshot.instances[0].errorCode,'PLATFORM_UNSUPPORTED');assert.equal(snapshot.instances[0].pid,null);assert.equal(snapshot.instances[0].guardianPid,null);assert.equal(snapshot.leases[0].status,'failed');}
   // (2) DSH reads the session it wrote, after the app-host published into the same storage root.
   const stat = await persistence.stat('ses-h11');
   assert.ok(stat, 'DSH could not read back its own session after the app-host write');
@@ -114,12 +119,13 @@ test('H14/AC-07 on the real web server: unauthenticated, wrong origin and iframe
 test('H09/dispose: unloading the plugin removes its routes, stops owned instances, and closes the domain', async t => {
   const h = await boot(t);
   const opened = await h.post('/apps/open', { appId: 'example', deploymentId: 'local', viewId: 'view-dispose' });
-  assert.equal(opened.status, 200);
-  const host = h.ctx.get('hanameshApps');
-  const inst = await until(() => host.instanceList(appHost.BROWSER_PRINCIPAL).find(i => i.status === 'ready'));
-  assert.ok(pidAlive(inst.pid));
+  const host = h.ctx.get('hanameshApps');let inst;
+  if(process.platform==='win32'){
+    assert.equal(opened.status,400);assert.equal(opened.json.error?.code,'PLATFORM_UNSUPPORTED');
+    inst=await assertOwnedPlatformRejection(host,{appId:'example',deploymentId:'local',viewId:'view-dispose'},{principal:appHost.BROWSER_PRINCIPAL});
+  }else{assert.equal(opened.status, 200);inst=await until(() => host.instanceList(appHost.BROWSER_PRINCIPAL).find(i => i.status === 'ready'));assert.ok(pidAlive(inst.pid));}
   await h.fiber.dispose();
-  await until(() => !pidAlive(inst.pid));
+  if(process.platform!=='win32')await until(() => !pidAlive(inst.pid));
   assert.equal(h.ctx.get('hanameshApps'), undefined);
   assert.equal((await h.get('/hanamesh/apps')).status, 404, 'route must be gone after unload');
   // The domain is closed: a fresh plugin instance can open it again (single-open per name).
@@ -149,12 +155,14 @@ test('unit: bare apply() cannot masquerade as a loaded plugin', async () => {
 test('teardown: a whole-root unload (profile shutdown) never orphans an owned process, even though the storage domain closes concurrently', async t => {
   const h = await boot(t);
   const opened = await h.post('/apps/open', { appId: 'example', deploymentId: 'local', viewId: 'view-root-unload' });
-  assert.equal(opened.status, 200);
-  const host = h.ctx.get('hanameshApps');
-  const inst = await until(() => host.instanceList(appHost.BROWSER_PRINCIPAL).find(i => i.status === 'ready'));
-  assert.ok(pidAlive(inst.pid));
+  const host = h.ctx.get('hanameshApps');let inst;
+  if(process.platform==='win32'){
+    assert.equal(opened.status,400);assert.equal(opened.json.error?.code,'PLATFORM_UNSUPPORTED');
+    inst=await assertOwnedPlatformRejection(host,{appId:'example',deploymentId:'local',viewId:'view-root-unload'},{principal:appHost.BROWSER_PRINCIPAL});
+  }else{assert.equal(opened.status,200);inst=await until(() => host.instanceList(appHost.BROWSER_PRINCIPAL).find(i => i.status === 'ready'));assert.ok(pidAlive(inst.pid));}
   await h.ctx.fiber.dispose();
-  await until(() => !pidAlive(inst.pid), { timeout: 8_000 });
+  if(process.platform!=='win32')await until(() => !pidAlive(inst.pid), { timeout: 8_000 });
+  assert.equal(h.ctx.get('hanameshApps'),undefined);
 });
 
 test('AH-L07 (plugin): an unconfigured library seeds the HanaMesh catalog source through the real Config schema; an explicit [] does not', async t => {
@@ -205,6 +213,27 @@ test('AH-U07 (plugin): real Cordis early/absent/late Usage services never turn r
   assert.deepEqual(diagnosticMessages.map(message => message.args), [[diagnostic]], 'fixed bounded source-unavailable diagnostic, without app data or credentials');
   assert.equal(diagnosticMessages[0].type, 'debug');
   const opened = await first.post('/apps/open', { appId: 'example', deploymentId: 'local', viewId: 'view-u07' });
+  if(process.platform==='win32'){
+    assert.equal(opened.status,400);assert.equal(opened.json.error?.code,'PLATFORM_UNSUPPORTED');
+    await assertOwnedPlatformRejection(first.ctx.get('hanameshApps'),{appId:'example',deploymentId:'local',viewId:'view-u07'},{principal:appHost.BROWSER_PRINCIPAL});
+    assert.deepEqual(seat.calls,[],'an unsupported owned launch is never an original usage fact');
+    assert.equal((await first.get('/hanamesh/apps')).json.apps[0].packageName,'@hanamesh/app-example');
+    assert.deepEqual((await first.get('/hanamesh/router/receipts?appId=example')).json.items,[],'refused launch cannot generate transport receipts');
+    const alone=await boot(t,{withPlugin:false});let loggerFailures=0;
+    alone.ctx.logger.exporter({levels:{default:3},export:message=>{if(message.args[0]===diagnostic){loggerFailures++;throw new Error('fixture diagnostic sink failure');}}});
+    alone.fiber=alone.ctx.plugin(appHost,{dataRoot:join(alone.root,'app-data'),applications:[app],library:{handoff:{enabled:false}}});
+    await until(()=>alone.ctx.get('hanameshApps')!==undefined);assert.equal(loggerFailures,1);assert.equal(alone.ctx.get('hanameshUsage'),undefined);
+    await assertOwnedPlatformRejection(alone.ctx.get('hanameshApps'),{appId:'example',deploymentId:'local',viewId:'view-u07b'},{principal:appHost.BROWSER_PRINCIPAL});
+    const late={calls:[],record:async value=>{late.calls.push(value);return{disposition:'withheld'}}};
+    alone.ctx.provide('hanameshUsage',late);await until(()=>alone.ctx.get('hanameshUsage')!==undefined);
+    await assertOwnedPlatformRejection(alone.ctx.get('hanameshApps'),{appId:'example',deploymentId:'local',viewId:'view-u07c'},{principal:appHost.BROWSER_PRINCIPAL});
+    assert.deepEqual(late.calls,[],'late service cannot manufacture facts after a refused launch');
+    assert.deepEqual((await alone.get('/hanamesh/router/receipts?appId=example')).json.items,[]);assert.equal(loggerFailures,1);
+    assert.equal((await alone.get('/hanamesh/apps')).json.apps[0].packageName,'@hanamesh/app-example');
+    await first.fiber.dispose();await alone.fiber.dispose();
+    assert.equal(first.ctx.get('hanameshApps'),undefined);assert.equal(alone.ctx.get('hanameshApps'),undefined);
+    t.diagnostic('AH-U07 Windows: real Cordis early/absent/late Usage service and throwing diagnostic sink; owned launches durably fail PLATFORM_UNSUPPORTED before spawn; zero Usage facts and transport receipts.');return;
+  }
   assert.equal(opened.status, 200, JSON.stringify(opened.json));
   const ready = await until(async () => (await first.get('/hanamesh/apps')).json.instances.find(i => i.status === 'ready'));
   assert.deepEqual(seat.calls, [], 'ready without actual public presentation facts is not open');
@@ -360,7 +389,7 @@ test('Core declaration missing: real Cordis library exposes the exact reason and
   const dependencies={'@hanamesh/core':'0.3.12','@hanamesh/usage':'0.2.0-rc.34','@hanamesh/dsh-app-host':'0.6.5'};
   for(const [name,version] of Object.entries(dependencies)){await mkdir(join(profile,'node_modules',name),{recursive:true});await writeFile(join(profile,'node_modules',name,'package.json'),JSON.stringify({name,version}));}
   await writeFile(join(profile,'package.json'),JSON.stringify({dependencies,dsh:{profile:{bundles:Object.keys(dependencies)}}}));
-  h.fiber=h.ctx.plugin(appHost,{dataRoot:join(h.root,'app-data'),applications:[],nodeBinary:process.execPath,library:{profileDir:profile,profileName:'core-suite-fixture',dshBin:join(h.root,'unexecuted-dsh.js'),sources:[],fixture:new URL('./fixtures/catalog/provider-page.json',import.meta.url).pathname,handoff:{enabled:false}}});
+  h.fiber=h.ctx.plugin(appHost,{dataRoot:join(h.root,'app-data'),applications:[],nodeBinary:process.execPath,library:{profileDir:profile,profileName:'core-suite-fixture',dshBin:join(h.root,'unexecuted-dsh.js'),sources:[],fixture:fileURLToPath(new URL('./fixtures/catalog/provider-page.json',import.meta.url)),handoff:{enabled:false}}});
   await until(()=>h.ctx.get('hanameshApps')!==undefined);
   const list=await h.get('/hanamesh/library?category=');assert.equal(list.status,200,JSON.stringify(list.json));
   const item=list.json.items.find(i=>i.kind==='suite');assert.equal(item.suiteUpgradeUnavailable,'Core 未提供套件声明');assert.equal(item.suite.components[0].version,'0.3.12');

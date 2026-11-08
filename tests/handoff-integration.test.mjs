@@ -56,6 +56,8 @@ async function boot(t, options = {}) {
   });
   await new Promise(r => registry.listen(0, '127.0.0.1', r)); t.after(() => new Promise(r => registry.close(r)));
   const ctx = new Context(), manager = pluginManager(profile);
+  // Acquire cleanup before initialization can fail while listeners are live.
+  t.after(async () => { await ctx.fiber?.dispose?.(); });
   ctx.plugin(Storage); ctx.plugin(storageJson, { root: join(root, 'storages') }); ctx.plugin(storageDomain, { backend: 'json' });
   ctx.plugin(WebServer, { host: '127.0.0.1', port: 0 });
   ctx.provide('connection', { requestRejection: request => request.headers?.authorization === `Bearer ${TOKEN}` ? undefined : { status: 401 } });
@@ -69,7 +71,6 @@ async function boot(t, options = {}) {
     profileDir: profile, profileName: 'desktop',dshBin:cliFixture, fixture: catalogFixture, registry: `http://127.0.0.1:${registry.address().port}`,
     handoff: { enabled: true, ports: [port], allowedOrigins: [SITE] } } });
   await until(() => ctx.get('hanameshApps') !== undefined);
-  t.after(async () => { await ctx.fiber?.dispose?.(); });
   const headers = { origin, authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json', 'x-hanamesh-client': 'workspace-v1' };
   return { ctx, manager, port, origin, root, listener: `http://127.0.0.1:${port}`,
     post: (path, body) => http(origin + path, { method: 'POST', headers, body: JSON.stringify(body) }),

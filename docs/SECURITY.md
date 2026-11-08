@@ -98,3 +98,6 @@ B17 候选的套件来源选择仅在 AppHost 自有同源已准入设置端点�
 ## Local snapshot publication on Windows
 
 The optional local `AtomicFileStore` flushes the newly written snapshot file, closes it, then renames it within the same directory on every platform. On Linux and macOS it additionally opens and synchronizes the containing directory before acknowledging publication. Node does not provide the directory-open/fsync operation on Windows, so that extra directory flush is not attempted there. Windows still publishes a complete file image and retains real process-kill/crash-cut checks; this does not promise that the renamed directory entry survives power loss or an OS/storage crash. A file-sync failure is never ignored, and a failure after rename remains `COMMIT_UNCERTAIN`. The normal DSH storage-domain bridge keeps its provider's publication contract.
+
+
+On Windows the optional Coding OAuth Gateway **file** source remains unreachable: Node's POSIX mode bits cannot establish a private Windows ACL, so AppHost rejects that source before reading its contents. `chmod(0600)` is never treated as ACL proof. The authenticated HTTP provider is the supported alternative; no secret is silently imported from an unverified file.

@@ -14,7 +14,7 @@ import { createLibraryService } from '../src/library/service.js';
 import { createLibraryInstaller } from '../src/library/install.js';
 import { createLibraryHttpHandler } from '../src/library/routes.js';
 import { clientHarness, fakeClock, settle } from './fixtures/client-ui-harness.mjs';
-import { definition, http, until } from './helpers.mjs';
+import { definition, http, until, attachDefinition } from './helpers.mjs';
 
 // Evidence: SOURCE/FIXTURE plus a real local app process. CLI, catalog and auth are
 // named counterparts; this never proves the native Desktop or owner acceptance.
@@ -47,6 +47,7 @@ async function provider(t, { available = true, gate, cliFails = false, readbackV
   });
   await mkdir(profile);
   await writeFile(join(profile, 'package.json'), JSON.stringify({ dependencies: {}, dsh: { profile: { bundles: [] } } }));
+  const portableApp=process.platform==='win32'?await attachDefinition(t,{id:'market-example'}):definition({id:'market-example'});
   const calls = [];
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   const origin = `http://127.0.0.1:${server.address().port}`;
@@ -69,7 +70,7 @@ async function provider(t, { available = true, gate, cliFails = false, readbackV
         await mkdir(pkgRoot, { recursive: true });
         const app = name === appTarget.packageName;
         await writeFile(join(pkgRoot, 'package.json'), JSON.stringify({ name, version: readbackVersion, ...(app ? { hanamesh: { app: 'app.json' } } : {}) }));
-        if (app) await writeFile(join(pkgRoot, 'app.json'), JSON.stringify(definition({ id: 'market-example' })));
+        if (app) await writeFile(join(pkgRoot, 'app.json'), JSON.stringify(portableApp));
         const manifest = JSON.parse(await readFile(join(profile, 'package.json'), 'utf8'));
         manifest.dependencies[name] = '1.2.3';
         await writeFile(join(profile, 'package.json'), JSON.stringify(manifest));

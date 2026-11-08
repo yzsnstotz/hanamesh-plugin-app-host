@@ -36,6 +36,11 @@ class Admission(unittest.TestCase):
    raise BeforeSpawnStop()
   self.driver.subprocess.Popen=intercepted_spawn
   try:
+   if sys.platform=='win32':
+    with self.assertRaisesRegex(self.driver.GateError,'NATIVE_PROCESS_PLATFORM_UNSUPPORTED'):self.driver.run(self.c)
+    self.assertFalse((self.root/'native/launch-reservation.json').exists(),'unsupported native process observation cannot publish a false reservation')
+    self.assertTrue(self.driver.preflight(self.c),'source admission remains distinct from native process support')
+    return
    with self.assertRaises(BeforeSpawnStop):self.driver.run(self.c)
   finally:self.driver.subprocess.Popen=original
   with self.assertRaisesRegex(self.driver.GateError,'NATIVE_LAUNCH_RESERVED'):
