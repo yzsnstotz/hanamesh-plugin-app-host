@@ -228,22 +228,27 @@ Actions runs on the standard public/free `macos-15` arm64 runner because the exi
 
 ## 发布检查：平台依赖闭包（不可关闭）
 
-`DSH_PNPM_PLATFORM_CLOSURE` 是正确性不变量，Mac/Windows/Linux 同样适用：DSH 自带 pnpm 11.7.0 处理不适用平台 optional 子包时可能安装完不退出，导致 DSH 持续等待。正常 tarball、bundled 包及完整锁定依赖闭包发现 os/cpu/libc 字段或平台子包 optionalDependencies 即拒绝，报具体包名/路径；缺闭包证据也拒绝。不能以开关、超时、重试、omit-optional 或静默兜底绕过；应改用单包内含多平台文件的中立依赖。
+`DSH_PNPM_PLATFORM_CLOSURE` 是正确性不变量，Mac/Windows/Linux 同样适用：DSH 自带 pnpm 11.7.0 处理不适用平台 optional 子包时可能安装完不退出，导致 DSH 持续等待。正常 tarball、bundled 包及完整锁定依赖闭包的根/必需路径含 os/cpu/libc 即拒绝；完整可选子图按 optional-platform-paths-v1 核对真实清单/冻结元数据及所有平台工件，缺绑定的平台 optional 声明仍拒绝，报具体包名/路径；缺闭包证据也拒绝。不能以开关、超时、重试、omit-optional 或静默兜底绕过；应改用单包内含多平台文件的中立依赖。
 
 运行 `npm run release:check` 正常打包并检查；发布仅用 `npm run release:publish`，发布已检查的同一 tarball。直接目录 npm publish 会被 prepublishOnly 明确拒绝。开发工具 `@hanamesh/release-platform-gate` 仅 devDependency，先按接线请求复制经 SHA 固定的正常工具包并更新冻结锁；CI 必须接入这个发布门。详细输出包含不可关闭的原因、正常包/锁 SHA 和扫描路径；absent optional peer 按 npm 定义列明，不等同 optionalDependencies。
 
-共享门已升级到 R2 PASS 的 0.1.10，原正常工具 tar SHA256 为 `c72010c96a5f22e36d65f6c1fd850e583dead7e843644eba1657b4416d9cbd0d`；最终 main 来源见 `vendor/release-platform-gate.json`。本仓接线仍须 R1 独审，不等于 npm 发布放行，本次不发布。
+历史共享门曾升级到 R2 PASS 的 0.1.10，原正常工具 tar SHA256 为 `c72010c96a5f22e36d65f6c1fd850e583dead7e843644eba1657b4416d9cbd0d`；最终 main 来源见 `vendor/release-platform-gate.json`。本仓接线仍须 R1 独审，不等于 npm 发布放行，本次不发布。
 
 `verify:pack` 原有 tarball 参数保持；正常消费者验证之后通过共享公开 checkRelease 核对同一个归档，CI沿该入口必经硬门，不另打一个包代替原包。接线没有复制扫描实现。
 
 有限依赖形态合同为正常开发工具包中的 `DEPENDENCY_SHAPES.md`（dependency-shapes-v1）：支持 registry/git/file/link/tarball/workspace/bundled/vendor 的明确子集，不能当作 npm/pnpm 的无限全集。合同外一律 `UNSUPPORTED_DEPENDENCY_SHAPE`，逐项公开 `package/path/shape/why/action/contract`；缓存、bundle、环境变量或额外 CLI 开关都不能绕过准入。已知缺证据、冻结漂移、完整性和平台违规仍各自具名拒绝，不能以“任意失败”代替正确理由。
 
-发布说明：DSH 内置 pnpm 11.7.0 处理不适用平台 optional 子包时可能安装后不退出，使 DSH 一直等安装结束；因此本门是正确性不变量（`disableable:false`），没有关闭开关。所有 OS/CPU/libc 都必须具备平台中立的完整安装依赖闭包，不能用本机已装、omit-optional、ignore-scripts、超时、重试、放宽断言或改客户端代替。每次 PASS/FAIL 的 JSON/receipt 都包含触发背景和不能关闭的 reason；release:check 正常 pack，release:publish 只发布同一已检查且再核 SHA 的 tar。源码目录发布由 prepublishOnly 拒绝，CI 的 verify:pack/preflight 必经该门；无可失败 job 或旁路入口。
+发布说明：DSH 内置 pnpm 11.7.0 处理不适用平台 optional 子包时可能安装后不退出，使 DSH 一直等安装结束；因此本门是正确性不变量（`disableable:false`），没有关闭开关。所有 OS/CPU/libc 的必需安装路径必须中立；可选平台子图仍须完整闭包与强 SRI，不能用本机已装、omit-optional、ignore-scripts、超时、重试、放宽断言或改客户端代替。每次 PASS/FAIL 的 JSON/receipt 都包含触发背景和不能关闭的 reason；release:check 正常 pack，release:publish 只发布同一已检查且再核 SHA 的 tar。源码目录发布由 prepublishOnly 拒绝，CI 的 verify:pack/preflight 必经该门；无可失败 job 或旁路入口。
 
-固定提供方 main 提交 `13ec0db3bc6aa6b6235f2105d3f0a6b998855ff5`，与 R2 审过的 0.1.10 正常包6载荷逐字一致；来源/归档摘要见 `vendor/release-platform-gate.json`。
+历史提供方 main 提交 `13ec0db3bc6aa6b6235f2105d3f0a6b998855ff5`，与 R2 审过的 0.1.10 正常包6载荷逐字一致；来源/归档摘要见 `vendor/release-platform-gate.json`。
 
 ## Core 公开套件声明的测试依赖
 
 源码测试通过 `@hanamesh/core/suite` 读取 Core 单源公开命令。`@hanamesh/core` 是仓库声明的 devDependency，按 npm 版本范围 `^0.3.30` 从公开 npm 安装，冻结 pnpm 锁记录实际版本与 SRI；许可证记录见 `docs/LICENSES.json`。Core 不成为运行时依赖或 bundled 包。
 
 套件升级的执行定义来自可信 Cordis Core 声明 `upgrade.installation:{name,version,command,args}`；AppHost将实际profile与可选registry交给Core，使用返回的完整argv，不自行加flag、解析命令前缀或补默认npm源。缺定义时具名拒绝，参数纳入确认快照。该数据接口避免AppHost在Core新版本发布前依赖未发布SDK。
+
+
+### PK2 · DSH 0.2.2-rc.1 平台门更新
+
+现行门为 0.1.11，来源 `68383f41179c94ac9e0f98e59a8ae743e5137b82`，正常归档 SHA256 `270b64e76aaf7c56349e229f2404cd0856b567b3e3e967794a95a6120067bf76`，详见 vendor/release-platform-gate.json。新审查契约 optional-platform-paths-v1 按必需/可选路径遍历；完整可选平台子图逐工件核锁/真实清单/强 SRI，必需路径、缺证据、未知形态与关闭开关继续拒绝。此前“所有 os/cpu/libc 字段无条件拒绝”的描述仅代表 0.1.10 历史策略。作者门通过不冒称独立审查或 Windows/Linux 真机通过；本轮不发布 npm。

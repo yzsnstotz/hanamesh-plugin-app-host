@@ -1,42 +1,43 @@
 {
   "name": "@hanamesh/release-platform-gate",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "sourceRepository": "https://github.com/yzsnstotz/hanamesh-docs.git",
   "sourcePath": "tools/release-platform-gate",
-  "sourceRef": "stage/c-leoventory-release-platform-cycle-0110-1027",
-  "sourceCommit": "7a39e4e332a2cbb5dcbfddec68383fb5cef39eb8",
-  "reviewCommit": "7a39e4e332a2cbb5dcbfddec68383fb5cef39eb8",
-  "reviewDocs": "cce157612b1390b845ccca3f0632247de9fb3229",
-  "archiveSha256": "71545cbb636d3b1a5e7d9fbba728b16e006b8eaf70bc2540038d077df7263a61",
+  "sourceRef": "fix/pk2-platform-optional-contract-20261109",
+  "sourceCommit": "68383f41179c94ac9e0f98e59a8ae743e5137b82",
+  "reviewCommit": null,
+  "reviewDocs": null,
+  "archiveSha256": "270b64e76aaf7c56349e229f2404cd0856b567b3e3e967794a95a6120067bf76",
   "invariant": "DSH_PNPM_PLATFORM_CLOSURE",
   "disableable": false,
   "dependencyShapeContract": "dependency-shapes-v1",
   "payload": [
     {
       "path": "package.json",
-      "sha256": "c902bb6eed2b6682aeeeaf2a81a97c89fbcaffb9ca3b843bbf10fef183507fdf"
+      "sha256": "8943aacb7ff35b00332d18a4427ef82392eaa57319b9298ec3e23bedca9f210c"
     },
     {
       "path": "DEPENDENCY_SHAPES.md",
-      "sha256": "4ec79aceec8ad9fcdef806212e3bb89b09e882a071f50f2a8f8240ff33e3d2d7"
+      "sha256": "4270f2088cfdac76dad833da542687946a1081a34b65f04581d7c39283b72f46"
     },
     {
       "path": "README.md",
-      "sha256": "ec1654e533eb183d4f13a1e4d824c4f42ae602550f2c846ed88e7373c2d71c1e"
+      "sha256": "cd52100e652d17f29bb82ca42d51fa531419a6500fa7978f1941d42e5bdf066a"
     },
     {
       "path": "cli.mjs",
-      "sha256": "a063f4d0b3eda221f487ca58de3d2e352779ff0b5e24f5e67d039571ecd0eced"
+      "sha256": "f2c32cc1378f132c288984aadffd9f9ecacec9519fba28e12baa53df73350622"
     },
     {
       "path": "index.mjs",
-      "sha256": "3a8bd2557f187ea068ade2bc593827e4d12e3a2b9cd0d34556c00ae3f6e5e1ff"
+      "sha256": "304266888e03f94020ac6a21c9b0644a1f5d7ea971c224ab5652c8868d470cd0"
     },
     {
       "path": "release.mjs",
-      "sha256": "d1cabae7f77e5f6cea1d5b1b823b5c58e565b2c75a4b96ab2454618a9397c740"
+      "sha256": "e48c8367eb5786e526e7834b8bdf780ded3227b3abbd03fe3282ea4de721a258"
     }
   ],
-  "reviewTargetCommit": "7a39e4e332a2cbb5dcbfddec68383fb5cef39eb8",
-  "reviewStatus": "PASS"
+  "reviewTargetCommit": "68383f41179c94ac9e0f98e59a8ae743e5137b82",
+  "reviewStatus": "SELF_TEST_PASS_PENDING_INDEPENDENT_REVIEW",
+  "platformClosureContract": "optional-platform-paths-v1"
 }
