@@ -3,11 +3,49 @@ import {fork,spawnSync} from 'node:child_process';
 import {mkdtempSync,realpathSync,rmSync,lstatSync} from 'node:fs';
 import {join} from 'node:path';
 let started=false,finishing=false,finalized=false,directory,anchor,anchorExited=false,payload;
-function finalize(){
+function groupMetadata(){
+ const result=spawnSync('/bin/ps',['-axo','pid=,pgid=,uid=,stat='],{encoding:'utf8',stdio:['ignore','pipe','ignore']});
+ if(result.status!==0)throw new Error('Owned group metadata is unavailable.');
+ const rows=result.stdout.trim().split('\n').filter(Boolean).map(line=>{
+  const match=/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s*$/.exec(line);
+  if(!match)throw new Error('Owned group metadata is invalid.');
+  return{pid:Number(match[1]),pgid:Number(match[2]),uid:Number(match[3]),state:match[4]};
+ });
+ return rows.filter(row=>row.pgid===anchor.pid);
+}
+async function confirmOwnedGroupGone(){
+ if(process.platform==='win32'||!anchor)return;
+ // Observe only the PGID created by this anchor, never send another termination
+ // signal after its PID could be reused. close(anchor) alone does not reap descendants.
+ const deadline=Date.now()+1000;const observed=new Set();
+ while(true){
+  try{process.kill(-anchor.pid,0)}catch(error){
+   if(error.code==='ESRCH')return;
+   if(error.code!=='EPERM')throw error;
+   // Darwin may return EPERM for an empty or zombie-only process group. Read
+   // metadata only (never argv/commands); a foreign UID or unknown state fails closed.
+   const members=groupMetadata();
+   if(members.some(row=>row.uid!==process.getuid()||!/^[-A-Za-z+<>]+$/.test(row.state)))throw error;
+   for(const row of members)observed.add(row.pid);
+   if(members.length===0){
+    let remaining=false;for(const pid of observed){try{process.kill(pid,0);remaining=true}catch(probe){if(probe.code!=='ESRCH')throw probe}}
+    if(!remaining)return;
+   }
+  }
+  if(Date.now()>=deadline)throw new Error('Owned command group did not finish reaping.');
+  await new Promise(resolve=>setTimeout(resolve,5));
+ }
+}
+async function finalize(){
  if(finalized)return;finalized=true;
+ let cleanupComplete=false;
  // Normal owned shutdown reaches here after the live group was killed and its anchor closed.
  // An external SIGKILL/native crash of an internal supervisor is outside automatic recovery.
- if(directory){try{rmSync(directory,{recursive:true,force:true,maxRetries:4,retryDelay:25});try{lstatSync(directory);payload={error:'AGENT_READER_CLEANUP_FAILED'}}catch(error){if(error.code!=='ENOENT')throw error}}catch{payload={error:'AGENT_READER_CLEANUP_FAILED'}}}
+ try{await confirmOwnedGroupGone();
+  if(directory){rmSync(directory,{recursive:true,force:true,maxRetries:4,retryDelay:25});try{lstatSync(directory);throw new Error('Owned neutral directory survived cleanup.')}catch(error){if(error.code!=='ENOENT')throw error}}
+  cleanupComplete=true;
+ }catch{payload={error:'AGENT_READER_CLEANUP_FAILED'}}
+ payload={...payload,cleanupComplete};
  let flushed=0;const complete=()=>{if(++flushed!==2)return;const exit=()=>process.exit(0);
   if(process.connected){try{process.send(payload,exit)}catch{exit()}}else exit();
  };

@@ -42,7 +42,7 @@ export async function runOfficialInstallationCommand({channel,reader,args,signal
  if(!validReader(reader))fail('AGENT_READER_DISCOVERY_INVALID');
  const nodeRuntime=guardNodeBinary({workerNode});if(!nodeRuntime)fail('AGENT_READER_NODE_REQUIRED');
  for(const path of [reader.home,reader.configDir]){let value;try{value=await stat(path)}catch{fail('AGENT_PROFILE_UNAVAILABLE')}if(!value.isDirectory())fail('AGENT_PROFILE_UNAVAILABLE')}
- const temporaryRoot=await realpath(tmpdir());let cwd;
+ const temporaryRoot=await realpath(tmpdir());let cwd,cleanupConfirmed=false;
  // Keep the selected user's manager resolution conditions, without model/API tokens, proxy, preloads or askpass.
  const systemRoot=process.platform==='win32'?(process.env.SystemRoot??'C:\\Windows'):undefined;
  const inheritedPath=(reader.runtimeEnv?.PATH??'').split(delimiter).filter(absolutePath);
@@ -59,14 +59,14 @@ export async function runOfficialInstallationCommand({channel,reader,args,signal
   const timer=setTimeout(()=>kill('AGENT_READER_TIMEOUT'),reader.timeoutMs);
   child.stdout.on('data',chunk=>{total+=chunk.length;if(total>reader.maxOutputBytes)kill('AGENT_READER_OUTPUT_LIMIT');else chunks.push(chunk)});
   child.stderr.on('data',chunk=>{stderr=true;total+=chunk.length;if(total>reader.maxOutputBytes)kill('AGENT_READER_OUTPUT_LIMIT')});
-  child.on('message',value=>{if(typeof value.directory==='string')cwd=value.directory;else message=value});
+  child.on('message',value=>{if(typeof value.directory==='string')cwd=value.directory;else{message=value;cleanupConfirmed=value.cleanupComplete===true}});
   child.once('exit',()=>{exited=true});
   child.once('error',error=>{fault??=error.code==='EACCES'?'AGENT_READER_PERMISSION_DENIED':'AGENT_READER_UNAVAILABLE'});
   child.once('close',code=>{exited=true;clearTimeout(timer);signal?.removeEventListener('abort',abort);
-   if(fault||message?.error||message?.result!==0||(stderr&&channel!=='shell'))reject(new AppHostError(fault??message?.error??(stderr&&channel!=='shell'?'AGENT_READER_DIAGNOSTIC':'AGENT_READER_FAILED'),'The official reader did not return a complete successful result.',{},503));
+   if(fault||message?.error||message?.result!==0||(stderr&&channel!=='shell'))reject(new AppHostError((cwd&&!cleanupConfirmed?'AGENT_READER_CLEANUP_FAILED':fault??message?.error)??(stderr&&channel!=='shell'?'AGENT_READER_DIAGNOSTIC':'AGENT_READER_FAILED'),'The official reader did not return a complete successful result.',{},503));
    else resolve(Buffer.concat(chunks).toString('utf8'));
   });
   if(child.connected)child.send({executable:reader.nodeScript?nodeRuntime:reader.executable,args:reader.nodeScript?[reader.executable,...args]:args,temporaryRoot,env},()=>{});
   if(signal?.aborted)abort();
- })}finally{if(cwd)await rm(cwd,{recursive:true,force:true})}
+ })}finally{if(cwd&&cleanupConfirmed)await rm(cwd,{recursive:true,force:true,maxRetries:4,retryDelay:25})}
 }
