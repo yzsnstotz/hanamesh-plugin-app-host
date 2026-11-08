@@ -1,13 +1,13 @@
 /** Detached reaper: it outlives the caller and owns the neutral directory, outside the command group. */
 import {fork,spawnSync} from 'node:child_process';
-import {mkdtempSync,realpathSync,rmSync} from 'node:fs';
+import {mkdtempSync,realpathSync,rmSync,lstatSync} from 'node:fs';
 import {join} from 'node:path';
 let started=false,finishing=false,finalized=false,directory,anchor,anchorExited=false,payload;
 function finalize(){
  if(finalized)return;finalized=true;
  // Normal owned shutdown reaches here after the live group was killed and its anchor closed.
  // An external SIGKILL/native crash of an internal supervisor is outside automatic recovery.
- if(directory){try{rmSync(directory,{recursive:true,force:true})}catch{payload={error:'AGENT_READER_CLEANUP_FAILED'}}}
+ if(directory){try{rmSync(directory,{recursive:true,force:true,maxRetries:4,retryDelay:25});try{lstatSync(directory);payload={error:'AGENT_READER_CLEANUP_FAILED'}}catch(error){if(error.code!=='ENOENT')throw error}}catch{payload={error:'AGENT_READER_CLEANUP_FAILED'}}}
  let flushed=0;const complete=()=>{if(++flushed!==2)return;const exit=()=>process.exit(0);
   if(process.connected){try{process.send(payload,exit)}catch{exit()}}else exit();
  };

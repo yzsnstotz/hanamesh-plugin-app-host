@@ -26,7 +26,7 @@ test('cancellation kills the exact owned read process and rejects without output
 });
 test('reader supervisor retains group ownership after CLI leader exits, so the budget closes inherited pipes',async t=>{
  const root=await scratch('installation-exited-leader-');t.after(()=>rm(root,{recursive:true,force:true}));const record=join(root,'children.json');
- const{reader}=await setup(t,`const {spawn}=await import('node:child_process');const fs=await import('node:fs');const child=spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{stdio:['ignore','inherit','inherit']});fs.writeFileSync(${JSON.stringify(record)},JSON.stringify({leader:process.pid,child:child.pid}));process.exit(0);`);
+ const{reader}=await setup(t,`const {spawn}=await import('node:child_process');const fs=await import('node:fs');const child=spawn(process.execPath,['-e',"process.stdout.write('held',()=>process.send({ready:true}));setInterval(()=>process.stdout.write('held'),100)"],{stdio:['ignore','inherit','inherit','ipc']});child.once('message',()=>{fs.writeFileSync(${JSON.stringify(record)},JSON.stringify({leader:process.pid,child:child.pid}));child.disconnect();process.exit(0)});`);
  const pending=invoke({...reader,timeoutMs:1500});const outcome=pending.then(()=>({code:'unexpected-success'}),e=>({code:e.code}));let child;
  try{
   for(let i=0;i<200;i++){try{child=JSON.parse(await readFile(record,'utf8'));break}catch{await new Promise(r=>setTimeout(r,5))}}assert.ok(child?.child,'the CLI leader actually spawned its pipe-holding child');

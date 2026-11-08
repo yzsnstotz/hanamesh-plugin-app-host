@@ -27,7 +27,7 @@ export function observeGitTrace(directory){
    let event;try{event=JSON.parse(line);}catch{throw Object.assign(new Error('Invalid Git credential trace.'),{code:'GIT_TRACE_INVALID'});}
    if(['child_start','exec'].includes(event.event)&&forbidden.test((event.argv??[]).join(' '))){failure=Object.assign(new Error('Forbidden macOS keychain helper was invoked; operation failed.'),{code:'GIT_KEYCHAIN_FORBIDDEN'});throw failure;}
   }
- },close(){if(closed)return;closed=true;try{closeSync(fd);}finally{rmSync(directory,{recursive:true,force:true});}}};
+ },close(){if(closed)return;closed=true;try{closeSync(fd);}finally{rmSync(directory,{recursive:true,force:true,maxRetries:4,retryDelay:25});}}};
 }
 export function guardNodeBinary({workerNode,versions=process.versions,execPath=process.execPath}={}){
  if(workerNode!==undefined)return typeof workerNode==='string'&&isAbsolute(workerNode)?workerNode:undefined;
@@ -59,6 +59,6 @@ export async function spawnGitSafe(command,args,options={}){
  }finally{
   clearTimeout(deadline);clearTimeout(abortFallback);signal?.removeEventListener('abort',abort);
   if(worker?.connected)worker.disconnect();
-  if(directory)rmSync(directory,{recursive:true,force:true});
+  if(directory)rmSync(directory,{recursive:true,force:true,maxRetries:4,retryDelay:25});
  }
 }

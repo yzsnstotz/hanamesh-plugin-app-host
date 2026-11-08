@@ -21,21 +21,22 @@ for(const [name,relative]of layouts)test(`AH1 layout ${name}`,async t=>{
  const reader=await discovery.discoverOfficialReader({channel,...options(home),platform:windows?'win32':'linux'});
  assert.equal(reader.executable,file);assert.equal(reader.home,home);assert.equal(reader.configDir,join(home,channel==='claude'?'.claude':'.codex'));
 });
-for(const name of ['PATH','login shell','Homebrew arm64','Homebrew Intel','npm custom','pnpm custom','nvm custom','fnm custom','volta custom','asdf custom','mise custom','Codex custom installer'])test(`AH1 layout ${name}`,async t=>{
- const home=await fixture(t),bin=join(home,name==='Homebrew arm64'?'opt/homebrew/bin':name==='Homebrew Intel'?'usr/local/bin':'custom/bin'),file=await executable(join(bin,'codex')),o=options(home);
+for(const name of ['PATH','login shell','Homebrew arm64','Homebrew Intel','npm custom','pnpm custom','nvm custom','fnm custom','volta custom','asdf custom','mise custom','Codex custom installer'])test(`AH1 layout ${name}${process.platform==='win32'&&name==='login shell'?' (Windows ignores POSIX login shell)':''}`,async t=>{
+ const extension=process.platform==='win32'?'.exe':'';
+ const home=await fixture(t),bin=join(home,name==='Homebrew arm64'?'opt/homebrew/bin':name==='Homebrew Intel'?'usr/local/bin':'custom/bin'),file=await executable(join(bin,'codex'+extension)),o=options(home);
  if(name==='PATH')o.env.PATH=bin;
- else if(name==='login shell')o.loginPath=async()=>bin;
+ else if(name==='login shell'){if(process.platform==='win32'){o.systemBinDirs=[bin];o.loginPath=async()=>assert.fail('Windows discovery must not invoke a POSIX login shell')}else o.loginPath=async()=>bin;}
  else if(name.startsWith('Homebrew'))o.systemBinDirs=[bin];
- else {const keys={'npm custom':'NPM_CONFIG_PREFIX','pnpm custom':'PNPM_HOME','nvm custom':'NVM_BIN','fnm custom':'FNM_MULTISHELL_PATH','volta custom':'VOLTA_HOME','asdf custom':'ASDF_DATA_DIR','mise custom':'MISE_DATA_DIR','Codex custom installer':'CODEX_INSTALL_DIR'};const key=keys[name];o.env[key]=['NPM_CONFIG_PREFIX','VOLTA_HOME'].includes(key)?join(home,'custom'):bin;
- if(name==='asdf custom'){await executable(join(bin,'shims','codex'));}if(name==='mise custom'){await executable(join(bin,'shims','codex'));}}
+ else {const keys={'npm custom':'NPM_CONFIG_PREFIX','pnpm custom':'PNPM_HOME','nvm custom':'NVM_BIN','fnm custom':'FNM_MULTISHELL_PATH','volta custom':'VOLTA_HOME','asdf custom':'ASDF_DATA_DIR','mise custom':'MISE_DATA_DIR','Codex custom installer':'CODEX_INSTALL_DIR'};const key=keys[name];o.env[key]=(key==='VOLTA_HOME'||key==='NPM_CONFIG_PREFIX'&&process.platform!=='win32')?join(home,'custom'):bin;
+ if(name==='asdf custom'){await executable(join(bin,'shims','codex'+extension));}if(name==='mise custom'){await executable(join(bin,'shims','codex'+extension));}}
  const reader=await discovery.discoverOfficialReader({channel:'codex',...o});
- assert.equal(reader.executable,['asdf custom','mise custom'].includes(name)?join(bin,'shims','codex'):file);
+ assert.equal(reader.executable,['asdf custom','mise custom'].includes(name)?join(bin,'shims','codex'+extension):file);
 });
 test('AH1 deterministic priority, deduplication and absent CLI never initialize a profile',async t=>{
- const home=await fixture(t),o=options(home),first=await executable(join(home,'first','codex'));
- await executable(join(home,'.local/bin/codex'));o.env.PATH=dirname(first);o.loginPath=async()=>join(home,'.local/bin');
+ const extension=process.platform==='win32'?'.exe':'';const home=await fixture(t),o=options(home),first=await executable(join(home,'first','codex'+extension));
+ await executable(join(home,'.local/bin','codex'+extension));o.env.PATH=dirname(first);o.loginPath=async()=>join(home,'.local/bin');
  assert.equal((await discovery.discoverOfficialReader({channel:'codex',...o})).executable,first);
- await rm(first);await rm(join(home,'.local/bin/codex'));
+ await rm(first);await rm(join(home,'.local/bin','codex'+extension));
  await assert.rejects(discovery.discoverOfficialReader({channel:'codex',...o}),{code:'AGENT_READER_UNAVAILABLE'});
  await assert.rejects(readFile(join(home,'.codex')),{code:'ENOENT'});
 });
@@ -56,28 +57,33 @@ test('AH1 a broken selected npm shim never borrows a different manager installat
  o.env.PATH=bin;await assert.rejects(discovery.discoverOfficialReader({channel:'codex',...o,platform:'win32'}),{code:'AGENT_READER_ENTRYPOINT_UNAVAILABLE'});
 });
 test('AH1 version-manager choice is newest Node SemVer, profiles honor existing environment, and symlinks work',async t=>{
- const home=await fixture(t),o=options(home);await executable(join(home,'.nvm/versions/node/v18.0.0/bin/codex'));
- const newest=await executable(join(home,'.nvm/versions/node/v24.13.1/bin/codex'));
+ const extension=process.platform==='win32'?'.exe':'';const home=await fixture(t),o=options(home);await executable(join(home,'.nvm/versions/node/v18.0.0/bin','codex'+extension));
+ const newest=await executable(join(home,'.nvm/versions/node/v24.13.1/bin','codex'+extension));
  o.env.CODEX_HOME=join(home,'selected-profile');assert.equal((await discovery.discoverOfficialReader({channel:'codex',...o})).executable,newest);
- const link=join(home,'linked');await mkdir(link);await symlink(newest,join(link,'codex'));o.env.PATH=link;
- const reader=await discovery.discoverOfficialReader({channel:'codex',...o});assert.equal(reader.executable,join(link,'codex'));assert.equal(reader.configDir,o.env.CODEX_HOME);
+ const link=join(home,'linked');await mkdir(link);await symlink(newest,join(link,'codex'+extension));o.env.PATH=link;
+ const reader=await discovery.discoverOfficialReader({channel:'codex',...o});assert.equal(reader.executable,join(link,'codex'+extension));assert.equal(reader.configDir,o.env.CODEX_HOME);
 });
 test('AH1 login PATH reads only framed PATH, strips inherited credentials, and times out without raw output',async t=>{
- const home=await fixture(t),shell=await executable(join(home,'shell'),`process.stdout.write('startup noise\\0HANAMESH_ENV\\0'+JSON.stringify({PATH:process.env.HOME+'/custom'})+'\\0');if(process.env.API_KEY)process.exit(2)`);
- const value=await discovery.readLoginPath({home,env:{SHELL:shell,PATH:'/usr/bin:/bin',API_KEY:'never-inherit'}});
- assert.equal(value,home+'/custom');
+ const home=await fixture(t),shell=await executable(join(home,'shell'),`process.stdout.write('startup noise\\0HANAMESH_ENV\\0'+JSON.stringify({PATH:(await import('node:path')).join(process.env.HOME,'custom')})+'\\0');if(process.env.API_KEY)process.exit(2)`);
+ const {runOfficialInstallationCommand}=await import('../src/library/installation-cli.js');
+ // The controlled shell is JavaScript; interpret it with Node rather than relying on POSIX shebang execution.
+ const runCommand=request=>{assert.equal(request.reader.executable,shell);assert.equal(request.args[0],'-ilc');return runOfficialInstallationCommand({...request,reader:{...request.reader,nodeScript:true}})};
+ const value=await discovery.readLoginPath({home,env:{SHELL:shell,PATH:'/usr/bin:/bin',API_KEY:'never-inherit'},runCommand});
+ assert.equal(value,join(home,'custom'));
  await executable(shell,`setInterval(()=>{},1000)`);
- await assert.rejects(discovery.readLoginPath({home,env:{SHELL:shell},timeoutMs:60}),{code:'AGENT_READER_TIMEOUT'});
+ await assert.rejects(discovery.readLoginPath({home,env:{SHELL:shell},timeoutMs:60,runCommand}),{code:'AGENT_READER_TIMEOUT'});
 });
 
 test('AH1 discovered CLI reads fresh newer inventories with real child processes in an isolated HOME',async t=>{
  const home=await fixture(t),bin=join(home,'.local/bin');
  for(const channel of ['claude','codex']){
   await mkdir(join(home,channel==='claude'?'.claude':'.codex'));
-  await executable(join(bin,channel),`const a=process.argv.slice(2);const channel=${JSON.stringify(channel)};const version=channel==='claude'?'2.1.319 (Claude Code)':'codex-cli 0.167.0';if(a[0]==='--version')console.log(version);else if(a.includes('marketplace'))console.log(channel==='claude'?'[]':'{"marketplaces":[]}');else console.log(channel==='claude'?'[]':'{"installed":[],"available":[]}');`);
+  const entry=process.platform==='win32'?join(bin,'node_modules',...(channel==='claude'?['@anthropic-ai','claude-code','cli.js']:['@openai','codex','bin','codex.js'])):join(bin,channel);
+  if(process.platform==='win32')await executable(join(bin,channel+'.cmd'));
+  await executable(entry,`const a=process.argv.slice(2);const channel=${JSON.stringify(channel)};const version=channel==='claude'?'2.1.319 (Claude Code)':'codex-cli 0.167.0';if(a[0]==='--version')console.log(version);else if(a.includes('marketplace'))console.log(channel==='claude'?'[]':'{"marketplaces":[]}');else console.log(channel==='claude'?'[]':'{"installed":[],"available":[]}');`);
  }
  const {createInstallationStatusReader}=await import('../src/library/installation-status.js');
- const read=createInstallationStatusReader({discoverReader:q=>discovery.discoverOfficialReader({...q,...options(home)})});t.after(()=>read.close());
+ const read=createInstallationStatusReader({discoverReader:q=>discovery.discoverOfficialReader({...q,...options(home),platform:process.platform})});t.after(()=>read.close());
  const result=await read();
  for(const row of result.observations.filter(row=>row.scope.id==='agent-cli')){assert.equal(row.status,'not-installed');assert.deepEqual(row.identity,{pluginName:'hanamesh',marketplace:'hanamesh'});}
  assert.doesNotMatch(JSON.stringify(result),new RegExp(home));

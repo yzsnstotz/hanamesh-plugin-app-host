@@ -1,16 +1,25 @@
 // Internal IPC supervisor. The parent never detaches a package manager directly.
-import {spawn,spawnSync} from 'node:child_process';
+import {spawn,spawnSync,fork} from 'node:child_process';
 import {existsSync,mkdtempSync,writeFileSync,rmSync,realpathSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {dirname,join,basename} from 'node:path';
 import {observeGitTrace} from './git-process.js';
-let monitor,directory,timer,done=false,started=false;
+let monitor,directory,timer,done=false,started=false,anchor;
 function finish(payload){
  if(done)return;done=true;clearInterval(timer);
+ if(process.platform==='win32'&&anchor){
+  anchor.once('close',()=>finalize(payload));
+  const stopped=spawnSync(join(process.env.SystemRoot,'System32','taskkill.exe'),['/PID',String(anchor.pid),'/T','/F'],{stdio:'ignore',windowsHide:true});
+  if(stopped.status!==0)payload={error:{code:'GIT_TREE_CLEANUP_FAILED'}};
+  return;
+ }
+ finalize(payload);
+}
+function finalize(payload){
  try{monitor?.check(true);}catch(error){payload={error:{code:error.code??'GIT_TRACE_INVALID'}};}
  try{if(monitor)monitor.close();else if(directory)rmSync(directory,{recursive:true,force:true});}catch{payload={error:{code:'GIT_TRACE_CLEANUP_FAILED'}};}
  const end=()=>{
-  if(process.platform==='win32'){spawnSync('taskkill',['/pid',String(process.pid),'/T','/F'],{stdio:'ignore'});process.exit(1);}
+  if(process.platform==='win32')process.exit(0);
   else process.kill(-process.pid,'SIGKILL');
  };
  if(process.connected)process.send(payload,end);else end();
@@ -39,6 +48,13 @@ process.on('message',request=>{
    const candidates=[...(supplied&&basename(supplied)===entry?[supplied]:[]),...[dirname(process.execPath),...(options.env.PATH??options.env.Path??'').split(';')].map(base=>join(base,'node_modules',pkg,'bin',entry))];
    const cli=candidates.find(path=>existsSync(path));if(!cli)throw Object.assign(new Error('Package manager JS entry unavailable.'),{code:'PACKAGE_MANAGER_UNAVAILABLE'});
    command=process.execPath;args=[cli,...args];
+  }
+  if(process.platform==='win32'){
+   anchor=fork(new URL('./git-command-worker.js',import.meta.url),[],{cwd:options.cwd,env:options.env,execArgv:[],stdio:['ignore','inherit','inherit','ipc']});
+   anchor.once('message',finish);anchor.once('error',error=>finish({error:{code:error.code??'SPAWN_FAILED'}}));
+   anchor.send({command,args,options});
+   timer=setInterval(()=>{try{monitor.check();}catch(error){finish({error:{code:error.code??'GIT_TRACE_INVALID'}});}},25);
+   return;
   }
   const {input,...spawnOptions}=options;
   const child=spawn(command,args,{...spawnOptions,stdio:[input===undefined?'ignore':'pipe','inherit','inherit'],detached:false});
