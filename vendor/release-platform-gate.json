@@ -4,10 +4,10 @@
   "sourceRepository": "https://github.com/yzsnstotz/hanamesh-docs.git",
   "sourcePath": "tools/release-platform-gate",
   "sourceRef": "fix/pk2-platform-optional-contract-20261109",
-  "sourceCommit": "68383f41179c94ac9e0f98e59a8ae743e5137b82",
+  "sourceCommit": "285bc01e424255285ecf050c56e837e4cde939a8",
   "reviewCommit": null,
   "reviewDocs": null,
-  "archiveSha256": "270b64e76aaf7c56349e229f2404cd0856b567b3e3e967794a95a6120067bf76",
+  "archiveSha256": "6f1acd41eb51f4faa27e8fe285dfea84c62670824da36f99738c5f2290b49348",
   "invariant": "DSH_PNPM_PLATFORM_CLOSURE",
   "disableable": false,
   "dependencyShapeContract": "dependency-shapes-v1",
@@ -18,7 +18,7 @@
     },
     {
       "path": "DEPENDENCY_SHAPES.md",
-      "sha256": "4270f2088cfdac76dad833da542687946a1081a34b65f04581d7c39283b72f46"
+      "sha256": "3b810a0b63f2644da40b2b1006797314e109e4c4e2fec4231a8cf1517e64ca52"
     },
     {
       "path": "README.md",
@@ -30,14 +30,14 @@
     },
     {
       "path": "index.mjs",
-      "sha256": "304266888e03f94020ac6a21c9b0644a1f5d7ea971c224ab5652c8868d470cd0"
+      "sha256": "70f5149e77225e3a5aaef6e4a6cdf29358e7dd231fc8e21765ecde14de507eda"
     },
     {
       "path": "release.mjs",
       "sha256": "e48c8367eb5786e526e7834b8bdf780ded3227b3abbd03fe3282ea4de721a258"
     }
   ],
-  "reviewTargetCommit": "68383f41179c94ac9e0f98e59a8ae743e5137b82",
+  "reviewTargetCommit": "285bc01e424255285ecf050c56e837e4cde939a8",
   "reviewStatus": "SELF_TEST_PASS_PENDING_INDEPENDENT_REVIEW",
   "platformClosureContract": "optional-platform-paths-v1"
 }

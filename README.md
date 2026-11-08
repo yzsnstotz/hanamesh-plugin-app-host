@@ -255,4 +255,4 @@ Actions runs on the standard public/free `macos-15` arm64 runner because the exi
 
 ### PK2 · DSH 0.2.2-rc.1 平台门更新
 
-现行门为 0.1.11，来源 `68383f41179c94ac9e0f98e59a8ae743e5137b82`，正常归档 SHA256 `270b64e76aaf7c56349e229f2404cd0856b567b3e3e967794a95a6120067bf76`，详见 vendor/release-platform-gate.json。新审查契约 optional-platform-paths-v1 按必需/可选路径遍历；完整可选平台子图逐工件核锁/真实清单/强 SRI，必需路径、缺证据、未知形态与关闭开关继续拒绝。此前“所有 os/cpu/libc 字段无条件拒绝”的描述仅代表 0.1.10 历史策略。作者门通过不冒称独立审查或 Windows/Linux 真机通过；本轮不发布 npm。
+现行门为 0.1.11，来源 `285bc01e424255285ecf050c56e837e4cde939a8`，正常归档 SHA256 `6f1acd41eb51f4faa27e8fe285dfea84c62670824da36f99738c5f2290b49348`，详见 vendor/release-platform-gate.json。新审查契约 optional-platform-paths-v1 按必需/可选路径遍历；完整可选平台子图逐工件核锁/真实清单/强 SRI，必需路径、缺证据、未知形态与关闭开关继续拒绝。此前“所有 os/cpu/libc 字段无条件拒绝”的描述仅代表 0.1.10 历史策略。作者门通过不冒称独立审查或 Windows/Linux 真机通过；本轮不发布 npm。

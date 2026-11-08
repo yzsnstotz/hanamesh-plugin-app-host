@@ -474,7 +474,7 @@ packages:
     hasBin: true
 
   '@hanamesh/release-platform-gate@file:vendor/hanamesh-release-platform-gate-0.1.11.tgz':
-    resolution: {integrity: sha512-taXBkvtNHwuCtL543PjpiDvo3V4auayIVhjlGE6CmwUFcww6LzK/EXUpbAK9Zm36tESBLWraGnedFDYQIjtV7A==, tarball: file:vendor/hanamesh-release-platform-gate-0.1.11.tgz}
+    resolution: {integrity: sha512-XxUJ7Gc6akxWShdDGnMC46DwTWOmg3S11Zlcmg/Z8lqbyyPdmRcr7XVXnjouvWCLwnAWKZnvIdcOLMNQgDd5GA==, tarball: file:vendor/hanamesh-release-platform-gate-0.1.11.tgz}
     version: 0.1.11
     engines: {node: '>=24.13.1 <25'}
     hasBin: true
