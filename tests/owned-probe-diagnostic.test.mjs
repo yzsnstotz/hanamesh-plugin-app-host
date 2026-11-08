@@ -5,7 +5,7 @@ import * as diagnostics from '../src/owned-probe-diagnostic.js';
 for (const [name, script, expected] of [
   ['slow exit', 'setTimeout(()=>process.exit(7),450)', {code:7,signal:null,killed:false}],
   ['timeout', 'setInterval(()=>{},100)', {code:null,signal:'SIGTERM',killed:true}],
-  ['signal', 'setTimeout(()=>process.kill(process.pid,"SIGTERM"),450)', {code:null,signal:'SIGTERM',killed:false}],
+  ['signal', 'setTimeout(()=>process.kill(process.pid,"SIGTERM"),450)', process.platform==='win32'?{code:1,signal:null,killed:false}:{code:null,signal:'SIGTERM',killed:false}],
 ]) test(name, async()=>{
   assert.equal(typeof diagnostics.observeOwnedProbe,'function');
   const events=[];

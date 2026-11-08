@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, mkdir, rm } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
-import { join } from 'node:path';
+import { join, dirname, delimiter } from 'node:path';
+import {realpathSync,statSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import { DSH_TARGET } from '../src/dsh.js';
 import { scratch } from './helpers.mjs';
@@ -28,14 +29,20 @@ test('NPM-APPHOST-01: actual packed manifest keeps devkit development-only and t
   try {
     const cache = join(dir, 'npm-cache');
     await mkdir(cache);
-    const raw = execFileSync('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', dir], {
+    let npmEntry;
+    if(process.platform==='win32'){
+      for(const directory of [dirname(process.execPath),...(process.env.PATH??process.env.Path??'').split(delimiter)]){try{const candidate=realpathSync(join(directory,'node_modules/npm/bin/npm-cli.js'));if(statSync(candidate).isFile()){npmEntry=candidate;break;}}catch{}}
+      assert.ok(npmEntry,'installed npm JavaScript entry must exist; never execute a .cmd via shell');
+    }
+    const tar=process.platform==='win32'?join(process.env.SystemRoot,'System32/tar.exe'):'tar';
+    const raw = execFileSync(npmEntry?process.execPath:'npm', [...(npmEntry?[npmEntry]:[]),'pack', '--ignore-scripts', '--json', '--pack-destination', dir], {
       cwd: new URL('..', import.meta.url),
       env: { ...process.env, npm_config_cache: cache, NPM_CONFIG_CACHE: cache },
       encoding: 'utf8',
     });
     const [{ filename, files }] = JSON.parse(raw);
-    const manifest = JSON.parse(execFileSync('tar', ['-xOf', join(dir, filename), 'package/package.json'], { encoding: 'utf8' }));
-    const packedFile = path => execFileSync('tar', ['-xOf', join(dir, filename), `package/${path}`], { encoding: 'utf8' });
+    const manifest = JSON.parse(execFileSync(tar, ['-xOf', join(dir, filename), 'package/package.json'], { encoding: 'utf8' }));
+    const packedFile = path => execFileSync(tar, ['-xOf', join(dir, filename), `package/${path}`], { encoding: 'utf8' });
     assert.equal(manifest.license, 'SEE LICENSE IN LICENSE');
     assert.match(packedFile('LICENSE'), /lib-provision.*bundled.*not relicensed/is);
     const licenses = JSON.parse(packedFile('docs/LICENSES.json'));

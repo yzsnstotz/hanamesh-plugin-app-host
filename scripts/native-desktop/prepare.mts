@@ -42,7 +42,7 @@ for (const key of ['npm_config_cache', 'npm_config_store_dir', 'ZDOTDIR', 'DSH_D
   if (process.env[key]) inside(process.env[key]);
 }
 inside(process.cwd()); inside(upstream); inside(join(app, '.desktop-build')); inside(join(root, 'native'));
-execFileSync('/usr/bin/python3', [join(import.meta.dirname, 'lifecycle.py'), 'prepare-check',
+execFileSync(process.platform==='win32'?'python.exe':'/usr/bin/python3', [join(import.meta.dirname, 'lifecycle.py'), 'prepare-check',
   '--root', root, '--ports', ports.join(',')], {env:process.env, stdio:'inherit'});
 
 // Import public preparation functions only after CLI and isolation admission.

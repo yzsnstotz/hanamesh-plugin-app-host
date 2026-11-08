@@ -14,10 +14,17 @@ await writeProbeFile(joinProbePath(import.meta.dirname,'app.mjs'), \`import {cre
     import{AppHost,AtomicFileStore}from'@hanamesh/dsh-app-host';import{WorkspaceAppClient}from'@hanamesh/dsh-app-host/client';
     const root=import.meta.dirname;const host=new AppHost({store:new AtomicFileStore(join(root,'sidecar')),dataRoot:join(root,'data'),parentOrigin:'http://127.0.0.1:49123'});
     host.register({id:'installed',name:'Installed package',deployments:[{id:'local',dataId:'v1',mode:'owned',command:process.execPath,args:[join(root,'app.mjs'),'{{port}}','{{dataDir}}'],readiness:{path:'/',status:200,bodyIncludes:'PACKAGE_SMOKE_IDENTITY'},stopGraceMs:60}]});
-    try{await host.init();const result=await host.open({appId:'installed',deploymentId:'local',viewId:'installed-view'});assert.equal(await readFile(join(result.instance.dataDir,'independent-app.txt'),'utf8'),'actual app write');assert.equal(typeof WorkspaceAppClient,'function');
+    try{await host.init();let result;
+    if(process.platform==='win32'){
+      await assert.rejects(host.open({appId:'installed',deploymentId:'local',viewId:'installed-view'}),{code:'PLATFORM_UNSUPPORTED'});
+      const failed=host.instanceList()[0];assert.equal(failed.status,'failed');assert.equal(failed.pid,null);assert.equal(failed.guardianPid,null);assert.equal(failed.endpoint,null);
+      await assert.rejects(readFile(join(failed.dataDir,'independent-app.txt')),{code:'ENOENT'});assert.equal(host.list().views[0].status,'failed');
+      assert.ok(host.eventsSince().events.some(event=>event.type==='instance.failed'&&event.code==='PLATFORM_UNSUPPORTED'));
+    }else{result=await host.open({appId:'installed',deploymentId:'local',viewId:'installed-view'});assert.equal(await readFile(join(result.instance.dataDir,'independent-app.txt'),'utf8'),'actual app write');}
+    assert.equal(typeof WorkspaceAppClient,'function');
     // The ./dsh entry needs the pinned DSH peers (schemastery, storage-domain): without them it cannot load at all, so it cannot masquerade as a plugin here. Its real load is the H01 profile run.
     await assert.rejects(import('@hanamesh/dsh-app-host/dsh'),{code:'ERR_MODULE_NOT_FOUND'});
-    console.log(JSON.stringify({check:'ISOLATED_PACKAGE',status:'PASS',realOwnedPid:result.instance.pid,realAppData:true,installedExports:['.','./client'],dshEntry:'requires pinned DSH peers; verified separately in the real profile',sourceTreeImports:0}));}
+    console.log(JSON.stringify({check:'ISOLATED_PACKAGE',status:'PASS',realOwnedPid:result?.instance.pid??null,realAppData:process.platform!=='win32',ownedRuntime:process.platform==='win32'?'PLATFORM_UNSUPPORTED':'RUNNING',installedExports:['.','./client'],dshEntry:'requires pinned DSH peers; verified separately in the real profile',sourceTreeImports:0}));}
     finally{await host.dispose();}
   
 
@@ -93,5 +100,17 @@ const runtimeVersion='1.0.0',runtimeSha='a'.repeat(64),runtimePlatform=process.p
 await runtimeFs.writeFile(runtimeJoin(runtimeRoot,'.provision','ledger.json'),JSON.stringify({schema:1,items:{runtime:{version:runtimeVersion,sha256:runtimeSha,platform:runtimePlatform,installedAt:new Date().toISOString(),target:runtimeTarget,installTo:'runtime',source:'local'}}}));
 const runtimeHost=new RuntimeLedgerHost({store:new RuntimeLedgerStore(runtimeJoin(import.meta.dirname,'default-ledger-sidecar')),dataRoot:runtimeData,parentOrigin:'http://127.0.0.1:49123',sweepIntervalMs:0});
 runtimeHost.register({id:'ledger-app',name:'Default ledger runtime',deployments:[{id:'local',dataId:'data-v1',mode:'owned',args:['{{port}}','{{dataDir}}'],runtime:{manifest:{schema:1,sources:[],items:[{id:'runtime',version:runtimeVersion,kind:'tar.gz',installTo:'runtime',platforms:{[runtimePlatform]:{asset:'runtime.tgz',sha256:runtimeSha}}}]},item:'runtime',exec:'bin/app'},readiness:{path:'/',status:200,bodyIncludes:'DEFAULT_LEDGER_RUNTIME'},stopGraceMs:60}]});
-try{await runtimeHost.init();const result=await runtimeHost.open({appId:'ledger-app',deploymentId:'local',viewId:'default-reader'});assertRuntimeLedger.equal(result.instance.status,'ready');assertRuntimeLedger.equal(await runtimeFs.readFile(runtimeJoin(result.instance.dataDir,'default-ledger-open.txt'),'utf8'),'real default reader startup');assertRuntimeLedger.match(await(await fetch(result.uiUrl)).text(),/DEFAULT_LEDGER_RUNTIME/);console.log(JSON.stringify({check:'NORMAL_PACKAGE_DEFAULT_RUNTIME_LEDGER',status:'PASS',ledgerReaderInjected:false,realOwnedPid:result.instance.pid,actualAppData:true}));}finally{await runtimeHost.dispose();}
+try{await runtimeHost.init();
+ const request={appId:'ledger-app',deploymentId:'local',viewId:'default-reader'};
+ if(process.platform==='win32'){
+  const ledgerPath=runtimeJoin(runtimeRoot,'.provision','ledger.json'),before=await runtimeFs.readFile(ledgerPath,'utf8');
+  await assertRuntimeLedger.rejects(runtimeHost.open(request),{code:'PLATFORM_UNSUPPORTED'});
+  const failed=runtimeHost.instanceList()[0];assertRuntimeLedger.equal(failed.status,'failed');assertRuntimeLedger.equal(failed.pid,null);assertRuntimeLedger.equal(failed.guardianPid,null);assertRuntimeLedger.equal(failed.endpoint,null);
+  await assertRuntimeLedger.rejects(runtimeFs.access(failed.dataDir),{code:'ENOENT'});
+  assertRuntimeLedger.equal(runtimeHost.list().views[0].status,'failed');assertRuntimeLedger.ok(runtimeHost.eventsSince().events.some(event=>event.type==='instance.failed'&&event.code==='PLATFORM_UNSUPPORTED'));
+  assertRuntimeLedger.equal(await runtimeFs.readFile(ledgerPath,'utf8'),before,'unsupported owned launch cannot mutate the supplied public provision ledger');
+  const persisted=JSON.parse(await runtimeFs.readFile(runtimeHost.store.path,'utf8'));assertRuntimeLedger.equal(persisted.instances[0].status,'failed');assertRuntimeLedger.equal(persisted.leases[0].status,'failed');
+  console.log(JSON.stringify({check:'NORMAL_PACKAGE_DEFAULT_RUNTIME_LEDGER',status:'PASS',ledgerReaderInjected:false,realOwnedPid:null,actualAppData:false,ownedRuntime:'PLATFORM_UNSUPPORTED',durableFailure:true,ledgerUnchanged:true}));
+ }else{const result=await runtimeHost.open(request);assertRuntimeLedger.equal(result.instance.status,'ready');assertRuntimeLedger.equal(await runtimeFs.readFile(runtimeJoin(result.instance.dataDir,'default-ledger-open.txt'),'utf8'),'real default reader startup');assertRuntimeLedger.match(await(await fetch(result.uiUrl)).text(),/DEFAULT_LEDGER_RUNTIME/);console.log(JSON.stringify({check:'NORMAL_PACKAGE_DEFAULT_RUNTIME_LEDGER',status:'PASS',ledgerReaderInjected:false,realOwnedPid:result.instance.pid,actualAppData:true}));}
+}finally{await runtimeHost.dispose();}
 `;
