@@ -27,7 +27,7 @@ for(const [label,matrix,code] of [
  const {scratch}=await import('./helpers.mjs');const dir=await scratch('hm-install-target-gate-');
  t.after(()=>rmSync(dir,{recursive:true,force:true}));
  const leaf={name:'arbitrary-platform-leaf',version:'1.0.0',os:['linux'],cpu:['arm64']};
- function archive(name,pkg){const work=join(dir,name);mkdirSync(join(work,'package'),{recursive:true});writeFileSync(join(work,'package/package.json'),JSON.stringify(pkg));const file=join(dir,name+'.tgz');const p=spawnSync('/usr/bin/tar',['-czf',file,'-C',work,'package'],{encoding:'utf8'});assert.equal(p.status,0,p.stderr);return file;}
+ function archive(name,pkg){const work=join(dir,name);mkdirSync(join(work,'package'),{recursive:true});writeFileSync(join(work,'package/package.json'),JSON.stringify(pkg));const file=join(dir,name+'.tgz');const p=spawnSync(process.platform==='win32'?join(process.env.SystemRoot,'System32','tar.exe'):'/usr/bin/tar',['-czf',file,'-C',work,'package'],{encoding:'utf8'});assert.equal(p.status,0,p.stderr);return file;}
  const leafTar=archive('leaf',leaf),pkg={name:'gate-consumer-fixture',version:'1.0.0',optionalDependencies:{'arbitrary-platform-leaf':'1.0.0'}},tarball=archive('root',pkg),lockfile=join(dir,'package-lock.json');
  writeFileSync(lockfile,JSON.stringify({lockfileVersion:3,packages:{'':pkg,'node_modules/arbitrary-platform-leaf':{...leaf,resolved:'file:'+leafTar,integrity:'sha512-'+createHash('sha512').update(readFileSync(leafTar)).digest('base64')}}}));
  const cli=join(dirname(fileURLToPath(import.meta.resolve('@hanamesh/release-platform-gate'))),'cli.mjs');const args=[cli,'--tarball',tarball,'--lockfile',lockfile];
