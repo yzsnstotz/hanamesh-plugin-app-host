@@ -307,8 +307,8 @@
       "specs": {
         "devDependencies": "file:vendor/hanamesh-core-0.3.33.tgz"
       },
-      "sourceCommit": "1b20896b01764efc5e1941ae44f6aec28442147c",
-      "archiveSha256": "6dfa824891aa9115052473e1b27cf87811ff47a757addd812f6d6daf9c35c338",
+      "sourceCommit": "969a89a1f7e383fca7d6aefa7f27507d3a1605d5",
+      "archiveSha256": "088cf6a7b7575fa1d22116d6af8a6b0312fbbb825c50d9bf38f0447ef36c7c78",
       "licenseNotice": "MIT License\n\nCopyright (c) 2026 HanaMesh\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n",
       "licenseSha256": "cd29e05178eecb3207c494901de7d41785a7b31216e94ab37f3e104e93f3f3b1"
     },
