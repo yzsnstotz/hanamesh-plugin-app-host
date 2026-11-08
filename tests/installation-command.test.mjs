@@ -30,9 +30,13 @@ test('reader supervisor retains group ownership after CLI leader exits, so the b
  const{reader}=await setup(t,`const {spawn}=await import('node:child_process');const fs=await import('node:fs');const child=spawn(process.execPath,['-e',"process.stdout.on('error',error=>{if(error.code!=='EPIPE')throw error});process.stdout.write('held',error=>process.send({ready:!error}));setInterval(()=>{},1000)"],{detached:process.platform==='win32',windowsHide:true,stdio:['ignore','inherit','inherit','ipc']});child.once('message',value=>{if(value.ready!==true)process.exit(2);fs.writeFileSync(${JSON.stringify(record)},JSON.stringify({leader:process.pid,child:child.pid}));child.disconnect();process.exit(0)});`);
  const pending=invoke({...reader,timeoutMs:1500});const outcome=pending.then(()=>({code:'unexpected-success'}),e=>({code:e.code}));let child;
  try{
-  for(let i=0;i<200;i++){try{child=JSON.parse(await readFile(record,'utf8'));break}catch{await new Promise(r=>setTimeout(r,5))}}assert.ok(child?.child,'the CLI leader actually spawned its pipe-holding child');assert.doesNotThrow(()=>process.kill(child.child,0),'the ready descendant is alive before its reader budget expires');
+  for(let i=0;i<200;i++){try{child=JSON.parse(await readFile(record,'utf8'));break}catch{await new Promise(r=>setTimeout(r,5))}}assert.ok(child?.child,'the CLI leader actually spawned its pipe-holding child');
+  // Probe liveness now, report it after the outcome: a supervisor that releases the group at leader exit also reaps
+  // this descendant within milliseconds, and that early reaping is the cancellation defect, not a separate precondition.
+  let alive=true;try{process.kill(child.child,0)}catch{alive=false}
   const result=await Promise.race([outcome,new Promise(r=>setTimeout(()=>r({code:'SUPERVISOR_DID_NOT_SETTLE'}),3000))]);
   assert.equal(result.code,'AGENT_READER_TIMEOUT','an exited CLI leader must not defeat group cancellation');
+  assert.ok(alive,'the ready descendant is alive before its reader budget expires');
   for(let i=0;i<100;i++){try{process.kill(child.child,0);await new Promise(r=>setTimeout(r,5))}catch{child=undefined;break}}assert.equal(child,undefined,'the exact owned pipe-holding child is gone');
  }finally{if(child?.child){try{process.kill(child.child,'SIGKILL')}catch{}}await outcome}
 });

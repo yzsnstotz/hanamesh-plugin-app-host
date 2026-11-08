@@ -95,12 +95,17 @@ test('AH-HO01: the real plugin starts the listener, the window confirms, the gua
   assert.equal(open.json.pollMs, 1500); assert.equal(open.json.listener.port, h.port); assert.equal(open.json.live, false);
   assert.equal((await h.post('/hanamesh/library/handoffs/state', { handoffId, state: 'shown' })).json.state, 'shown');
   // The person confirms: the market's normal install route.
-  const started = await h.post('/hanamesh/library/install', item);
+  const confirmedAt = Date.now(), started = await h.post('/hanamesh/library/install', item);
   assert.equal(started.status, 202, JSON.stringify(started.json));
   const read = async () => (await site(h.listener + '/hanamesh/library/handoff?id=' + handoffId)).json();
   // Waiting is only for the background operation; the assertion below is the check.
   await until(async () => (await read()).state === 'installed').catch(() => {});
-  assert.equal((await read()).state, 'installed', 'library install events reach the handoff');
+  const handoff = await read();
+  // On failure, name the phase: install still running (started, no done, operation listed), done not linked, or failed.
+  const timeline = handoff.state === 'installed' ? '' : (({ events, operations }) => '; ' + JSON.stringify({ elapsedMs: Date.now() - confirmedAt,
+    handoff: { state: handoff.state, error: handoff.error?.code }, runningOperations: operations,
+    events: events.map(event => [event.sequence, event.type, event.at - confirmedAt, event.packageName ?? event.result?.packageName ?? null, event.code ?? null]) }))((await h.get('/hanamesh/library/events?after=0')).json);
+  assert.equal(handoff.state, 'installed', 'library install events reach the handoff' + timeline);
   assert.deepEqual((await read()).result, { status: 'restart-required' });
   assert.deepEqual(h.manager.calls, [],'in-process manager is never called');
   const done = (await h.get('/hanamesh/library/events?after=0')).json.events.find(event => event.type === 'library.install-done' && event.operationId);
