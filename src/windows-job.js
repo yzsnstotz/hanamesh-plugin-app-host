@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url';
 export function createWindowsJob({pid,env,cwd,signal}){
  if(process.platform!=='win32'||!Number.isSafeInteger(pid)||pid<=1)throw new Error('A live Windows anchor PID is required.');
  const command=join(env.SystemRoot??'C:\\Windows','System32','WindowsPowerShell','v1.0','powershell.exe');
- const child=spawn(command,['-NoLogo','-NoProfile','-NonInteractive','-File',fileURLToPath(new URL('./windows-job.ps1',import.meta.url)),'-AnchorPid',String(pid)],{env,cwd,signal,windowsHide:true,stdio:['pipe','pipe','pipe']});
+ const child=spawn(command,['-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',fileURLToPath(new URL('./windows-job.ps1',import.meta.url)),'-AnchorPid',String(pid)],{env,cwd,signal,windowsHide:true,stdio:['pipe','pipe','pipe']});
  let pending='',fault,closed=false,readyResolve,readyReject,stopPromise;const requests=[];
  const ready=new Promise((resolve,reject)=>{readyResolve=resolve;readyReject=reject});
  const exit=new Promise(resolve=>child.once('close',()=>{closed=true;fail(new Error('Windows ownership helper closed.'));resolve()}));

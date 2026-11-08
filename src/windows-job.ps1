@@ -1,5 +1,6 @@
 param([Parameter(Mandatory=$true)][int]$AnchorPid)
 $ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
 $PSModuleAutoLoadingPreference = 'None'
 Import-Module ($PSHOME+'\Modules\Microsoft.PowerShell.Utility\Microsoft.PowerShell.Utility.psd1') -ErrorAction Stop
 Add-Type -TypeDefinition @'
