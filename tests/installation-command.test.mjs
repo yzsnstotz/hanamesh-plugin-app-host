@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {mkdir,writeFile,readFile,rm} from 'node:fs/promises';import{join}from'node:path';
-import{scratch}from'./helpers.mjs';
+import{scratch,waitForFixtureFile}from'./helpers.mjs';
 import{runOfficialInstallationCommand}from'../src/library/installation-cli.js';
 // Interpret test scripts with the pinned Node executable: fresh shebang executables have OS launch latency unrelated to the reader budget.
 async function setup(t,code){const root=await scratch('installation-command-test-');t.after(()=>rm(root,{recursive:true,force:true}));await mkdir(join(root,'profile'));const script=join(root,'official-cli.mjs');await writeFile(script,code);return{root,reader:{executable:process.execPath,home:root,configDir:join(root,'profile'),pluginName:'hanamesh',marketplace:'registered-suite',marketplaceUrl:'https://market.example/plugins.git',timeoutMs:2000,maxOutputBytes:20000}}}
@@ -20,8 +20,8 @@ test('automatic manager environment carries only named path variables and reject
 test('cancellation kills the exact owned read process and rejects without output',async t=>{
  const root=await scratch('installation-cancel-test-');t.after(()=>rm(root,{recursive:true,force:true}));const record=join(root,'pid');
  const{reader}=await setup(t,`(await import('node:fs')).writeFileSync(${JSON.stringify(record)},String(process.pid));setInterval(()=>{},1000)`);
- const controller=new AbortController();const pending=invoke(reader,controller.signal);pending.catch(()=>{});t.after(()=>controller.abort());let pid;
- for(let i=0;i<100;i++){try{pid=Number(await readFile(record,'utf8'));break}catch{await new Promise(r=>setTimeout(r,5))}}
+ const controller=new AbortController();const pending=invoke(reader,controller.signal);pending.catch(()=>{});t.after(()=>controller.abort());
+ const pid=Number(await waitForFixtureFile(record,{timeoutMs:reader.timeoutMs}));
  assert.ok(pid);controller.abort();await assert.rejects(pending,{code:'INSTALLATION_STATUS_CANCELLED'});assert.throws(()=>process.kill(pid,0),{code:'ESRCH'});
 });
 test('reader supervisor retains group ownership after CLI leader exits, so the budget closes inherited pipes',async t=>{

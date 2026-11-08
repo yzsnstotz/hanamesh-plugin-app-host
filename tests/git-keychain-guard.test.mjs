@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdir,writeFile,readFile,chmod,rm,readdir} from 'node:fs/promises';
 import {join,dirname} from 'node:path';
 import {spawn} from 'node:child_process';
-import {scratch} from './helpers.mjs';
+import {scratch,waitForFixtureFile} from './helpers.mjs';
 import {createLibraryInstaller} from '../src/library/install.js';
 const policy=await import('../src/git-process.js').catch(error=>{if(error.code!=='ERR_MODULE_NOT_FOUND')throw error;return{};});
 const keys={GIT_CONFIG_NOSYSTEM:'1',GIT_TERMINAL_PROMPT:'0',GIT_CONFIG_COUNT:'2',GIT_CONFIG_KEY_0:'credential.helper',GIT_CONFIG_VALUE_0:'',GIT_CONFIG_KEY_1:'credential.helper',GIT_CONFIG_VALUE_1:'!gh auth git-credential'};
@@ -130,8 +130,7 @@ test('GIT13 caller death during supervisor startup leaves no unowned trace windo
  const caller=join(h.root,'early-caller.mjs');await writeFile(caller,`import {spawnGitSafe} from ${JSON.stringify(api)};import {writeFileSync} from 'node:fs';const run=spawnGitSafe(process.execPath,['-e','setInterval(()=>{},1000)'],{env:process.env});writeFileSync(${JSON.stringify(ready)},'ready');await run;`);
  const runner=spawn(process.execPath,[new URL('../scripts/safe-git.mjs',import.meta.url).pathname,process.execPath,caller],{env:h.env,stdio:'ignore'});
  t.after(()=>{if(runner.exitCode===null&&runner.signalCode===null)runner.kill('SIGKILL');});
- let seen=false;for(let i=0;i<100;i++){try{await readFile(ready);seen=true;break;}catch{}await new Promise(r=>setTimeout(r,2));}
- assert.equal(seen,true);const done=new Promise(resolve=>runner.once('close',resolve));runner.kill('SIGKILL');await done;
+ assert.equal(await waitForFixtureFile(ready),'ready');const done=new Promise(resolve=>runner.once('close',resolve));runner.kill('SIGKILL');await done;
  for(let i=0;i<100;i++){if((await readdir(h.tmp)).length===0)break;await new Promise(r=>setTimeout(r,10));}
  assert.deepEqual(await readdir(h.tmp),[],'supervisor owns every trace from creation through disconnect');
 });

@@ -1,7 +1,7 @@
 import { mkdtemp, rm, realpath, readFile } from 'node:fs/promises';
-import { rmSync } from 'node:fs';
+import { rmSync, watch } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join, resolve, dirname } from 'node:path';
 import { request, createServer } from 'node:http';
 import { spawn, execFileSync } from 'node:child_process';
 import { AppHost, AtomicFileStore } from '../src/index.js';
@@ -19,6 +19,18 @@ export async function scratch(prefix='t-',{short=false}={}){
   return await mkdtemp(join(await processRoots.get(key),prefix));
 }
 process.on('exit',()=>{for(const path of ownedProcessRoots)rmSync(path,{recursive:true,force:true});});
+// Subscribe before the initial read so fast fixture publication cannot be lost.
+// This only observes an exact test-created file; it does not change command budgets.
+export function waitForFixtureFile(file,{timeoutMs=2000}={}){
+  return new Promise((resolve,reject)=>{
+    let settled=false;
+    const finish=(error,value)=>{if(settled)return;settled=true;clearTimeout(timer);watcher.close();error?reject(error):resolve(value);};
+    const check=()=>{void readFile(file,'utf8').then(value=>finish(null,value),error=>{if(error.code!=='ENOENT')finish(error);});};
+    const watcher=watch(dirname(file),check);
+    const timer=setTimeout(()=>finish(new Error('Fixture did not publish its readiness file within its declared startup budget.')),timeoutMs);
+    watcher.once('error',finish);check();
+  });
+}
 export async function temporary(){return await scratch('t-');}
 export function definition({id='example',single=true,extra={},embedding='direct'}={}){
   const args=[fixture,'port={{port}}','data={{dataDir}}','runtimeId={{runtimeId}}','instanceId={{instanceId}}',
