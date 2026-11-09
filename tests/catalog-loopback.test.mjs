@@ -5,7 +5,7 @@ import {validateManifestUrl, validateCatalogManifest, loadCatalog} from '../src/
 import {createLibraryService} from '../src/library/service.js';
 import {reviewedNpmItem} from './fixtures/catalog/reviewed-item.mjs';
 const fixture=JSON.parse(await readFile(new URL('./fixtures/catalog/hanamesh-view-v1.json',import.meta.url),'utf8'));
-const origins=['http://127.0.0.1','http://127.0.0.1:1','http://127.0.0.1:65535','http://[::1]','http://[::1]:49231','http://localhost','http://LOCALHOST:49232'];
+const origins=['http://127.0.0.1','http://127.0.0.1:1','http://127.0.0.1:65535','http://[::1]','http://[::1]:49231','http://localhost','http://LOCALHOST:49232','https://localhost:8443','https://127.0.0.1:49231','https://[::1]:49231','https://s9-rehearsal.localhost:29907'];
 test('CAT-LOOP shipped source schema accepts canonical local attribution homepage and endpoint',async()=>{
  const schema=JSON.parse(await readFile(new URL('../schemas/catalog-source.schema.json',import.meta.url),'utf8'));
  for(const origin of origins.map(value=>new URL(value).origin)){
@@ -18,7 +18,7 @@ function manifest(origin,hana=true){
  if(!hana)delete result.limits;
  return result;
 }
-for(const origin of origins)test('CAT-LOOP accepts exact loopback HTTP catalog '+origin,async()=>{
+for(const origin of origins)test('CAT-LOOP accepts exact local catalog '+origin,async()=>{
  const url=origin+'/catalog-source.json?view=hanamesh';assert.equal(validateManifestUrl(url).origin,new URL(origin).origin);
  for(const hana of [false,true])assert.deepEqual(validateCatalogManifest(manifest(origin,hana)),manifest(origin,hana));
  const calls=[];const result=await loadCatalog({sources:[{manifestUrl:url}],fetchImpl:async(url,options)=>{
@@ -27,8 +27,8 @@ for(const origin of origins)test('CAT-LOOP accepts exact loopback HTTP catalog '
  }});
  assert.equal(calls.length,2);assert.deepEqual(result.items,fixture.page.items);assert.equal(result.source.manifestUrl,new URL(url).href);
 });
-test('CAT-LOOP nonloopback HTTP and nonstandard HTTPS stay refused before network',async()=>{
- for(const origin of ['http://catalog.example','http://192.168.1.2:8080','http://0.0.0.0:8080','http://[::]:8080','http://[::ffff:127.0.0.1]:8080','http://localhost.example:8080','http://127.0.0.1.example:8080','http://example.localhost:8080','https://catalog.example:8443','https://localhost:8443','ftp://localhost:8080']){
+test('CAT-LOOP nonloopback HTTP and remote nonstandard HTTPS stay refused before network',async()=>{
+ for(const origin of ['http://catalog.example','http://192.168.1.2:8080','http://0.0.0.0:8080','http://[::]:8080','http://[::ffff:127.0.0.1]:8080','http://localhost.example:8080','http://127.0.0.1.example:8080','http://example.localhost:8080','https://catalog.example:8443','ftp://localhost:8080']){
   let calls=0;await assert.rejects(loadCatalog({sources:[{manifestUrl:origin+'/catalog-source.json'}],fetchImpl:async()=>{calls++;}}),{code:'INVALID_CATALOG_URL'});assert.equal(calls,0);
  }
  assert.equal(validateManifestUrl('https://catalog.example:443/catalog-source.json').origin,'https://catalog.example');

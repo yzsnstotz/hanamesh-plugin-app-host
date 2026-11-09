@@ -12,14 +12,15 @@ const MAX_SOURCE_LINKS=500;
 const plain=value=>typeof value==='string'&&value.length>0&&!/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/u.test(value);
 const own=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).every(key=>keys.includes(key));
 // WHATWG URL canonicalizes hostnames (including IPv6); no DNS lookup or origin aliasing.
-const catalogOrigin=url=>(url.protocol==='https:'&&!url.port)||
-  (url.protocol==='http:'&&['127.0.0.1','[::1]','localhost'].includes(url.hostname));
+const loopback=url=>['127.0.0.1','[::1]','localhost'].includes(url.hostname);
+const catalogOrigin=url=>(url.protocol==='https:'&&(!url.port||loopback(url)||url.hostname.endsWith('.localhost')))||
+  (url.protocol==='http:'&&loopback(url));
 
 export function validateManifestUrl(value){
   let url;try{url=new URL(value);}catch{throw new AppHostError('INVALID_CATALOG_URL','Catalog manifest URL is invalid.');}
   const viewQuery=!url.search||(url.searchParams.size===1&&url.searchParams.get('view')==='hanamesh');
   requireCondition(catalogOrigin(url)&&!url.username&&!url.password&&viewQuery&&!url.hash,
-    'INVALID_CATALOG_URL','Catalog manifests require standard-port HTTPS or loopback HTTP (127.0.0.1, ::1, localhost), with only an optional view=hanamesh query.');
+    'INVALID_CATALOG_URL','Catalog manifests require standard-port HTTPS, local HTTPS (loopback or *.localhost), or loopback HTTP, with only an optional view=hanamesh query.');
   return url;
 }
 

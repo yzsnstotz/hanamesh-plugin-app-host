@@ -53,3 +53,21 @@ for(const [channel,newer,lower,malformed]of [['claude','2.1.319 (Claude Code)','
  value.version=malformed;assert.equal(observation(await read(),channel,'agent-cli').reason.code,'AGENT_READER_VERSION_INVALID');
  value.version=newer;value.plugins={unexpected:[]};assert.equal(observation(await read(),channel,'agent-cli').reason.code,'AGENT_INVENTORY_INVALID');
 });
+
+test('DT2 Claude official GitHub marketplace records identify the canonical repository',async()=>{
+ const config={...configured,marketplace:'hanamesh',marketplaceUrl:'https://github.com/yzsnstotz/hanamesh-plugins'};
+ const value={version:'2.1.303 (Claude Code)',plugins:[{id:'hanamesh@hanamesh',version:'0.1.3',scope:'user',enabled:true,installPath:'/private/never-return'}],marketplaces:[{name:'hanamesh',source:'github',repo:'yzsnstotz/hanamesh-plugins'}]};
+ const read=reader({readers:{claude:config},runCommand:command('claude',value)});
+ const row=observation(await read(),'claude','agent-cli');assert.equal(row.status,'installed');assert.equal(row.version,'0.1.3');
+ value.marketplaces[0].repo='other/hanamesh-plugins';
+ assert.equal(observation(await read(),'claude','agent-cli').reason.code,'AGENT_MARKETPLACE_SOURCE_MISMATCH');
+});
+
+test('DT2 Claude official HTTPS GitHub registration keeps the same repository with .git suffix',async()=>{
+ const config={...configured,marketplace:'hanamesh',marketplaceUrl:'https://github.com/yzsnstotz/hanamesh-plugins'};
+ const value={version:'2.1.319 (Claude Code)',plugins:[{id:'hanamesh@hanamesh',version:'0.1.3',scope:'user',enabled:true,installPath:'/private/never-return'}],marketplaces:[{name:'hanamesh',source:'git',url:'https://github.com/yzsnstotz/hanamesh-plugins.git'}]};
+ const read=reader({readers:{claude:config},runCommand:command('claude',value)});
+ assert.equal(observation(await read(),'claude','agent-cli').status,'installed');
+ value.marketplaces[0].url='https://github.com/other/hanamesh-plugins.git';
+ assert.equal(observation(await read(),'claude','agent-cli').reason.code,'AGENT_MARKETPLACE_SOURCE_MISMATCH');
+});
