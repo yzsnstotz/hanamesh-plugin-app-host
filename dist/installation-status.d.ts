@@ -3,7 +3,7 @@ export const INSTALLATION_STATUS_CAPABILITY:Readonly<{contract:'hanamesh.install
 export interface InstallationStatusRequest {contractVersion:'1';consent:'read-installations'}
 export interface InstallationObservation {
  channel:'hanamesh'|'dsh'|'claude'|'codex';
- scope:{id:'current-runtime'|'other-runtime'|'agent-cli'|'desktop-app';kind:'responding-runtime'|'unobserved-runtime'|'official-user-profile'|'desktop-app';label:string};
+ scope:{id:'current-runtime'|'other-runtime'|'agent-cli'|'desktop-app';kind:'responding-runtime'|'other-client'|'official-user-profile'|'desktop-app';label:string};
  status:'installed'|'not-installed'|'incomplete'|'unknown';version:string|null;versionKind:'suite-bundle'|'agent-distribution';
  components:readonly {name:string;version:string|null;active?:boolean;status?:string}[];
  identity:{pluginName:string;marketplace:string}|null;

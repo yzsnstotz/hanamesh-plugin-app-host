@@ -1,9 +1,12 @@
 /** Read fresh public installation facts. No compatibility calculation, persistence or polling. */
 import semver from 'semver';
 import {AppHostError} from '../errors.js';
-import {SUITE_BUNDLE,createCoreSuiteAdapter,SUITE_PACKAGES} from './suite.js';
+import {readFile} from 'node:fs/promises';
+import {join,resolve} from 'node:path';
+import {homedir} from 'node:os';
+import {SUITE_BUNDLE,createCoreSuiteAdapter,SUITE_PACKAGES,readSuiteStatus} from './suite.js';
 import {readerVersionFailure,validReader,runOfficialInstallationCommand} from './installation-cli.js';
-import {discoverOfficialReader} from './installation-discovery.js';
+import {discoverOfficialReader,agentProfileState,AGENT_INSTALLATION_TARGET} from './installation-discovery.js';
 const object=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const exact=x=>typeof x==='string'&&semver.valid(x)===x?x:null;
 const reason=(code,message,action)=>({code,message,action});
@@ -57,8 +60,26 @@ function parseInventory(channel,plugins,marketplaces,target){
   reason:failed?reason(channel==='claude'?'AGENT_PLUGIN_LOAD_FAILED':'AGENT_PLUGIN_PAYLOAD_MISSING','官方清单报告插件负载或加载问题。','在该官方客户端的插件详情中检查并修复。'):version===null?reason('AGENT_VERSION_UNAVAILABLE','已确认该作用域的安装记录，但实际版本未知。','在该官方客户端插件详情中核对实际版本。'):null};
 }
 const failureCodes=new Set(['AGENT_SHELL_ENV_UNAVAILABLE','AGENT_READER_DISCOVERY_INVALID','AGENT_READER_ENTRYPOINT_UNAVAILABLE','AGENT_READER_UNAVAILABLE','AGENT_READER_PERMISSION_DENIED','AGENT_READER_NODE_REQUIRED','AGENT_PROFILE_UNAVAILABLE','AGENT_READER_TIMEOUT','AGENT_READER_OUTPUT_LIMIT','AGENT_READER_CLEANUP_FAILED','AGENT_READER_DIAGNOSTIC','AGENT_READER_FAILED','AGENT_INVENTORY_INVALID','AGENT_INVENTORY_CONFLICT','AGENT_MARKETPLACE_SOURCE_MISMATCH','AGENT_MARKETPLACE_SOURCE_UNAVAILABLE','AGENT_SCOPE_UNOBSERVABLE']);
-/** Automatic current-user discovery only; `core` is the optional public protocol-1 Cordis service accessor. */
-export function createInstallationStatusReader({client='dsh',core=()=>undefined,workerNode,runCommand=runOfficialInstallationCommand,discoverReader=discoverOfficialReader}={}){
+/** Physical on-disk DSH profile inventory: no @hanamesh/hanamesh dependency (or no profile) is authoritative absence. */
+async function profileSuite(row,profileDir){
+ let profile;try{profile=JSON.parse(await readFile(join(profileDir,'package.json'),'utf8'))}
+ catch(error){if(['ENOENT','ENOTDIR'].includes(error.code))return{...row,status:'not-installed'};return unknown(row,'DSH_PROFILE_UNREADABLE','DSH 桌面版 profile 清单无法读取。','打开 DSH 确认其插件页可用后重新检测。')}
+ if(!object(profile)||!object(profile.dependencies))return unknown(row,'DSH_PROFILE_UNREADABLE','DSH 桌面版 profile 清单无法读取。','打开 DSH 确认其插件页可用后重新检测。');
+ if(!Object.hasOwn(profile.dependencies,SUITE_BUNDLE))return{...row,status:'not-installed'};
+ const value=await readSuiteStatus(profileDir);
+ const components=value.components.map(c=>({name:c.name,version:c.version,active:c.active}));
+ if(value.status==='installed'&&value.version)return{...row,status:'installed',version:value.version,components};
+ if(value.status==='unknown')return unknown(row,'DSH_PROFILE_UNREADABLE','DSH 桌面版 profile 清单无法读取。','打开 DSH 确认其插件页可用后重新检测。');
+ return{...row,status:'incomplete',version:value.version,components,reason:reason('DSH_PROFILE_SUITE_INCOMPLETE','DSH 桌面版 profile 中的 HanaMesh 套件缺组件或未启用。','在 DSH 插件页启用 HanaMesh，或按 DSH 安装说明重新安装总包后重启 DSH。')};
+}
+/** Upstream default DSH home (`@deepseek-ai/dsh-home-paths` DSH_HOME_DIR_NAME '.dsh') desktop profile; null when it is this runtime's own profile. */
+export function officialDshDesktopProfile(ownProfileDir,home=homedir()){
+ const dir=join(home,'.dsh','profiles','desktop');
+ return typeof ownProfileDir==='string'&&resolve(ownProfileDir)===resolve(dir)?null:dir;
+}
+/** Automatic current-user discovery only; `core` is the optional public protocol-1 Cordis service accessor.
+ * `otherProfileDir`: the official DSH desktop profile when it is not this runtime's own profile (HanaMesh client only). */
+export function createInstallationStatusReader({client='dsh',core=()=>undefined,workerNode,runCommand=runOfficialInstallationCommand,discoverReader=discoverOfficialReader,profileState=agentProfileState,otherProfileDir=null}={}){
  if(!['dsh','hanamesh'].includes(client))throw new TypeError('client must be dsh or hanamesh');
  const active=new Set();let closed=false;
  const suite=createCoreSuiteAdapter({core});
@@ -74,6 +95,7 @@ export function createInstallationStatusReader({client='dsh',core=()=>undefined,
  async function agent(channel,signal){
   const initial=agentBase(channel);let row=initial;
   try{
+   if(await abortable(profileState({channel}),signal)==='absent')return{...initial,status:'not-installed',identity:{pluginName:AGENT_INSTALLATION_TARGET.pluginName,marketplace:AGENT_INSTALLATION_TARGET.marketplace}};
    const config=await abortable(discoverReader({channel,signal,workerNode}),signal);
    if(!validReader(config))throw new AppHostError('AGENT_READER_DISCOVERY_INVALID','Invalid automatic reader.',{},503);
    row={...initial,identity:{pluginName:config.pluginName,marketplace:config.marketplace}};
@@ -87,11 +109,15 @@ export function createInstallationStatusReader({client='dsh',core=()=>undefined,
    return{...row,...parseInventory(channel,plugins,marketplaces,config)};
   }catch(error){if(signal.aborted||error.code==='INSTALLATION_STATUS_CANCELLED')throw interrupted();const code=failureCodes.has(error.code)?error.code:'AGENT_READER_FAILED';const messages={AGENT_READER_UNAVAILABLE:'未在当前用户的 PATH 或常见安装位置找到官方 CLI。',AGENT_SHELL_ENV_UNAVAILABLE:'登录 shell 的 PATH 未能读取。',AGENT_PROFILE_UNAVAILABLE:'当前用户的官方资料目录不存在或不可访问。',AGENT_READER_TIMEOUT:'本次官方只读检测超时。',AGENT_INVENTORY_INVALID:'官方清单 JSON 不符合受支持的格式。',AGENT_READER_DISCOVERY_INVALID:'自动发现的官方 CLI 信息无效。',AGENT_READER_ENTRYPOINT_UNAVAILABLE:'已发现 Windows 命令入口，但官方 npm 程序文件缺失。'};return unknown(row,code,messages[code]??'本次官方清单读取未能提供完整且一致的安装事实。','在终端确认官方 CLI 可运行，并在其用户级插件页面检查清单、权限和市场来源后重新检测。')}
  }
+ async function other(signal){
+  if(client==='hanamesh'&&otherProfileDir)return abortable(profileSuite(base('dsh','other-runtime','other-client','DSH 桌面版 profile（磁盘只读清单；运行中的 DSH 由其自身监听回答）'),otherProfileDir),signal);
+  return unknown(base(client==='dsh'?'hanamesh':'dsh','other-runtime','other-client','另一客户端 runtime（须由其自身监听回答）'),'OTHER_RUNTIME_NOT_OBSERVED','本监听未读取另一客户端的 runtime。','启动该客户端，并向其已广告的状态入口显式检测。');
+ }
  const read=async({signal}={})=>{
   if(closed||signal?.aborted)throw interrupted();const controller=new AbortController();active.add(controller);const combined=signal?AbortSignal.any([signal,controller.signal]):controller.signal;
   try{const current=await runtime(combined);const agents=await Promise.all(['claude','codex'].map(channel=>agent(channel,combined)));if(combined.aborted)throw interrupted();
    return{schemaVersion:1,client,checkedAt:new Date().toISOString(),observations:[current,
-    unknown(base(client==='dsh'?'hanamesh':'dsh','other-runtime','unobserved-runtime','另一客户端 runtime（须由其自身监听回答）'),'OTHER_RUNTIME_NOT_OBSERVED','本监听未读取另一客户端的 runtime。','启动该客户端，并向其已广告的状态入口显式检测。'),...agents,
+    await other(combined),...agents,
     unknown(base('codex','desktop-app','desktop-app','Codex / ChatGPT 桌面 App（独立作用域）'),'CODEX_DESKTOP_SCOPE_UNOBSERVABLE','Codex CLI 清单不能证明桌面 App 的安装。','在桌面 App 的插件目录核对；需官方公开桌面状态协议后才可接入。')]};
   }finally{active.delete(controller)}
  };

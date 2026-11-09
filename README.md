@@ -1,6 +1,4 @@
-WIP 交接（DT3 → Claude）：Codex `.git` 来源修复已真实 CLI/网页验证，但本轮整体 suite 完整性修复未完成；本分支仅供接手，不发布。详见编排 questions/DT3-delivery.md。
-
-0.6.26 候选：Codex 官方 GitHub 市场 URL 的 `.git` 后缀按精确仓库身份归一；市场映射与每项安装来源独立校验，不同仓库、凭据、查询、fragment 仍拒绝。检测不执行安装或配置写入。
+0.6.26 候选：Codex 官方 GitHub 市场 URL 的 `.git` 后缀按精确仓库身份归一；市场映射与每项安装来源独立校验，不同仓库、凭据、查询、fragment 仍拒绝。CD2 扩大只读覆盖：ChatGPT 桌面 App 内置 Codex CLI、SemVer 预发布版本（仍须不低于最低版本）；官方用户资料目录不存在即判未安装；HanaMesh 客户端从磁盘读取 DSH 桌面版 profile（`~/.dsh/profiles/desktop`）给出 DSH 渠道已安装/未安装。检测不执行安装或配置写入，见[安装状态](docs/INSTALLATION_STATUS.md)。
 
 0.6.25 候选：本机 HTTPS 目录允许回环端口及 *.localhost，修复彩排种子初始化阻断检测监听；公网 HTTPS 非标准端口仍拒绝。Claude 官方 GitHub 市场清单按 repo 身份核对，保留不同来源拒绝。安装物回归命令见[安装状态](docs/INSTALLATION_STATUS.md)，不以页面打开代替检测通过。
 

@@ -6,7 +6,7 @@ import {join,dirname} from 'node:path';
 const discovery=await import('../src/library/installation-discovery.js').catch(e=>{if(e.code==='ERR_MODULE_NOT_FOUND')return{};throw e});
 async function fixture(t){const home=await scratch('ah1-discovery-');t.after(()=>rm(home,{recursive:true,force:true}));return home}
 async function executable(file,body='process.stdout.write("codex-cli 0.167.0")'){await mkdir(dirname(file),{recursive:true});await writeFile(file,`#!${process.execPath}\n${body}\n`);await chmod(file,0o755);return file}
-const options=home=>({home,env:{HOME:home,PATH:''},systemBinDirs:[],loginPath:async()=>''});
+const options=home=>({home,env:{HOME:home,PATH:''},systemBinDirs:[],applicationDirs:[],loginPath:async()=>''});
 const layouts=[
  ['native','.local/bin'],['legacy Claude','.claude/local'],['legacy Claude npm','.claude/local/node_modules/.bin'],
  ['npm prefix','.npm-global/bin'],['npm alternate','.npm/bin'],['pnpm Linux','.local/share/pnpm'],['pnpm Linux bin','.local/share/pnpm/bin'],['pnpm macOS','Library/pnpm'],['pnpm macOS bin','Library/pnpm/bin'],['yarn','.yarn/bin'],['yarn config','.config/yarn/global/node_modules/.bin'],
@@ -68,10 +68,10 @@ test('AH1 login PATH reads only framed PATH, strips inherited credentials, and t
  const {runOfficialInstallationCommand}=await import('../src/library/installation-cli.js');
  // The controlled shell is JavaScript; interpret it with Node rather than relying on POSIX shebang execution.
  const runCommand=request=>{assert.equal(request.reader.executable,shell);assert.equal(request.args[0],'-ilc');return runOfficialInstallationCommand({...request,reader:{...request.reader,nodeScript:true}})};
- const value=await discovery.readLoginPath({home,env:{SHELL:shell,PATH:'/usr/bin:/bin',API_KEY:'never-inherit'},runCommand});
+ const value=(await discovery.readLoginEnvironment({home,env:{SHELL:shell,PATH:'/usr/bin:/bin',API_KEY:'never-inherit'},runCommand})).PATH;
  assert.equal(value,join(home,'custom'));
  await executable(shell,`setInterval(()=>{},1000)`);
- await assert.rejects(discovery.readLoginPath({home,env:{SHELL:shell},timeoutMs:60,runCommand}),{code:'AGENT_READER_TIMEOUT'});
+ await assert.rejects(discovery.readLoginEnvironment({home,env:{SHELL:shell},timeoutMs:60,runCommand}),{code:'AGENT_READER_TIMEOUT'});
 });
 
 test('AH1 discovered CLI reads fresh newer inventories with real child processes in an isolated HOME',async t=>{
@@ -83,7 +83,7 @@ test('AH1 discovered CLI reads fresh newer inventories with real child processes
   await executable(entry,`const a=process.argv.slice(2);const channel=${JSON.stringify(channel)};const version=channel==='claude'?'2.1.319 (Claude Code)':'codex-cli 0.167.0';if(a[0]==='--version')console.log(version);else if(a.includes('marketplace'))console.log(channel==='claude'?'[]':'{"marketplaces":[]}');else console.log(channel==='claude'?'[]':'{"installed":[],"available":[]}');`);
  }
  const {createInstallationStatusReader}=await import('../src/library/installation-status.js');
- const read=createInstallationStatusReader({discoverReader:q=>discovery.discoverOfficialReader({...q,...options(home),platform:process.platform})});t.after(()=>read.close());
+ const read=createInstallationStatusReader({profileState:q=>discovery.agentProfileState({...q,home,env:options(home).env}),discoverReader:q=>discovery.discoverOfficialReader({...q,...options(home),platform:process.platform})});t.after(()=>read.close());
  const result=await read();
  for(const row of result.observations.filter(row=>row.scope.id==='agent-cli')){assert.equal(row.status,'not-installed');assert.deepEqual(row.identity,{pluginName:'hanamesh',marketplace:'hanamesh'});}
  assert.doesNotMatch(JSON.stringify(result),new RegExp(home));

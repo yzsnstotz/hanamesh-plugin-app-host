@@ -37,7 +37,7 @@ interface InstallationStatus {
 interface InstallationObservation {
   channel:'hanamesh'|'dsh'|'claude'|'codex';
   scope:{id:'current-runtime'|'other-runtime'|'agent-cli'|'desktop-app';
-    kind:'responding-runtime'|'unobserved-runtime'|'official-user-profile'|'desktop-app';label:string};
+    kind:'responding-runtime'|'other-client'|'official-user-profile'|'desktop-app';label:string};
   status:'installed'|'not-installed'|'incomplete'|'unknown';
   version:string|null;
   versionKind:'suite-bundle'|'agent-distribution';
@@ -69,6 +69,7 @@ Selection is deterministic: the first executable in the inherited absolute PATH 
 | Homebrew / system | `/opt/homebrew/bin`, `/usr/local/bin`, `/home/linuxbrew/.linuxbrew/bin`, `/usr/bin`, `/bin`. [Homebrew prefixes](https://docs.brew.sh/Installation); [Claude Homebrew setup](https://code.claude.com/docs/en/setup), [Codex distribution](https://learn.chatgpt.com/docs/cli). Brew-linked native binaries use the same discovery path. |
 | nvm / fnm / installed manager versions | `NVM_BIN`, `NVM_SYMLINK`; `NVM_DIR/versions/node/*/bin` or `~/.nvm/versions/node/*/bin`; Windows `NVM_HOME/*`; `FNM_MULTISHELL_PATH`; `FNM_DIR/node-versions/*/installation[/bin]`, `~/.local/share/fnm/node-versions/*/installation/bin`, `~/Library/Application Support/fnm/node-versions/*/installation/bin`, `%APPDATA%/fnm/node-versions/*/installation`; asdf `installs/nodejs/*/bin`, mise `installs/node/*/bin`. Only SemVer directory names are scanned. [nvm](https://github.com/nvm-sh/nvm), [fnm](https://github.com/Schniz/fnm/blob/master/docs/commands.md), [asdf](https://asdf-vm.com/manage/configuration.html), [mise](https://mise.jdx.dev/directories.html). |
 | Windows native links / npm shims | `%LOCALAPPDATA%/Microsoft/WinGet/Links` ([Claude WinGet](https://code.claude.com/docs/en/setup)). `.exe` precedes `.cmd` per directory. A `.cmd` is never sent to a shell: resolve only the adjacent official npm `node_modules/@anthropic-ai/claude-code/cli.js` or `node_modules/@openai/codex/bin/codex.js`, run it with the verified standalone Node. Missing JS is a named failure, not a guessed shell command. |
+| Desktop app bundle (macOS, Codex only, searched last) | `/Applications` and `~/Applications` `ChatGPT.app/Contents/Resources/codex-cli/bin/codex` (the ChatGPT desktop app ships the Codex CLI; it reads the same `CODEX_HOME` / `~/.codex`). A standalone CLI in any earlier layout wins. |
 
 HOME is the host user's HOME/USERPROFILE. Honor existing `CLAUDE_CONFIG_DIR` / `CODEX_HOME` environment paths, otherwise use `~/.claude` / `~/.codex`. These directories must already exist; discovery never creates them, reads their contents, or reads credentials, sessions or private configuration files. Only official read commands observe plugin inventory. The named profile scope is not a machine-wide inventory. Electron hosts retain the existing verified standalone Node requirement.
 
@@ -78,8 +79,8 @@ Minimum CLI version and fixed syntax (no new upper bound):
 
 | Channel | Minimum version / accepted `--version` syntax | Fixed subsequent read argv |
 |---|---|---|
-| Claude Code | `>=2.1.301`, `MAJOR.MINOR.PATCH (Claude Code)` | `plugin list --json`; `plugin marketplace list --json` |
-| Codex CLI | `>=0.162.1`, `codex-cli MAJOR.MINOR.PATCH` | `plugin list --json --disable remote_plugin`; `plugin marketplace list --json --disable remote_plugin` |
+| Claude Code | `>=2.1.301`, `MAJOR.MINOR.PATCH[-prerelease] (Claude Code)` | `plugin list --json`; `plugin marketplace list --json` |
+| Codex CLI | `>=0.162.1`, `codex-cli MAJOR.MINOR.PATCH[-prerelease]` (desktop bundles report e.g. `0.167.0-alpha.3.2`; SemVer ordering applies, so `0.162.1-alpha.1` is below the minimum) | `plugin list --json --disable remote_plugin`; `plugin marketplace list --json --disable remote_plugin` |
 
 Malformed version output is `AGENT_READER_VERSION_INVALID`; below-minimum versions are `AGENT_READER_VERSION_UNSUPPORTED`; JSON parse/shape failure is `AGENT_INVENTORY_INVALID`. New versions such as 2.1.319 / 0.167.0 must pass exactly the existing inventory validation.
 
@@ -94,7 +95,11 @@ HTTP refusals: `HOST_DENIED`, `ORIGIN_DENIED`, `FRAME_CONTROL_DENIED`, `CREDENTI
 Per-scope unknown reasons always include a safe code/message/action:
 
 - `CORE_SUITE_DECLARATION_MISSING`, `CORE_SUITE_DECLARATION_INVALID`, `CORE_SUITE_READ_FAILED`, `CORE_SUITE_DECLARATION_UNKNOWN`; incomplete: `CORE_SUITE_CURRENT_INCOMPLETE`, plus Core blocked codes.
-- `OTHER_RUNTIME_NOT_OBSERVED`, `CODEX_DESKTOP_SCOPE_UNOBSERVABLE`.
+- `OTHER_RUNTIME_NOT_OBSERVED`, `CODEX_DESKTOP_SCOPE_UNOBSERVABLE`, `DSH_PROFILE_UNREADABLE`; incomplete: `DSH_PROFILE_SUITE_INCOMPLETE`.
+
+Authoritative absence (read-only, no CLI execution): an official user profile directory (`CLAUDE_CONFIG_DIR` / `CODEX_HOME`, else `~/.claude` / `~/.codex`) that does not exist holds no user-scope plugin, so that channel is `not-installed` with the registered identity, whether or not the CLI is installed. An existing but inaccessible directory stays `AGENT_PROFILE_UNAVAILABLE`; an existing profile without a readable CLI stays `AGENT_READER_UNAVAILABLE`.
+
+The HanaMesh client's `other-runtime` row (`kind:'other-client'`) reads the official DSH desktop profile on disk at the upstream default home (`~/.dsh/profiles/desktop`, `@deepseek-ai/dsh-home-paths` `.dsh`): no profile or no `@hanamesh/hanamesh` dependency is `not-installed`; the bundle and all three members resolved at the bundle's exact versions and selected in `dsh.profile.bundles` is `installed` with the bundle version (a physical inventory, not that runtime's Core completeness); otherwise `incomplete`; unreadable JSON is unknown. When the HanaMesh client itself uses `~/.dsh` the two cannot be separated and the row stays `OTHER_RUNTIME_NOT_OBSERVED`. A DSH listener never reports the HanaMesh client: that row is always `OTHER_RUNTIME_NOT_OBSERVED`.
 - `AGENT_READER_VERSION_INVALID`, `AGENT_READER_VERSION_UNSUPPORTED`, `AGENT_READER_NODE_REQUIRED`, `AGENT_SHELL_ENV_UNAVAILABLE`, `AGENT_READER_ENTRYPOINT_UNAVAILABLE`, `AGENT_READER_DISCOVERY_INVALID`.
 - `AGENT_PROFILE_UNAVAILABLE`, `AGENT_READER_UNAVAILABLE`, `AGENT_READER_PERMISSION_DENIED`, `AGENT_READER_TIMEOUT`, `AGENT_READER_OUTPUT_LIMIT`, `AGENT_READER_DIAGNOSTIC`, `AGENT_READER_CLEANUP_FAILED`, `AGENT_READER_FAILED`.
 - `AGENT_INVENTORY_INVALID`, `AGENT_INVENTORY_CONFLICT`, `AGENT_SCOPE_UNOBSERVABLE`, `AGENT_MARKETPLACE_SOURCE_UNAVAILABLE`, `AGENT_MARKETPLACE_SOURCE_MISMATCH`.

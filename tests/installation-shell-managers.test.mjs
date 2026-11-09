@@ -2,7 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {mkdir,writeFile,chmod,symlink,readFile,rm} from 'node:fs/promises';
 import {createHash} from 'node:crypto';import {join,dirname} from 'node:path';import {spawnSync} from 'node:child_process';
 import {scratch} from './helpers.mjs';
-import {readLoginPath,discoverOfficialReader} from '../src/library/installation-discovery.js';
+import {readLoginEnvironment,discoverOfficialReader} from '../src/library/installation-discovery.js';
 import {runOfficialInstallationCommand} from '../src/library/installation-cli.js';
 const binaries={asdf:{path:process.env.AH1_ASDF_BINARY,sha:'d9bbd3608115899dc79841bb60be956ebe4a118fd28f33444e0ab27fbdb736b5'},mise:{path:process.env.AH1_MISE_BINARY,sha:'21c269cd3c88e31c56aad7f7ccd9916b6fa78683937d93e5d17129b783d6f962'}};
 const verified=new Map();
@@ -17,8 +17,8 @@ test('R115-P2-1 real non-TTY Bash stderr does not prevent framed PATH recovery a
  await writeFile(join(h,'.bash_profile'),'export PATH="$HOME/custom-cli-bin:/usr/bin:/bin"\nprintf "normal login diagnostic\\n" >&2\n');
  const env={HOME:h,SHELL:'/bin/bash',PATH:'/usr/bin:/bin'};
  const direct=spawnSync('/bin/bash',['-ilc','printf "ready"'],{env,encoding:'utf8',stdio:['ignore','pipe','pipe']});assert.equal(direct.status,0);assert.match(direct.stderr,/normal login diagnostic/);
- let restored;await assert.doesNotReject(async()=>{restored=await readLoginPath({home:h,env})},'normal Bash stderr must not block environment recovery');assert.ok(restored.split(':').includes(bin));
- const reader=await discoverOfficialReader({channel:'codex',home:h,env,systemBinDirs:[]});assert.equal(reader.executable,join(bin,'codex'));
+ let restored;await assert.doesNotReject(async()=>{restored=(await readLoginEnvironment({home:h,env})).PATH},'normal Bash stderr must not block environment recovery');assert.ok(restored.split(':').includes(bin));
+ const reader=await discoverOfficialReader({channel:'codex',home:h,env,systemBinDirs:[],applicationDirs:[]});assert.equal(reader.executable,join(bin,'codex'));
 });
 
 async function managerFixture(t,manager,{customXdg=false,gui=false}={}){
@@ -41,7 +41,7 @@ async function managerFixture(t,manager,{customXdg=false,gui=false}={}){
   await writeFile(join(h,'.bash_profile'),`export PATH="$HOME/${manager==='asdf'?'.asdf':'.local/share/mise'}/shims:$HOME/manager-bin:/usr/bin:/bin"\n${customXdg?'export XDG_CONFIG_HOME="$HOME/custom-config"\n':''}`);
   discoveryEnv={HOME:h,SHELL:'/bin/bash',PATH:'/usr/bin:/bin'};
  }
- const reader=await discoverOfficialReader({channel:'codex',home:h,env:discoveryEnv,systemBinDirs:[]});assert.equal(reader.executable,join(shims,'codex'),'same selected shim, no fallback to leaf');
+ const reader=await discoverOfficialReader({channel:'codex',home:h,env:discoveryEnv,systemBinDirs:[],applicationDirs:[]});assert.equal(reader.executable,join(shims,'codex'),'same selected shim, no fallback to leaf');
  assert.equal((await runOfficialInstallationCommand({channel:'codex',reader,args:['--version']})).trim(),'codex-cli 0.167.0','selected real shim must execute');
  const list=await runOfficialInstallationCommand({channel:'codex',reader,args:['plugin','list','--json','--disable','remote_plugin']});assert.deepEqual(JSON.parse(list),{installed:[],available:[]});
 }
@@ -53,7 +53,7 @@ test('R115 shell-defined PATH and XDG reach the same real mise shim in GUI disco
 test('R115 shell diagnostics never mask nonzero exits or missing framed output',{skip:process.platform==='win32'},async t=>{
  const h=await home(t),shell=join(h,'shell');
  await executable(shell,'#!/bin/sh\nprintf "normal stderr\\n" >&2\nexit 7\n');
- await assert.rejects(readLoginPath({home:h,env:{SHELL:shell,PATH:'/usr/bin:/bin'}}),{code:'AGENT_READER_FAILED'});
+ await assert.rejects(readLoginEnvironment({home:h,env:{SHELL:shell,PATH:'/usr/bin:/bin'}}),{code:'AGENT_READER_FAILED'});
  await executable(shell,'#!/bin/sh\nprintf "startup output without a marker\\n"\nprintf "normal stderr\\n" >&2\n');
- await assert.rejects(readLoginPath({home:h,env:{SHELL:shell,PATH:'/usr/bin:/bin'}}),{code:'AGENT_SHELL_ENV_UNAVAILABLE'});
+ await assert.rejects(readLoginEnvironment({home:h,env:{SHELL:shell,PATH:'/usr/bin:/bin'}}),{code:'AGENT_SHELL_ENV_UNAVAILABLE'});
 });

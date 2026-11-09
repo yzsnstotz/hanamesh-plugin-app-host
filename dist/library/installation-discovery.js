@@ -36,15 +36,26 @@ export async function readLoginEnvironment({home=homedir(),env=process.env,signa
  if(!value||typeof value!=='object'||Array.isArray(value)||typeof value.PATH!=='string'||!Object.entries(value).every(([key,path])=>INSTALLATION_ENV_KEYS.includes(key)&&typeof path==='string'&&!/[\x00-\x1f]/.test(path)))throw failure('AGENT_SHELL_ENV_UNAVAILABLE');
  return installationEnvironment(value);
 }
-export async function readLoginPath(options){return(await readLoginEnvironment(options)).PATH}
 
 /** Select once: inherited PATH, login PATH, then documented layouts; never try another CLI after execution. */
-export async function discoverOfficialReader({channel,home=process.env.HOME??process.env.USERPROFILE??homedir(),env=process.env,platform=process.platform,
- systemBinDirs=platform==='win32'?[]:['/opt/homebrew/bin','/usr/local/bin','/home/linuxbrew/.linuxbrew/bin','/usr/bin','/bin'],loginPath,signal,workerNode}={}){
+/** The official user profile directory each CLI reads (CLAUDE_CONFIG_DIR / CODEX_HOME, else ~/.claude / ~/.codex). */
+export function agentProfileDir({channel,home=process.env.HOME??process.env.USERPROFILE??homedir(),env=process.env}={}){
  if(!['claude','codex'].includes(channel)||!absolute(home))throw failure('AGENT_PROFILE_UNAVAILABLE');
- signal?.throwIfAborted();
  const configDir=env[channel==='claude'?'CLAUDE_CONFIG_DIR':'CODEX_HOME']??join(home,channel==='claude'?'.claude':'.codex');
  if(!absolute(configDir))throw failure('AGENT_PROFILE_UNAVAILABLE');
+ return configDir;
+}
+/** Read-only existence check: an absent profile directory holds no user-scope plugin; unreadable is not absence. */
+export async function agentProfileState({channel,home,env}={}){
+ const dir=agentProfileDir({channel,...(home===undefined?{}:{home}),...(env===undefined?{}:{env})});
+ try{if(!(await stat(dir)).isDirectory())throw failure('AGENT_PROFILE_UNAVAILABLE');return 'present'}
+ catch(error){if(['ENOENT','ENOTDIR'].includes(error.code))return 'absent';throw error.code==='AGENT_PROFILE_UNAVAILABLE'?error:failure('AGENT_PROFILE_UNAVAILABLE')}
+}
+export async function discoverOfficialReader({channel,home=process.env.HOME??process.env.USERPROFILE??homedir(),env=process.env,platform=process.platform,
+ systemBinDirs=platform==='win32'?[]:['/opt/homebrew/bin','/usr/local/bin','/home/linuxbrew/.linuxbrew/bin','/usr/bin','/bin'],
+ applicationDirs=platform==='darwin'?['/Applications',join(home,'Applications')]:[],loginPath,signal,workerNode}={}){
+ const configDir=agentProfileDir({channel,home,env});
+ signal?.throwIfAborted();
  const appData=env.APPDATA??join(home,'AppData','Roaming'),local=env.LOCALAPPDATA??join(home,'AppData','Local');
  const runtimeEnv=installationEnvironment(env,platform);
  const reader={home,configDir,...AGENT_INSTALLATION_TARGET,...INSTALLATION_READ_BUDGET,runtimeEnv};
@@ -81,7 +92,9 @@ export async function discoverOfficialReader({channel,home=process.env.HOME??pro
   ...[env.npm_config_prefix,env.NPM_CONFIG_PREFIX,join(home,'.npm-global'),join(home,'.npm')].filter(absolute).map(root=>platform==='win32'?root:join(root,'bin')),
   env.PNPM_HOME,...(absolute(env.PNPM_HOME)?[join(env.PNPM_HOME,'bin')]:[]),join(home,'.local','share','pnpm'),join(home,'.local','share','pnpm','bin'),join(home,'Library','pnpm'),join(home,'Library','pnpm','bin'),join(home,'.yarn','bin'),join(home,'.config','yarn','global','node_modules','.bin'),
   join(env.VOLTA_HOME??join(home,'.volta'),'bin'),join(asdf,'shims'),join(mise,'shims'),
-  ...(platform==='win32'?[join(appData,'npm'),join(local,'pnpm'),join(local,'Yarn','bin'),join(local,'Programs','OpenAI','Codex','bin'),join(local,'Microsoft','WinGet','Links'),join(local,'Volta','bin'),...(absolute(env.ProgramFiles)?[join(env.ProgramFiles,'nodejs')]:[])]:[]),...systemBinDirs];
+  ...(platform==='win32'?[join(appData,'npm'),join(local,'pnpm'),join(local,'Yarn','bin'),join(local,'Programs','OpenAI','Codex','bin'),join(local,'Microsoft','WinGet','Links'),join(local,'Volta','bin'),...(absolute(env.ProgramFiles)?[join(env.ProgramFiles,'nodejs')]:[])]:[]),...systemBinDirs,
+  // Desktop app bundles last, so a standalone CLI the user installed wins: ChatGPT.app ships the Codex CLI.
+  ...(channel==='codex'?applicationDirs.map(root=>join(root,'ChatGPT.app','Contents','Resources','codex-cli','bin')):[])];
  selected=await find(fixed);if(selected)return selected;
  const managed=[];
  for(const [root,suffix]of [[join(nvm,'versions','node'),['bin']],[env.NVM_HOME,[]],[join(fnm,'node-versions'),['installation',...(platform==='win32'?[]:['bin'])]],

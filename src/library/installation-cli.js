@@ -22,7 +22,8 @@ export function installationEnvironment(source,platform=process.platform){
 const fail=code=>{throw new AppHostError(code,'The automatically discovered official installation reader could not complete.',{},503)};
 export const MINIMUM_READER_VERSIONS=Object.freeze({claude:'2.1.301',codex:'0.162.1'});
 export function readerVersionFailure(channel,output){
- const pattern=channel==='claude'?/^(\d+\.\d+\.\d+) \(Claude Code\)$/:/^codex-cli (\d+\.\d+\.\d+)$/;
+ // SemVer prerelease is allowed: desktop apps bundle prerelease CLIs (ChatGPT.app: codex-cli 0.167.0-alpha.3.2).
+ const pattern=channel==='claude'?/^(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?) \(Claude Code\)$/:/^codex-cli (\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/;
  const version=pattern.exec(output.trim())?.[1];
  if(!version||semver.valid(version)!==version)return 'AGENT_READER_VERSION_INVALID';
  return semver.gte(version,MINIMUM_READER_VERSIONS[channel])?null:'AGENT_READER_VERSION_UNSUPPORTED';
