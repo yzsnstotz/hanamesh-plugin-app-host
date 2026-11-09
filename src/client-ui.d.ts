@@ -43,6 +43,8 @@ export function SuiteSourceSettingsSection():unknown;
 export function registerAppHostPages(ctx:unknown):()=>void;
 export function EnvironmentContent():unknown;
 /** Current catalog contract supplies none of these counts; null is explicit unknown, never zero. */
-export function credibilityFacts():{id:string;label:string;value:null;reason:'catalog-field-unavailable'}[];
+export interface CredibilityFacts {itemId?:string;signals?:{stars?:number|null;npmDownloads30d?:number|null;storeInstalls30d?:number|null;checkedAt?:string|null}|null;popularity?:{users30d?:number|null;asOf?:string|null}|null;checkedAt?:string|null;asOf?:string|null}
+export function credibilityFacts(facts?:CredibilityFacts|null):{id:string;label:string;value:number|null;reason:'catalog-field-unavailable'|null}[];
+export function readCredibility(source:unknown,item:{id:string},fetcher?:typeof fetch):Promise<CredibilityFacts>;
 /** HanaMesh-view catalog website link; absent for fixtures and other provider protocols. */
 export function catalogWebsiteLink(source:unknown,item:unknown):string|null;

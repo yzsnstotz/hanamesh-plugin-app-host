@@ -937,9 +937,12 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
     {method:'POST',path:'/apps/heartbeat',sample:{viewId:'verification-view',leaseToken:''}},
     {method:'POST',path:'/apps/close',sample:{viewId:'verification-view',leaseToken:''}},
   ];
+  Object.assign(COPY.zh,{cl1Detail:'HanaMesh / 应用详情',cred0:'暂无',cred1:'当前暂无数据',cred2:'公开统计',cred3:'DSH 安装 / 30 天',cred4:'使用人数 / 30 天',cred5:'信号更新：',cred6:'使用人数更新：'});
+  Object.assign(COPY.en,{cl1Detail:'HanaMesh / Application details',cred0:'Not available',cred1:'No data available',cred2:'Public statistics',cred3:'DSH installs / 30 days',cred4:'Users / 30 days',cred5:'Signals updated: ',cred6:'Users updated: '});
   function LibraryOverlay({embedded,mainPage=false,preferredSubsectionId,verification=false}={}){useLocale();
     const[visible,setVisible]=React.useState(embedded?true:libraryVisible),[snapshot,setSnapshot]=React.useState(null),[error,setError]=React.useState(''),[receipt,setReceipt]=React.useState(null),[query,setQuery]=React.useState(''),[filter,setFilter]=React.useState(''),[extra,setExtra]=React.useState([]),[pending,updatePending]=React.useState(pendingOperations),[seenCategories,setSeenCategories]=React.useState([]),[changed,setChanged]=React.useState(false),[openingAppId,setOpeningAppId]=React.useState(null),[closing,setClosing]=React.useState(false);
-    const[detailId,setDetailId]=React.useState(null),[acceptedTarget,setAcceptedTarget]=React.useState(null),[libraryTab,setLibraryTab]=React.useState('all');
+    const[detailId,setDetailId]=React.useState(null),[acceptedTarget,setAcceptedTarget]=React.useState(null),[libraryTab,setLibraryTab]=React.useState('all'),[credibility,setCredibility]=React.useState(null);
+    React.useEffect(()=>{let live=true;setCredibility(null);if(detailId&&visible)void readCredibility(snapshot?.source,{id:detailId}).then(value=>{if(live)setCredibility(value);});return()=>{live=false;};},[detailId,visible,snapshot?.source?.manifestUrl]);
     const[target,updateTarget]=React.useState(targetSelection),[targetItemId,setTargetItemId]=React.useState(''),[targetPackageName,setTargetPackageName]=React.useState('');
     const[verificationCall,setVerificationCall]=React.useState('GET /hanamesh/library/install-target'),[verificationInput,setVerificationInput]=React.useState('{}'),[verificationOutput,setVerificationOutput]=React.useState(null),[verifying,setVerifying]=React.useState(false);
     const verificationBusy=React.useRef(false);
@@ -1092,8 +1095,8 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
       else if(row?.state==='installed')action=PROTECTED.has(row.packageName)?h('span',null,t('HanaMesh 套件')):h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/plugins/uninstall',{packageName:row.packageName},item.id,t('卸载'))},t('卸载'));
       else if(row?.state==='uninstalled-not-unloaded')action=h('span',null,t('已卸载，重启 DSH 后生效'));
       else if(row)action=h('span',null,t('已安装，重启 DSH 后生效'));
-      return h('article',{key:item.id,'data-hanamesh-library-item':item.id,'data-hanamesh-kind':item.kind,className:detail?'hm-app-detail':'hm-app-card'},h('h3',null,item.displayName),h('p',null,item.summary),
-        detail?h('div',{className:'hm-app-detail-content'},h('h4',null,t('关于这个应用')),h('p',null,item.description||item.summary),h('h4',null,t('可信度')),h('div',{className:'hm-credibility'},...credibilityFacts().map(row=>h('div',{key:row.id},h('span',null,t(row.label)),h('strong',null,'—'),h('small',null,t('当前目录未提供'))))),h('p',{className:'hm-market-state'},t('可信度数据缺失不代表 0；本机安装状态与平台采用度分别显示。')),h('h4',null,t('来源与安装目标')),h('p',null,item.package?.name??t('仅收录，不可安装')),item.installTarget?h('code',null,item.installTarget.source==='github'?'https://github.com/'+item.installTarget.repo+' @ '+item.installTarget.ref:item.installTarget.name+' @ '+item.installTarget.version):null,...(item.source?.sourceLinks??[]).map((link,index)=>h('p',{key:index},h('a',{href:link.sourceUrl,target:'_blank',rel:'noopener noreferrer'},link.sourceId+' · '+link.sourceRef))),catalogWebsiteLink(snapshot?.source,item)?h('a',{href:catalogWebsiteLink(snapshot?.source,item),target:'_blank',rel:'noopener noreferrer',className:'hm-website-link'},t('在网站查看')):null):null,
+      return h('article',{key:item.id,'data-hanamesh-library-item':item.id,'data-hanamesh-kind':item.kind,className:detail?'hm-app-detail':'hm-app-card'},detail&&mainPage?null:h('h3',null,item.displayName),detail&&mainPage?null:h('p',null,item.summary),
+        detail?h('div',{className:'hm-app-detail-content'},h('h4',null,t('关于这个应用')),h('p',null,item.description||item.summary),h('h4',null,t('可信度')),h('div',{className:'hm-credibility'},...credibilityFacts(credibility?.itemId===item.id?credibility:null).map(row=>h('div',{key:row.id},h('span',null,t(row.label)),h('strong',{'data-hanamesh-credibility':row.id},row.value===null?t('暂无'):row.value.toLocaleString()),h('small',null,row.value===null?t('当前暂无数据'):t('公开统计'))))),h('p',{className:'hm-market-state'},t('可信度数据缺失不代表 0；本机安装状态与平台采用度分别显示。')),credibility?.checkedAt?h('small',null,t('信号更新：')+credibility.checkedAt):null,credibility?.asOf?h('small',null,t('使用人数更新：')+credibility.asOf):null,h('h4',null,t('来源与安装目标')),h('p',null,item.package?.name??t('仅收录，不可安装')),item.installTarget?h('code',null,item.installTarget.source==='github'?'https://github.com/'+item.installTarget.repo+' @ '+item.installTarget.ref:item.installTarget.name+' @ '+item.installTarget.version):null,...(item.source?.sourceLinks??[]).map((link,index)=>h('p',{key:index},h('a',{href:link.sourceUrl,target:'_blank',rel:'noopener noreferrer'},link.sourceId+' · '+link.sourceRef))),catalogWebsiteLink(snapshot?.source,item)?h('a',{href:catalogWebsiteLink(snapshot?.source,item),target:'_blank',rel:'noopener noreferrer',className:'hm-website-link'},t('在网站查看')):null):null,
         h('small',null,t(KIND_TEXT[item.kind])+' · '+(item.publisher?.name??t('未知发布者'))+((item.categories??[]).length?' · '+item.categories.join('、'):'')),
         state,h('div',{className:'hm-market-actions'},action,!detail?h('button',{type:'button',onClick:()=>setDetailId(item.id)},t('详情')):null),op&&!busy?operationNotice(op):null);};
     const detailItem=items.find(item=>item.id===detailId);
@@ -1106,11 +1109,11 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
           row.state==='installed'&&!PROTECTED.has(row.packageName)&&!pending['plugin:'+row.packageName]?h('button',{type:'button',onClick:()=>void operate('/hanamesh/library/plugins/uninstall',{packageName:row.packageName},'plugin:'+row.packageName,t('卸载'))},t('卸载')):pending['plugin:'+row.packageName]?operationNotice(pending['plugin:'+row.packageName]):null)))):null;
     // The seat owner may ask for a subsection to come first; `installed` is the only one it names today.
     const body=mainPage?(libraryTab==='installed'?[installedSection??h('p',{role:'status'},t('还没有已安装项。'))]:[catalogSection,moreButton]):preferredSubsectionId==='installed'?[installedSection,catalogSection,moreButton]:[catalogSection,moreButton,installedSection];
-    const reviewing=mainPage&&target!==null;
+    const reviewing=mainPage&&target!==null,detailing=mainPage&&Boolean(detailItem)&&!reviewing;
     return h('section',{className:(embedded?'hm-market hm-market-embedded':'hm-library-overlay hm-market')+(mainPage?' hm-apphost-page':'')},
-      mainPage?h('div',{className:'hm-apphost-breadcrumb'},t('HanaMesh / 应用库')):null,
-      h('header',null,h('div',null,mainPage?h('div',{className:'hm-apphost-eyebrow'},reviewing?'APPHOST / INSTALL':'APPHOST / LIBRARY'):null,h('h1',null,mainPage?t(reviewing?'安装之前，先看清楚。':'好工具，让想法走得更远。'):t('应用库'))),mainPage?h('button',{type:'button',onClick:()=>{try{pageLayout.selectPanel('hanamesh-environment');}catch{setError(new Error('CORE_PAGE_UNAVAILABLE'));}}},t('环境与来源')):embedded?null:h('button',{type:'button',onClick:()=>setLibraryVisible(false)},t('关闭'))),
-      mainPage?h('p',null,t('发现适合你的工具，查看来源后再安装；账号与模型授权分别管理。')):null,
+      mainPage?h('div',{className:'hm-apphost-breadcrumb'},t(detailing?'HanaMesh / 应用详情':'HanaMesh / 应用库')):null,
+      h('header',null,h('div',null,mainPage?h('div',{className:'hm-apphost-eyebrow'},reviewing?'APPHOST / INSTALL':detailing?'APPLICATION / DETAIL':'APPHOST / LIBRARY'):null,h('h1',null,mainPage?(detailing?detailItem.displayName:t(reviewing?'安装之前，先看清楚。':'好工具，让想法走得更远。')):t('应用库'))),mainPage?h('button',{type:'button',onClick:()=>{try{pageLayout.selectPanel('hanamesh-environment');}catch{setError(new Error('CORE_PAGE_UNAVAILABLE'));}}},t('环境与来源')):embedded?null:h('button',{type:'button',onClick:()=>setLibraryVisible(false)},t('关闭'))),
+      mainPage?h('p',null,detailing?detailItem.summary:t('发现适合你的工具，查看来源后再安装；账号与模型授权分别管理。')):null,
       h(MarketConflictNotice,null),h(HandoffIssueNotice,null),
       snapshot?.restartBaseline?.known===false?h('p',{role:'alert',className:'hm-library-failed'},t('启动时没能读取 profile（')+snapshot.restartBaseline.code+t('），「需重启」状态无法判断，下面的状态都按已加载显示')):null,
       verification===true?h('section',{className:'hm-install-target','aria-label':t('安装目标开发小界面')},h('h2',null,t('安装目标')),
@@ -1137,9 +1140,9 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
         h('textarea',{'aria-label':t('合约样例输入'),value:verificationInput,onChange:event=>setVerificationInput(event.target.value)}),
         h('button',{type:'button',disabled:verifying,onClick:()=>void verify()},t('调用合约')),
         h('pre',{'aria-label':t('合约调用输出')},verificationOutput===null?t('尚未调用'):JSON.stringify(verificationOutput,null,2))):null,
-      reviewing?null:h('div',{className:'hm-library-toolbar'},h('input',{type:'search',placeholder:t('搜索应用与插件'),value:query,onChange:e=>setQuery(e.target.value),onKeyDown:e=>{if(e.key==='Enter')void load();}}),h('button',{type:'button',onClick:()=>void load()},t('搜索')),
+      reviewing||detailing?null:h('div',{className:'hm-library-toolbar'},h('input',{type:'search',placeholder:t('搜索应用与插件'),value:query,onChange:e=>setQuery(e.target.value),onKeyDown:e=>{if(e.key==='Enter')void load();}}),h('button',{type:'button',onClick:()=>void load()},t('搜索')),
         h('select',{'aria-label':t('类别'),value:filter,onChange:e=>setFilter(e.target.value)},...filters.map(([value,label])=>h('option',{key:value||'all',value},t(label))))),
-      mainPage&&!reviewing?h('div',{role:'tablist','aria-label':t('应用筛选'),className:'hm-library-tabs'},...[["all","全部应用"],["installed","已安装"]].map(([value,label])=>h('button',{type:'button',role:'tab',key:value,'aria-selected':libraryTab===value,onClick:()=>{setLibraryTab(value);setDetailId(null);}},t(label)))):null,
+      mainPage&&!reviewing&&!detailing?h('div',{role:'tablist','aria-label':t('应用筛选'),className:'hm-library-tabs'},...[["all","全部应用"],["installed","已安装"]].map(([value,label])=>h('button',{type:'button',role:'tab',key:value,'aria-selected':libraryTab===value,onClick:()=>{setLibraryTab(value);setDetailId(null);}},t(label)))):null,
       reviewing&&target.status!=='confirmation-required'&&target.status!=='installing'?h('button',{type:'button',onClick:()=>setTarget(null)},t('返回应用库')):null,
       restartRequired?h(RestartNotice,null):null,
       error?FailureNotice({error}):null,
@@ -1180,7 +1183,26 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
   }
   // These four counts are not present in the current catalog-view contract.
   // Never substitute local package state, publisher badges or guessed zeroes.
-  function credibilityFacts(){return[{id:'stars',label:'GitHub 星数'},{id:'npm30',label:'npm 下载 / 30 天'},{id:'installs',label:'安装人数'},{id:'users',label:'使用人数'}].map(row=>({...row,value:null,reason:'catalog-field-unavailable'}));}
+  // WX11/12: the existing Web detail projects Host 0.6.54+ githubStars as stars.
+  // The incremental signals feed is a server ingestion API, never a browser scan.
+  const credibilityCount=value=>Number.isSafeInteger(value)&&value>=0?value:null;
+  const credibilityTime=value=>typeof value==='string'&&Number.isFinite(Date.parse(value))?value:null;
+  function credibilityFacts(facts){return[
+    {id:'stars',label:'GitHub 星数',value:credibilityCount(facts?.signals?.stars)},
+    {id:'npm30',label:'npm 下载 / 30 天',value:credibilityCount(facts?.signals?.npmDownloads30d)},
+    {id:'installs',label:'DSH 安装 / 30 天',value:credibilityCount(facts?.signals?.storeInstalls30d)},
+    {id:'users',label:'使用人数 / 30 天',value:credibilityCount(facts?.popularity?.users30d)}
+  ].map(row=>({...row,reason:row.value===null?'catalog-field-unavailable':null}));}
+  async function readCredibility(source,item,fetcher=globalThis.fetch){
+    const link=catalogWebsiteLink(source,item),empty={itemId:item?.id,signals:null,popularity:null,checkedAt:null,asOf:null};
+    if(!link||typeof fetcher!=='function')return empty;
+    const origin=new URL(link).origin,id=encodeURIComponent(item.id),controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
+    const read=async path=>{const response=await fetcher(origin+path,{method:'GET',credentials:'omit',redirect:'error',cache:'no-store',signal:controller.signal,headers:{accept:'application/json'}});if(!response.ok)throw Error('CREDIBILITY_UNAVAILABLE');const value=await response.json();if(value?.hanaId!==item.id)throw Error('CREDIBILITY_ID_MISMATCH');return value;};
+    try{const [detail,popularity]=await Promise.allSettled([read('/api/v2/hanas/'+id),read('/hm/v1/custody/hanas/'+id+'/popularity')]);
+      const signals=detail.status==='fulfilled'?detail.value.signals:null,pop=popularity.status==='fulfilled'?popularity.value:null;
+      return {...empty,signals,popularity:pop,checkedAt:credibilityTime(signals?.checkedAt),asOf:credibilityTime(pop?.asOf)};
+    }finally{clearTimeout(timer);}
+  }
   function catalogWebsiteLink(source,item){
     if(source?.kind==='fixture'||typeof source?.manifestUrl!=='string'||typeof item?.id!=='string')return null;
     try{const url=new URL(source.manifestUrl);if(url.pathname!=='/catalog-source.json'||url.searchParams.get('view')!=='hanamesh')return null;return new URL('/hana/'+encodeURIComponent(item.id),url.origin).href;}catch{return null;}
@@ -1192,7 +1214,7 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
     const previous=pageLayout;pageLayout=ctx.layout;const releases=[];
     releases.push(ctx.slots.inject('main',()=>ctx.slots.register({name:'main',key:'hanamesh-library'},()=>h(LibraryOverlay,{embedded:true,mainPage:true}))));
     releases.push(ctx.slots.inject('main',()=>ctx.slots.register({name:'main',key:'hanamesh-providers'},()=>h(ProvidersPage,{navigate:id=>ctx.layout.selectPanel(id)}))));
-    releases.push(ctx.slots.inject('sidebar.panellist',()=>ctx.slots.register({name:'sidebar.panellist',id:'hanamesh-library',order:11,label:t('应用库')},AppLibraryIcon)));
+    releases.push(ctx.slots.inject('sidebar.panellist',()=>ctx.slots.register({name:'sidebar.panellist',id:'hanamesh-library',order:-20,label:t('应用库')},AppLibraryIcon)));
     return()=>{for(const dispose of releases.reverse())dispose();if(pageLayout===ctx.layout)pageLayout=previous;};
   }
 
@@ -1200,7 +1222,7 @@ function AppLibraryIcon({size=20}){return h('span',{'aria-hidden':true,style:{di
 
 const appHostPageStyles=`
 .hm-apphost-page{height:100%;overflow:auto;box-sizing:border-box;padding:36px 38px;max-width:1360px;margin:auto;color:var(--dsw-alias-label-primary,CanvasText);background:var(--dsw-alias-bg-base,Canvas);font:14px/1.55 var(--dsw-font-family,system-ui)}.hm-apphost-page *{box-sizing:border-box}.hm-apphost-page h1{font-size:32px;line-height:1.25;letter-spacing:-.025em;margin:0}.hm-apphost-page h2{font-size:17px}.hm-apphost-page p{color:var(--dsw-alias-label-secondary);line-height:1.7}.hm-apphost-breadcrumb{font-size:12px;color:var(--dsw-alias-label-tertiary);margin-bottom:28px}.hm-apphost-eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--dsw-alias-brand-primary);margin-bottom:10px}.hm-apphost-page>header{margin-bottom:28px}.hm-apphost-page button,.hm-apphost-page select,.hm-apphost-page input{font:inherit;color:inherit;min-height:44px;padding:10px 14px;border:1px solid var(--dsw-alias-border-l2);border-radius:10px;background:var(--dsw-alias-bg-layer-3);max-width:100%}.hm-apphost-page button{cursor:pointer}.hm-apphost-page button:disabled{opacity:.5;cursor:default}.hm-apphost-page :focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:3px}.hm-connection-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:28px 0 24px}.hm-connection-tabs [aria-current=page]{color:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary)}.hm-apphost-card{padding:22px;border:1px solid var(--dsw-alias-border-l1);border-radius:18px;background:var(--dsw-alias-bg-layer-2);min-width:0}.hm-apphost-environment{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}.hm-apphost-environment>details summary{cursor:pointer;font-weight:600;min-height:28px}.hm-apphost-page .hm-library-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.hm-apphost-page .hm-library-grid article{padding:22px;border-radius:18px;background:var(--dsw-alias-bg-layer-2);border-color:var(--dsw-alias-border-l1);display:flex;flex-direction:column;gap:16px}.hm-apphost-page .hm-library-grid h3{margin:0;font-size:16px}.hm-apphost-page .hm-market-actions{margin-top:auto}.hm-apphost-page .hm-library-toolbar{gap:12px;margin:24px 0}.hm-apphost-page .hm-app-detail{padding:22px;border:1px solid var(--dsw-alias-border-l1);border-radius:18px;background:var(--dsw-alias-bg-layer-2);margin:20px 0;overflow-wrap:anywhere}.hm-apphost-page .hm-app-detail h3{font-size:28px;margin:0 0 12px}.hm-credibility{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.hm-credibility>div{padding:16px;border:1px solid var(--dsw-alias-border-l1);border-radius:14px;background:var(--dsw-alias-bg-layer-1)}.hm-credibility span,.hm-credibility small{display:block;font-size:12px;color:var(--dsw-alias-label-tertiary)}.hm-credibility strong{display:block;font:26px/1.8 var(--dsh-font-family-code-default,monospace)}.hm-apphost-page .hm-install-review{padding:22px;border-radius:18px;background:var(--dsw-alias-bg-layer-2);margin:24px 0}.hm-install-ack{display:flex;align-items:center;gap:10px;margin:18px 0}.hm-install-ack input{width:20px;min-height:20px;flex:none;accent-color:var(--dsw-alias-brand-primary)}.hm-apphost-page .hm-website-link{display:inline-block;min-height:44px;color:var(--dsw-alias-brand-primary);padding:10px 0}.hm-library-tabs{display:flex;gap:5px;padding:4px;border:1px solid var(--dsw-alias-border-l1);border-radius:11px;width:max-content;margin:20px 0}.hm-library-tabs [aria-selected=true]{background:var(--dsw-alias-bg-layer-3);border-color:var(--dsw-alias-brand-primary)}.hm-apphost-page footer{font-size:11px;color:var(--dsw-alias-label-tertiary);margin-top:26px}
-@media(max-width:1000px){.hm-apphost-page .hm-library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:640px){.hm-apphost-page{padding:24px 18px}.hm-apphost-page h1{font-size:26px}.hm-apphost-page .hm-library-grid,.hm-apphost-environment,.hm-credibility{grid-template-columns:minmax(0,1fr)}.hm-apphost-card{padding:18px}}
+@media(max-width:1000px){.hm-apphost-page .hm-library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:640px){.hm-apphost-page>header{display:block}.hm-apphost-page>header button{margin-top:16px}.hm-apphost-page{padding:24px 18px}.hm-apphost-page h1{font-size:26px}.hm-apphost-page .hm-library-grid,.hm-apphost-environment,.hm-credibility{grid-template-columns:minmax(0,1fr)}.hm-apphost-card{padding:18px}}
 `;
 
   const name='hanamesh-app-host-client',inject=['slots','locale'];
@@ -1221,5 +1243,5 @@ const appHostPageStyles=`
     ctx.effect(()=>{let stopped=false,timer;const tick=async()=>{await pollHandoffsVisibly();if(!stopped)timer=setTimeout(()=>void tick(),handoffPollMs);};void tick();return()=>{stopped=true;clearTimeout(timer);};},'hanamesh-app-host:website-handoff');
     ctx.effect(()=>{globalThis.addEventListener?.('hashchange',consumeInstallTargetHash);consumeInstallTargetHash();return()=>globalThis.removeEventListener?.('hashchange',consumeInstallTargetHash);},'hanamesh-app-host:install-target-navigation');}
   return{name,inject,apply,ProvidersSection,SuiteSourceSettingsSection,LibrarySourcesSection,HandoffSettingsSection,NodeRuntimeSection,LibraryAction,LibraryOverlay,MarketConflictNotice,createMarketSeat,openInstallTarget,
-    registerAppHostPages,EnvironmentContent,credibilityFacts,catalogWebsiteLink,MARKET_SEAT,MARKET_CONFLICT_TEXT,INSTALL_TARGET_HASH,INSTALL_TARGET_CONTRACT_VERSION,marketState:()=>({conflict:marketConflict,entryVisible})};
+    registerAppHostPages,EnvironmentContent,credibilityFacts,readCredibility,catalogWebsiteLink,MARKET_SEAT,MARKET_CONFLICT_TEXT,INSTALL_TARGET_HASH,INSTALL_TARGET_CONTRACT_VERSION,marketState:()=>({conflict:marketConflict,entryVisible})};
 }});

@@ -271,3 +271,22 @@ The library includes local installed/all tabs and a source-preserving details vi
 The current catalog-view DTO has no public GitHub stars / npm downloads / platform install people / usage people fields. Details render each as unavailable with a reason, never as zero or a local-inventory substitute. The website SearchSignals DTO is a different contract, and store installation次数 is not 人数. Supplying these figures needs a formally added catalog-view DTO; this candidate does not relax validation or perform request-time GitHub/npm calls. A “在网站查看” link is derived only from the reviewed HanaMesh-view catalog provider; fixture/other-provider routes are not guessed. No trading or asset UI is added to the client.
 
 Scoped page styles consume the same host theme tokens. The library glyph reuses the supplied DS1 asset. Source/fixture checks do not establish real DSH loading or design screenshot acceptance; those remain separate CL1 gates.
+
+### CL1 existing public credibility reads (2026-11-10)
+
+On detail open only, the client uses the reviewed HanaMesh catalog origin's existing
+`GET /api/v2/hanas/:id` and `GET /hm/v1/custody/hanas/:id/popularity` public reads.
+The first is WX11/WX12's projection of Host 0.6.54+ `/v1/indexer/signals/changes`:
+`githubStars` becomes `signals.stars`, with `npmDownloads30d`, nullable
+`storeInstalls30d` and `checkedAt`. The second supplies `users30d` and its own
+`asOf`. DSH installs are 30-day counts, never unique installation people; neither
+npm downloads nor `installCount` is substituted. All missing/invalid/error values
+show “暂无”; real zero stays zero, and timestamps remain separate.
+
+No new backend, signal-feed consumption, source scraping, polling or catalog DTO
+extension. Both requests omit credentials, refuse redirects and time out after
+8 seconds; identity must match the selected item. Source routes are derived only
+for the reviewed `/catalog-source.json?view=hanamesh` provider. Other catalog
+providers and unavailable/CORS-denied public reads retain “暂无”. The source's
+browser access rules are respected; there is no proxy/CORS bypass. Closing or
+switching details ignores stale replies.
