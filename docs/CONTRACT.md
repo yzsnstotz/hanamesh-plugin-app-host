@@ -259,3 +259,15 @@ B17 review repair（同0.6.8候选）：`AppHost` 未注入 `runtimeLedgerReader
 A2 0.6.22：普通插件必须有 Indexer 已审核的 installMethods 和 oneClickInstall.allowed:true；仅执行其 npm 精确版本或完整 GitHub SHA。缺目标具名拒绝，不根据包名查可变版本标签。CLI 使用显式 library.registry（若有），否则保留宿主原生 registry 配置。删除普通插件按包名内部直装方法、元数据查询及其专用设置/规则加载。套件仅透传 Core installCommand。安装失败保留脱敏 CLI/读回诊断及补偿结果；精确版本发布后即可原生验收。
 
 A2 0.6.22：升级tuple必须带Core生成的installation（name/version/command/args），name/version与该tuple一致。AppHost传实际profile和可选配置来源；未配置来源由Core显式声明。CLI直接执行args；confirmation同时绑定该定义。installCommand是Core的可空修复展示文本，不解析命令前缀。旧Core缺定义不回退自拼。
+
+## CL1 HanaMesh client pages (2026-11-10 candidate)
+
+AppHost adds keyed main entries `hanamesh-library` and `hanamesh-providers`. Sidebar list id `hanamesh-library` (order 11, label 应用库) addresses the matching main key. The existing market seat, overlay fallback, website install-target entry, exact install/readback, app receipts, leases and close ownership remain intact; new layout-aware entry actions select the main page without creating a Session. The legacy footer action is hidden when the native main navigation is available.
+
+Core declares root-scoped list slot `hanamesh.environment.content` as a child of main key `hanamesh-environment`. AppHost registers its own `EnvironmentContent` there: installation environment and lazily opened catalog/suite-source/handoff forms. Those forms use their original authenticated routes and stores; opening the environment does not read every closed form or save/install anything. Tabs select Core keys `hanamesh-account` / `hanamesh-environment` and AppHost `hanamesh-providers`. No sibling source import, Core allowlist change or host root/sidebar/conversation replacement is involved.
+
+The library includes local installed/all tabs and a source-preserving details view. Installation confirmation shows the exact reviewed npm version or full GitHub ref/path/build permission, and requires acknowledgement of the **current resolved target object** before its original confirm action can post. A newly resolved target clears that acknowledgement; server-side fixed-target reread remains authoritative. The shipped conformance harness includes an explicit `acknowledgeInstall()` step before confirmation. Old directory `latestVersion` is still rejected/not displayed.
+
+The current catalog-view DTO has no public GitHub stars / npm downloads / platform install people / usage people fields. Details render each as unavailable with a reason, never as zero or a local-inventory substitute. The website SearchSignals DTO is a different contract, and store installation次数 is not 人数. Supplying these figures needs a formally added catalog-view DTO; this candidate does not relax validation or perform request-time GitHub/npm calls. A “在网站查看” link is derived only from the reviewed HanaMesh-view catalog provider; fixture/other-provider routes are not guessed. No trading or asset UI is added to the client.
+
+Scoped page styles consume the same host theme tokens. The library glyph reuses the supplied DS1 asset. Source/fixture checks do not establish real DSH loading or design screenshot acceptance; those remain separate CL1 gates.

@@ -1,3 +1,4 @@
+import {acknowledgeInstall} from './fixtures/install-review.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
@@ -291,7 +292,7 @@ test('CM09: confirmation posts once, acceptance stays pending, matching completi
   const m = await market(t, { registered: true });
   await m.h.module.openInstallTarget(appTarget);
   await settle();
-  const confirm = m.h.find(n => n.type === 'button' && n.children.includes('确认安装'));
+  await acknowledgeInstall(m.h);const confirm = m.h.find(n => n.type === 'button' && n.children.includes('确认安装'));
   confirm.props.onClick(); confirm.props.onClick();
   await settle();
   assert.equal(m.calls.filter(c => c.path === '/hanamesh/library/install').length, 1);
@@ -311,7 +312,7 @@ test('CM09: confirmation posts once, acceptance stays pending, matching completi
 test('CM10: an operation failure preserves recovery failure and cannot show installation success or an open action', async t => {
   const m = await market(t, { failed: true });
   await m.h.module.openInstallTarget(appTarget); await settle();
-  await m.h.click('确认安装'); await m.clock.advance(1000);
+  await acknowledgeInstall(m.h);await m.h.click('确认安装'); await m.clock.advance(1000);
   assert.match(m.text(), /DSH_PLUGIN_FAILED/);
   assert.match(m.text(), /恢复失败/);
   assert.doesNotMatch(m.text(), /安装完成，请查看已安装列表/);
@@ -321,7 +322,7 @@ test('CM10: an operation failure preserves recovery failure and cannot show inst
 test('CM11: wrong installed version is reported as the C-MARKET readback error and cannot enable open', async t => {
   const m = await market(t, { version: '9.9.9', registered: true });
   await m.h.module.openInstallTarget(appTarget); await settle();
-  await m.h.click('确认安装'); await m.clock.advance(1000);
+  await acknowledgeInstall(m.h);await m.h.click('确认安装'); await m.clock.advance(1000);
   assert.match(m.text(), /INSTALL_READBACK_MISMATCH/, 'the public contract error must survive the client readback check');
   assert.doesNotMatch(m.text(), /安装完成，请查看已安装列表/);
   const dialog = m.h.find(n => n.props['aria-label'] === '市场安装确认');
@@ -388,13 +389,13 @@ test('CM15: an event cursor from before a provider restart reports loss of opera
 });
 
 test('R1 recovery not-needed preserves original install failure and never reports success',async t=>{
- const m=await market(t,{failed:true,recoveryStatus:'not-needed'});await m.h.module.openInstallTarget(appTarget);await settle();await m.h.click('确认安装');await m.clock.advance(1000);assert.match(m.text(),/DSH_PLUGIN_FAILED/);assert.match(m.text(),/安装前状态未被改动/);assert.doesNotMatch(m.text(),/returnt|安装完成/);
+ const m=await market(t,{failed:true,recoveryStatus:'not-needed'});await m.h.module.openInstallTarget(appTarget);await settle();await acknowledgeInstall(m.h);await m.h.click('确认安装');await m.clock.advance(1000);assert.match(m.text(),/DSH_PLUGIN_FAILED/);assert.match(m.text(),/安装前状态未被改动/);assert.doesNotMatch(m.text(),/returnt|安装完成/);
 });
 
 test('MP03 market failure shows the release-age cause and DSH upgrade action with original diagnostics',async t=>{
  const diagnostic='[ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION] 3 lockfile entries failed verification:\n @ai-workbench/connect@0.7.37 was published at 2026-10-25T19:37:31.290Z, within the minimumReleaseAge cutoff (2026-10-24T20:22:43.181Z)\n @ai-workbench/remote-agent@0.8.29 was published within the minimumReleaseAge cutoff\n @ai-workbench/workbench@0.1.3 was published within the minimumReleaseAge cutoff';
  const m=await market(t,{failed:true,recoveryStatus:'not-needed',diagnostic});
- await m.h.module.openInstallTarget(appTarget);await settle();await m.h.click('确认安装');await m.clock.advance(1000);
+ await m.h.module.openInstallTarget(appTarget);await settle();await acknowledgeInstall(m.h);await m.h.click('确认安装');await m.clock.advance(1000);
  assert.match(m.text(),/升级 DSH/,'show an actionable upstream fix');
  assert.match(m.text(),/发布时间检查未通过/,'show the actual failure class');
  const alert=m.h.find(n=>n.props?.role==='alert'&&JSON.stringify(n).includes('ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION'));
@@ -409,7 +410,7 @@ test('MP03 market failure shows the release-age cause and DSH upgrade action wit
 
 test('MP04 non-policy install failure retains its actual cause without suggesting a DSH upgrade',async t=>{
  const diagnostic='[ERR_PNPM_FETCH_404] package unavailable';const m=await market(t,{failed:true,diagnostic});
- await m.h.module.openInstallTarget(appTarget);await settle();await m.h.click('确认安装');await m.clock.advance(1000);
+ await m.h.module.openInstallTarget(appTarget);await settle();await acknowledgeInstall(m.h);await m.h.click('确认安装');await m.clock.advance(1000);
  assert.ok(m.h.find(n=>n.type==='details'&&n.children.some(child=>child?.type==='pre'&&child.children.includes(diagnostic))),'generic pnpm diagnostics must also reach the person');
  const alert=m.h.find(n=>n.props?.role==='alert'&&JSON.stringify(n).includes('ERR_PNPM_FETCH_404'));assert.ok(alert,'generic pnpm category must be visible outside folded details');
  assert.doesNotMatch(m.text(),/升级 DSH/);
@@ -419,7 +420,7 @@ test('MP04 non-policy install failure retains its actual cause without suggestin
 test('MD04 uncoded install failure shows its sanitized original phase/type/message in technical details',async t=>{
  const diagnostic='Phase: registry fetch\nTypeError: fixture fetch failed token=[REDACTED]\nCause: Error [ENOTFOUND]: fixture lookup';
  const m=await market(t,{failed:true,recoveryStatus:'not-needed',diagnostic,failureCode:'LIBRARY_OPERATION_FAILED'});
- await m.h.module.openInstallTarget(appTarget);await settle();await m.h.click('确认安装');await m.clock.advance(1000);
+ await m.h.module.openInstallTarget(appTarget);await settle();await acknowledgeInstall(m.h);await m.h.click('确认安装');await m.clock.advance(1000);
  assert.match(m.text(),/LIBRARY_OPERATION_FAILED/);assert.match(m.text(),/安装前状态未被改动/);
  assert.ok(m.h.find(n=>n.type==='details'&&n.children.some(child=>child?.type==='pre'&&child.children.includes(diagnostic))),'the exact safe failure reaches the existing technical-details surface');
  assert.equal(m.calls.filter(c=>c.path==='/hanamesh/library/install').length,1,'no hidden retries');assert.doesNotMatch(m.text(),/发布时间检查未通过/,'an uncoded exception is not reclassified as a pnpm policy failure');

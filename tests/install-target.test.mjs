@@ -1,3 +1,4 @@
+import {acknowledgeInstall} from './fixtures/install-review.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -63,7 +64,7 @@ test('IT04: public market input shows market-owned confirmation without a direct
 test('IT05: public input and confirm clicks share one install, show its result and read the installed list',async t=>{
   const {harness,calls,clock}=await ui(t);const seat=harness.module.createMarketSeat();
   assert.equal(typeof seat.openInstallTarget,'function');await seat.openInstallTarget({itemId:item.id,packageName:'fixture-plugin'});await settle();
-  const confirm=harness.find(node=>node.type==='button'&&node.children.includes('确认安装'));assert(confirm);confirm.props.onClick();confirm.props.onClick();await settle();
+  await acknowledgeInstall(harness);const confirm=harness.find(node=>node.type==='button'&&node.children.includes('确认安装'));assert(confirm);confirm.props.onClick();confirm.props.onClick();await settle();
   await seat.openInstallTarget({packageName:'fixture-plugin'});await settle();
   assert.equal(calls.filter(c=>c.path==='/hanamesh/library/install').length,1);await clock.advance(1000);
   assert.match(text(harness.tree),/安装完成/);assert.match(text(harness.tree),/data-hanamesh-installed/);
@@ -72,12 +73,12 @@ test('IT05: public input and confirm clicks share one install, show its result a
 test('IT06: authorization failure remains visible; malformed input cannot post an install',async t=>{
   const {harness,calls}=await ui(t,{denied:true});const seat=harness.module.createMarketSeat();assert.equal(typeof seat.openInstallTarget,'function');
   await assert.rejects(seat.openInstallTarget({packageName:'fixture-plugin',version:'evil'}));
-  await seat.openInstallTarget({packageName:'fixture-plugin'});await settle();await harness.click('确认安装');
+  await seat.openInstallTarget({packageName:'fixture-plugin'});await settle();await acknowledgeInstall(harness);await harness.click('确认安装');
   assert.match(text(harness.tree),/FORBIDDEN/);assert.equal(calls.filter(c=>c.path==='/hanamesh/library/install').length,1);
   assert.equal(calls.find(c=>c.path==='/hanamesh/library/install').init.headers['x-hanamesh-client'],'workspace-v1');
 });
 test('IT07: an operation done event without an installed readback does not claim the target is installed',async t=>{
-  const{harness,clock}=await ui(t,{missingReadback:true});await harness.module.openInstallTarget({packageName:'fixture-plugin'});await settle();await harness.click('确认安装');await clock.advance(1000);
+  const{harness,clock}=await ui(t,{missingReadback:true});await harness.module.openInstallTarget({packageName:'fixture-plugin'});await settle();await acknowledgeInstall(harness);await harness.click('确认安装');await clock.advance(1000);
   assert.match(text(harness.tree),/读回失败/);assert.doesNotMatch(text(harness.tree),/安装完成，请查看已安装列表/);
 });
 test('IT08: normal host URL fragment navigation enters the same confirmation, never installs or accepts duplicate/extra fields',async t=>{

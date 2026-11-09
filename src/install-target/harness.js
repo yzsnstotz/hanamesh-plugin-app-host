@@ -34,6 +34,8 @@ export async function loadClient({fetch:transport}){
   render();await idle();
   return{module,
     text:()=>JSON.stringify(tree),
+    find:predicate=>find(tree,predicate),
+    async acknowledgeInstall(){const checkbox=find(tree,node=>node.type==='input'&&node.props['aria-label']==='我已核对来源与安装目标');if(!checkbox)throw new Error('Installation review acknowledgement is not visible');checkbox.props.onChange({currentTarget:{checked:true}});await idle();},
     button:label=>find(tree,node=>node.type==='button'&&node.children.includes(label)),
     async click(label){const button=find(tree,node=>node.type==='button'&&node.children.includes(label));if(!button)throw new Error('No visible button '+label);button.props.onClick();await idle();},
     idle,

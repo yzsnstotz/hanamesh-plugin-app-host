@@ -1,3 +1,4 @@
+import {acknowledgeInstall} from './fixtures/install-review.mjs';
 import {writeSuiteProfile,installation} from './fixtures/core-suite-declaration.mjs';
 import {formatSuiteInstallCommand} from '@hanamesh/core/suite';
 const SUITE_INSTALL_COMMAND=formatSuiteInstallCommand('0.1.1');
@@ -56,7 +57,7 @@ test('suite failure UI shows partial versions and the repair command without cla
     else if(path.startsWith('/hanamesh/library/events?'))value={sequence:1,events:[{operationId:'suite-op',type:'library.install-failed',code:'DSH_PLUGIN_FAILED',details}]};
     return{ok:true,json:async()=>value};
   }});t.after(()=>h.unmount());
-  await h.module.openInstallTarget({itemId:'hanamesh:suite-upgrade'});await settle();await h.click('确认安装');await clock.advance(1000);
+  await h.module.openInstallTarget({itemId:'hanamesh:suite-upgrade'});await settle();await acknowledgeInstall(h);await h.click('确认安装');await clock.advance(1000);
   const text=JSON.stringify(h.tree);assert.match(text,/套件升级未完成/);assert.match(text,/部分组件可能已改变/);assert.ok(text.includes(targets['@hanamesh/core']));assert.ok(text.includes(SUITE_INSTALL_COMMAND));assert.doesNotMatch(text,/未安装：/);
 });
 

@@ -1,3 +1,4 @@
+import {acknowledgeInstall} from './fixtures/install-review.mjs';
 // D-213 SOURCE/HTTP fixture, not real Desktop/U2. The actual producer, Loader
 // registration, client apply, slots, market seat and HTTP handler are exercised.
 import test, {before, after} from 'node:test';
@@ -156,7 +157,7 @@ test('VE03 test-panel install selection requires normal confirmation; cancel is 
   assert.ok(m.find('市场安装确认'), 'normal confirmation is still required');
   await m.click('取消'); assert.equal(m.installs.length, 0);
   await m.choose('POST /hanamesh/library/install', target); await m.click('调用合约');
-  await m.click('确认安装'); assert.deepEqual(m.installs.map(input => ({contractVersion: '1', ...input})), [target]);
+  await acknowledgeInstall(m);await m.click('确认安装'); assert.deepEqual(m.installs.map(input => ({contractVersion: '1', ...input})), [target]);
   assert.equal(m.traffic.filter(row => row.method === 'POST' && row.url === '/hanamesh/library/install').length, 1);
 });
 

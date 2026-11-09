@@ -173,7 +173,7 @@ async function runRecoveryProvider(contract,record){
     await record(id,'recovery','market shows '+caseId+' as '+(id==='RU01'?'a failure that was restored':'a failure whose restoration failed, never as installed or rolled back'),async()=>{
       const item=recovery.cases.find(row=>row.id===caseId),source=await sourceRecoveryProfile(contract,item);
       const host=await startProvider(contract,{profile:source.profile,installer:source.installer});const client=await loadClient({fetch:host.browserFetch});
-      try{await client.module.openInstallTarget({packageName:source.target.packageName});await client.idle();await client.click('确认安装');await host.settled();await client.tick(1000);
+      try{await client.module.openInstallTarget({packageName:source.target.packageName});await client.idle();await client.acknowledgeInstall();await client.click('确认安装');await host.settled();await client.tick(1000);
         const text=client.text();
         if(!text.includes('安装失败：'+item.expect.code)||!text.includes(expected))throw new Error('market text: '+text.slice(text.indexOf('安装失败')>=0?text.indexOf('安装失败'):0).slice(0,300));
         if(text.includes(refused)||text.includes('安装完成'))throw new Error('market misreports the recovery result');
@@ -247,7 +247,7 @@ export async function runProviderSuite(){
     await record('PC02','confirm','only an explicit confirmation installs, once, through the existing guarded route',async()=>{
       expectEqual(host.installs.length,0,'installs before confirmation');
       await client.module.openInstallTarget({packageName:'@hanamesh-fixture/install-target-app',contractVersion:'1'});await client.idle();
-      const confirm=client.button('确认安装');confirm.props.onClick();confirm.props.onClick();await client.idle();
+      await client.acknowledgeInstall();const confirm=client.button('确认安装');confirm.props.onClick();confirm.props.onClick();await client.idle();
       expectEqual(host.posts.map(p=>[p.path,p.headers['x-hanamesh-client']]),[['/hanamesh/library/install','workspace-v1']],'install requests');
       expectEqual(host.installs,['@hanamesh-fixture/install-target-app'],'installer calls');
     });
@@ -258,7 +258,7 @@ export async function runProviderSuite(){
       if(!client.button('确认安装'))throw new Error('localhost fragment did not reach confirmation');
       await client.click('取消');expectEqual([host.posts.length,host.installs.length],[postsBefore,installsBefore],'localhost cancellation');
       await client.module.openInstallTarget({packageName:'@hanamesh-fixture/install-target-plugin',contractVersion:'1'});await client.idle();
-      const confirm=client.button('确认安装');confirm.props.onClick();confirm.props.onClick();await client.idle();
+      await client.acknowledgeInstall();const confirm=client.button('确认安装');confirm.props.onClick();confirm.props.onClick();await client.idle();
       expectEqual([host.posts.length,host.installs.length],[postsBefore+1,installsBefore+1],'localhost confirmed install once');
       expectEqual(host.installs.at(-1),'@hanamesh-fixture/install-target-plugin','localhost installer target');
     });

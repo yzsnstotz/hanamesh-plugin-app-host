@@ -12,7 +12,7 @@ export function NodeRuntimeSection():unknown;
 export function LibraryAction():unknown;
 /** The HanaMesh market page (applications + plugins; install / upgrade / uninstall / restart notice).
  *  `embedded` renders it inline for the Extension Management tab instead of as the shell overlay. */
-export function LibraryOverlay(props?:{embedded?:boolean,preferredSubsectionId?:string,verification?:boolean}):unknown;
+export function LibraryOverlay(props?:{embedded?:boolean,mainPage?:boolean,preferredSubsectionId?:string,verification?:boolean}):unknown;
 /** rc.32: the「只能其一」notice shown at the top of the market page when dshmarket holds the seat. */
 export function MarketConflictNotice():unknown;
 /** Identifiers only; metadata and confirmation are owned by the client's market. */
@@ -38,3 +38,11 @@ export const INSTALL_TARGET_CONTRACT_VERSION:'1';
 
 /** AppHost-owned registry selection, independent of catalog manifest sources. */
 export function SuiteSourceSettingsSection():unknown;
+
+/** Additive DSH layout seats and the Core-owned environment content extension. */
+export function registerAppHostPages(ctx:unknown):()=>void;
+export function EnvironmentContent():unknown;
+/** Current catalog contract supplies none of these counts; null is explicit unknown, never zero. */
+export function credibilityFacts():{id:string;label:string;value:null;reason:'catalog-field-unavailable'}[];
+/** HanaMesh-view catalog website link; absent for fixtures and other provider protocols. */
+export function catalogWebsiteLink(source:unknown,item:unknown):string|null;
