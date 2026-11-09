@@ -1,3 +1,7 @@
+WIP 交接（DT3 → Claude）：Codex `.git` 来源修复已真实 CLI/网页验证，但本轮整体 suite 完整性修复未完成；本分支仅供接手，不发布。详见编排 questions/DT3-delivery.md。
+
+0.6.26 候选：Codex 官方 GitHub 市场 URL 的 `.git` 后缀按精确仓库身份归一；市场映射与每项安装来源独立校验，不同仓库、凭据、查询、fragment 仍拒绝。检测不执行安装或配置写入。
+
 0.6.25 候选：本机 HTTPS 目录允许回环端口及 *.localhost，修复彩排种子初始化阻断检测监听；公网 HTTPS 非标准端口仍拒绝。Claude 官方 GitHub 市场清单按 repo 身份核对，保留不同来源拒绝。安装物回归命令见[安装状态](docs/INSTALLATION_STATUS.md)，不以页面打开代替检测通过。
 
 PX3 跨平台候选：Windows 可以运行插件/公开服务、attach 应用、受控只读 CLI 与普通包安装；`owned` 应用仍在创建进程、数据目录及请求凭据之前明确拒绝 `PLATFORM_UNSUPPORTED`。Windows 单测保留真实 attach 的 HTTP/租约/网关断言，并验证 owned 的持久失败、无进程/文件写入及不消费凭据；这些断言不构成 Windows owned 运行支持。独立 Node 可用不扩大 owned 支持；受管 Node 准备仍遵守原平台限制。Windows 本地快照采用文件 flush 加同目录 rename，不承诺断电后目录项持久；Coding OAuth Gateway 文件源因缺私有 ACL 证明继续拒绝，HTTP 提供方不变。各平台实际结果以本分支 GitHub Actions 矩阵收据为准。

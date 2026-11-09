@@ -71,3 +71,23 @@ test('DT2 Claude official HTTPS GitHub registration keeps the same repository wi
  value.marketplaces[0].url='https://github.com/other/hanamesh-plugins.git';
  assert.equal(observation(await read(),'claude','agent-cli').reason.code,'AGENT_MARKETPLACE_SOURCE_MISMATCH');
 });
+
+test('DT3 Codex official GitHub add normalizes .git in both marketplace and per-install sources',async()=>{
+ const url='https://github.com/yzsnstotz/hanamesh-plugins';
+ const config={...configured,marketplace:'hanamesh',marketplaceUrl:url};
+ const value=official('codex');value.plugins.installed[0]={...value.plugins.installed[0],pluginId:'hanamesh@hanamesh',marketplaceName:'hanamesh',version:'0.2.8'};value.marketplaces.marketplaces[0].name='hanamesh';
+ const read=reader({readers:{codex:config},runCommand:command('codex',value)});
+ for(const mapping of [url,url+'.git'])for(const installed of [url,url+'.git']){
+  value.marketplaces.marketplaces[0].marketplaceSource={sourceType:'git',source:mapping};
+  value.plugins.installed[0].marketplaceSource={sourceType:'git',source:installed};
+  const row=observation(await read(),'codex','agent-cli');assert.equal(row.status,'installed');assert.equal(row.version,'0.2.8');
+ }
+ for(const source of [url+'.git?ref=main',url+'.git#main',url+'.git/',url+'.git/other','https://github.com/other/hanamesh-plugins.git','https://user@github.com/yzsnstotz/hanamesh-plugins.git','http://github.com/yzsnstotz/hanamesh-plugins.git','https://github.com/yzsnstotz/hanamesh-plugins%2egit']){
+  value.marketplaces.marketplaces[0].marketplaceSource={sourceType:'git',source:url+'.git'};
+  value.plugins.installed[0].marketplaceSource={sourceType:'git',source};
+  assert.equal(observation(await read(),'codex','agent-cli').reason.code,'AGENT_MARKETPLACE_SOURCE_MISMATCH','per-install source remains independently authoritative');
+  value.plugins.installed[0].marketplaceSource={sourceType:'git',source:url+'.git'};
+  value.marketplaces.marketplaces[0].marketplaceSource={sourceType:'git',source};
+  assert.equal(observation(await read(),'codex','agent-cli').reason.code,'AGENT_MARKETPLACE_SOURCE_MISMATCH','mapping source also remains authoritative');
+ }
+});

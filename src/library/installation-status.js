@@ -17,10 +17,12 @@ const unknown=(row,code,message,action)=>({...row,status:'unknown',version:null,
 const agentBase=channel=>base(channel,'agent-cli','official-user-profile',channel==='claude'?'Claude Code 用户级插件（不覆盖项目或其他隔离资料）':'Codex CLI 本地市场用户资料（不代表桌面 App、项目或其他隔离资料）');
 const inventoryError=()=>{throw new AppHostError('AGENT_INVENTORY_INVALID','Official inventory shape is unsupported.',{},503)};
 const qualified=x=>typeof x==='string'&&/^[a-z0-9][a-z0-9._-]*@[a-z0-9][a-z0-9._-]*$/.test(x)&&x.length<=257;
+function githubGitUrl(url){return typeof url==='string'&&/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\.git$/.test(url)?url.slice(0,-4):url;}
+function codexMarketplaceUrl(source){return source?.sourceType==='git'?githubGitUrl(source.source):source?.sourceType==='url'?source.source:null;}
 function claudeMarketplaceUrl(value){
  if(value.source==='github'&&typeof value.repo==='string'&&/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(value.repo))return `https://github.com/${value.repo}`;
  const url=['url','git'].includes(value.source)?value.url:null;
- return value.source==='git'&&typeof url==='string'&&/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\.git$/.test(url)?url.slice(0,-4):url;
+ return value.source==='git'?githubGitUrl(url):url;
 }
 function parseInventory(channel,plugins,marketplaces,target){
  let rows,markets;
@@ -34,7 +36,7 @@ function parseInventory(channel,plugins,marketplaces,target){
  if(!markets.every(r=>object(r)&&typeof r.name==='string'&&r.name.length>0&&r.name.length<=128))inventoryError();
  const sourceRows=markets.filter(r=>r.name===target.marketplace);
  if(sourceRows.length>1)throw new AppHostError('AGENT_INVENTORY_CONFLICT','Conflicting marketplace identities.',{},503);
- if(sourceRows.length){const m=sourceRows[0],url=channel==='claude'?claudeMarketplaceUrl(m):(['git','url'].includes(m.marketplaceSource?.sourceType)?m.marketplaceSource.source:null);
+ if(sourceRows.length){const m=sourceRows[0],url=channel==='claude'?claudeMarketplaceUrl(m):codexMarketplaceUrl(m.marketplaceSource);
   if(url!==target.marketplaceUrl)throw new AppHostError('AGENT_MARKETPLACE_SOURCE_MISMATCH','The configured marketplace source is not the registered target.',{},503);
  }
  const id=`${target.pluginName}@${target.marketplace}`;
@@ -47,7 +49,7 @@ function parseInventory(channel,plugins,marketplaces,target){
  const installedSource=scoped[0].marketplaceSource;
  if(channel==='codex'){
   if(!installedSource||!['git','url'].includes(installedSource.sourceType)||typeof installedSource.source!=='string')throw new AppHostError('AGENT_MARKETPLACE_SOURCE_UNAVAILABLE','Installed marketplace source is not observable.',{},503);
-  if(installedSource.source!==target.marketplaceUrl)throw new AppHostError('AGENT_MARKETPLACE_SOURCE_MISMATCH','Installed marketplace source conflicts with the registered target.',{},503);
+  if(codexMarketplaceUrl(installedSource)!==target.marketplaceUrl)throw new AppHostError('AGENT_MARKETPLACE_SOURCE_MISMATCH','Installed marketplace source conflicts with the registered target.',{},503);
  }
  const row=scoped[0],version=exact(channel==='claude'&&row.readFromFolder!==undefined?row.folderVersion:row.version);
  const failed=channel==='claude'?Boolean(row.errors?.length||row.notes?.length):!row.installed;
