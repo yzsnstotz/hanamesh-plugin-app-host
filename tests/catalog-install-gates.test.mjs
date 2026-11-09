@@ -45,7 +45,7 @@ test('R25 M2 npm fixed targets upgrade in target preview, market list and instal
  const result=await service.install({itemId:item.id,installTarget:npm});assert.equal(result.status,'started','the new fixed target is not already-installed');await service.close();assert.deepEqual(installedTarget,npm);
 });
 
-test('R25 M2 confirmation has no directory version and npm upgrade button has no version suffix',async t=>{
+test('R25 M2 confirmation has no retired directory version, shows reviewed npm version and upgrade has no version suffix',async t=>{
  const item={id:'r25',displayName:'Reviewed plugin',kind:'plugin',package:{registry:'npm',name:npm.name},installTarget:npm,installed:{packageName:npm.name,state:'installed',version:'1.0.0'},upgradeAvailable:true};
  const client=await loadClient({fetch:async path=>{
   if(path.startsWith('/hanamesh/library/target?'))return Response.json({source:{kind:'fixture'},item});
@@ -55,5 +55,5 @@ test('R25 M2 confirmation has no directory version and npm upgrade button has no
  await client.module.openInstallTarget({itemId:item.id,installTarget:npm});await client.idle();
  assert(!client.text().includes('目录未提供版本'),'confirmation has no retired version placeholder');
  assert(!client.text().includes('"children":["版本"]'),'confirmation has no version label');
- assert(!client.text().includes('1.2.3'),'the pinned npm version is execution data, not directory display metadata');
+ assert(client.text().includes('1.2.3'),'confirmation displays the exact reviewed npm execution target');assert(client.text().includes('精确版本'));
 });

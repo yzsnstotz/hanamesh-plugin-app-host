@@ -177,8 +177,8 @@ test('AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall /
 
 test('AH-M07 (client source): the entry is 「市场」, cards carry kind/state/upgrade, and a plugin change keeps a manual complete-exit/reopen notice in every carrier',async()=>{
   const source=await readFile(new URL('../src/client-ui.js',import.meta.url),'utf8');
-  assert.match(source,/onClick:\(\)=>setLibraryVisible\(true\)},t\('市场'\)\)/,'sidebar entry');
-  assert.match(source,/h\('h1',null,t\('HanaMesh 市场'\)\)/,'overlay title');
+  assert.match(source,/onClick:\(\)=>showLibrary\(\)},t\('市场'\)\)/,'sidebar entry');
+  assert.match(source,/好工具，让想法走得更远。/,'library page title');assert.match(source,/key:'hanamesh-library'/,'additive main key');
   assert.match(source,/localizedSection\(ctx,'hanamesh-library-sources',19,"市场目录源"/,'settings section');
   assert.doesNotMatch(source,/hanamesh:\/\/restart|requestRestart|window\.parent\.postMessage/);
   assert.match(source,/请完全退出 HanaMesh 客户端或 DSH 后重新打开/);

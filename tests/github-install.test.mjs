@@ -1,3 +1,4 @@
+import {acknowledgeInstall} from './fixtures/install-review.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { pinnedGithubSpec } from '../src/library/github-target.js';
@@ -185,7 +186,7 @@ test('GitHub client confirmation displays the repository, full SHA, path and loc
   await client.module.openInstallTarget({itemId:'demo',installTarget:target});await client.idle();
   for(const text of ['acme/mono',sha,'plugins/demo','会在本机执行构建脚本','sharp'])assert(client.text().includes(text),'confirmation shows '+text);
   assert.equal(posts.length,0,'preview does not install or approve scripts');
-  await client.click('确认安装');
+  await acknowledgeInstall(client);await client.click('确认安装');
   assert.deepEqual(posts,[{path:'/hanamesh/library/install',body:{itemId:'demo',packageName:'dsh-demo',installTarget:target}}]);
 });
 

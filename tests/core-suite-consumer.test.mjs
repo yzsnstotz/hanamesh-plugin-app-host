@@ -1,3 +1,4 @@
+import {acknowledgeInstall} from './fixtures/install-review.mjs';
 import {installation} from './fixtures/core-suite-declaration.mjs';
 import {writeSuiteProfile} from './fixtures/core-suite-declaration.mjs';
 import {formatSuiteInstallCommand} from '@hanamesh/core/suite';
@@ -95,6 +96,6 @@ test('a suite operation timeout does not claim that installation was never execu
     else if(path.startsWith('/hanamesh/library/events?'))value={sequence:0,events:[],operations:['accepted']};
     return{ok:true,json:async()=>value};
   }});t.after(()=>h.unmount());
-  await h.module.openInstallTarget({itemId:'hanamesh:suite-upgrade'});await h.click('确认安装');await clock.advance(600000);await settle();
+  await h.module.openInstallTarget({itemId:'hanamesh:suite-upgrade'});await acknowledgeInstall(h);await h.click('确认安装');await clock.advance(600000);await settle();
   const text=JSON.stringify(h.tree);assert.match(text,/OPERATION_TIMEOUT/);assert.doesNotMatch(text,/套件升级未执行|补齐命令修复/);
 });
