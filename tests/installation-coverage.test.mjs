@@ -1,11 +1,11 @@
 // CD2: widen read-only coverage to the common install methods without guessing absence from read failures.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdir,writeFile,chmod,rm} from 'node:fs/promises';
+import {mkdir,writeFile,chmod,rm,symlink} from 'node:fs/promises';
 import {join,dirname} from 'node:path';
 import {scratch} from './helpers.mjs';
 import {declaration,core} from './fixtures/core-suite-declaration.mjs';
-import {createInstallationStatusReader} from '../src/library/installation-status.js';
+import {createInstallationStatusReader,officialDshDesktopProfile} from '../src/library/installation-status.js';
 import {discoverOfficialReader} from '../src/library/installation-discovery.js';
 import {readerVersionFailure} from '../src/library/installation-cli.js';
 async function home(t){const dir=await scratch('cd2-coverage-');t.after(()=>rm(dir,{recursive:true,force:true}));return dir}
@@ -70,4 +70,35 @@ test('the HanaMesh client reads the official DSH desktop profile on disk for the
  assert.equal(value.status,'unknown','sharing the same home cannot separate the two clients');assert.equal(value.reason.code,'OTHER_RUNTIME_NOT_OBSERVED');
  const fromDsh=row(await createInstallationStatusReader({client:'dsh',core:()=>service,discoverReader:unavailable,profileState:async()=>'absent',otherProfileDir:dsh})(),'hanamesh','other-runtime');
  assert.equal(fromDsh.status,'unknown','the HanaMesh client answers for itself');
+});
+
+// Exercise the production selector, never substitute null for the identity guard.
+for(const alias of ['direct','target-symlink','own-symlink'])test(`same physical profile stays unknown (${alias})`,async t=>{
+ const root=await home(t),target=join(root,'.dsh','profiles','desktop'),physical=join(root,'physical');
+ await mkdir(dirname(target),{recursive:true});
+ let own=target;
+ if(alias==='target-symlink'){await profile(physical);await symlink(physical,target,'dir');own=physical}
+ else{await profile(target);if(alias==='own-symlink'){own=join(root,'own-alias');await symlink(target,own,'dir')}}
+ const selected=officialDshDesktopProfile(own,root);
+ const result=await createInstallationStatusReader({client:'hanamesh',otherProfileDir:selected,profileState:async()=>'absent'})();
+ const value=row(result,'dsh','other-runtime');
+ assert.equal(value.status,'unknown');assert.equal(value.reason.code,'OTHER_RUNTIME_NOT_OBSERVED');
+ assert.equal(selected,null);
+});
+test('profile identity failures never authorize reading another client',async t=>{
+ const root=await home(t),target=join(root,'.dsh','profiles','desktop');await profile(target);
+ const loop=join(root,'loop');await symlink(loop,loop);
+ for(const own of [undefined,'',join(root,'missing'),loop]){
+  const selected=officialDshDesktopProfile(own,root);
+  const value=row(await createInstallationStatusReader({client:'hanamesh',otherProfileDir:selected,profileState:async()=>'absent'})(),'dsh','other-runtime');
+  assert.equal(value.status,'unknown');assert.equal(value.reason.code,'OTHER_RUNTIME_NOT_OBSERVED');assert.equal(selected,null);
+ }
+ const own=join(root,'own');await mkdir(own);await rm(target,{recursive:true});await symlink(loop,target);
+ assert.equal(officialDshDesktopProfile(own,root),null,'unresolvable target identity is unknown');
+});
+test('distinct physical profiles permit the official DSH disk observation',async t=>{
+ const root=await home(t),own=join(root,'own'),target=join(root,'.dsh','profiles','desktop');await mkdir(own);await profile(target);
+ const selected=officialDshDesktopProfile(own,root);assert.equal(selected,target);
+ const value=row(await createInstallationStatusReader({client:'hanamesh',otherProfileDir:selected,profileState:async()=>'absent'})(),'dsh','other-runtime');
+ assert.equal(value.status,'installed');assert.equal(value.version,'0.1.6');
 });

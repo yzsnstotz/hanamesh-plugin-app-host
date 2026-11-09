@@ -2,7 +2,8 @@
 import semver from 'semver';
 import {AppHostError} from '../errors.js';
 import {readFile} from 'node:fs/promises';
-import {join,resolve} from 'node:path';
+import {join} from 'node:path';
+import {realpathSync} from 'node:fs';
 import {homedir} from 'node:os';
 import {SUITE_BUNDLE,createCoreSuiteAdapter,SUITE_PACKAGES,readSuiteStatus} from './suite.js';
 import {readerVersionFailure,validReader,runOfficialInstallationCommand} from './installation-cli.js';
@@ -72,10 +73,11 @@ async function profileSuite(row,profileDir){
  if(value.status==='unknown')return unknown(row,'DSH_PROFILE_UNREADABLE','DSH 桌面版 profile 清单无法读取。','打开 DSH 确认其插件页可用后重新检测。');
  return{...row,status:'incomplete',version:value.version,components,reason:reason('DSH_PROFILE_SUITE_INCOMPLETE','DSH 桌面版 profile 中的 HanaMesh 套件缺组件或未启用。','在 DSH 插件页启用 HanaMesh，或按 DSH 安装说明重新安装总包后重启 DSH。')};
 }
-/** Upstream default DSH home (`@deepseek-ai/dsh-home-paths` DSH_HOME_DIR_NAME '.dsh') desktop profile; null when it is this runtime's own profile. */
+/** Official DSH desktop profile; only distinct, resolvable physical profiles may answer for another client. */
 export function officialDshDesktopProfile(ownProfileDir,home=homedir()){
  const dir=join(home,'.dsh','profiles','desktop');
- return typeof ownProfileDir==='string'&&resolve(ownProfileDir)===resolve(dir)?null:dir;
+ if(typeof ownProfileDir!=='string'||!ownProfileDir)return null;
+ try{return realpathSync(ownProfileDir)===realpathSync(dir)?null:dir}catch{return null}
 }
 /** Automatic current-user discovery only; `core` is the optional public protocol-1 Cordis service accessor.
  * `otherProfileDir`: the official DSH desktop profile when it is not this runtime's own profile (HanaMesh client only). */

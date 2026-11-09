@@ -1,5 +1,7 @@
 // AppHost mutation targets, name filters and invariant-specific failure reasons.
 export const cases=[
+ {id:'CD3-profile-alias-admitted',file:'src/library/installation-status.js',from:'realpathSync(ownProfileDir)===realpathSync(dir)',to:'ownProfileDir===dir',test:'tests/installation-coverage.test.mjs',pattern:'same physical profile',reason:/Expected values to be strictly equal/},
+ {id:'CD3-profile-identity-failure-admitted',file:'src/library/installation-status.js',from:'catch{return null}',to:'catch{return dir}',test:'tests/installation-coverage.test.mjs',pattern:'profile identity failures',reason:/Expected values to be strictly equal/},
  {id:'CD2-prerelease-cli-rejected',file:'src/library/installation-cli.js',from:"/^codex-cli (\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?)$/",to:"/^codex-cli (\\d+\\.\\d+\\.\\d+)$/",test:'tests/installation-coverage.test.mjs',pattern:'prerelease',reason:/ChatGPT\.app bundles a prerelease/},
  {id:'CD2-chatgpt-bundle-ignored',file:'src/library/installation-discovery.js',from:"...(channel==='codex'?applicationDirs.map(",to:"...(false?applicationDirs.map(",test:'tests/installation-coverage.test.mjs',pattern:'ChatGPT desktop app',reason:/ChatGPT\.app bundled Codex CLI must be found/},
  {id:'CD2-absent-profile-unknown',file:'src/library/installation-status.js',from:"==='absent')return{...initial,status:'not-installed'",to:"==='never')return{...initial,status:'not-installed'",test:'tests/installation-coverage.test.mjs',pattern:'absent official user profile',reason:/strictly equal|no command|absent profile/},
