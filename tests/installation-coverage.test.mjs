@@ -102,3 +102,19 @@ test('distinct physical profiles permit the official DSH disk observation',async
  const value=row(await createInstallationStatusReader({client:'hanamesh',otherProfileDir:selected,profileState:async()=>'absent'})(),'dsh','other-runtime');
  assert.equal(value.status,'installed');assert.equal(value.version,'0.1.6');
 });
+
+test('profile identity is rechecked before every explicit read on a reused reader',async t=>{
+ const root=await home(t),own=join(root,'own'),other=join(root,'other'),target=join(root,'.dsh','profiles','desktop');
+ await profile(own);await profile(other);await mkdir(dirname(target),{recursive:true});await symlink(other,target,'dir');
+ const read=createInstallationStatusReader({client:'hanamesh',otherProfileDir:()=>officialDshDesktopProfile(own,root),profileState:async()=>'absent'});
+ t.after(()=>read.close());assert.equal(row(await read(),'dsh','other-runtime').status,'installed');
+ await rm(target);await symlink(own,target,'dir');
+ const value=row(await read(),'dsh','other-runtime');assert.equal(value.status,'unknown','a cached reader must not retain an earlier distinct-profile decision');assert.equal(value.reason.code,'OTHER_RUNTIME_NOT_OBSERVED');
+});
+
+test('a later explicit read can resolve a previously missing target profile',async t=>{
+ const root=await home(t),own=join(root,'own'),target=join(root,'.dsh','profiles','desktop');await profile(own);
+ const read=createInstallationStatusReader({client:'hanamesh',otherProfileDir:()=>officialDshDesktopProfile(own,root),profileState:async()=>'absent'});t.after(()=>read.close());
+ assert.equal(row(await read(),'dsh','other-runtime').reason.code,'OTHER_RUNTIME_NOT_OBSERVED');
+ await profile(target);assert.equal(row(await read(),'dsh','other-runtime').status,'installed');
+});

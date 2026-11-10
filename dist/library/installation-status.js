@@ -80,7 +80,7 @@ export function officialDshDesktopProfile(ownProfileDir,home=homedir()){
  try{return realpathSync(ownProfileDir)===realpathSync(dir)?null:dir}catch{return null}
 }
 /** Automatic current-user discovery only; `core` is the optional public protocol-1 Cordis service accessor.
- * `otherProfileDir`: the official DSH desktop profile when it is not this runtime's own profile (HanaMesh client only). */
+ * `otherProfileDir`: a fresh selector of the official DSH desktop profile (HanaMesh client only); trusted fixtures may supply a path. */
 export function createInstallationStatusReader({client='dsh',core=()=>undefined,workerNode,runCommand=runOfficialInstallationCommand,discoverReader=discoverOfficialReader,profileState=agentProfileState,otherProfileDir=null}={}){
  if(!['dsh','hanamesh'].includes(client))throw new TypeError('client must be dsh or hanamesh');
  const active=new Set();let closed=false;
@@ -112,7 +112,8 @@ export function createInstallationStatusReader({client='dsh',core=()=>undefined,
   }catch(error){if(signal.aborted||error.code==='INSTALLATION_STATUS_CANCELLED')throw interrupted();const code=failureCodes.has(error.code)?error.code:'AGENT_READER_FAILED';const messages={AGENT_READER_UNAVAILABLE:'未在当前用户的 PATH 或常见安装位置找到官方 CLI。',AGENT_SHELL_ENV_UNAVAILABLE:'登录 shell 的 PATH 未能读取。',AGENT_PROFILE_UNAVAILABLE:'当前用户的官方资料目录不存在或不可访问。',AGENT_READER_TIMEOUT:'本次官方只读检测超时。',AGENT_INVENTORY_INVALID:'官方清单 JSON 不符合受支持的格式。',AGENT_READER_DISCOVERY_INVALID:'自动发现的官方 CLI 信息无效。',AGENT_READER_ENTRYPOINT_UNAVAILABLE:'已发现 Windows 命令入口，但官方 npm 程序文件缺失。'};return unknown(row,code,messages[code]??'本次官方清单读取未能提供完整且一致的安装事实。','在终端确认官方 CLI 可运行，并在其用户级插件页面检查清单、权限和市场来源后重新检测。')}
  }
  async function other(signal){
-  if(client==='hanamesh'&&otherProfileDir)return abortable(profileSuite(base('dsh','other-runtime','other-client','DSH 桌面版 profile（磁盘只读清单；运行中的 DSH 由其自身监听回答）'),otherProfileDir),signal);
+  const profileDir=client==='hanamesh'?(typeof otherProfileDir==='function'?otherProfileDir():otherProfileDir):null;
+  if(profileDir)return abortable(profileSuite(base('dsh','other-runtime','other-client','DSH 桌面版 profile（磁盘只读清单；运行中的 DSH 由其自身监听回答）'),profileDir),signal);
   return unknown(base(client==='dsh'?'hanamesh':'dsh','other-runtime','other-client','另一客户端 runtime（须由其自身监听回答）'),'OTHER_RUNTIME_NOT_OBSERVED','本监听未读取另一客户端的 runtime。','启动该客户端，并向其已广告的状态入口显式检测。');
  }
  const read=async({signal}={})=>{
