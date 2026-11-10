@@ -30,6 +30,9 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   const suiteFacts=async()=>installer?.suiteFacts?await installer.suiteFacts():{...await readSuiteStatus(config.profileDir),status:'unknown',completeness:'unknown',blocked:[{code:'CORE_SUITE_DECLARATION_MISSING'}],suiteUpgradeUnavailable:CORE_SUITE_DECLARATION_MISSING};
   const events=[];let sequence=0;let state;const running=new Map(),installing=new Map();let bootDependencies;
   const eventRetention=config.eventRetention??512;
+  const versionLookupConcurrency=config.versionLookupConcurrency??4,versionLookupCacheMs=config.versionLookupCacheMs??30000;
+  requireCondition(Number.isSafeInteger(versionLookupConcurrency)&&versionLookupConcurrency>=1&&versionLookupConcurrency<=16,'INVALID_INPUT','library.versionLookupConcurrency must be an integer from 1 to 16.');
+  requireCondition(Number.isSafeInteger(versionLookupCacheMs)&&versionLookupCacheMs>0&&versionLookupCacheMs<=2147483647,'INVALID_INPUT','library.versionLookupCacheMs must be a positive timer budget.');
   requireCondition(Number.isSafeInteger(eventRetention)&&eventRetention>0,'INVALID_INPUT','library.eventRetention must be a positive safe integer.');
   const observers=new Set();
   const emit=event=>{const value={sequence:++sequence,at:Date.now(),...event};events.push(value);if(events.length>eventRetention)events.shift();for(const observer of observers){try{observer(value);}catch(error){warn('hanamesh-app-host library: event observer failed (%s): %s',value.type,error?.message??error);}}return value;};
@@ -149,19 +152,25 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       let items=page.items.map(item=>{const selected=catalogPackageTargets(item)[0];return selected?{...item,installTarget:selected,package:{registry:selected.source,name:installTargetName(selected)}}:item;}).filter(item=>!protectedPackage(item.package?.name)).map(item=>{const row=byPackage.get(item.package?.name)??null;const kind=itemKind(item);
         return{...item,kind,application:isApplication(item),installed:row,upgradeAvailable:npmUpgradeAvailable(item.installTarget,row)};});
       if(config.profileDir&&!cursor&&(!category||category==='plugin')&&(!q||'hanamesh 套件'.includes(q.toLowerCase())))items.unshift({id:'hanamesh:suite',displayName:'HanaMesh 套件',summary:'官方 · 不计分。Core、使用记录与应用库一次装齐。',kind:'suite',official:true,installed:suiteStatus.status==='installed'?{state:'installed',version:suiteStatus.version}:null,suite:suiteStatus,...((installer?.suiteUpgradeUnavailable??suiteStatus.suiteUpgradeUnavailable)?{suiteUpgradeUnavailable:installer?.suiteUpgradeUnavailable??suiteStatus.suiteUpgradeUnavailable}:{})});
-      if(versionCatalog)for(const item of items){
-        if(item.kind!=='suite'&&(!item.installed||item.installTarget?.source!=='npm'))continue;
-        try{const releases=await (item.kind==='suite'?suiteVersionCatalog():versionCatalog).read(item.kind==='suite'?SUITE_BUNDLE:item.package.name);item.latestVersion=releases.latestVersion;if(item.kind==='suite'&&item.latestVersion&&suiteStatus.version&&semver.gt(item.latestVersion,suiteStatus.version)){const plan=await installer.prepareSuiteUpgrade();item.latestVersion=plan.bundle.to;}item.upgradeAvailable=Boolean(releases.latestVersion&&item.installed?.version&&semver.gt(item.latestVersion,item.installed.version));}
-        catch(error){item.versionError=error.code??'PLUGIN_VERSIONS_UNAVAILABLE';item.latestVersion=null;item.upgradeAvailable=false;}
-      }
+      // Version discovery is optional and starts only through the per-item read route after this list paints.
+      let coreSource;
+      if(state.suiteSource?.mode==='core')try{coreSource=readSuiteSourceState(suiteSourceService());}catch(error){coreSource={code:error.code??'CORE_SUITE_SOURCE_INVALID'};}
+      const versionQueries=versionCatalog?{concurrency:versionLookupConcurrency,cacheMs:versionLookupCacheMs,scope:JSON.stringify([state.revision,config.registry??'https://registry.npmjs.org/',state.suiteSource??null,coreSource??null])}:null;
       const categories=[...new Set(page.items.flatMap(item=>item.categories??[]))].sort();
-      return{source:page.source,items,categories,installed:installedRows,plugins:pluginRows,restartRequired:[...pluginRows,...installedRows].some(row=>RESTART_STATES.has(row.state)),...(bootSnapshotError?{restartBaseline:{known:false,code:bootSnapshotError}}:{}),page:page.page};},
-    async versions(input){
+      return{source:page.source,items,categories,...(versionQueries?{versionQueries}:{}),installed:installedRows,plugins:pluginRows,restartRequired:[...pluginRows,...installedRows].some(row=>RESTART_STATES.has(row.state)),...(bootSnapshotError?{restartBaseline:{known:false,code:bootSnapshotError}}:{}),page:page.page};},
+    async versions(input,{signal}={}){
       requireCondition(input&&Object.keys(input).length===1&&typeof input.itemId==='string','INVALID_INPUT','Only itemId is accepted.');
       requireCondition(versionCatalog,'PLUGIN_VERSIONS_UNAVAILABLE','Version discovery is unavailable.',{},503);
-      if(input.itemId==='hanamesh:suite')return{...await suiteVersionCatalog().read(SUITE_BUNDLE),installedVersion:(await suiteFacts()).version};
+      signal?.throwIfAborted();
+      if(input.itemId==='hanamesh:suite'){
+        const releases=await suiteVersionCatalog().read(SUITE_BUNDLE,{signal}),installedVersion=(await suiteFacts()).version;
+        signal?.throwIfAborted();let latestVersion=releases.latestVersion;
+        if(latestVersion&&installedVersion&&semver.gt(latestVersion,installedVersion)){const plan=await installer.prepareSuiteUpgrade();signal?.throwIfAborted();latestVersion=plan.bundle.to;}
+        return{...releases,latestVersion,installedVersion,upgradeAvailable:Boolean(latestVersion&&installedVersion&&semver.gt(latestVersion,installedVersion))};
+      }
       const {item}=await resolveTarget(input);requireCondition(item.installTarget.source==='npm','NOT_INSTALLABLE','Version selection requires an npm source.');
-      return{...await versionCatalog.read(item.package.name),installedVersion:item.installed?.version??null};
+      const releases=await versionCatalog.read(item.package.name,{signal}),installedVersion=item.installed?.version??null;signal?.throwIfAborted();
+      return{...releases,installedVersion,upgradeAvailable:Boolean(releases.latestVersion&&installedVersion&&semver.gt(releases.latestVersion,installedVersion))};
     },
     sources(){return{sources:structuredClone(state.sources),revision:state.revision};},
     /** Suite package registry selection is independent of catalog manifest sources. */

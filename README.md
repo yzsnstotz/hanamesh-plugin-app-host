@@ -1,3 +1,5 @@
+R162：预装 `@hanamesh/brand` 的前后端保护身份统一；目录和已装事实先显示，版本信息按项异步补充，受控并发/短期复用并随页面取消。完整预算与边界见 [R162首屏与保护](docs/LIBRARY.md#r162-首屏与保护边界)。
+
 应用库版本管理：卡片和详情显示已装与最新兼容版本；可升级或选择历史 npm 版本，逐次确认后交给正式 DSH CLI 精确安装。失败保留原诊断与逐项恢复结果；需要完全退出并重开。版本查询失败显示错误，不冒充已是最新。详见 [版本管理](docs/LIBRARY.md#vr1-市场版本管理)。
 
 0.6.26 候选：Codex 官方 GitHub 市场 URL 的 `.git` 后缀按精确仓库身份归一；市场映射与每项安装来源独立校验，不同仓库、凭据、查询、fragment 仍拒绝。CD2 扩大只读覆盖：ChatGPT 桌面 App 内置 Codex CLI、SemVer 预发布版本（仍须不低于最低版本）；官方用户资料目录不存在即判未安装；HanaMesh 客户端从磁盘读取 DSH 桌面版 profile（`~/.dsh/profiles/desktop`）给出 DSH 渠道已安装/未安装。检测不执行安装或配置写入，见[安装状态](docs/INSTALLATION_STATUS.md)。
@@ -26,7 +28,7 @@ PK1 兼容候选：开发输入更新为 DSH 0.2.2-rc.1 / Cordis 4.1.0 / Schemas
 
 > I51 R1 返修（待复审）：供应商指引跟随宿主中英菜单，默认正文只写用途和结果；实现解释、交接固定规则及具名设置默认值保留在技术详情。交接的保存操作与套件来源选择前置，自有字段按单列排列；设置值、默认值、权限、读写协议均不变。
 
-0.6.13 候选只消费新 npm 三包身份；插件 id、服务与存储不变。新旧 Core/Usage/Brand 均受保护，Recommender 不属于套件。0.6.12 原件保持原行为。
+0.6.13 候选只消费新 npm 三包身份；插件 id、服务与存储不变。Core、Usage、AppHost、总包与当前 Brand 受保护，Recommender 不属于套件。0.6.12 原件保持原行为。
 >
 > 已知限制 / Known limitations：官方 DSH rc.2 设置页在 390 CSS px 下仍保留固定侧栏，插件内容可用宽度受宿主挤压；本插件不改变客户端或全局 CSS，不能保证该宿主窄屏下标题、原生下拉选项及输入值完整可见。完整设置操作建议使用宽窗口。At 390 CSS px, the official DSH rc.2 settings sidebar leaves limited room for plugin content; titles, native select options and input values may remain constrained. Use a wider window for full settings operations. AppHost only controls its own content and does not modify the client or global CSS. 此限制按编排本次裁定披露，不报告整页390通过。Brand M01既有错误可见性限制仍开；静态profile peers check红流不改写为通过。
 
@@ -56,7 +58,7 @@ CLI-8：未配置来源的新用户默认请求 HanaMesh 视图（`https://marke
 
 0.6.5 历史交付：Git 依赖安装先清除继承的凭据 helper，再只使用 gh；安装与测试入口监测到 osxkeychain 即失败。套件能力沿用 0.6.4：套件只显示一张官方卡，读回实际组件版本；兼容升级展示三个固定组件的版本变化并需本人确认，升级后完全退出并重开。原有DSH 本地 `install-target` 与网站交接监听共用允许网站名单，未获准网站不能读客户端能力；`library.handoff.pollMs` 保存后在真实存储重启中保留，旧记录缺字段仍用默认值。
 
-> 2026-10-15 · 0.6.1（核查修正）：①探测只回答「允许交接的网站」，别的网站拿不到客户端、就绪、缺什么；②交接出错不再被吞：过期分成「客户端没来取 / 确认框打不开 / 弹出后没回复」，确认框打不开报 `HANDOFF_OPEN_FAILED` 带原因，上报失败、读取失败在应用库里提示并写日志；免重启装完读回 profile 失败会照实提示；③轮询间隔成为设置 `library.handoff.pollMs`（默认 1500 毫秒）；去掉端口数、网站数、过期上下限、预检缓存、读包标识超时这些写死的限值，剩下的固定规则在设置页逐条列出并说明原因；④品牌插件 `hanamesh-brand` 进保护名单，不可从市场卸载；⑤测试临时目录全部在进程退出时删除（失败也删），有守卫测试。
+> 2026-10-15 · 0.6.1（核查修正）：①探测只回答「允许交接的网站」，别的网站拿不到客户端、就绪、缺什么；②交接出错不再被吞：过期分成「客户端没来取 / 确认框打不开 / 弹出后没回复」，确认框打不开报 `HANDOFF_OPEN_FAILED` 带原因，上报失败、读取失败在应用库里提示并写日志；免重启装完读回 profile 失败会照实提示；③轮询间隔成为设置 `library.handoff.pollMs`（默认 1500 毫秒）；去掉端口数、网站数、过期上下限、预检缓存、读包标识超时这些写死的限值，剩下的固定规则在设置页逐条列出并说明原因；④品牌插件 `@hanamesh/brand` 在保护名单，不可从市场卸载；⑤测试临时目录全部在进程退出时删除（失败也删），有守卫测试。
 > 2026-10-15 · 0.6.0（第 2 段 Session E）：①网站交接——应用库在 127.0.0.1 上另起交接监听（默认端口 39317/39318/39319），网站探测、交接、轮询状态，客户端窗口弹出原有确认，用户确认才安装（C-MARKET 2026-10-15 追加）；②宿主有公开 `pluginManager` 时插件安装/卸载改由它完成，装完即加载、无需重启（结果 `applied`）；③探测返回真实客户端 `dsh`/`hanamesh` 和「还不能安装」的具体原因；④设置页新增「网站安装交接」，端口、允许的网站、过期时间都可见可改。
 
 > D-230 / 0.5.9 candidate: each acquired AppHost route, optional-service listener, observer, resolver, domain and host now registers its release immediately. Failed activation drains the acquired resources and preserves the original error; cleanup failures produce only a named APPHOST_CLEANUP_FAILED diagnostic. Normal unload uses the same once-only releases. Ordinary-app admission, original presentation/success facts, native isolation and final-package U2 remain separate gates.

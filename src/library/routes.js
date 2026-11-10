@@ -73,7 +73,13 @@ export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,a
     else if(path==='/hanamesh/library/suite/status'){requireCondition(Object.keys(input).length===0,'INVALID_INPUT','Suite status takes no parameters.');result=await library.suiteStatus();}
     else if(path==='/hanamesh/library/version-target')result=await library.resolveVersionTarget(input);
     else if(path==='/hanamesh/library/version/install')result=await library.installVersion(input);
-    else if(path==='/hanamesh/library/versions')result=await library.versions(input);
+    else if(path==='/hanamesh/library/versions'){
+      // Same transport lifetime as the existing read-only installation-status route.
+      const controller=new AbortController(),abort=()=>{if(!res.writableEnded)controller.abort();};req.once('aborted',abort);res.once('close',abort);
+      try{if(req.aborted||res.destroyed)controller.abort();result=await library.versions(input,{signal:controller.signal});if(controller.signal.aborted)return;}
+      catch(error){if(controller.signal.aborted)return;throw error;}
+      finally{req.off('aborted',abort);res.off('close',abort);}
+    }
     else if(path==='/hanamesh/library/target')result=await library.resolveTarget(input);
     else if(path==='/hanamesh/library'&&readOnly){requireCondition(Object.keys(input).every(key=>['q','category','cursor'].includes(key)),'UNKNOWN_FIELDS','Unknown library parameters.');result=await library.list(input);}
     else if(path==='/hanamesh/library/sources'&&readOnly)result=library.sources();

@@ -670,6 +670,21 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     const response=await globalThis.fetch.bind(globalThis)(path,{...init,headers:{'x-hanamesh-client':'workspace-v1',...(init.body?{'content-type':'application/json'}:{}),...init.headers}});
     const value=await response.json();if(!response.ok){const error=new Error(value?.error?.code??`HTTP_${response.status}`);error.response=value;throw error;}return value;
   };
+  /** Per-view display metadata only; exact installation preview always re-reads its own target. */
+  function createVersionQueries({concurrency,cacheMs,read,notify}){
+    if(!Number.isSafeInteger(concurrency)||concurrency<1||concurrency>16||!Number.isSafeInteger(cacheMs)||cacheMs<=0)throw new Error('PLUGIN_VERSION_QUERY_CONFIG_INVALID');
+    const entries=new Map(),queue=[];let active=0,closed=false;
+    const publish=(entry,value)=>{if(!closed&&!entry.cancelled&&entries.get(entry.id)===entry)notify(entry.id,{key:entry.key,...value});};
+    const cancel=entry=>{if(entry.cancelled)return;entry.cancelled=true;if(entries.get(entry.id)===entry)entries.delete(entry.id);entry.controller.abort();entry.reject(new Error('PLUGIN_VERSION_QUERY_CANCELLED'));};
+    const pump=()=>{while(!closed&&active<concurrency&&queue.length){const entry=queue.shift();if(entry.cancelled)continue;active++;
+      Promise.resolve().then(()=>read(entry.id,entry.controller.signal)).then(result=>{if(entry.cancelled)return;entry.finishedAt=Date.now();entry.state='ready';publish(entry,{...result,loading:false,error:null});entry.resolve(result);},error=>{if(entry.cancelled)return;entry.finishedAt=Date.now();entry.state='failed';publish(entry,{loading:false,error:String(error.code??error.message??error),latestVersion:null,upgradeAvailable:false});entry.reject(error);}).finally(()=>{active--;pump();});
+    }};
+    const ensure=descriptor=>{const prior=entries.get(descriptor.id);if(prior?.key===descriptor.key&&(prior.state==='loading'||Date.now()-prior.finishedAt<cacheMs))return prior.promise;
+      if(prior)cancel(prior);if(closed)return Promise.reject(new Error('PLUGIN_VERSION_QUERY_CANCELLED'));
+      const entry={...descriptor,controller:new AbortController(),state:'loading',cancelled:false};entry.promise=new Promise((resolve,reject)=>{entry.resolve=resolve;entry.reject=reject;});entry.promise.catch(()=>{});entries.set(entry.id,entry);queue.push(entry);publish(entry,{loading:true,error:null});pump();return entry.promise;
+    };
+    return{read:ensure,reconcile(descriptors){const wanted=new Map(descriptors.map(row=>[row.id,row.key]));for(const entry of entries.values())if(wanted.get(entry.id)!==entry.key)cancel(entry);for(const row of descriptors)if(row.automatic)void ensure(row);},close(){if(closed)return;closed=true;for(const entry of entries.values())cancel(entry);queue.length=0;}};
+  }
   const entryId=entry=>entry.projection==='file'?`file:${entry.base??'home'}:${entry.path}`:`env:${entry.env}`;
   function ProvidersSection(){useLocale();
     const[providers,setProviders]=React.useState([]),[apps,setApps]=React.useState([]),[plans,setPlans]=React.useState({}),[error,setError]=React.useState('');
@@ -910,7 +925,7 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
   const KIND_TEXT={application:t('应用'),plugin:t('插件'),listing:t('仅收录')};
   const STATE_TEXT={registered:t('已安装'),installed:t('已安装'),'installed-not-loaded':t('需重启'),'uninstalled-not-unloaded':t('已卸载 · 需重启'),'runtime-missing':t('缺运行时'),invalid:t('包无效')};
   // Mirrors PROTECTED_PACKAGES on the host: the suite is never offered an uninstall button (the host answers 403 anyway).
-  const PROTECTED=new Set(['@hanamesh/hanamesh','@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host','hanamesh-brand']);
+  const PROTECTED=new Set(['@hanamesh/hanamesh','@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host','@hanamesh/brand']);
   function RestartNotice({reason}){useLocale();
     return h('p',{role:'status',className:'hm-restart-notice','data-hanamesh-restart':'required'},h('strong',null,t('需重新打开客户端')),' ',reason??t('插件更改需要重新打开客户端后生效。'),' ',h('span',{className:'hm-restart-hint'},t('请完全退出 HanaMesh 客户端或 DSH 后重新打开；关闭窗口不等于退出。')));
   }
@@ -958,6 +973,7 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
   function LibraryOverlay({embedded,mainPage=false,preferredSubsectionId,verification=false}={}){useLocale();
     const[visible,setVisible]=React.useState(embedded?true:libraryVisible),[snapshot,setSnapshot]=React.useState(null),[error,setError]=React.useState(''),[receipt,setReceipt]=React.useState(null),[query,setQuery]=React.useState(''),[filter,setFilter]=React.useState(''),[extra,setExtra]=React.useState([]),[pending,updatePending]=React.useState(pendingOperations),[seenCategories,setSeenCategories]=React.useState([]),[changed,setChanged]=React.useState(false),[openingAppId,setOpeningAppId]=React.useState(null),[closing,setClosing]=React.useState(false);
     const[versionLists,setVersionLists]=React.useState({});
+    const versionQueries=React.useRef(null);
     const[detailId,setDetailId]=React.useState(null),[acceptedTarget,setAcceptedTarget]=React.useState(null),[libraryTab,setLibraryTab]=React.useState('all'),[credibility,setCredibility]=React.useState(null);
     React.useEffect(()=>{let live=true;setCredibility(null);if(detailId&&visible)void readCredibility(snapshot?.source,{id:detailId}).then(value=>{if(live)setCredibility(value);});return()=>{live=false;};},[detailId,visible,snapshot?.source?.manifestUrl]);
     const[target,updateTarget]=React.useState(targetSelection),[targetItemId,setTargetItemId]=React.useState(''),[targetPackageName,setTargetPackageName]=React.useState('');
@@ -1027,6 +1043,16 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
     const load=React.useCallback(async()=>{try{setError('');setExtra([]);const page=await request('/hanamesh/library'+params());setSnapshot(page);remember(page);}catch(e){setError(e);}},[params]);
     const more=async()=>{try{const cursor=(extra.at(-1)??snapshot)?.page?.nextCursor;if(!cursor)return;const next=await request('/hanamesh/library'+params(cursor));setExtra(list=>[...list,next]);remember(next);}catch(e){if(String(e.message??e)==='CATALOG_CHANGED'){setSnapshot(null);setExtra([]);}setError(e);}};
     React.useEffect(()=>{if(visible)void load();},[visible,load]);
+    const versionDescriptor=item=>({id:item.id,key:JSON.stringify([snapshot?.source,snapshot?.versionQueries?.scope,item.package?.name,item.installed?.version??item.suite?.version??null]),automatic:item.kind==='suite'||Boolean(item.installed&&item.installTarget?.source==='npm')});
+    React.useEffect(()=>()=>{versionQueries.current?.close();versionQueries.current=null;},[]);
+    React.useEffect(()=>{
+      if(!visible||!snapshot?.versionQueries){if(versionQueries.current){versionQueries.current.close();versionQueries.current=null;if(!visible){setSnapshot(null);setExtra([]);setVersionLists({});}}return;}
+      const settings=snapshot.versionQueries,signature=JSON.stringify([settings.concurrency,settings.cacheMs]);
+      if(versionQueries.current?.signature!==signature){versionQueries.current?.close();versionQueries.current={...createVersionQueries({...settings,read:(id,signal)=>request('/hanamesh/library/versions?'+new URLSearchParams({itemId:id}),{signal}),notify:(id,value)=>setVersionLists(previous=>{const prior=previous[id]?.key===value.key?previous[id]:{};return{...previous,[id]:{...prior,...value,...(value.versions?{selected:prior.selected??value.versions.find(row=>row.compatible&&row.version!==value.installedVersion)?.version??''}:{})}};})}),signature};}
+      const all=[snapshot,...extra].flatMap(page=>page?.items??[]),shown=filter==='plugin'?all.filter(item=>item.kind==='plugin'||item.kind==='suite'):all;
+      versionQueries.current.reconcile(shown.map(versionDescriptor));
+    },[visible,snapshot,extra,filter]);
+
     React.useEffect(()=>{if(visible&&['installed','installed-live'].includes(target?.status))void load();},[visible,load,target?.status]);
     // rc.18: install/provision/uninstall are 202 + events. Track the operation per card so the user sees
     // 「安装中…」 and, on failure, the code with a readable reason (user 2026-09-20: clicked install, nothing happened).
@@ -1095,20 +1121,27 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
     };
     const close=async()=>{if(closing)return;setClosing(true);try{await heldView.current?.close();setReceipt(null);setError('');}catch(e){setError(e);}finally{if(mounted.current)setClosing(false);}};
     if(!visible)return null;
-    const pages=[snapshot,...extra].filter(Boolean),all=pages.flatMap(page=>page.items??[]),items=filter==='plugin'?all.filter(item=>item.kind==='plugin'||item.kind==='suite'):all,installed=snapshot?.installed??[],plugins=snapshot?.plugins??[],nextCursor=(extra.at(-1)??snapshot)?.page?.nextCursor??null;
+    const pages=[snapshot,...extra].filter(Boolean),all=pages.flatMap(page=>page.items??[]),items=(filter==='plugin'?all.filter(item=>item.kind==='plugin'||item.kind==='suite'):all).map(item=>{const state=versionLists[item.id];return state&&(!state.key||state.key===versionDescriptor(item).key)?{...item,...(Object.hasOwn(state,'latestVersion')?{latestVersion:state.latestVersion,upgradeAvailable:state.upgradeAvailable??item.upgradeAvailable}:{}),versionError:state.error??item.versionError}:item;}),installed=snapshot?.installed??[],plugins=snapshot?.plugins??[],nextCursor=(extra.at(-1)??snapshot)?.page?.nextCursor??null;
     const restartRequired=changed||Boolean(snapshot?.restartRequired);
     const filters=[...BASE_FILTERS,...seenCategories.filter(c=>c!=='hanamesh-app').map(c=>[c,c])];
     const openButton=row=>h('button',{type:'button',disabled:Boolean(openingAppId),onClick:()=>void open(row)},openingAppId===row.appId?t('打开中…'):t('打开'));
     const reviewVersion=(item,version)=>openInstallTarget({itemId:item.kind==='suite'?'hanamesh:suite-upgrade':item.id,version},{versionSelection:true}).catch(()=>{});
     const versionControls=item=>{
       if(item.kind!=='suite'&&item.installTarget?.source!=='npm')return null;
-      const state=versionLists[item.id];
-      const read=async()=>{setVersionLists(previous=>({...previous,[item.id]:{loading:true}}));try{const result=await request('/hanamesh/library/versions?'+new URLSearchParams({itemId:item.id}));setVersionLists(previous=>({...previous,[item.id]:{...result,selected:result.versions.find(row=>row.compatible&&row.version!==item.installed?.version)?.version??''}}));}catch(error){setVersionLists(previous=>({...previous,[item.id]:{error:String(error.message??error)}}));}};
+      const saved=versionLists[item.id],state=saved?.key&&saved.key!==versionDescriptor(item).key?undefined:saved;
+      const read=async()=>{
+        const descriptor=versionDescriptor(item);
+        setVersionLists(previous=>({...previous,[item.id]:{...(previous[item.id]?.key===descriptor.key?previous[item.id]:{}),key:descriptor.key,expanded:true}}));
+        if(versionQueries.current){void versionQueries.current.read(descriptor).catch(()=>{});return;}
+        setVersionLists(previous=>({...previous,[item.id]:{...previous[item.id],loading:true}}));
+        try{const result=await request('/hanamesh/library/versions?'+new URLSearchParams({itemId:item.id}));setVersionLists(previous=>({...previous,[item.id]:{...result,expanded:true,selected:result.versions.find(row=>row.compatible&&row.version!==item.installed?.version)?.version??''}}));}
+        catch(error){setVersionLists(previous=>({...previous,[item.id]:{expanded:true,error:String(error.message??error)}}));}
+      };
       return h('div',{className:'hm-plugin-versions'},
         item.latestVersion?h('p',{'data-hanamesh-latest-version':item.latestVersion},t('最新兼容版本：')+item.latestVersion):item.versionError?h('p',{role:'alert'},t('版本查询失败：')+item.versionError):null,
         h('button',{type:'button',disabled:state?.loading,onClick:()=>void read()},t(state?.loading?'正在读取版本…':'选择历史版本')),
-        state?.error?h('p',{role:'alert'},t('版本查询失败：')+state.error):null,
-        state?.versions?h('div',null,h('select',{'aria-label':t('插件版本'),value:state.selected,onChange:event=>setVersionLists(previous=>({...previous,[item.id]:{...previous[item.id],selected:event.target.value}}))},h('option',{value:'',disabled:true},t('插件版本')),...state.versions.map(row=>h('option',{key:row.version,value:row.version,disabled:!row.compatible||row.version===item.installed?.version},row.version+(row.compatible?'':' · '+t('不兼容'))))),h('button',{type:'button',disabled:!state.selected,onClick:()=>void reviewVersion(item,state.selected)},t('安装所选版本'))):null);
+        state?.error&&state.error!==item.versionError?h('p',{role:'alert'},t('版本查询失败：')+state.error):null,
+        state?.expanded&&state?.versions?h('div',null,h('select',{'aria-label':t('插件版本'),value:state.selected,onChange:event=>setVersionLists(previous=>({...previous,[item.id]:{...previous[item.id],selected:event.target.value}}))},h('option',{value:'',disabled:true},t('插件版本')),...state.versions.map(row=>h('option',{key:row.version,value:row.version,disabled:!row.compatible||row.version===item.installed?.version},row.version+(row.compatible?'':' · '+t('不兼容'))))),h('button',{type:'button',disabled:!state.selected,onClick:()=>void reviewVersion(item,state.selected)},t('安装所选版本'))):null);
     };
     const card=(item,detail=false)=>{const row=item.installed,op=pending[item.id],busy=op?.busy;const installBody={itemId:item.id,...(item.package?.name?{packageName:item.package.name}:{}),...(item.installTarget?{installTarget:item.installTarget}:{})};
       const reviewOrInstall=label=>row&&item.latestVersion?reviewVersion(item,item.latestVersion):item.installTarget?openInstallTarget(installBody).catch(()=>{}):operate('/hanamesh/library/install',installBody,item.id,label);

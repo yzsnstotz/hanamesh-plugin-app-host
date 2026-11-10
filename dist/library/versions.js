@@ -42,10 +42,12 @@ export function createNpmVersionCatalog({registry='https://registry.npmjs.org/',
   }
   return null;
  }
- async function read(name){
+ async function read(name,{signal}={}){
   requireCondition(packageName(name),'INVALID_INPUT','A valid npm package name is required.');
+  const budget=AbortSignal.timeout(timeoutMs),readSignal=signal?AbortSignal.any([signal,budget]):budget;
   try{
-   const response=await fetchImpl(new URL(encodeURIComponent(name),url).href,{method:'GET',credentials:'omit',redirect:'error',headers:{accept:'application/json'},signal:AbortSignal.timeout(timeoutMs)});
+   readSignal.throwIfAborted();
+   const response=await fetchImpl(new URL(encodeURIComponent(name),url).href,{method:'GET',credentials:'omit',redirect:'error',headers:{accept:'application/json'},signal:readSignal});
    requireCondition(response.ok,'PLUGIN_VERSIONS_UNAVAILABLE','Could not read published plugin versions.',{status:response.status},502);
    const chunks=[];let bytes=0;
    for await(const chunk of response.body){bytes+=chunk.length;requireCondition(bytes<=maxBytes,'PLUGIN_VERSIONS_UNAVAILABLE','Plugin version metadata exceeds the configured limit.',{},502);chunks.push(chunk);}
@@ -53,6 +55,7 @@ export function createNpmVersionCatalog({registry='https://registry.npmjs.org/',
    requireCondition(data.name===name&&data.versions&&typeof data.versions==='object'&&!Array.isArray(data.versions),'PLUGIN_VERSIONS_UNAVAILABLE','The registry returned invalid plugin metadata.',{},502);
    const versions=[],peers=new Map();const peer=name=>{if(!peers.has(name))peers.set(name,Promise.resolve().then(()=>peerVersion(name)));return peers.get(name);};
    for(const version of Object.keys(data.versions).filter(v=>semver.valid(v)===v).sort(semver.rcompare)){
+    readSignal.throwIfAborted();
     const record=data.versions[version];if(record?.name!==name||record.version!==version)continue;
     const failure=record.deprecated?'PLUGIN_VERSION_DEPRECATED':await reason(record,peer);
     versions.push({version,compatible:failure===null,...(failure?{reason:failure}:{})});
@@ -60,7 +63,7 @@ export function createNpmVersionCatalog({registry='https://registry.npmjs.org/',
    // Prereleases remain selectable; the default follows latest's stable/prerelease channel.
    const latest=data['dist-tags']?.latest,prerelease=typeof latest==='string'&&semver.valid(latest)&&semver.prerelease(latest)!==null;
    const latestVersion=versions.find(row=>row.compatible&&(prerelease||semver.prerelease(row.version)===null))?.version??null;
-   return{packageName:name,registry:url.href,latestVersion,versions};
+   readSignal.throwIfAborted();return{packageName:name,registry:url.href,latestVersion,versions};
   }catch(error){if(error instanceof AppHostError)throw error;throw new AppHostError('PLUGIN_VERSIONS_UNAVAILABLE','Could not read published plugin versions.',{cause:String(error.message??error)},502);}
  }
  return{read,forRegistry:value=>createNpmVersionCatalog({registry:value,fetchImpl,peerVersion,nodeVersion,anchor,timeoutMs,maxBytes}),async select(name,version){requireCondition(typeof version==='string'&&semver.valid(version)===version,'INVALID_INPUT','Select an exact published version.');const result=await read(name),row=result.versions.find(row=>row.version===version);requireCondition(row?.compatible,'PLUGIN_VERSION_INCOMPATIBLE','The selected version is unavailable or incompatible with this client.',{version,reason:row?.reason??'PLUGIN_VERSION_MISSING'},409);return row;}};

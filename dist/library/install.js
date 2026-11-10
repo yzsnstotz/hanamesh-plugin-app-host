@@ -14,7 +14,7 @@ import {SUITE_BUNDLE,prepareSuiteUpgrade,readSuiteStatus,createCoreSuiteAdapter}
 import {packageInstallTarget,installTargetName,pinnedGithubSpec} from './github-target.js';
 
 /** Suite packages are changed only by the confirmed suite upgrade command. */
-export const PROTECTED_PACKAGES=Object.freeze([SUITE_BUNDLE,'@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host','hanamesh-brand']);
+export const PROTECTED_PACKAGES=Object.freeze([SUITE_BUNDLE,'@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host','@hanamesh/brand']);
 const blocked=new Set(PROTECTED_PACKAGES);
 const packageName=value=>typeof value==='string'&&/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(value);
 async function json(path){return JSON.parse(await readFile(path,'utf8'));}

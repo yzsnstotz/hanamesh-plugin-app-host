@@ -61,7 +61,7 @@ test('AH-M02: plugin uninstall is `dsh plugin remove <name>`; the HanaMesh suite
   const result=await installer.uninstallPlugin({packageName:'dsh-plugin-tether'});
   assert.deepEqual(result,{status:'restart-required',kind:'plugin',packageName:'dsh-plugin-tether'});
   assert.deepEqual(calls[0].args,[resolve('/opt/dsh/lib/bin.js'),'plugin','--profile','web','remove','dsh-plugin-tether']);
-  assert.deepEqual([...PROTECTED_PACKAGES].sort(),['@hanamesh/core','@hanamesh/dsh-app-host','@hanamesh/hanamesh','@hanamesh/usage','hanamesh-brand']);
+  assert.deepEqual([...PROTECTED_PACKAGES].sort(),['@hanamesh/brand','@hanamesh/core','@hanamesh/dsh-app-host','@hanamesh/hanamesh','@hanamesh/usage']);
   for(const name of PROTECTED_PACKAGES){
     await assert.rejects(installer.uninstallPlugin({packageName:name}),{code:'PACKAGE_DENIED'});
     await assert.rejects(installer.install({...plugin,installTarget:{...plugin.installTarget,name}}),{code:'PACKAGE_DENIED'});
@@ -193,4 +193,24 @@ test('AH-M07 (client source): the entry is 「市场」, cards carry kind/state/
   const clientProtected=JSON.parse(source.match(/const PROTECTED=new Set\((\[[^\]]*\])\)/)[1].replaceAll("'",'"'));
   assert.deepEqual(clientProtected.sort(),[...PROTECTED_PACKAGES].sort(),'no uninstall button for the suite (brand included), same list as the host');
   assert.doesNotMatch(source,/ctx\.get\(/,'the browser bundle never reads host services');
+});
+
+
+test('R162-F01 scoped Brand is a disk fact but both uninstall layers reject before mutation',async t=>{
+ const profile=await profileFixture(t,{dependencies:{'@hanamesh/brand':'0.1.4','dsh-plugin-tether':'0.1.17'},packages:{'@hanamesh/brand':{version:'0.1.4',dsh:{bundle:{patch:'./patch.yml'}}},'dsh-plugin-tether':{version:'0.1.17',dsh:{bundle:{patch:'./patch.yml'}}}}});
+ const {calls,installer}=installerDouble(profile);
+ let state={revision:0,sources:[]};const service=await createLibraryService({domain:{global:{get:async()=>state,set:async v=>{state=v}},close:async()=>{}},host:{instanceList:()=>[],list:()=>({apps:[]})},config:{profileDir:profile.profile,fixture},installer}).init();t.after(()=>service.close());
+ assert((await service.installedPlugins()).some(row=>row.packageName==='@hanamesh/brand'));
+ await assert.rejects(service.uninstallPlugin({packageName:'@hanamesh/brand'}),{code:'PACKAGE_DENIED'});
+ await assert.rejects(installer.uninstallPlugin({packageName:'@hanamesh/brand'}),{code:'PACKAGE_DENIED'});assert.equal(calls.length,0);
+ assert.equal(PROTECTED_PACKAGES.includes('hanamesh-brand'),false);
+ await service.uninstallPlugin({packageName:'dsh-plugin-tether'});await service.close();assert.equal(calls.length,1);assert.equal(calls[0].args.at(-1),'dsh-plugin-tether');
+});
+
+test('R162-F02 catalog and disk facts return without invoking suspended version reads',async t=>{
+ const profile=await profileFixture(t,{dependencies:{'@hanamesh/utility-plugin':'1.0.0'},packages:{'@hanamesh/utility-plugin':{version:'1.0.0',dsh:{bundle:{patch:'./patch.yml'}}}}});
+ let state={revision:0,sources:[]},reads=0;let release,mark;const suspended=new Promise(resolve=>{release=resolve}),started=new Promise(resolve=>{mark=resolve});
+ const service=await createLibraryService({domain:{global:{get:async()=>state,set:async v=>{state=v}},close:async()=>{}},host:{list:()=>({apps:[]})},config:{profileDir:profile.profile,fixture},versionCatalog:{read:async()=>{reads++;mark();await suspended;return{latestVersion:'1.1.0',versions:[]}}}}).init();t.after(()=>{release();return service.close()});
+ const pending=service.list({category:''});assert.equal(await Promise.race([pending.then(()=> 'listed'),started.then(()=> 'version-read')]),'listed','the list must settle before a version lookup starts');
+ assert.equal(reads,0,'listing must not start optional npm version reads');const page=await pending;assert(page.items.length>0);assert(page.plugins.some(row=>row.packageName==='@hanamesh/utility-plugin'));assert.equal(page.versionQueries.concurrency,4);
 });

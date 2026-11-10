@@ -60,3 +60,18 @@ test('VR1 failed suite replacement restores the original bundle and physical mem
  const catalog=createNpmVersionCatalog({fetchImpl:async()=>response(data),nodeVersion:'24.13.1',anchor:new URL('../package.json',import.meta.url),peerVersion:async name=>name==='@deepseek-ai/dsh'?'0.2.2-rc.1':'18.3.1'});
  const result=await catalog.read(name);assert.equal(result.latestVersion,'1.0.0');assert.equal(result.versions[0].reason,'PLUGIN_PEER_INCOMPATIBLE');
  });
+
+test('R162-F02 caller cancellation reaches the registry fetch without changing its timeout policy',async()=>{
+ const controller=new AbortController();let observed;
+ const catalog=createNpmVersionCatalog({fetchImpl:async(_url,{signal})=>{observed=signal;return new Promise((_resolve,reject)=>signal.addEventListener('abort',()=>reject(Error('cancelled')),{once:true}));}});
+ const pending=catalog.read(name,{signal:controller.signal});pending.catch(()=>{});controller.abort();assert.equal(observed.aborted,true);await assert.rejects(pending,{code:'PLUGIN_VERSIONS_UNAVAILABLE'});
+});
+
+test('R162-F02 closing a real HTTP version request aborts its registry operation',async t=>{
+ const {createServer}=await import('node:http'),{once}=await import('node:events'),{createLibraryHttpHandler}=await import('../src/library/routes.js');
+ const entered=Promise.withResolvers(),closed=Promise.withResolvers();let signal,handler;
+ const server=createServer((req,res)=>{res.once('close',()=>queueMicrotask(()=>closed.resolve()));void handler(req,res);});server.listen(0,'127.0.0.1');await once(server,'listening');t.after(async()=>{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
+ const origin='http://127.0.0.1:'+server.address().port;
+ handler=createLibraryHttpHandler({versions:async(_input,options)=>{signal=options.signal;entered.resolve();return new Promise((_resolve,reject)=>signal.addEventListener('abort',()=>reject(Error('cancelled')),{once:true}));}},{parentOrigin:origin,authenticate:async()=>({principalId:'fixture'}),authorize:async()=>true});
+ const controller=new AbortController(),pending=fetch(origin+'/hanamesh/library/versions?itemId=fixture',{signal:controller.signal});pending.catch(()=>{});await entered.promise;controller.abort();await assert.rejects(pending);await closed.promise;assert.equal(signal.aborted,true);
+});

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {clientHarness,settle} from './fixtures/client-ui-harness.mjs';
+import {clientHarness,settle,fakeClock} from './fixtures/client-ui-harness.mjs';
 import {acknowledgeInstall} from './fixtures/install-review.mjs';
 const item={id:'fixture:notes',displayName:'Notes fixture',summary:'Local source fixture',description:'Long fixture description',kind:'plugin',package:{registry:'npm',name:'fixture-notes'},installTarget:{source:'npm',name:'fixture-notes',version:'1.0.0',allowBuild:[]},source:{sourceId:'fixture',sourceRef:'notes',sourceLinks:[]},installed:null};
 const text=node=>!node?'':Array.isArray(node)?node.map(text).join(' '):typeof node==='object'?text(node.children):String(node);
@@ -86,4 +86,47 @@ test('VR1 suite confirmation shows the exact bundle transition when component ve
  await h.module.openInstallTarget({itemId:suite.id});await settle();
  const confirmation=h.find(node=>node.props['data-suite-confirmation']);assert(confirmation);assert.match(text(confirmation),/0\.1\.6 → 0\.1\.7/);
  assert.equal(h.find(node=>node.type==='button'&&node.children.includes('确认安装')).props.disabled,true);
+});
+
+
+test('R162-F01 scoped Brand has no installed-row uninstall control while third-party plugins remain operable',async t=>{
+ const h=await clientHarness({fetch:async()=>response({items:[],installed:[],plugins:[{packageName:'@hanamesh/brand',version:'0.1.4',state:'installed'},{packageName:'fixture-third-party',version:'1.0.0',state:'installed'}],page:{}})});t.after(()=>h.unmount());
+ assert.equal(Boolean(h.find(n=>n.props['data-hanamesh-installed']==='@hanamesh/brand')),false);
+ assert(h.find(n=>n.props['data-hanamesh-installed']==='fixture-third-party'));assert(h.find(n=>n.type==='button'&&n.children.includes('卸载')));
+});
+
+test('R162-F02 suspended versions preserve the first screen, bound concurrency, reuse reads and isolate item updates',async t=>{
+ const items=['alpha','beta','gamma'].map(name=>({...item,id:name,displayName:name,package:{registry:'npm',name},installed:{state:'installed',version:'1.0.0'},installTarget:{...item.installTarget,name}}));const pending=new Map(),calls=[];
+ const h=await clientHarness({fetch:async(path,init)=>{
+  if(path.startsWith('/hanamesh/library/versions?')){const id=new URL(path,'http://fixture').searchParams.get('itemId');calls.push(id);return new Promise((resolve,reject)=>{pending.set(id,{resolve:v=>resolve(response(v)),reject,signal:init.signal});init.signal.addEventListener('abort',()=>reject(Error('cancelled')),{once:true});});}
+  return response({source:{kind:'fixture'},versionQueries:{concurrency:2,cacheMs:30000,scope:'one'},items,installed:[],plugins:[{packageName:'fixture-third-party',version:'1.0.0',state:'installed'}],page:{}});
+ }});t.after(()=>h.unmount());
+ for(const name of ['alpha','beta','gamma'])assert.match(text(h.tree),new RegExp(name));assert(h.find(n=>n.type==='button'&&n.children.includes('详情')));assert(h.find(n=>n.type==='button'&&n.children.includes('卸载')));
+ assert.deepEqual(calls,['alpha','beta']);
+ pending.get('alpha').resolve({latestVersion:'1.1.0',installedVersion:'1.0.0',upgradeAvailable:true,versions:[{version:'1.1.0',compatible:true}]});await settle();assert.deepEqual(calls,['alpha','beta','gamma']);assert.match(text(h.tree),/1\.1\.0/);
+ pending.get('beta').reject(Error('REGISTRY_OFFLINE'));await settle();const beta=h.find(n=>n.props['data-hanamesh-library-item']==='beta');assert.match(text(beta),/REGISTRY_OFFLINE/);assert.doesNotMatch(text(h.find(n=>n.props['data-hanamesh-library-item']==='alpha')),/REGISTRY_OFFLINE/);
+ await h.click('搜索');await settle();assert.deepEqual(calls,['alpha','beta','gamma'],'same source/installed facts reuse both completed and pending reads');
+ h.unmount();assert.equal(pending.get('gamma').signal.aborted,true,'unmount aborts the outstanding request');
+});
+
+test('R162-F02 leaving the market cancels outstanding and queued reads, and stale responses never replace the next source',async t=>{
+ let source='one';const pending=[],items=['alpha','beta'].map(name=>({...item,id:name,displayName:name,installed:{state:'installed',version:'1.0.0'}}));
+ const h=await clientHarness({embedded:false,fetch:async(path,init)=>{if(path.startsWith('/hanamesh/library/versions?'))return new Promise(resolve=>pending.push({resolve,signal:init.signal}));return response({source:{kind:'fixture',path:source},versionQueries:{concurrency:1,cacheMs:30000,scope:source},items,installed:[],plugins:[],page:{}});}});t.after(()=>h.unmount());
+ await h.show();assert.equal(pending.length,1);await h.hide();assert.equal(pending[0].signal.aborted,true);
+ source='two';await h.show();assert.equal(pending.length,2);pending[0].resolve(response({latestVersion:'9.9.9',versions:[]}));await settle();assert.doesNotMatch(text(h.tree),/9\.9\.9/);assert.equal(pending.length,2,'old queue must not start after cancellation');
+ pending[1].resolve(response({latestVersion:'1.1.0',versions:[]}));await settle();assert.match(text(h.tree),/1\.1\.0/);
+});
+
+
+test('R162-F02 history and reload reuse fresh results while an expired result refreshes on the next explicit load',async t=>{
+ const clock=fakeClock();let calls=0;const current={...item,installed:{state:'installed',version:'1.0.0'}};
+ const h=await clientHarness({clock,fetch:async path=>{if(path.startsWith('/hanamesh/library/versions?')){calls++;return response({latestVersion:calls===1?'1.1.0':'1.2.0',installedVersion:'1.0.0',upgradeAvailable:true,versions:[{version:'1.2.0',compatible:true},{version:'1.1.0',compatible:true}]});}return response({source:{kind:'fixture'},versionQueries:{concurrency:1,cacheMs:1000,scope:'same'},items:[current],installed:[],plugins:[],page:{}});}});t.after(()=>h.unmount());
+ assert.equal(calls,1);await h.click('选择历史版本');assert.equal(calls,1);await h.click('搜索');assert.equal(calls,1);await clock.advance(1001);assert.equal(calls,1,'expiry is not automatic retry');await h.click('搜索');assert.equal(calls,2);assert.match(text(h.tree),/1\.2\.0/);
+});
+
+test('R162-F02 an uninstalled item expands on its first manual query and discards display metadata from a previous source',async t=>{
+ let scope='first',calls=0;
+ const h=await clientHarness({fetch:async path=>{if(path.startsWith('/hanamesh/library/versions?')){calls++;const version=scope==='first'?'1.1.0':'2.0.0';return response({latestVersion:version,installedVersion:null,upgradeAvailable:false,versions:[{version,compatible:true}]});}return response({source:{kind:'fixture',path:scope},versionQueries:{concurrency:1,cacheMs:30000,scope},items:[item],installed:[],plugins:[],page:{}});}});t.after(()=>h.unmount());
+ assert.equal(calls,0,'uninstalled items do not trigger automatic discovery');await h.click('选择历史版本');assert.equal(calls,1);assert.equal(Boolean(h.find(n=>n.type==='select'&&n.props['aria-label']==='插件版本')),true);assert.match(text(h.tree),/1\.1\.0/);
+ scope='second';await h.click('搜索');assert.doesNotMatch(text(h.tree),/1\.1\.0/,'old source display metadata must be invalidated even without an automatic query');await h.click('选择历史版本');assert.equal(calls,2);assert.equal(Boolean(h.find(n=>n.type==='select'&&n.props['aria-label']==='插件版本')),true);assert.match(text(h.tree),/2\.0\.0/);await h.click('选择历史版本');assert.equal(calls,2);
 });

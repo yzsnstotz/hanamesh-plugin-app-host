@@ -99,3 +99,12 @@ A2 0.6.22：普通插件必须有 Indexer 已审核的 installMethods 和 oneCli
 参考：dsh-market `f76b5f58ec553aba91b964f009a8561eea175011` 的 `src/updates.ts`、`src/routes.ts`、`src/official-desktop.ts`；DSH 0.2.2-rc.1 `dsh-plugin-manager` README 的 `listVersions`/`updateBundle`、`dsh-client-ui-plugin-manager` 版本确认 UI。DSH 的版本接口只列新版，`updateBundle` 拒绝旧版；本市场的完整历史切换沿用已有受监测正式 CLI，不移除旧包后再装，也不修改 DSH 本体。
 
 原生验收补充：总包确认页单独显示精确总包的已装→目标版本，即使三个业务成员未变。正式安装 CLI 保留宿主经绝对路径校验的 XDG_DATA_HOME，使 pnpm 沿用该 profile 首次安装的数据根；不转发任意环境、API token 或 proxy，不改 store、不重装依赖以掩盖 store 冲突。
+
+
+## R162 首屏与保护边界
+
+当前预装Brand包名为 `@hanamesh/brand`，与总包、Core、Usage、AppHost同属普通市场保护名单；已装事实可以读到它，但不提供卸载入口，服务与安装器都在执行正式CLI之前拒绝装卸。退休Brand包名不保留保护别名；普通第三方插件仍可卸载。
+
+目录与磁盘已装事实先返回，首屏不等待npm版本查询。客户端随后逐项调用现有 `/hanamesh/library/versions`；同一页面以 `library.versionLookupConcurrency`（默认4，整数1–16）限制在途查询，按项显示最新兼容版本或具名错误。`library.versionLookupCacheMs`（默认30000ms）仅复用同来源、同已装版本的展示结果和在途请求；过期后下一次明确加载才查询，不定时自动重试。历史下拉复用当前新鲜结果；来源或已装版本变化会失效，离开页面/卸载组件取消在途及排队项，旧响应不回写新来源。
+
+浏览器取消经既有HTTP断连生命周期传给registry fetch；原单次timeout、响应预算、匿名和拒绝重定向规则仍生效。展示缓存不进入安装授权：确认和安装仍重新读取精确目标、Core组合与物理baseline。借用dsh-market同一调研SHA的 `MarketSection.tsx` 分离installed/updates读取与展示缓存思路；HTTP取消复用本仓 `installation-status-http.js` 的res close/req aborted模式，不引入上游没有的DSH API。

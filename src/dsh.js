@@ -75,6 +75,8 @@ export const Config = z.object({
     /** Locations are inferred from the verified Desktop argv/profile or plain DSH (see library/locate.js). */
     profileDir:z.string(),profileName:z.string(),dshBin:z.string(),
     registry:z.string(),
+    versionLookupConcurrency:z.number().min(1).max(16).default(4),
+    versionLookupCacheMs:z.number().min(1).max(2147483647).default(30000),
     versionLookupTimeoutMs:z.number().min(1).max(2147483647).default(30000),
     versionLookupMaxBytes:z.number().min(1).default(16777216),
     /** Publicly named event history capacity; a lost cursor reports resetRequired. */
