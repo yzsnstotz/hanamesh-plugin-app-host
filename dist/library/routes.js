@@ -8,8 +8,8 @@ import { HANDOFF_DEFAULTS, HANDOFF_RULES, HANDOFF_SETTING_NAMES, HANDOFF_BODY_MA
 // Keep older route order; dsh.js registers each exact path on the public host API.
 export const LIBRARY_ROUTES=['/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/install','/hanamesh/library/provision','/hanamesh/library/uninstall','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/plugins/install','/hanamesh/library/plugins/uninstall','/hanamesh/library/target','/hanamesh/library/install-target','/hanamesh/library/handoffs','/hanamesh/library/handoffs/state','/hanamesh/library/handoff-settings','/hanamesh/library/suite/upgrade','/hanamesh/library/installation-status'];
 export const NODE_RUNTIME_ROUTES=['/hanamesh/library/node-runtime','/hanamesh/library/node-runtime/settings','/hanamesh/library/node-runtime/plan','/hanamesh/library/node-runtime/prepare','/hanamesh/library/node-runtime/cancel'];
-LIBRARY_ROUTES.push(...NODE_RUNTIME_ROUTES,'/hanamesh/library/suite-source');
-const READ_ROUTES=new Set(['/hanamesh/library/suite-source','/hanamesh/library/node-runtime','/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/target','/hanamesh/library/handoffs','/hanamesh/library/handoff-settings']);
+LIBRARY_ROUTES.push('/hanamesh/library/version-target','/hanamesh/library/version/install','/hanamesh/library/suite/status','/hanamesh/library/versions',...NODE_RUNTIME_ROUTES,'/hanamesh/library/suite-source');
+const READ_ROUTES=new Set(['/hanamesh/library/version-target','/hanamesh/library/suite/status','/hanamesh/library/versions','/hanamesh/library/suite-source','/hanamesh/library/node-runtime','/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/target','/hanamesh/library/handoffs','/hanamesh/library/handoff-settings']);
 async function jsonBody(req){
   requireCondition(req.headers['content-type']?.split(';')[0].trim()==='application/json','CONTENT_TYPE_REQUIRED','Expected application/json.',{},415);
   const chunks=[];let total=0;for await(const chunk of req){total+=chunk.length;requireCondition(total<=65_536,'BODY_TOO_LARGE','Request body is too large.',{},413);chunks.push(chunk);}
@@ -44,7 +44,7 @@ export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,a
     requireCondition(subject&&typeof subject.principalId==='string','UNAUTHENTICATED','Host authentication is required.',{},401);
     if(readOnly)requireCondition(new Set(url.searchParams.keys()).size===[...url.searchParams.keys()].length,'INVALID_INPUT','Duplicate query fields are not accepted.');
     const input=readOnly?Object.fromEntries(url.searchParams):await jsonBody(req);
-    if(readOnly&&path==='/hanamesh/library/target'&&input.installTarget!==undefined){try{input.installTarget=JSON.parse(input.installTarget);}catch{throw new AppHostError('INVALID_INPUT','installTarget must contain a structured catalog target.');}}
+    if(readOnly&&['/hanamesh/library/target','/hanamesh/library/version-target'].includes(path)&&input.installTarget!==undefined){try{input.installTarget=JSON.parse(input.installTarget);}catch{throw new AppHostError('INVALID_INPUT','installTarget must contain a structured catalog target.');}}
     requireCondition(await authorize(subject,path,input)===true,'FORBIDDEN','Operation is not authorized.',{},403);
     let result;
     if(NODE_RUNTIME_ROUTES.includes(path)){
@@ -70,6 +70,10 @@ export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,a
     else if(path==='/hanamesh/library/handoffs/state'){send(res,200,{...handoff.queue.report(input),traceId});return;}
     else if(path==='/hanamesh/library/handoff-settings'&&readOnly){requireCondition(Object.keys(input).length===0,'UNKNOWN_FIELDS','handoff-settings takes no parameters.');result={settings:library.handoffSettings(),defaults:HANDOFF_DEFAULTS,names:HANDOFF_SETTING_NAMES,rules:HANDOFF_RULES,listener:handoff.listener.state()};}
     else if(path==='/hanamesh/library/handoff-settings'){const settings=await library.replaceHandoffSettings(input);send(res,200,{settings,defaults:HANDOFF_DEFAULTS,names:HANDOFF_SETTING_NAMES,rules:HANDOFF_RULES,listener:await handoff.restart(),traceId});return;}
+    else if(path==='/hanamesh/library/suite/status'){requireCondition(Object.keys(input).length===0,'INVALID_INPUT','Suite status takes no parameters.');result=await library.suiteStatus();}
+    else if(path==='/hanamesh/library/version-target')result=await library.resolveVersionTarget(input);
+    else if(path==='/hanamesh/library/version/install')result=await library.installVersion(input);
+    else if(path==='/hanamesh/library/versions')result=await library.versions(input);
     else if(path==='/hanamesh/library/target')result=await library.resolveTarget(input);
     else if(path==='/hanamesh/library'&&readOnly){requireCondition(Object.keys(input).every(key=>['q','category','cursor'].includes(key)),'UNKNOWN_FIELDS','Unknown library parameters.');result=await library.list(input);}
     else if(path==='/hanamesh/library/sources'&&readOnly)result=library.sources();

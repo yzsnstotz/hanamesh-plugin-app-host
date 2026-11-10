@@ -1,3 +1,5 @@
+应用库版本管理：卡片和详情显示已装与最新兼容版本；可升级或选择历史 npm 版本，逐次确认后交给正式 DSH CLI 精确安装。失败保留原诊断与逐项恢复结果；需要完全退出并重开。版本查询失败显示错误，不冒充已是最新。详见 [版本管理](docs/LIBRARY.md#vr1-市场版本管理)。
+
 0.6.26 候选：Codex 官方 GitHub 市场 URL 的 `.git` 后缀按精确仓库身份归一；市场映射与每项安装来源独立校验，不同仓库、凭据、查询、fragment 仍拒绝。CD2 扩大只读覆盖：ChatGPT 桌面 App 内置 Codex CLI、SemVer 预发布版本（仍须不低于最低版本）；官方用户资料目录不存在即判未安装；HanaMesh 客户端从磁盘读取 DSH 桌面版 profile（`~/.dsh/profiles/desktop`）给出 DSH 渠道已安装/未安装。检测不执行安装或配置写入，见[安装状态](docs/INSTALLATION_STATUS.md)。
 
 0.6.25 候选：本机 HTTPS 目录允许回环端口及 *.localhost，修复彩排种子初始化阻断检测监听；公网 HTTPS 非标准端口仍拒绝。Claude 官方 GitHub 市场清单按 repo 身份核对，保留不同来源拒绝。安装物回归命令见[安装状态](docs/INSTALLATION_STATUS.md)，不以页面打开代替检测通过。

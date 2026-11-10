@@ -85,3 +85,15 @@ D1: DSH suite installation and upgrades use only @hanamesh/hanamesh. Core owns t
 
 
 A2 0.6.22：普通插件必须有 Indexer 已审核的 installMethods 和 oneClickInstall.allowed:true；仅执行其 npm 精确版本或完整 GitHub SHA。缺目标具名拒绝，不根据包名查可变版本标签。CLI 使用显式 library.registry（若有），否则保留宿主原生 registry 配置。删除普通插件按包名内部直装方法、元数据查询及其专用设置/规则加载。套件仅透传 Core installCommand。安装失败保留脱敏 CLI/读回诊断及补偿结果；精确版本发布后即可原生验收。
+
+## VR1 市场版本管理
+
+应用库/应用详情显示已装版本与最新兼容版本，一键升级默认选择该精确版本；“选择历史版本”列出发布版本，不兼容版本禁用。npm 发布元数据只用于发现，版本选择再次验证 Node、可观察 peer 和公开 DSH `evaluatePluginCompatibility`，缺失事实不会启用安装。总包继续由 Core 的 `getSuiteDeclaration({registry,profile,bundleVersion})` 决定三个业务组件的兼容组合。Theme 为总包分发依赖，不增加业务成员。
+
+新增插件自有的认证同源路由：GET `/hanamesh/library/versions?itemId=...`、GET `/hanamesh/library/version-target?itemId=...&version=...`、POST `/hanamesh/library/version/install`。后者只接受当前目录身份、精确版本及复读的安装目标，不接受 URL、命令或浏览器提供的 registry。已确认的总包仍 POST `/hanamesh/library/suite/upgrade`，GET `/hanamesh/library/suite/status` 返回从总包解析的物理组件读回。原 install-target v1 的 `/target` 与 `/install` 继续拒绝任意 version 字段；网站交接不改变。
+
+普通插件安装/升级/历史切换均复用 `dsh plugin --profile <实际profile> add --save-exact <name>@<version>`。总包执行 Core 提供的精确 argv；执行前按相同的显式版本请求复读来源、声明与物理 baseline。命令运行、精确读回或组件验证失败，先通过同一正式 CLI 补偿，再逐项比较依赖、包、选择与锁；原失败和恢复失败都可见，未核实不报告恢复成功。不会自动重试，不直接写 DSH 的 profile/lock，不全局放宽成熟期。安装后提示完全退出并重开；读回使用总包内部解析的真实子包，而非要求子包成为 profile 直接依赖。
+
+版本查询使用与安装一致的配置 registry；总包选择 Core 来源时从其公开 source state 读取并拒绝未就绪状态。`library.versionLookupTimeoutMs`（默认 30000）与 `library.versionLookupMaxBytes`（默认 16777216）限制每次匿名、拒绝重定向的读取。查询仅发生于页面上已装 npm 项和主动展开版本，不遍历整个市场；失败显示错误。
+
+参考：dsh-market `f76b5f58ec553aba91b964f009a8561eea175011` 的 `src/updates.ts`、`src/routes.ts`、`src/official-desktop.ts`；DSH 0.2.2-rc.1 `dsh-plugin-manager` README 的 `listVersions`/`updateBundle`、`dsh-client-ui-plugin-manager` 版本确认 UI。DSH 的版本接口只列新版，`updateBundle` 拒绝旧版；本市场的完整历史切换沿用已有受监测正式 CLI，不移除旧包后再装，也不修改 DSH 本体。

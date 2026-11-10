@@ -292,3 +292,7 @@ for the reviewed `/catalog-source.json?view=hanamesh` provider. Other catalog
 providers and unavailable/CORS-denied public reads retain “暂无”. The source's
 browser access rules are respected; there is no proxy/CORS bypass. Closing or
 switching details ignores stale replies.
+
+## VR1 版本切换（2026-11-10）
+
+新增市场本机版本路由、兼容检查、确认与恢复义务见 [LIBRARY.md 的 VR1 章节](LIBRARY.md#vr1-市场版本管理)。此能力不扩大 install-target v1/网站交接输入；普通安装协议仍不接受外部版本覆盖。总包依赖可为兼容范围，物理完整性按范围判断；Core 是总包兼容组合的唯一提供方，AppHost 只执行并读回。明确选择的旧总包版本在相同校验下可切换，默认操作仍只升级。

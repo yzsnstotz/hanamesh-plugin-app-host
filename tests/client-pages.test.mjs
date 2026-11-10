@@ -64,3 +64,17 @@ test('main details use their own title and hide library search and category tabs
  assert.equal(h.find(node=>node.props.role==='tablist'),undefined);
  assert.match(text(h.tree),/HanaMesh \/ 应用详情/);
 });
+
+test('VR1 installed cards show latest compatible version and selected history reopens exact confirmation',async t=>{
+ const current={...item,installed:{state:'installed',version:'1.0.0'},latestVersion:'1.1.0',upgradeAvailable:true};const calls=[];
+ const h=await clientHarness({fetch:async(path,init)=>{calls.push({path,init});if(path==='/hanamesh/library/version/install'){const input=JSON.parse(init.body);current.installed={...current.installed,packageName:current.package.name,version:input.version};return response({status:'already-installed'});}if(path.startsWith('/hanamesh/library/versions?'))return response({latestVersion:'1.1.0',versions:[{version:'2.0.0',compatible:false},{version:'1.1.0',compatible:true},{version:'0.9.0',compatible:true}]});if(path.startsWith('/hanamesh/library/version-target?'))return response({source:{kind:'fixture'},item:{...current,selectedVersion:new URL(path,'http://fixture').searchParams.get('version'),installTarget:{...item.installTarget,version:new URL(path,'http://fixture').searchParams.get('version')},upgradeAvailable:true}});return response({items:[current],installed:[],plugins:[],page:{}});}});t.after(()=>h.unmount());
+ assert.match(text(h.tree),/1\.0\.0/);assert.match(text(h.tree),/1\.1\.0/);
+ await h.click('升级');await settle();assert(calls.at(-1).path.includes('version=1.1.0'));assert.equal(calls.some(row=>row.init?.method==='POST'),false);
+ assert.equal(h.find(node=>node.type==='button'&&node.children.includes('确认安装')).props.disabled,true);
+ await h.click('取消');await h.click('选择历史版本');await settle();
+ const select=h.find(node=>node.type==='select'&&node.props['aria-label']==='插件版本');assert(select);
+ assert.equal(h.find(node=>node.type==='option'&&node.props.value==='2.0.0').props.disabled,true);
+ select.props.onChange({target:{value:'0.9.0'}});await settle();await h.click('安装所选版本');await settle();
+ assert(calls.at(-1).path.includes('version=0.9.0'));assert.equal(h.find(node=>node.type==='button'&&node.children.includes('确认安装')).props.disabled,true);
+ await acknowledgeInstall(h);await h.click('确认安装');await settle();const mutation=calls.find(row=>row.path==='/hanamesh/library/version/install');assert.equal(JSON.parse(mutation.init.body).version,'0.9.0');
+});

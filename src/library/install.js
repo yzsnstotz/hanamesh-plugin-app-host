@@ -118,10 +118,10 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
     try{
       base=await profileSnapshot(profileDir,name);
       stage='before-add';let version;const target=item.installTarget,github=target?.source==='github';
-      if(target.source==='npm'){version=target.version;installRegistry=registry??null;}
+      if(target.source==='npm'){version=target.version;installRegistry=context?.registry??registry??null;}
       const spec=github?pinnedGithubSpec(target.repo,target.ref,target.path):`${name}@${version}`;
       const status='restart-required';
-      stage='add';await run(['add','--save-exact',...(installRegistry===null?[]:[`--registry=${installRegistry}`]),...(target?.allowBuild??[]).map(entry=>`--allow-build=${entry}`),spec]);
+      stage='add';if(context?.installation)await runCli(context.installation.args);else await run(['add','--save-exact',...(installRegistry===null?[]:[`--registry=${installRegistry}`]),...(target?.allowBuild??[]).map(entry=>`--allow-build=${entry}`),spec]);
       stage='readback';const added=await profileSnapshot(profileDir,name);
       if(github){
         const actual=await json(join(profileDir,'node_modules',...name.split('/'),'package.json'));
@@ -129,6 +129,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
           'INSTALL_READBACK_MISMATCH','The profile does not resolve and enable the reviewed GitHub package.',{expected:spec,spec:added.spec,packageName:actual.name,active:added.bundles.includes(name)},502);
         version=actual.version;
       }else requireCondition(added.spec===version&&added.module===version,'INSTALL_READBACK_MISMATCH','The profile does not resolve the exact version that was added.',{expected:version,spec:added.spec,module:added.module},502);
+      if(context?.verify)await context.verify();
       if(kind==='plugin')return{status,kind,packageName:name,version,...(target?{installTarget:target}:{}),...(github?{commit:target.ref}:{})};
       stage='definition';const record=await installed(name);const declared=record.definition.deployments.map(deployment=>deployment.runtime).find(Boolean);
       if(declared){stage='provision';const root=runtimeRoot(record.definition.id);runtime={root,base:await runtimeSnapshot(await runtimeApi('ledger'),root)};
@@ -144,9 +145,9 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
   }
   let suitePlan;
   const suiteProvider=coreSuitePlan??createCoreSuiteAdapter({core:coreService,registry,profileName,suiteSourceMode,suiteSourceService});
-  async function previewSuite(){
-    const next=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider});
-    suitePlan={...next,planId:randomUUID()};return structuredClone(suitePlan);
+  async function previewSuite({bundleVersion}={}){
+    const next=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider,...(bundleVersion===undefined?{}:{bundleVersion})});
+    suitePlan={...next,requestedVersion:bundleVersion??null,planId:randomUUID()};return structuredClone(suitePlan);
   }
   return{
     get suiteUpgradeUnavailable(){return suiteProvider.unavailable??null;},
@@ -158,18 +159,18 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
     async upgradeSuite({planId}={}){return await profileWriter.run(async()=>{
       requireCondition(suitePlan?.planId===planId,'SUITE_PLAN_CHANGED','升级确认已变化，请重新查看并确认。',{},409);
       const confirmed=suitePlan;suitePlan=undefined;
-      const fresh=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider});
+      const fresh=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider,...(confirmed.requestedVersion===null?{}:{bundleVersion:confirmed.requestedVersion})});
       const identity=plan=>JSON.stringify({installation:plan.installation,sourceBinding:plan.sourceBinding,bundle:plan.bundle,components:plan.components,declarationId:plan.declarationId,registry:plan.registry,selectedUpgrade:plan.selectedUpgrade,physicalBaseline:plan.physicalBaseline});
       requireCondition(identity(fresh)===identity(confirmed),'SUITE_PLAN_CHANGED','套件声明或版本已变化，请重新查看并确认。',{},409);
       requireCondition(fresh.available,'SUITE_NO_UPDATE','当前没有兼容新版。',{},409);
       const before=await readSuiteStatus(profileDir);
       requireCondition(before.status==='installed'&&before.version===fresh.bundle.from&&fresh.components.every((c,i)=>before.components[i]?.version===c.from),'SUITE_PLAN_CHANGED','已装版本或启用状态已变化，请重新查看并确认。',{},409);
       requireCondition(cliAvailable,'DSH_CLI_UNAVAILABLE','套件升级需客户端随附的官方 CLI；请恢复后重试。',{},503);
-      const executing=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider});
+      const executing=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider,...(confirmed.requestedVersion===null?{}:{bundleVersion:confirmed.requestedVersion})});
       requireCondition(identity(executing)===identity(confirmed),'SUITE_PLAN_CHANGED','执行前套件安装包来源或声明已变化，请重新查看并确认。',{},409);
       emit({type:'library.install-started',itemId:'hanamesh:suite-upgrade',packageName:SUITE_BUNDLE,kind:'suite-upgrade'});
       try{
-        await runCli(fresh.installation.args);
+        await transaction({id:'hanamesh:suite-upgrade',package:{name:SUITE_BUNDLE},installTarget:{source:'npm',name:SUITE_BUNDLE,version:fresh.bundle.to,allowBuild:[]}},'plugin',{registry:fresh.registry,installation:fresh.installation,verify:async()=>{const actual=await readSuiteStatus(profileDir);requireCondition(actual.status==='installed'&&actual.version===fresh.bundle.to&&fresh.components.every((c,i)=>actual.components[i]?.version===c.to),'INSTALL_READBACK_MISMATCH','Suite component readback differs from the confirmed versions.',{},502);}});
         const actual=await readSuiteStatus(profileDir);
         const saved=await json(join(profileDir,'package.json'));
         requireCondition(actual.status==='installed'&&actual.version===fresh.bundle.to&&saved.dependencies?.[SUITE_BUNDLE]===fresh.bundle.to&&fresh.components.every((c,i)=>actual.components[i]?.version===c.to),'INSTALL_READBACK_MISMATCH','套件升级后的版本或启用状态不符，请完全退出后按补齐命令修复。',{},502);

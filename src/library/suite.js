@@ -29,7 +29,7 @@ export async function readSuiteStatus(profileDir){
       return{name,label,version:pkg?.name===name&&semver.valid(pkg.version)?pkg.version:null,active:selected};
     }));
     const version=bundle?.name===SUITE_BUNDLE&&semver.valid(bundle.version)?bundle.version:null;
-    return{status:version&&selected&&components.every(c=>c.version&&bundle.dependencies?.[c.name]===c.version)?'installed':'incomplete',version,components};
+    return{status:version&&selected&&components.every(c=>c.version&&typeof bundle.dependencies?.[c.name]==='string'&&semver.validRange(bundle.dependencies[c.name])&&semver.satisfies(c.version,bundle.dependencies[c.name]))?'installed':'incomplete',version,components};
   }catch{return{status:'unknown',version:null,components:[]};}
 }
 export const CORE_SUITE_DECLARATION_MISSING='Core 未提供套件声明';
@@ -98,9 +98,9 @@ export function createCoreSuiteAdapter({core=()=>undefined,registry,suiteSourceM
     requireCondition(current()===service,'CORE_SUITE_DECLARATION_MISSING',CORE_SUITE_DECLARATION_MISSING,{},503);
     return validateDeclaration(result);
   }
-  const get=async()=>{
+  const get=async({bundleVersion}={})=>{
     const binding=sourceBinding();
-    const declaration=await read({...(binding.registry===undefined?{}:{registry:binding.registry}),...(profileName===undefined?{}:{profile:profileName})});
+    const declaration=await read({...(binding.registry===undefined?{}:{registry:binding.registry}),...(profileName===undefined?{}:{profile:profileName}),...(bundleVersion===undefined?{}:{bundleVersion})});
     requireCondition(JSON.stringify(sourceBinding())===JSON.stringify(binding),'SUITE_PLAN_CHANGED','套件安装包来源已变化，请重新查看并确认。',{},409);
     requireCondition(declaration.completeness==='complete','CORE_SUITE_CURRENT_INCOMPLETE','Core 套件完整性：'+declaration.completeness,{completeness:declaration.completeness,blocked:declaration.blocked},409);
     let expected;try{const url=new URL(binding.registry);url.pathname=url.pathname.replace(/\/$/,'')+'/';expected=url.href;}catch{}
@@ -126,9 +126,9 @@ export function createCoreSuiteAdapter({core=()=>undefined,registry,suiteSourceM
  * Core owns candidate selection, completeness, ranges and compatibility; this module only checks
  * that an exact execution plan is well formed and confined to our three protected packages.
  */
-export async function prepareSuiteUpgrade({coreSuitePlan}={}){
+export async function prepareSuiteUpgrade({coreSuitePlan,bundleVersion}={}){
   requireCondition(typeof coreSuitePlan==='function','CORE_SUITE_DECLARATION_MISSING',CORE_SUITE_DECLARATION_MISSING,{},503);
-  const plan=await coreSuitePlan();
+  const plan=await coreSuitePlan(bundleVersion===undefined?undefined:{bundleVersion});
   requireCondition(plan!==undefined&&plan!==null,'CORE_SUITE_DECLARATION_MISSING',CORE_SUITE_DECLARATION_MISSING,{},503);
   const invalid=()=>requireCondition(false,'CORE_SUITE_DECLARATION_INVALID','Core 套件声明无法用于精确安装。',{},503);
   if(typeof plan!=='object'||Array.isArray(plan)||typeof plan.available!=='boolean'||!object(plan.bundle)||plan.bundle.name!==SUITE_BUNDLE||!exact(plan.bundle.from)||!exact(plan.bundle.to)||!nullableText(plan.installCommand)||!validInstallation(plan.installation,plan.bundle.to)||!Array.isArray(plan.components)||plan.components.length!==SUITE_PACKAGES.length)invalid();

@@ -113,7 +113,12 @@ export async function verifyAppHostPack(tarball){
   const peers=Object.fromEntries(Object.keys(pkg.peerDependencies).map(name=>[name,pkg.devDependencies[name]??(name.startsWith('@deepseek-ai/dsh-')?'0.2.2-rc.1':name==='react'?'18.3.1':pkg.peerDependencies[name])]))
   Object.assign(peers,{
     '@deepseek-ai/dsh-storage':'0.2.2-rc.1',
-    '@deepseek-ai/dsh-scope':'0.2.2-rc.1'});
+    '@deepseek-ai/dsh-scope':'0.2.2-rc.1',
+    '@deepseek-ai/cordis-plugin-group':'1.1.0',
+    '@deepseek-ai/cordis-plugin-loader':'1.1.0',
+    '@deepseek-ai/cordis-plugin-include':'1.1.0',
+    '@deepseek-ai/dsh-home-paths':'0.2.2-rc.1',
+    '@deepseek-ai/dsh-launch-environment':'0.2.2-rc.1'});
   await verifyPack({...options,consumer:{packageJson:{private:true,type:'module',dependencies:{...peers,
     '@hanamesh/dsh-app-host':`file:${options.tarball}`}},
     javascript:"import assert from 'node:assert/strict';import{createRequire}from'node:module';import{apply}from'@hanamesh/dsh-app-host/dsh';assert.equal(typeof apply,'function');const require=createRequire(import.meta.url);assert.throws(()=>require.resolve('@hanamesh/devkit'),{code:'MODULE_NOT_FOUND'});"+'\n'+runtimeLedgerJavascript,

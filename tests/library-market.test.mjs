@@ -188,7 +188,7 @@ test('AH-M07 (client source): the entry is 「市场」, cards carry kind/state/
   assert.match(source,/'\/hanamesh\/library\/plugins\/uninstall'/);
   assert.match(source,/item\.upgradeAvailable\)action=/,'upgrade action');
   assert.match(source,/t\('升级'\)/);
-  assert.doesNotMatch(source,/latestVersion|目录未提供版本/);
+  assert.doesNotMatch(source,/目录未提供版本/);assert.match(source,/data-hanamesh-latest-version/);
   assert.match(source,/'installed-not-loaded':t\('需重启'\)/);
   const clientProtected=JSON.parse(source.match(/const PROTECTED=new Set\((\[[^\]]*\])\)/)[1].replaceAll("'",'"'));
   assert.deepEqual(clientProtected.sort(),[...PROTECTED_PACKAGES].sort(),'no uninstall button for the suite (brand included), same list as the host');

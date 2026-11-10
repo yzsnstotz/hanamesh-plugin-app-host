@@ -31,6 +31,7 @@ import { createProviderSources } from './router/sources.js';
 import { createRouter } from './router/broker.js';
 import { createRouterHttpHandler, ROUTER_ROUTES } from './router/routes.js';
 import { libraryDomainSpec } from './library/domain.js';
+import {createNpmVersionCatalog,hostVersionReader} from './library/versions.js';
 import { createLibraryService } from './library/service.js';
 import { createLibraryInstaller } from './library/install.js';
 import { inferDesktopLayout, resolveLibraryLocations } from './library/locate.js';
@@ -74,6 +75,8 @@ export const Config = z.object({
     /** Locations are inferred from the verified Desktop argv/profile or plain DSH (see library/locate.js). */
     profileDir:z.string(),profileName:z.string(),dshBin:z.string(),
     registry:z.string(),
+    versionLookupTimeoutMs:z.number().min(1).max(2147483647).default(30000),
+    versionLookupMaxBytes:z.number().min(1).default(16777216),
     /** Publicly named event history capacity; a lost cursor reports resetRequired. */
     eventRetention:z.number().default(512),
     /** Website → client handoff listener (library/handoff.js). Unset fields use the defaults shown in the library
@@ -258,7 +261,9 @@ export async function apply(ctx, config) {
     };
     const identity=await detectClient({desktop});
     if(typeof ctx.logger?.info==='function')ctx.logger.info('hanamesh-app-host library: client %s (%s)',identity.client,identity.evidence);
-    library=createLibraryService({domain:{global:libraryDomain.global,close:closeLibraryDomain},host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer,client:identity.client,unavailable,suiteSourceService:()=>suiteSourceService,installationStatus:nodeStatusBinding(()=>nodeRuntime.executable,workerNode=>createInstallationStatusReader({client:identity.client,core:()=>coreService,workerNode,otherProfileDir:identity.client==='hanamesh'?()=>officialDshDesktopProfile(locations.profileDir):null})),logger:ctx.logger});
+    const versionAnchor=desktop?.runtimeDir?join(desktop.runtimeDir,'package.json'):dshBin;
+    const versionCatalog=versionAnchor?createNpmVersionCatalog({registry:libraryConfig.registry||undefined,anchor:versionAnchor,peerVersion:hostVersionReader(versionAnchor),timeoutMs:libraryConfig.versionLookupTimeoutMs,maxBytes:libraryConfig.versionLookupMaxBytes}):undefined;
+    library=createLibraryService({versionCatalog,domain:{global:libraryDomain.global,close:closeLibraryDomain},host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer,client:identity.client,unavailable,suiteSourceService:()=>suiteSourceService,installationStatus:nodeStatusBinding(()=>nodeRuntime.executable,workerNode=>createInstallationStatusReader({client:identity.client,core:()=>coreService,workerNode,otherProfileDir:identity.client==='hanamesh'?()=>officialDshDesktopProfile(locations.profileDir):null})),logger:ctx.logger});
     own('library', () => library.close());
     await library.init();
     // rc.27: app bundles register plain `app.json` (no package name); the installed scan knows which npm package ships

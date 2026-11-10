@@ -352,12 +352,13 @@
       "version": "0.2.2-rc.1",
       "license": "MIT",
       "source": "https://registry.npmjs.org/@deepseek-ai/dsh-app-boot/-/dsh-app-boot-0.2.2-rc.1.tgz",
-      "purpose": "Declared public host type/build prerequisite",
+      "purpose": "Public host SDK for DSH compatibility evaluation; exact development input.",
       "usedAs": [
         "devDependencies"
       ],
       "specs": {
-        "devDependencies": "0.2.2-rc.1"
+        "devDependencies": "0.2.2-rc.1",
+        "peerDependencies": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0"
       }
     },
     "@deepseek-ai/dsh-client-ui-primitives": {
