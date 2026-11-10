@@ -1,5 +1,7 @@
 // AppHost mutation targets, name filters and invariant-specific failure reasons.
 export const cases=[
+ {id:'VR1-package-data-home-lost',file:'src/library/install.js',from:'...dataEnv,HOME:',to:'HOME:',test:'tests/library-install.test.mjs',pattern:'^AH-L04',reason:/Expected values to be strictly equal/},
+ {id:'VR1-bundle-version-hidden',file:'src/client-ui.js',from:"target.item.suiteUpgrade.bundle.from+' → '+target.item.suiteUpgrade.bundle.to",to:"''",test:'tests/client-pages.test.mjs',pattern:'^VR1 suite confirmation',reason:/did not match the regular expression/},
  {id:'VR1-suite-compensation-skipped',file:'src/library/install.js',from:"error.recovery=await recover({name,stage,base,runtime,operationId,installRegistry});",to:"error.recovery={status:'not-needed'};",test:'tests/version-upgrade.test.mjs',pattern:'^VR1 failed suite replacement',reason:/validation function is expected to return|Expected values/},
  {id:'VR1-incompatible-version-installed',file:'src/library/versions.js',from:"requireCondition(row?.compatible,",to:"requireCondition(true,",test:'tests/version-upgrade.test.mjs',pattern:'^VR1 version listing',reason:/Missing expected rejection/},
  {id:'VR1-selected-version-forgotten',file:'src/client-ui.js',from:"...(selected.item.selectedVersion?{version:selected.item.selectedVersion}:{})",to:"...{}",test:'tests/client-pages.test.mjs',pattern:'^VR1 installed cards',reason:/Expected values to be strictly equal/},

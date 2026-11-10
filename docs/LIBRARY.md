@@ -97,3 +97,5 @@ A2 0.6.22：普通插件必须有 Indexer 已审核的 installMethods 和 oneCli
 版本查询使用与安装一致的配置 registry；总包选择 Core 来源时从其公开 source state 读取并拒绝未就绪状态。`library.versionLookupTimeoutMs`（默认 30000）与 `library.versionLookupMaxBytes`（默认 16777216）限制每次匿名、拒绝重定向的读取。查询仅发生于页面上已装 npm 项和主动展开版本，不遍历整个市场；失败显示错误。
 
 参考：dsh-market `f76b5f58ec553aba91b964f009a8561eea175011` 的 `src/updates.ts`、`src/routes.ts`、`src/official-desktop.ts`；DSH 0.2.2-rc.1 `dsh-plugin-manager` README 的 `listVersions`/`updateBundle`、`dsh-client-ui-plugin-manager` 版本确认 UI。DSH 的版本接口只列新版，`updateBundle` 拒绝旧版；本市场的完整历史切换沿用已有受监测正式 CLI，不移除旧包后再装，也不修改 DSH 本体。
+
+原生验收补充：总包确认页单独显示精确总包的已装→目标版本，即使三个业务成员未变。正式安装 CLI 保留宿主经绝对路径校验的 XDG_DATA_HOME，使 pnpm 沿用该 profile 首次安装的数据根；不转发任意环境、API token 或 proxy，不改 store、不重装依赖以掩盖 store 冲突。

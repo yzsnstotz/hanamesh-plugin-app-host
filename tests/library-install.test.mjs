@@ -9,13 +9,18 @@ async function installedPackage(profile){const root=join(profile,'node_modules',
   await writeFile(join(root,'package.json'),JSON.stringify({name:'@hanamesh/app-vibe-trading',version:'1.2.3',hanamesh:{app:'app.json'}}));
   await writeFile(join(root,'app.json'),JSON.stringify({id:'vibe',name:'Vibe',deployments:[{id:'local',dataId:'data-v1',mode:'owned',args:['{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:'Vibe'},runtime:{manifest:{schema:1,sources:[],items:[{id:'runtime',version:'0.1.15',kind:'tar.gz',installTo:'runtime',platforms:{}}]},item:'runtime',exec:'bin/vibe'}}]}));}
 
-test('AH-L04/L05: install uses explicit Node + DSH argv, exact stable registry version, then provisions the declared item',async()=>{
+test('AH-L04/L05: install uses explicit Node + DSH argv, exact stable registry version, then provisions the declared item',async t=>{
   const profile=await scratch('hm-library-install-'),dataRoot=join(profile,'data');const calls=[],events=[];
+  const previousData=process.env.XDG_DATA_HOME,previousSecret=process.env.VR1_INSTALL_SECRET;
+  t.after(()=>{if(previousData===undefined)delete process.env.XDG_DATA_HOME;else process.env.XDG_DATA_HOME=previousData;if(previousSecret===undefined)delete process.env.VR1_INSTALL_SECRET;else process.env.VR1_INSTALL_SECRET=previousSecret;});
+  process.env.XDG_DATA_HOME=join(profile,'xdg-data');process.env.VR1_INSTALL_SECRET='fixture-only';
   const installer=createLibraryInstaller({profileDir:profile,profileName:'p3',dataRoot,nodeBinary:resolve('/opt/node/bin/node'),dshBin:resolve('/opt/dsh/bin.js'),
     fetchImpl:async()=>new Response(JSON.stringify({version:'1.2.3'}),{headers:{'content-type':'application/json'}}),
     spawn:async(command,args,options)=>{calls.push({command,args,options});await installedPackage(profile);await writeFile(join(profile,'package.json'),JSON.stringify({dependencies:{'@hanamesh/app-vibe-trading':'1.2.3'}}));return{code:0,stdout:'ok',stderr:''};},
     provision:async(manifest,options)=>{calls.push({manifest,options});return[{item:'runtime',action:'installed'}];},remove:async()=>{},ledger:async()=>({schema:1,items:{}}),emit:event=>events.push(event)});
   const result=await installer.install({id:'vibe-item',categories:['hanamesh-app'],package:{registry:'npm',name:'@hanamesh/app-vibe-trading'},installTarget:{source:'npm',name:'@hanamesh/app-vibe-trading',version:'1.2.3',allowBuild:[]}});
+  assert.equal(calls[0].options.env.XDG_DATA_HOME,join(profile,'xdg-data'));
+  assert.equal(calls[0].options.env.VR1_INSTALL_SECRET,undefined);
   assert.equal(calls[0].options.env.GIT_CONFIG_NOSYSTEM,'1');
   assert.equal(calls[0].options.env.GIT_CONFIG_VALUE_1,'!gh auth git-credential');
   assert.deepEqual({...calls[0],options:{cwd:calls[0].options.cwd}},{command:resolve('/opt/node/bin/node'),args:[resolve('/opt/dsh/bin.js'),'plugin','--profile','p3','add','--save-exact','@hanamesh/app-vibe-trading@1.2.3'],options:{cwd:profile}});

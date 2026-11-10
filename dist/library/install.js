@@ -1,5 +1,5 @@
 import { readFile, lstat, unlink, rmdir } from 'node:fs/promises';
-import { join, resolve, dirname, sep, delimiter } from 'node:path';
+import { join, resolve, dirname, sep, delimiter, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {safeGitEnv,guardNodeBinary,spawnGitSafe} from '../git-process.js';
 import { randomUUID } from 'node:crypto';
@@ -67,7 +67,9 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
   const commandPath=command=>[dirname(command),...(process.platform==='win32'?(process.env.PATH??process.env.Path??'').split(delimiter):['/opt/homebrew/bin','/usr/local/bin','/usr/bin','/bin'])].join(delimiter);
   const run=args=>runCli(['plugin','--profile',profileName,...args]);
   async function runCli(tail){try{requireCondition(cliAvailable,'DSH_CLI_UNAVAILABLE','The official dsh plugin CLI is unavailable in this host.',{need:['nodeBinary','dshBin']},503);
-    const options={cwd:profileDir,workerNode:supervisorNode,env:safeGitEnv({HOME:process.env.HOME,DSH_HOME:process.env.DSH_HOME,LANG:process.env.LANG??'C.UTF-8',PATH:commandPath(nodeBinary??desktopLauncher.command)})};
+    const dataHome=process.env.XDG_DATA_HOME;
+    const dataEnv=typeof dataHome==='string'&&isAbsolute(dataHome)&&!/[\x00-\x1f]/.test(dataHome)?{XDG_DATA_HOME:dataHome}:{};
+    const options={cwd:profileDir,workerNode:supervisorNode,env:safeGitEnv({...dataEnv,HOME:process.env.HOME,DSH_HOME:process.env.DSH_HOME,LANG:process.env.LANG??'C.UTF-8',PATH:commandPath(nodeBinary??desktopLauncher.command)})};
     if(launcherAvailable)options.env=safeGitEnv({...options.env,DSH_HOME:desktopLauncher.home,PATH:commandPath(desktopLauncher.command)});
     const result=await spawn(launcherAvailable?desktopLauncher.command:nodeBinary,launcherAvailable?tail:[...(desktopCli?['--expose-internals',fileURLToPath(new URL('./desktop-cli.js',import.meta.url)),desktopCli.entry,desktopCli.runtimeDir,desktopCli.supportDir]:[dshBin]),...tail],options);
     const clean=text=>redact(stripVTControlCharacters(String(text??''))).replace(/(https?:\/\/)[^/\s@]+@/g,'$1[REDACTED]@').slice(-2000);

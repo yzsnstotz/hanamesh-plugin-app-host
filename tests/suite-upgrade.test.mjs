@@ -52,7 +52,7 @@ test('suite failure UI shows partial versions and the repair command without cla
   const details={stage:'suite-upgrade',actual:{components:SUITE_PACKAGES.map(p=>({...p,version:targets[p.name],active:true}))},command:SUITE_INSTALL_COMMAND};
   const h=await clientHarness({clock,fetch:async path=>{
     let value={items:[],installed:[],plugins:[],page:{}};
-    if(path.startsWith('/hanamesh/library/target?'))value={source:{kind:'suite'},item:{id:'hanamesh:suite-upgrade',displayName:'HanaMesh 套件',kind:'suite-upgrade',package:{name:'@hanamesh/core'},upgradeAvailable:true,suiteUpgrade:{planId:'fixture',components:SUITE_PACKAGES.map(p=>({...p,from:'0.0.0',to:targets[p.name]}))}}};
+    if(path.startsWith('/hanamesh/library/target?'))value={source:{kind:'suite'},item:{id:'hanamesh:suite-upgrade',displayName:'HanaMesh 套件',kind:'suite-upgrade',package:{name:'@hanamesh/core'},upgradeAvailable:true,suiteUpgrade:{planId:'fixture',bundle:(await coreSuitePlan()).bundle,components:SUITE_PACKAGES.map(p=>({...p,from:'0.0.0',to:targets[p.name]}))}}};
     else if(path==='/hanamesh/library/suite/upgrade')value={operationId:'suite-op',status:'started'};
     else if(path.startsWith('/hanamesh/library/events?'))value={sequence:1,events:[{operationId:'suite-op',type:'library.install-failed',code:'DSH_PLUGIN_FAILED',details}]};
     return{ok:true,json:async()=>value};

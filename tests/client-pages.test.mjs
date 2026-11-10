@@ -78,3 +78,12 @@ test('VR1 installed cards show latest compatible version and selected history re
  assert(calls.at(-1).path.includes('version=0.9.0'));assert.equal(h.find(node=>node.type==='button'&&node.children.includes('确认安装')).props.disabled,true);
  await acknowledgeInstall(h);await h.click('确认安装');await settle();const mutation=calls.find(row=>row.path==='/hanamesh/library/version/install');assert.equal(JSON.parse(mutation.init.body).version,'0.9.0');
 });
+
+
+test('VR1 suite confirmation shows the exact bundle transition when component versions stay the same',async t=>{
+ const suite={id:'hanamesh:suite-upgrade',displayName:'HanaMesh 套件',kind:'suite-upgrade',package:{name:'@hanamesh/hanamesh'},installed:{state:'installed',version:'0.1.6'},upgradeAvailable:true,suiteUpgrade:{bundle:{from:'0.1.6',to:'0.1.7'},components:[{name:'@hanamesh/core',label:'Core',from:'0.3.36',to:'0.3.36'}]}};
+ const h=await clientHarness({fetch:async path=>path.startsWith('/hanamesh/library/target?')?response({source:{kind:'fixture'},item:suite}):response({items:[],installed:[],plugins:[],page:{}})});t.after(()=>h.unmount());
+ await h.module.openInstallTarget({itemId:suite.id});await settle();
+ const confirmation=h.find(node=>node.props['data-suite-confirmation']);assert(confirmation);assert.match(text(confirmation),/0\.1\.6 → 0\.1\.7/);
+ assert.equal(h.find(node=>node.type==='button'&&node.children.includes('确认安装')).props.disabled,true);
+});
