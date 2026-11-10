@@ -147,8 +147,10 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
   }
   let suitePlan;
   const suiteProvider=coreSuitePlan??createCoreSuiteAdapter({core:coreService,registry,profileName,suiteSourceMode,suiteSourceService});
+  // Display reads validate the same Core composition without registering an execution confirmation.
+  const readSuite=({bundleVersion}={})=>prepareSuiteUpgrade({coreSuitePlan:suiteProvider,...(bundleVersion===undefined?{}:{bundleVersion})});
   async function previewSuite({bundleVersion}={}){
-    const next=await prepareSuiteUpgrade({coreSuitePlan:suiteProvider,...(bundleVersion===undefined?{}:{bundleVersion})});
+    const next=await readSuite({bundleVersion});
     suitePlan={...next,requestedVersion:bundleVersion??null,planId:randomUUID()};return structuredClone(suitePlan);
   }
   return{
@@ -157,6 +159,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
       if(!suiteProvider.readFacts)return await readSuiteStatus(profileDir);
       try{return await suiteProvider.readFacts();}catch(error){return{...await readSuiteStatus(profileDir),status:'unknown',completeness:'unknown',blocked:[{code:error.code??'CORE_SUITE_DECLARATION_UNAVAILABLE'}],suiteUpgradeUnavailable:error.code==='CORE_SUITE_DECLARATION_MISSING'?suiteProvider.unavailable:'Core 套件声明读取失败（'+(error.code??'CORE_SUITE_DECLARATION_UNAVAILABLE')+'）'};}
     },
+    readSuiteUpgrade:readSuite,
     prepareSuiteUpgrade:previewSuite,
     async upgradeSuite({planId}={}){return await profileWriter.run(async()=>{
       requireCondition(suitePlan?.planId===planId,'SUITE_PLAN_CHANGED','升级确认已变化，请重新查看并确认。',{},409);

@@ -108,3 +108,10 @@ A2 0.6.22：普通插件必须有 Indexer 已审核的 installMethods 和 oneCli
 目录与磁盘已装事实先返回，首屏不等待npm版本查询。客户端随后逐项调用现有 `/hanamesh/library/versions`；同一页面以 `library.versionLookupConcurrency`（默认4，整数1–16）限制在途查询，按项显示最新兼容版本或具名错误。`library.versionLookupCacheMs`（默认30000ms）仅复用同来源、同已装版本的展示结果和在途请求；过期后下一次明确加载才查询，不定时自动重试。历史下拉复用当前新鲜结果；来源或已装版本变化会失效，离开页面/卸载组件取消在途及排队项，旧响应不回写新来源。
 
 浏览器取消经既有HTTP断连生命周期传给registry fetch；原单次timeout、响应预算、匿名和拒绝重定向规则仍生效。展示缓存不进入安装授权：确认和安装仍重新读取精确目标、Core组合与物理baseline。借用dsh-market同一调研SHA的 `MarketSection.tsx` 分离installed/updates读取与展示缓存思路；HTTP取消复用本仓 `installation-status-http.js` 的res close/req aborted模式，不引入上游没有的DSH API。
+
+
+## R168 后台套件查询与确认计划
+
+后台 `/hanamesh/library/versions` 通过安装器内部只读组合入口读取同一 Core 兼容声明，不登记 planId，不写入或替换用户确认计划。只有用户显式打开默认或历史目标确认时才登记新的执行计划；展示查询完成、失败或在 Core 读取期间取消，都不得使已打开的确认失效。Core 公开协议没有传入取消信号的接口；取消后丢弃展示结果，不虚构该接口，也不依赖撤销已登记计划。
+
+执行仍验证本人 planId，并重新核对来源、Core声明/精确tuple与物理baseline；确认只可使用一次。该分离不缓存执行权限，也不删除 `SUITE_PLAN_CHANGED` 保护。回归 `tests/suite-query-race.test.mjs` 将真实 service、installer 与公开Core适配器连接起来，挂起后台metadata/Core读取后分别确认默认/历史目标，并验证取消后原确认仍执行原精确版本。

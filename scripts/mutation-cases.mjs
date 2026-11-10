@@ -1,5 +1,7 @@
 // AppHost mutation targets, name filters and invariant-specific failure reasons.
 export const cases=[
+ {id:'R168-background-registers-plan',file:'src/library/service.js',from:'const plan=await installer.readSuiteUpgrade();',to:'const plan=await installer.prepareSuiteUpgrade();',test:'tests/suite-query-race.test.mjs',pattern:'^R168-F01',reason:/R168: background discovery must preserve the explicit confirmation plan/},
+ {id:'R168-display-port-registers-plan',file:'src/library/install.js',from:'readSuiteUpgrade:readSuite,',to:'readSuiteUpgrade:previewSuite,',test:'tests/suite-query-race.test.mjs',pattern:'^R168-F01',reason:/R168: background discovery must preserve the explicit confirmation plan/},
  {id:'R162-manual-history-loses-expansion',file:'src/client-ui.js',from:'key:descriptor.key,expanded:true',to:'expanded:true',test:'tests/client-pages.test.mjs',pattern:'^R162-F02 an uninstalled',reason:/Expected values to be strictly equal/},
  {id:'R162-source-display-not-invalidated',file:'src/client-ui.js',from:'return state&&(!state.key||state.key===versionDescriptor(item).key)?',to:'return state?',test:'tests/client-pages.test.mjs',pattern:'^R162-F02 an uninstalled',reason:/old source display metadata must be invalidated/},
  {id:'R162-client-brand-unprotected',file:'src/client-ui.js',from:"'@hanamesh/dsh-app-host','@hanamesh/brand'",to:"'@hanamesh/dsh-app-host'",test:'tests/client-pages.test.mjs',pattern:'^R162-F01',reason:/Expected values to be strictly equal/},

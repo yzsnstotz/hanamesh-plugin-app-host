@@ -165,7 +165,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       if(input.itemId==='hanamesh:suite'){
         const releases=await suiteVersionCatalog().read(SUITE_BUNDLE,{signal}),installedVersion=(await suiteFacts()).version;
         signal?.throwIfAborted();let latestVersion=releases.latestVersion;
-        if(latestVersion&&installedVersion&&semver.gt(latestVersion,installedVersion)){const plan=await installer.prepareSuiteUpgrade();signal?.throwIfAborted();latestVersion=plan.bundle.to;}
+        if(latestVersion&&installedVersion&&semver.gt(latestVersion,installedVersion)){const plan=await installer.readSuiteUpgrade();signal?.throwIfAborted();latestVersion=plan.bundle.to;}
         return{...releases,latestVersion,installedVersion,upgradeAvailable:Boolean(latestVersion&&installedVersion&&semver.gt(latestVersion,installedVersion))};
       }
       const {item}=await resolveTarget(input);requireCondition(item.installTarget.source==='npm','NOT_INSTALLABLE','Version selection requires an npm source.');
