@@ -107,7 +107,10 @@ export async function inferDesktopLayout({moduleUrl=import.meta.url,argv=process
     const node=join(payload,'dependencies/node/bin',process.platform==='win32'?'node.exe':'node');
     try {
       await access(node,constants.X_OK);
-      const {stdout}=await promisify(execFile)(node,['-p','JSON.stringify({node:process.versions.node,electron:process.versions.electron})'],{timeout:1000,env:{},maxBuffer:1024});
+      // No startup deadline: the first execution of the bundled binary waits for the OS (seconds on a cold launch,
+      // measured 4 s on the owner Mac and 129 s after a fresh DMG mount); a fixed cap made the client run without
+      // its Node for the whole session, so Claude Code/Codex could never be read.
+      const {stdout}=await promisify(execFile)(node,['-p','JSON.stringify({node:process.versions.node,electron:process.versions.electron})'],{env:{},maxBuffer:1024});
       const actual=JSON.parse(stdout);
       if(actual.node===metadata.node&&actual.electron===undefined)nodeBinary=await realpath(node);
     } catch { /* Unavailable/unproven payload Node stays unavailable; never use Electron. */ }

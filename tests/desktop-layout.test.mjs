@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdir,writeFile,symlink,rm} from 'node:fs/promises';
+import {mkdir,writeFile,symlink,rm,chmod} from 'node:fs/promises';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import * as locate from '../src/library/locate.js';
@@ -50,4 +50,15 @@ test('AH-D06: Desktop primary runtime manifest selects an executable standalone 
   assert.equal((await locate.resolveLibraryLocations({},{moduleUrl:h.moduleUrl,argv:h.argv,execPath:'/electron',versions:{electron:'44.7.0'}})).nodeBinary,undefined,'unproven payload version is refused');
   await writeFile(join(payload,'runtime.json'),JSON.stringify({desktopVersion:'0.2.1-alpha.2',platform:'wrong',arch:process.arch,node:process.versions.node}));
   assert.equal((await locate.resolveLibraryLocations({},{moduleUrl:h.moduleUrl,argv:h.argv,execPath:'/electron',versions:{electron:'44.7.0'}})).nodeBinary,undefined);
+});
+
+test('AH-D07: a payload Node that starts slowly on a cold launch is still selected, not dropped by a startup deadline',{skip:process.platform==='win32'},async t=>{
+  // Measured on the owner Mac: the bundled Node took 4.07 s to answer `-p` from the client volume (0.09 s CPU), and
+  // 129 s on its first execution after a fresh DMG mount on leoventory. Dropping it left Claude/Codex unreadable.
+  const h=await layout(t),payload=h.argv[4],bin=join(payload,'dependencies/node/bin'),node=join(bin,'node');
+  await mkdir(bin,{recursive:true});
+  await writeFile(node,`#!/bin/sh\nsleep 1.5\nexec '${process.execPath.replaceAll("'","'\\''")}' "$@"\n`);await chmod(node,0o755);
+  await writeFile(join(payload,'runtime.json'),JSON.stringify({desktopVersion:'0.2.1-alpha.2',platform:process.platform,arch:process.arch,node:process.versions.node,python:'3.13.0',pythonPackages:{}}));
+  const resolved=await locate.resolveLibraryLocations({},{moduleUrl:h.moduleUrl,argv:h.argv,execPath:'/electron',versions:{electron:'44.7.0'}});
+  assert.equal(resolved.nodeBinary,node);
 });
