@@ -1,5 +1,8 @@
 // AppHost mutation targets, name filters and invariant-specific failure reasons.
 export const cases=[
+ {id:'DT7-legacy-inventory-discarded',file:'src/library/installation-status.js',from:'const value=await suite.assessLegacy(await readLegacyProfileFacts(profileDir,profile));',to:"return{...row,status:'not-installed'}; const value=await suite.assessLegacy(await readLegacyProfileFacts(profileDir,profile));",test:'tests/legacy-installation.test.mjs',pattern:'DT7 disk facts delegate installed',reason:/Expected values to be strictly equal/},
+ {id:'DT7-legacy-verdict-discarded',file:'src/library/suite.js',from:'if(declaration.legacy)return{...declaration.legacy,',to:'if(false)return{...declaration.legacy,',test:'tests/legacy-installation.test.mjs',pattern:'DT7 current runtime forwards',reason:/Expected values to be strictly equal/},
+
  {id:'R168-background-registers-plan',file:'src/library/service.js',from:'const plan=await installer.readSuiteUpgrade();',to:'const plan=await installer.prepareSuiteUpgrade();',test:'tests/suite-query-race.test.mjs',pattern:'^R168-F01',reason:/R168: background discovery must preserve the explicit confirmation plan/},
  {id:'R168-display-port-registers-plan',file:'src/library/install.js',from:'readSuiteUpgrade:readSuite,',to:'readSuiteUpgrade:previewSuite,',test:'tests/suite-query-race.test.mjs',pattern:'^R168-F01',reason:/R168: background discovery must preserve the explicit confirmation plan/},
  {id:'R162-manual-history-loses-expansion',file:'src/client-ui.js',from:'key:descriptor.key,expanded:true',to:'expanded:true',test:'tests/client-pages.test.mjs',pattern:'^R162-F02 an uninstalled',reason:/Expected values to be strictly equal/},

@@ -1,3 +1,4 @@
+import {readLegacyProfileFacts} from './installation-profile.js';
 /** Read fresh public installation facts. No compatibility calculation, persistence or polling. */
 import semver from 'semver';
 import {AppHostError} from '../errors.js';
@@ -61,12 +62,17 @@ function parseInventory(channel,plugins,marketplaces,target){
   reason:failed?reason(channel==='claude'?'AGENT_PLUGIN_LOAD_FAILED':'AGENT_PLUGIN_PAYLOAD_MISSING','官方清单报告插件负载或加载问题。','在该官方客户端的插件详情中检查并修复。'):version===null?reason('AGENT_VERSION_UNAVAILABLE','已确认该作用域的安装记录，但实际版本未知。','在该官方客户端插件详情中核对实际版本。'):null};
 }
 const failureCodes=new Set(['AGENT_SHELL_ENV_UNAVAILABLE','AGENT_READER_DISCOVERY_INVALID','AGENT_READER_ENTRYPOINT_UNAVAILABLE','AGENT_READER_UNAVAILABLE','AGENT_READER_PERMISSION_DENIED','AGENT_READER_NODE_REQUIRED','AGENT_PROFILE_UNAVAILABLE','AGENT_READER_TIMEOUT','AGENT_READER_OUTPUT_LIMIT','AGENT_READER_CLEANUP_FAILED','AGENT_READER_DIAGNOSTIC','AGENT_READER_FAILED','AGENT_INVENTORY_INVALID','AGENT_INVENTORY_CONFLICT','AGENT_MARKETPLACE_SOURCE_MISMATCH','AGENT_MARKETPLACE_SOURCE_UNAVAILABLE','AGENT_SCOPE_UNOBSERVABLE']);
-/** Physical on-disk DSH profile inventory: no @hanamesh/hanamesh dependency (or no profile) is authoritative absence. */
-async function profileSuite(row,profileDir){
+/** Physical DSH profile inventory; Core alone assesses individually installed components. */
+async function profileSuite(row,profileDir,suite){
  let profile;try{profile=JSON.parse(await readFile(join(profileDir,'package.json'),'utf8'))}
  catch(error){if(['ENOENT','ENOTDIR'].includes(error.code))return{...row,status:'not-installed'};return unknown(row,'DSH_PROFILE_UNREADABLE','DSH 桌面版 profile 清单无法读取。','打开 DSH 确认其插件页可用后重新检测。')}
  if(!object(profile)||!object(profile.dependencies))return unknown(row,'DSH_PROFILE_UNREADABLE','DSH 桌面版 profile 清单无法读取。','打开 DSH 确认其插件页可用后重新检测。');
- if(!Object.hasOwn(profile.dependencies,SUITE_BUNDLE))return{...row,status:'not-installed'};
+ if(!Object.hasOwn(profile.dependencies,SUITE_BUNDLE)){
+  try{
+   const value=await suite.assessLegacy(await readLegacyProfileFacts(profileDir,profile));
+   return{...row,status:value.status,components:value.components,reason:value.reason,blocked:value.issues.map(({code,moduleName})=>({code,moduleName}))};
+  }catch(error){return unknown(row,error.code==='CORE_LEGACY_ASSESSOR_MISSING'?error.code:'CORE_LEGACY_ASSESSMENT_FAILED','旧组件状态暂时无法确认。','打开包含新版 Core 的 HanaMesh 客户端后重新检测，或按 DSH 安装说明升级。')}
+ }
  const value=await readSuiteStatus(profileDir);
  const components=value.components.map(c=>({name:c.name,version:c.version,active:c.active}));
  if(value.status==='installed'&&value.version)return{...row,status:'installed',version:value.version,components};
@@ -91,7 +97,7 @@ export function createInstallationStatusReader({client='dsh',core=()=>undefined,
    const components=value.components.map(c=>({name:c.name,version:exact(c.version),...(['satisfied','missing','incompatible','damaged','unreadable','inactive','failed','ambiguous'].includes(c.status)?{status:c.status}:{}),...(typeof c.active==='boolean'?{active:c.active}:{})}));
    const blocked=value.blocked.map(r=>({code:/^CORE_[A-Z0-9_]{1,75}$/.test(r.code)?r.code:'CORE_SUITE_BLOCKED',...(r.moduleName===SUITE_BUNDLE||SUITE_PACKAGES.some(c=>c.name===r.moduleName)?{moduleName:r.moduleName}:{})}));
    return{...row,status:value.status,version:value.status==='unknown'?null:exact(value.version),components,blocked,
-    reason:value.status==='unknown'?reason('CORE_SUITE_DECLARATION_UNKNOWN','Core 尚不能确认本 runtime 的套件完整性。','查看 Core 设置中的具名阻断原因，补齐其公开事实后重新检测。'):value.status==='incomplete'?reason('CORE_SUITE_CURRENT_INCOMPLETE','Core 报告本 runtime 的套件不完整。','在本客户端按 Core 组件说明修复后重新检测。'):null};
+    reason:value.reason??(value.status==='unknown'?reason('CORE_SUITE_DECLARATION_UNKNOWN','Core 尚不能确认本 runtime 的套件完整性。','查看 Core 设置中的具名阻断原因，补齐其公开事实后重新检测。'):value.status==='incomplete'?reason('CORE_SUITE_CURRENT_INCOMPLETE','Core 报告本 runtime 的套件不完整。','在本客户端按 Core 组件说明修复后重新检测。'):null)};
   }catch(error){if(signal.aborted)throw interrupted();const code=['CORE_SUITE_DECLARATION_MISSING','CORE_SUITE_DECLARATION_INVALID'].includes(error.code)?error.code:'CORE_SUITE_READ_FAILED';return unknown(row,code,code==='CORE_SUITE_DECLARATION_MISSING'?'本 runtime 未提供 Core 套件声明方法。':'本次 Core 套件声明读取失败。','启用支持 protocol 1 getSuiteDeclaration 的 Core，查看其设置并重新检测。')}
  }
  async function agent(channel,signal){
@@ -113,7 +119,7 @@ export function createInstallationStatusReader({client='dsh',core=()=>undefined,
  }
  async function other(signal){
   const profileDir=client==='hanamesh'?(typeof otherProfileDir==='function'?otherProfileDir():otherProfileDir):null;
-  if(profileDir)return abortable(profileSuite(base('dsh','other-runtime','other-client','DSH 桌面版 profile（磁盘只读清单；运行中的 DSH 由其自身监听回答）'),profileDir),signal);
+  if(profileDir)return abortable(profileSuite(base('dsh','other-runtime','other-client','DSH 桌面版 profile（磁盘只读清单；运行中的 DSH 由其自身监听回答）'),profileDir,suite),signal);
   return unknown(base(client==='dsh'?'hanamesh':'dsh','other-runtime','other-client','另一客户端 runtime（须由其自身监听回答）'),'OTHER_RUNTIME_NOT_OBSERVED','本监听未读取另一客户端的 runtime。','启动该客户端，并向其已广告的状态入口显式检测。');
  }
  const read=async({signal}={})=>{

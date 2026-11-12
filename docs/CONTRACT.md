@@ -301,3 +301,7 @@ switching details ignores stale replies.
 
 
 R168：后台套件版本展示使用不登记确认的 Core 只读组合查询，只有显式目标预览登记执行计划。后台完成或在Core读取期间取消，不替换已打开的默认/历史确认；planId、来源、tuple、物理baseline复读与单次确认保护保留。见 [后台查询与确认计划](LIBRARY.md#r168-后台套件查询与确认计划)。
+
+## DT7 · 0.6.28 legacy component installation observations
+
+The optional Core protocol-1 `assessLegacyInstallation` is the sole evaluator of no-bundle member facts. AppHost inventories public metadata, entry/selection facts and per-member peer resolution, then validates and forwards its result. Missing assessor and unreadable facts remain unknown. No-bundle runtime declarations forward optional `legacy`; total-bundle and executable upgrade gates remain unchanged. See [INSTALLATION_STATUS.md](INSTALLATION_STATUS.md). No request or observation DTO field is added; legacy states use existing status/reason/blocked fields and null bundle version.

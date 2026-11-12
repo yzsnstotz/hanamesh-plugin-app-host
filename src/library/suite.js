@@ -63,6 +63,17 @@ function validateDeclaration(value){
     const targets=new Set();
     for(const row of upgrade.targets){if(!object(row)||!text(row.id)||!SUITE_PACKAGES.some(p=>p.name===row.moduleName)||targets.has(row.moduleName)||!exact(row.version)||!text(row.repository)||!digest(row.metadataDigest))invalid();targets.add(row.moduleName);}
   }
+  if(value.legacy!==undefined){if(value.bundleVersion!==null)invalid();validateLegacyAssessment(value.legacy);}
+  return structuredClone(value);
+}
+/** Validate a Core verdict as data; AppHost never recalculates its result. */
+export function validateLegacyAssessment(value){
+  const invalid=()=>requireCondition(false,'CORE_LEGACY_ASSESSMENT_INVALID','Core 旧组件判定返回格式无效。',{},503);
+  if(!object(value)||!['installed','incomplete','not-installed','unknown'].includes(value.status)||!Array.isArray(value.components)||!Array.isArray(value.issues))invalid();
+  if(value.components.length!==3||new Set(value.components.map(row=>row?.name)).size!==3||!value.components.every(row=>object(row)&&SUITE_PACKAGES.some(p=>p.name===row.name)&&nullableText(row.version)&&text(row.status)&&(row.active===undefined||typeof row.active==='boolean')))invalid();
+  if(!value.issues.every(row=>object(row)&&text(row.code)&&text(row.moduleName)&&text(row.message)))invalid();
+  if(value.reason!==null&&(!object(value.reason)||!text(value.reason.code)||!text(value.reason.message)||!text(value.reason.action)))invalid();
+  if(value.status!=='not-installed'&&value.reason===null)invalid();
   return structuredClone(value);
 }
 /** Read only the optional protocol-1 public state; absence is unobservable, never starting/ready. */
@@ -113,8 +124,16 @@ export function createCoreSuiteAdapter({core=()=>undefined,registry,suiteSourceM
     return{available:true,bundle:{name:SUITE_BUNDLE,from:declaration.bundleVersion,to:selectedUpgrade.bundle.version},components,installation:selectedUpgrade.installation,installCommand:declaration.installCommand,sourceBinding:binding,declarationId:declaration.declarationId,registry:declaration.registry,selectedUpgrade,physicalBaseline:declaration.installed,upgrades:declaration.upgrades,blocked:declaration.blocked};
   };
   Object.defineProperty(get,'unavailable',{get:()=>current()?null:CORE_SUITE_DECLARATION_MISSING});
+  get.assessLegacy=async facts=>{
+    const service=current();
+    requireCondition(service&&typeof service.assessLegacyInstallation==='function','CORE_LEGACY_ASSESSOR_MISSING','Core 未提供旧组件只读判定接口。',{},503);
+    const result=await service.assessLegacyInstallation(facts);
+    requireCondition(current()===service,'CORE_LEGACY_ASSESSOR_MISSING','Core 判定接口已变化。',{},503);
+    return validateLegacyAssessment(result);
+  };
   get.readFacts=async()=>{
     const declaration=await read();
+    if(declaration.legacy)return{...declaration.legacy,version:null,completeness:declaration.completeness,blocked:[...declaration.blocked.filter(row=>row.code.startsWith('CORE_SUITE_CLIENT_PEER_')),...declaration.legacy.issues.map(({code,moduleName})=>({code,moduleName}))]};
     return{status:declaration.completeness==='complete'?'installed':declaration.completeness,completeness:declaration.completeness,version:declaration.bundleVersion,
       components:declaration.installed.map(row=>({...row,name:row.moduleName,label:SUITE_PACKAGES.find(p=>p.name===row.moduleName).label,version:row.actualVersion})),blocked:declaration.blocked};
   };

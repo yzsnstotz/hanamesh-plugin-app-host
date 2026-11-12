@@ -54,7 +54,7 @@ async function profile(dir,{dependency=true,bundle='0.1.6',members={'@hanamesh/c
  for(const [name,version]of Object.entries(members)){const memberDir=join(dir,'node_modules',...name.split('/'));await mkdir(memberDir,{recursive:true});await writeFile(join(memberDir,'package.json'),JSON.stringify({name,version}))}
 }
 test('the HanaMesh client reads the official DSH desktop profile on disk for the DSH channel',async t=>{
- const root=await home(t),dsh=join(root,'.dsh','profiles','desktop'),service=core(declaration());
+ const root=await home(t),dsh=join(root,'.dsh','profiles','desktop'),service={...core(declaration()),assessLegacyInstallation:async facts=>{assert.ok(facts.components.every(row=>row.observation.kind==='missing'));return{status:'not-installed',components:facts.components.map(row=>({name:row.moduleName,version:null,status:'missing'})),issues:[],reason:null}}};
  const read=dir=>createInstallationStatusReader({client:'hanamesh',core:()=>service,discoverReader:unavailable,profileState:async()=>'absent',otherProfileDir:dir})();
  let value=row(await read(dsh),'dsh','other-runtime');
  assert.equal(value.status,'not-installed','no DSH desktop profile means the suite is not installed there');assert.equal(value.reason,null);

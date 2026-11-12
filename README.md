@@ -1,3 +1,5 @@
+0.6.28 候选（DT7）：无总包的 DSH 单独组件由 Core 公开 `assessLegacyInstallation` 唯一判定。AppHost 只收集实际磁盘包、入口、profile 选择与可观察依赖事实并转述结果，不再按“无总包”直接报未安装。没有新 Core 判定接口或事实不可读时保持未知。见 [状态协议](docs/INSTALLATION_STATUS.md)。
+
 0.6.27 候选：客户端随附独立 Node 的启动识别上限由 1 秒改为 30 秒（`PAYLOAD_NODE_PROBE_TIMEOUT_MS`）。owner Mac 实测冷启动 4.07 s / 2.81 s（CPU 0.09 s），已安装应用 0.26 s，30 秒留出 7 倍以上余量；旧 1 秒上限会让整次会话没有 Node，Claude Code/Codex 只读检测恒为 `AGENT_READER_NODE_REQUIRED`、安装环境显示未准备。到上限或插件卸载时立即 SIGKILL 该子进程，Node 仍按原规则记为不可用。身份与版本校验不变。
 
 R168：后台套件版本查询与显式安装确认分离，展示读取不替换已打开的默认/历史确认计划；来源、精确组合与物理基线的执行复读保护保持。见 [查询与确认边界](docs/LIBRARY.md#r168-后台套件查询与确认计划)。
