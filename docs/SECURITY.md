@@ -104,3 +104,6 @@ On Windows the optional Coding OAuth Gateway **file** source remains unreachable
 
 
 An explicitly configured existing standalone Node on Windows x64 may be used by the controlled CLI supervisor. It is executed only for the fixed Node probe, with an empty PATH, bounded output and a two-second deadline; the response must match the selected OS/architecture, Node 24 version floor and absence of Electron. That external selection does not enable managed downloads/preparation or owned application launch.
+
+
+Installation reader stage diagnostics (0.6.29) are host-only numeric measurements and fixed identifiers, projected before logging. They retain stderr byte counts and `STDERR_PRESENT`/`STDERR_EMPTY`, never stderr text, command paths, argv, environment values or arbitrary exception details. CLI failure still fails closed with its original public reason code. See INSTALLATION_STATUS.md for timing/exit semantics.

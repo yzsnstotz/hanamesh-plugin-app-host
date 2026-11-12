@@ -38,7 +38,34 @@ export function validReader(value){
  try{const url=new URL(value.marketplaceUrl);if(url.protocol!=='https:'||url.username||url.password||url.hash||url.search||url.href!==value.marketplaceUrl)return false}catch{return false}
  return Number.isSafeInteger(value.timeoutMs)&&value.timeoutMs>0&&value.timeoutMs<=2_147_483_647&&Number.isSafeInteger(value.maxOutputBytes)&&value.maxOutputBytes>0;
 }
-export async function runOfficialInstallationCommand({channel,reader,args,signal,workerNode}){
+// Diagnostics contain only fixed identifiers, numeric measurements and allowlisted OS signals.
+const commandStages=new Set(['version','plugin-list','marketplace-list','login-shell']);
+const phases=['worker-startup','anchor-startup','cli','cleanup'];
+const now=()=>Number(process.hrtime.bigint())/1e6;
+const safeSignal=value=>['SIGTERM','SIGKILL','SIGINT','SIGABRT','SIGSEGV','SIGBUS','SIGILL','SIGPIPE','SIGHUP'].includes(value)?value:null;
+export function installationCommandDiagnostic(value){
+ if(!value||!commandStages.has(value.stage))return null;
+ const duration=value=>Number.isFinite(value)&&value>=0?Math.round(value*1000)/1000:null;
+ return{stage:value.stage,failurePhase:phases.includes(value.failurePhase)?value.failurePhase:null,
+  timedOut:value.timedOut===true,exitCode:Number.isInteger(value.exitCode)?value.exitCode:null,signal:safeSignal(value.signal),
+  workerExitCode:Number.isInteger(value.workerExitCode)?value.workerExitCode:null,workerSignal:safeSignal(value.workerSignal),
+  stderrBytes:Number.isSafeInteger(value.stderrBytes)&&value.stderrBytes>=0?value.stderrBytes:0,
+  stderrCode:value.stderrBytes>0?'STDERR_PRESENT':'STDERR_EMPTY',
+  timingsMs:Object.fromEntries(['workerStartup','anchorStartup','cli','cleanup','total'].map(key=>[key,duration(value.timingsMs?.[key])]))};
+}
+export async function runOfficialInstallationCommand({channel,reader,args,signal,workerNode,stage}){
+ const startedAt=now(),marks={};let stderrBytes=0,timeoutAt,workerExitCode,workerSignal;
+ const commandStage=stage??(channel==='shell'?'login-shell':args[0]==='--version'?'version':args.includes('marketplace')?'marketplace-list':'plugin-list');
+ const phaseAt=at=>marks.cleanupStartedAt<=at?'cleanup':marks.cliStartedAt<=at?'cli':marks.anchorStartedAt<=at?'anchor-startup':'worker-startup';
+ const diagnostic=code=>{
+  const endedAt=now(),end=marks.cleanupStartedAt??endedAt;
+  const elapsed=(start,stop)=>start===undefined?null:Math.max(0,(stop??end)-start);
+  return installationCommandDiagnostic({stage:commandStage,failurePhase:timeoutAt!==undefined?phaseAt(timeoutAt):code==='AGENT_READER_CLEANUP_FAILED'?'cleanup':marks.cliStartedAt!==undefined?'cli':phaseAt(end),timedOut:timeoutAt!==undefined,
+   exitCode:marks.exitCode,signal:marks.signal,workerExitCode,workerSignal,stderrBytes,
+   timingsMs:{workerStartup:elapsed(marks.workerStartedAt,marks.workerReadyAt),anchorStartup:elapsed(marks.anchorStartedAt,marks.cliStartedAt),
+    cli:elapsed(marks.cliStartedAt,marks.cliEndedAt),cleanup:elapsed(marks.cleanupStartedAt,endedAt),total:endedAt-startedAt}});
+ };
+ try{
  if(signal?.aborted)fail('INSTALLATION_STATUS_CANCELLED');
  if(!validReader(reader))fail('AGENT_READER_DISCOVERY_INVALID');
  const nodeRuntime=guardNodeBinary({workerNode});if(!nodeRuntime)fail('AGENT_READER_NODE_REQUIRED');
@@ -54,21 +81,26 @@ export async function runOfficialInstallationCommand({channel,reader,args,signal
  try{return await new Promise((resolve,reject)=>{
   if(signal?.aborted){reject(new AppHostError('INSTALLATION_STATUS_CANCELLED','Installation read was cancelled.',{},499));return}
   // The reaper must survive caller death on Windows too; libuv kills non-detached children with their creator.
+  marks.workerStartedAt=now();
   const child=fork(new URL('./installation-worker.js',import.meta.url),[],{cwd:temporaryRoot,env,execPath:nodeRuntime,execArgv:[],detached:true,windowsHide:true,stdio:['ignore','pipe','pipe','ipc']});
   const chunks=[];let total=0,stderr=false,fault,exited=false,message;
-  const kill=code=>{fault??=code;if(!exited&&child.pid){if(process.platform==='win32'){if(child.connected)child.send({abort:true},()=>{})}else child.kill('SIGTERM')}};
+  const kill=code=>{if(code==='AGENT_READER_TIMEOUT')timeoutAt??=now();fault??=code;if(!exited&&child.pid){if(process.platform==='win32'){if(child.connected)child.send({abort:true},()=>{})}else child.kill('SIGTERM')}};
   const abort=()=>kill('INSTALLATION_STATUS_CANCELLED');signal?.addEventListener('abort',abort,{once:true});
   const timer=setTimeout(()=>kill('AGENT_READER_TIMEOUT'),reader.timeoutMs);
   child.stdout.on('data',chunk=>{total+=chunk.length;if(total>reader.maxOutputBytes)kill('AGENT_READER_OUTPUT_LIMIT');else chunks.push(chunk)});
-  child.stderr.on('data',chunk=>{stderr=true;total+=chunk.length;if(total>reader.maxOutputBytes)kill('AGENT_READER_OUTPUT_LIMIT')});
-  child.on('message',value=>{if(typeof value.directory==='string')cwd=value.directory;else{message=value;cleanupConfirmed=value.cleanupComplete===true}});
+  child.stderr.on('data',chunk=>{stderr=true;stderrBytes+=chunk.length;total+=chunk.length;if(total>reader.maxOutputBytes)kill('AGENT_READER_OUTPUT_LIMIT')});
+  child.on('message',value=>{if(value.diagnostic){Object.assign(marks,value.diagnostic);return}if(typeof value.directory==='string')cwd=value.directory;else{message=value;cleanupConfirmed=value.cleanupComplete===true}});
   child.once('exit',()=>{exited=true});
   child.once('error',error=>{fault??=error.code==='EACCES'?'AGENT_READER_PERMISSION_DENIED':'AGENT_READER_UNAVAILABLE'});
-  child.once('close',code=>{exited=true;clearTimeout(timer);signal?.removeEventListener('abort',abort);
+  child.once('close',(code,terminationSignal)=>{workerExitCode=code;workerSignal=terminationSignal;exited=true;clearTimeout(timer);signal?.removeEventListener('abort',abort);
    if(fault||message?.error||message?.result!==0||(stderr&&channel!=='shell'))reject(new AppHostError((cwd&&!cleanupConfirmed?'AGENT_READER_CLEANUP_FAILED':fault??message?.error)??(stderr&&channel!=='shell'?'AGENT_READER_DIAGNOSTIC':'AGENT_READER_FAILED'),'The official reader did not return a complete successful result.',{},503));
    else resolve(Buffer.concat(chunks).toString('utf8'));
   });
   if(child.connected)child.send({executable:reader.nodeScript?nodeRuntime:reader.executable,args:reader.nodeScript?[reader.executable,...args]:args,temporaryRoot,env},()=>{});
   if(signal?.aborted)abort();
- })}finally{if(cwd&&cleanupConfirmed)await rm(cwd,{recursive:true,force:true,maxRetries:4,retryDelay:25})}
+ })}finally{if(cwd&&cleanupConfirmed)try{await rm(cwd,{recursive:true,force:true,maxRetries:4,retryDelay:25})}catch{fail('AGENT_READER_CLEANUP_FAILED')}}
+ }catch(error){
+  const failure=error instanceof AppHostError?error:new AppHostError('AGENT_READER_FAILED','The official reader could not complete.',{},503);
+  const value=diagnostic(failure.code);if(value)failure.details={command:value};throw failure;
+ }
 }

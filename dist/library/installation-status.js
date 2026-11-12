@@ -7,7 +7,7 @@ import {join} from 'node:path';
 import {realpathSync} from 'node:fs';
 import {homedir} from 'node:os';
 import {SUITE_BUNDLE,createCoreSuiteAdapter,SUITE_PACKAGES,readSuiteStatus} from './suite.js';
-import {readerVersionFailure,validReader,runOfficialInstallationCommand} from './installation-cli.js';
+import {readerVersionFailure,validReader,runOfficialInstallationCommand,installationCommandDiagnostic} from './installation-cli.js';
 import {discoverOfficialReader,agentProfileState,AGENT_INSTALLATION_TARGET} from './installation-discovery.js';
 const object=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const exact=x=>typeof x==='string'&&semver.valid(x)===x?x:null;
@@ -87,7 +87,7 @@ export function officialDshDesktopProfile(ownProfileDir,home=homedir()){
 }
 /** Automatic current-user discovery only; `core` is the optional public protocol-1 Cordis service accessor.
  * `otherProfileDir`: a fresh selector of the official DSH desktop profile (HanaMesh client only); trusted fixtures may supply a path. */
-export function createInstallationStatusReader({client='dsh',core=()=>undefined,workerNode,runCommand=runOfficialInstallationCommand,discoverReader=discoverOfficialReader,profileState=agentProfileState,otherProfileDir=null}={}){
+export function createInstallationStatusReader({logger,client='dsh',core=()=>undefined,workerNode,runCommand=runOfficialInstallationCommand,discoverReader=discoverOfficialReader,profileState=agentProfileState,otherProfileDir=null}={}){
  if(!['dsh','hanamesh'].includes(client))throw new TypeError('client must be dsh or hanamesh');
  const active=new Set();let closed=false;
  const suite=createCoreSuiteAdapter({core});
@@ -107,15 +107,19 @@ export function createInstallationStatusReader({client='dsh',core=()=>undefined,
    const config=await abortable(discoverReader({channel,signal,workerNode}),signal);
    if(!validReader(config))throw new AppHostError('AGENT_READER_DISCOVERY_INVALID','Invalid automatic reader.',{},503);
    row={...initial,identity:{pluginName:config.pluginName,marketplace:config.marketplace}};
-   const invoke=args=>abortable(runCommand({channel,reader:config,args,signal,workerNode}),signal);
-   const versionFailure=readerVersionFailure(channel,await invoke(['--version']));
+   const invoke=(stage,args)=>abortable(runCommand({channel,reader:config,args,signal,workerNode,stage}),signal);
+   const versionFailure=readerVersionFailure(channel,await invoke('version',['--version']));
    if(versionFailure)return unknown(row,versionFailure,versionFailure==='AGENT_READER_VERSION_INVALID'?'官方 CLI 版本输出格式无效。':'官方 CLI 低于支持的最低版本。','通过官方渠道升级 Claude Code 至 2.1.301 或以上、Codex CLI 至 0.162.1 或以上，再重新检测。');
    const suffix=channel==='codex'?['--disable','remote_plugin']:[];
-   const text=await invoke(['plugin','list','--json',...suffix]);
-   const sourceText=await invoke(['plugin','marketplace','list','--json',...suffix]);
+   const text=await invoke('plugin-list',['plugin','list','--json',...suffix]);
+   const sourceText=await invoke('marketplace-list',['plugin','marketplace','list','--json',...suffix]);
    let plugins,marketplaces;try{plugins=JSON.parse(text);marketplaces=JSON.parse(sourceText)}catch{inventoryError()}
    return{...row,...parseInventory(channel,plugins,marketplaces,config)};
-  }catch(error){if(signal.aborted||error.code==='INSTALLATION_STATUS_CANCELLED')throw interrupted();const code=failureCodes.has(error.code)?error.code:'AGENT_READER_FAILED';const messages={AGENT_READER_UNAVAILABLE:'未在当前用户的 PATH 或常见安装位置找到官方 CLI。',AGENT_SHELL_ENV_UNAVAILABLE:'登录 shell 的 PATH 未能读取。',AGENT_PROFILE_UNAVAILABLE:'当前用户的官方资料目录不存在或不可访问。',AGENT_READER_TIMEOUT:'本次官方只读检测超时。',AGENT_INVENTORY_INVALID:'官方清单 JSON 不符合受支持的格式。',AGENT_READER_DISCOVERY_INVALID:'自动发现的官方 CLI 信息无效。',AGENT_READER_ENTRYPOINT_UNAVAILABLE:'已发现 Windows 命令入口，但官方 npm 程序文件缺失。'};return unknown(row,code,messages[code]??'本次官方清单读取未能提供完整且一致的安装事实。','在终端确认官方 CLI 可运行，并在其用户级插件页面检查清单、权限和市场来源后重新检测。')}
+  }catch(error){
+   const diagnostic=installationCommandDiagnostic(error.details?.command);
+   if(diagnostic)try{logger?.warn?.('APPHOST_INSTALLATION_COMMAND_DIAGNOSTIC %s',JSON.stringify({channel,code:failureCodes.has(error.code)?error.code:'AGENT_READER_FAILED',...diagnostic}))}catch{}
+   if(signal.aborted||error.code==='INSTALLATION_STATUS_CANCELLED')throw interrupted();
+   const code=failureCodes.has(error.code)?error.code:'AGENT_READER_FAILED';const messages={AGENT_READER_UNAVAILABLE:'未在当前用户的 PATH 或常见安装位置找到官方 CLI。',AGENT_SHELL_ENV_UNAVAILABLE:'登录 shell 的 PATH 未能读取。',AGENT_PROFILE_UNAVAILABLE:'当前用户的官方资料目录不存在或不可访问。',AGENT_READER_TIMEOUT:'本次官方只读检测超时。',AGENT_INVENTORY_INVALID:'官方清单 JSON 不符合受支持的格式。',AGENT_READER_DISCOVERY_INVALID:'自动发现的官方 CLI 信息无效。',AGENT_READER_ENTRYPOINT_UNAVAILABLE:'已发现 Windows 命令入口，但官方 npm 程序文件缺失。'};return unknown(row,code,messages[code]??'本次官方清单读取未能提供完整且一致的安装事实。','在终端确认官方 CLI 可运行，并在其用户级插件页面检查清单、权限和市场来源后重新检测。')}
  }
  async function other(signal){
   const profileDir=client==='hanamesh'?(typeof otherProfileDir==='function'?otherProfileDir():otherProfileDir):null;

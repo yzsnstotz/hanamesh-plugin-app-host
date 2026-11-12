@@ -4,6 +4,8 @@ import {mkdtempSync,realpathSync,rmSync,lstatSync} from 'node:fs';
 import {join} from 'node:path';
 import {createWindowsJob} from '../windows-job.js';
 let started=false,finishing=false,finalized=false,directory,anchor,anchorExited=false,payload,windowsJob,jobStarting,jobController,stopping;
+const now=()=>Number(process.hrtime.bigint())/1e6;
+function diagnostic(value){try{if(process.connected)process.send({diagnostic:value},()=>{})}catch{}}
 function groupMetadata(){
  const result=spawnSync('/bin/ps',['-axo','pid=,pgid=,uid=,stat='],{encoding:'utf8',stdio:['ignore','pipe','ignore']});
  if(result.status!==0)throw new Error('Owned group metadata is unavailable.');
@@ -53,7 +55,7 @@ async function finalize(){
  process.stdout.write('',complete);process.stderr.write('',complete);
 }
 function finish(value){
- if(finishing)return;finishing=true;payload=value;
+ if(finishing)return;finishing=true;diagnostic({cleanupStartedAt:now()});payload=value;
  if(anchor&&(process.platform==='win32'||!anchorExited)){
   // The anchor is not released until the entire exact command ownership has ended.
   if(process.platform==='win32'){
@@ -80,17 +82,18 @@ process.once('unhandledRejection',()=>finish({error:'AGENT_READER_FAILED'}));
 if(!process.connected)process.exit(1);
 process.on('message',request=>{
  if(request.abort){finish({error:'INSTALLATION_STATUS_CANCELLED'});return}
- if(started)return;started=true;
+ if(started)return;started=true;diagnostic({workerReadyAt:now()});
  try{
   if(!process.connected){finish({error:'INSTALLATION_STATUS_CANCELLED'});return}
   directory=mkdtempSync(join(realpathSync(request.temporaryRoot),'hanamesh-installation-read-'));
   process.send({directory},error=>{if(error)finish({error:'INSTALLATION_STATUS_CANCELLED'})});
   const env={...request.env,TMPDIR:directory,TMP:directory,TEMP:directory};
+  diagnostic({anchorStartedAt:now()});
   anchor=fork(new URL('./installation-command-worker.js',import.meta.url),[],{cwd:directory,env,execArgv:[],detached:process.platform!=='win32',stdio:['ignore','pipe','pipe','ipc']});
   anchor.stdout.pipe(process.stdout,{end:false});anchor.stderr.pipe(process.stderr,{end:false});
-  anchor.on('message',value=>{void commandResult(value)});
+  anchor.on('message',value=>{if(value.diagnostic)diagnostic(value.diagnostic);else void commandResult(value)});
   anchor.once('exit',()=>{anchorExited=true});
-  anchor.once('error',()=>{if(!finishing){finishing=true;payload={error:'AGENT_READER_UNAVAILABLE'}}});
+  anchor.once('error',()=>{if(!finishing){finishing=true;diagnostic({cleanupStartedAt:now()});payload={error:'AGENT_READER_UNAVAILABLE'}}});
   anchor.once('close',()=>{if(!finishing)finish({error:'AGENT_READER_FAILED'});void finalize()});
   const launch=()=>{if(!finishing)anchor.send({executable:request.executable,args:request.args},error=>{if(error)finish({error:'AGENT_READER_UNAVAILABLE'})});};
   if(process.platform==='win32'){

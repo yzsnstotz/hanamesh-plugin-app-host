@@ -1,3 +1,5 @@
+0.6.29：官方安装清单读取失败仅在可信宿主日志增加固定命令阶段、退出状态、stderr 字节数/分类和分阶段耗时；公开 observation/reason DTO、所有预算与不重试行为不变。见 [诊断边界](INSTALLATION_STATUS.md#trusted-command-diagnostics-0629)。
+
 0.6.27：Desktop payload 独立 Node 的启动识别上限为 30 s（实测最慢冷启动 4.07 s 的 7 倍以上余量），超时或插件卸载即终止该子进程；版本、平台与非 Electron 校验不变。
 
 0.6.26：Codex 官方 GitHub `git` 来源的精确 `.git` 后缀在市场映射与每项安装来源分别归一；只读覆盖扩大到 ChatGPT.app 内置 Codex CLI、预发布 CLI 版本、不存在的官方资料目录（未安装）和 HanaMesh 客户端读取的 DSH 桌面版磁盘 profile；`other-runtime` 的 kind 改名为 `other-client`。只读命令与来源冲突拒绝不变，见 INSTALLATION_STATUS.md。
