@@ -305,3 +305,5 @@ R168：后台套件版本展示使用不登记确认的 Core 只读组合查询�
 ## DT7 · 0.6.28 legacy component installation observations
 
 The optional Core protocol-1 `assessLegacyInstallation` is the sole evaluator of no-bundle member facts. AppHost inventories public metadata, entry/selection facts and per-member peer resolution, then validates and forwards its result. Missing assessor and unreadable facts remain unknown. No-bundle runtime declarations forward optional `legacy`; total-bundle and executable upgrade gates remain unchanged. See [INSTALLATION_STATUS.md](INSTALLATION_STATUS.md). No request or observation DTO field is added; legacy states use existing status/reason/blocked fields and null bundle version.
+
+R204 repair: metadata exports and entry health are independent observations. Hidden package.json with a broken entry remains an installed damaged member, not missing; metadata read failure remains unconfirmed. Explicit unreadable peers are sent as unknown, distinct from disk-unresolved host injections. Core remains the sole status evaluator.

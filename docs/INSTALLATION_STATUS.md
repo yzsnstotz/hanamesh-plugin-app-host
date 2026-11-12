@@ -123,3 +123,5 @@ R115 regression fixtures execute real non-TTY Bash, asdf 0.20.2 official shim an
 安装物回归：`node tests/native/installed-detection.mjs /absolute/HanaMesh.app /absolute/new-evidence-directory https://website-origin` 从实际 app 资源读取种子版本，以全新 HOME / DSH_HOME / shared home / user-data 启动同一可执行文件；仅在出现该按钮时选择 Set up later，不登录或开启记录；随后断言获准 Origin 的发现响应、真实 POST、五作用域及本 runtime 的完整套件/版本。检测失败退出非零，保留逐端口响应、UI 与首错；不以页面可打开或目录中存在包文件代替运行结果。该手工安装物测试需要 macOS GUI 会话，默认源码单测另覆盖全新彩排配置初始化。
 
 未发布候选可在最后追加本人自建、无凭据且由正常 DSH CLI 安装的 profile 路径。回归把该资料复制到新 DSH_HOME，再运行同一安装物；不手改 app 或 dist。默认不传此参数时仍检查 app 原始种子。
+
+DT8 / R204 repair (same 0.6.28 candidate): package metadata lookup uses Node's public module search paths when package.json is not exported, independently of whether the root entry resolves. An existing package with a missing entry is collected as damaged with its real metadata/version; an existing package directory whose metadata cannot be read stays unreadable, never authoritative absence. Explicit peer read failures remain `unknown`. AppHost forwards these facts to Core and adds no compatibility policy.

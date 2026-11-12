@@ -1,5 +1,7 @@
 // AppHost mutation targets, name filters and invariant-specific failure reasons.
 export const cases=[
+ {id:'DT8-hidden-metadata-discarded',file:'src/library/installation-profile.js',from:'for(const directory of resolver.resolve.paths(name)??[]){',to:'for(const directory of []){',test:'tests/legacy-installation.test.mjs',pattern:'DT8 A01 unexported',reason:/Expected values to be strictly deep-equal/},
+ {id:'DT8-peer-read-failure-called-absent',file:'src/library/installation-profile.js',from:"peers[name]=absent(error)?null:'unknown'",to:'peers[name]=null',test:'tests/legacy-installation.test.mjs',pattern:'DT8 C02 collector',reason:/AssertionError/},
  {id:'DT7-legacy-inventory-discarded',file:'src/library/installation-status.js',from:'const value=await suite.assessLegacy(await readLegacyProfileFacts(profileDir,profile));',to:"return{...row,status:'not-installed'}; const value=await suite.assessLegacy(await readLegacyProfileFacts(profileDir,profile));",test:'tests/legacy-installation.test.mjs',pattern:'DT7 disk facts delegate installed',reason:/Expected values to be strictly equal/},
  {id:'DT7-legacy-verdict-discarded',file:'src/library/suite.js',from:'if(declaration.legacy)return{...declaration.legacy,',to:'if(false)return{...declaration.legacy,',test:'tests/legacy-installation.test.mjs',pattern:'DT7 current runtime forwards',reason:/Expected values to be strictly equal/},
 

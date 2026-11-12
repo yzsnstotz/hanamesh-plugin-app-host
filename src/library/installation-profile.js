@@ -1,17 +1,23 @@
 /** Public package metadata inventory only; never loads a plugin or calculates compatibility. */
 import {readFile,stat} from 'node:fs/promises';
 import {createRequire} from 'node:module';
-import {dirname,join} from 'node:path';
+import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {SUITE_PACKAGES} from './suite.js';
 const absent=error=>['MODULE_NOT_FOUND','ERR_MODULE_NOT_FOUND','ENOENT','ENOTDIR'].includes(error.code);
 async function packageFile(resolver,name){
  try{return resolver.resolve(`${name}/package.json`)}catch(error){
   if(!absent(error)&&error.code!=='ERR_PACKAGE_PATH_NOT_EXPORTED')throw error;
-  let cursor=dirname(resolver.resolve(name));
-  for(;;){const file=join(cursor,'package.json');try{if(JSON.parse(await readFile(file,'utf8')).name===name)return file}catch(error){if(!['ENOENT','ENOTDIR'].includes(error.code))throw error}
-   const parent=dirname(cursor);if(parent===cursor)throw Object.assign(new Error('metadata unavailable'),{code:'ENOENT'});cursor=parent;
+  // Metadata exports and entry health are independent. Public Node search paths
+  // also retain pnpm package symlinks when a declared entry is missing.
+  for(const directory of resolver.resolve.paths(name)??[]){
+   const root=join(directory,name);
+   try{if(!(await stat(root)).isDirectory())throw Object.assign(new Error('package root invalid'),{code:'ERR_PACKAGE_METADATA_UNAVAILABLE'})}catch(error){if(absent(error))continue;throw error}
+   const file=join(root,'package.json');
+   try{if(!(await stat(file)).isFile())throw new Error('metadata unavailable')}catch{throw Object.assign(new Error('metadata unavailable'),{code:'ERR_PACKAGE_METADATA_UNAVAILABLE'})}
+   return file;
   }
+  throw Object.assign(new Error('package absent'),{code:'MODULE_NOT_FOUND'});
  }
 }
 export async function readLegacyProfileFacts(profileDir,profile){

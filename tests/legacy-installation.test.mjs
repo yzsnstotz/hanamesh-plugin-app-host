@@ -30,3 +30,36 @@ test('DT7 current legacy unknown keeps Core startup blocked codes for bounded fo
  const value={...declaration(),bundleVersion:null,completeness:'unknown',legacy:verdict('unknown'),blocked:[{code:'CORE_SUITE_CLIENT_PEER_NOT_CONNECTED'}]};const provider=core(value),read=createInstallationStatusReader({core:()=>provider,profileState:async()=>'absent'});
  try{assert.ok((await read()).observations[0].blocked.some(r=>r.code==='CORE_SUITE_CLIENT_PEER_NOT_CONNECTED'))}finally{read.close()}
 });
+
+test('DT8 A01 unexported metadata with broken entries is installed damaged, never absent',async t=>{
+ const dir=await profile(t);
+ for(const [i,name] of names.entries())await writeFile(join(dir,'node_modules',name,'package.json'),JSON.stringify({name,version:versions[i],exports:{'.':'./missing-entry.js'}}));
+ const {readLegacyProfileFacts}=await import('../src/library/installation-profile.js');
+ const collected=await readLegacyProfileFacts(dir,JSON.parse(await (await import('node:fs/promises')).readFile(join(dir,'package.json'),'utf8')));
+ assert.deepEqual(collected.components.map(c=>c.observation.kind),names.map(()=>'damaged'));
+ let calls=0;
+ const provider={...core(declaration()),assessLegacyInstallation:async facts=>{
+  calls++;assert.deepEqual(facts.components.map(c=>c.observation.kind),names.map(()=>'damaged'));
+  assert.deepEqual(facts.components.map(c=>c.observation.version),versions);
+  return verdict('incomplete');
+ }};
+ const read=createInstallationStatusReader({client:'hanamesh',core:()=>provider,profileState:async()=>'absent',otherProfileDir:dir});t.after(()=>read.close());
+ const result=(await read()).observations.find(r=>r.scope.id==='other-runtime');assert.equal(calls,1);assert.equal(result.status,'incomplete');
+});
+test('DT8 C02 collector preserves a corrupt peer as explicit unknown',async t=>{
+ const dir=await profile(t);await writeFile(join(dir,'node_modules','external','package.json'),'{');
+ const {readLegacyProfileFacts}=await import('../src/library/installation-profile.js');
+ const facts=await readLegacyProfileFacts(dir,JSON.parse(await (await import('node:fs/promises')).readFile(join(dir,'package.json'),'utf8')));
+ assert.ok(facts.components.every(c=>c.peers.external==='unknown'));
+});
+
+test('DT8 A01 hidden metadata resolves without executing healthy entries; existing roots with lost metadata stay unreadable',async t=>{
+ const dir=await profile(t),fs=await import('node:fs/promises'),{readLegacyProfileFacts}=await import('../src/library/installation-profile.js');
+ const manifest=JSON.parse(await fs.readFile(join(dir,'package.json'),'utf8'));
+ for(const [i,name]of names.entries())await writeFile(join(dir,'node_modules',name,'package.json'),JSON.stringify({name,version:versions[i],exports:{'.':'./index.js'}}));
+ assert.ok((await readLegacyProfileFacts(dir,manifest)).components.every(c=>c.observation.kind==='present'));
+ await rm(join(dir,'node_modules',names[0],'package.json'));
+ assert.equal((await readLegacyProfileFacts(dir,manifest)).components[0].observation.kind,'unreadable');
+ for(const name of names)await rm(join(dir,'node_modules',name),{recursive:true});
+ assert.ok((await readLegacyProfileFacts(dir,manifest)).components.every(c=>c.observation.kind==='missing'));
+});
