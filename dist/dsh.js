@@ -136,9 +136,12 @@ export async function apply(ctx, config) {
   const dataRoot = config.dataRoot ?? join(process.env.DSH_HOME ?? process.env.HOME ?? '.', 'data', 'hanamesh-apps');
   requireCondition(typeof dataRoot === 'string', 'INVALID_ROOT', 'dataRoot is required.');
   // The payload Node probe may wait for a cold OS start; unloading the plugin kills it instead of waiting.
+  // Cordis runs effect cleanups only after apply() returns, so the cancel listens for this fiber's disposal
+  // (Cordis emits internal/plugin with uid cleared as soon as dispose() starts).
   const layoutProbe = new AbortController();
-  ctx.effect(() => () => layoutProbe.abort(), 'hanameshApps.layoutProbe');
+  ctx.on('internal/plugin', fiber => { if (fiber === ctx.fiber && fiber.uid === null) layoutProbe.abort(); });
   const desktop = await inferDesktopLayout({ signal: layoutProbe.signal });
+  if (layoutProbe.signal.aborted) return; // unloaded during the probe: acquire nothing
   const transportOrigin = `http://127.0.0.1:${webServer.port}`;
   const parentOrigin = config.parentOrigin ?? desktop?.parentOrigin ?? transportOrigin;
   const frameAncestors = config.frameAncestors ?? desktop?.frameAncestors ?? [];
