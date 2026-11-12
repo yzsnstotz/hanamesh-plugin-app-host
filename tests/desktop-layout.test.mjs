@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdir,writeFile,symlink,rm,chmod} from 'node:fs/promises';
+import {mkdir,writeFile,symlink,rm,chmod,readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import * as locate from '../src/library/locate.js';
@@ -61,4 +61,33 @@ test('AH-D07: a payload Node that starts slowly on a cold launch is still select
   await writeFile(join(payload,'runtime.json'),JSON.stringify({desktopVersion:'0.2.1-alpha.2',platform:process.platform,arch:process.arch,node:process.versions.node,python:'3.13.0',pythonPackages:{}}));
   const resolved=await locate.resolveLibraryLocations({},{moduleUrl:h.moduleUrl,argv:h.argv,execPath:'/electron',versions:{electron:'44.7.0'}});
   assert.equal(resolved.nodeBinary,node);
+});
+
+const hangingNode=async(t)=>{
+  const h=await layout(t),payload=h.argv[4],bin=join(payload,'dependencies/node/bin'),node=join(bin,'node'),pidFile=join(h.root,'probe.pid');
+  await mkdir(bin,{recursive:true});
+  // Never answers and never exits: the bound or the lifecycle signal must end it.
+  await writeFile(node,`#!/bin/sh\necho $$ > '${pidFile}'\nexec sleep 8\n`);await chmod(node,0o755);
+  await writeFile(join(payload,'runtime.json'),JSON.stringify({desktopVersion:'0.2.1-alpha.2',platform:process.platform,arch:process.arch,node:process.versions.node,python:'3.13.0',pythonPackages:{}}));
+  return{h,pidFile};
+};
+// The kill is sent when the wait ends; give the OS a moment to reap it, far below the child's own 8 s lifetime.
+const gone=async pidFile=>{const pid=Number((await readFile(pidFile,'utf8')).trim());assert.ok(pid>0);
+  for(let i=0;i<50;i++){try{process.kill(pid,0)}catch(error){if(error.code==='ESRCH')return;throw error}await new Promise(resolve=>setTimeout(resolve,20))}
+  assert.fail('the probe child must be killed, not left running');};
+test('AH-D08: a payload Node probe that never answers is bounded and its child is killed',{skip:process.platform==='win32'},async t=>{
+  assert.equal(locate.PAYLOAD_NODE_PROBE_TIMEOUT_MS,30_000);
+  const {h,pidFile}=await hangingNode(t),started=Date.now();
+  const desktop=await locate.inferDesktopLayout({moduleUrl:h.moduleUrl,argv:h.argv,probeTimeoutMs:800});
+  assert.ok(Date.now()-started<5_000,'bounded wait');assert.equal(desktop.nodeBinary,undefined);
+  await gone(pidFile);
+});
+test('AH-D09: disposing during the payload Node probe aborts it at once and kills its child',{skip:process.platform==='win32'},async t=>{
+  const {h,pidFile}=await hangingNode(t),controller=new AbortController(),started=Date.now();
+  const pending=locate.inferDesktopLayout({moduleUrl:h.moduleUrl,argv:h.argv,signal:controller.signal});
+  for(let i=0;i<100;i++){try{await readFile(pidFile);break}catch{await new Promise(resolve=>setTimeout(resolve,20))}}
+  controller.abort();
+  const desktop=await pending;
+  assert.ok(Date.now()-started<5_000,'abort ends the wait');assert.equal(desktop.nodeBinary,undefined);
+  await gone(pidFile);
 });

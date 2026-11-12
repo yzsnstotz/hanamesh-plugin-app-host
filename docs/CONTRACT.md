@@ -1,4 +1,4 @@
-0.6.27：Desktop payload 独立 Node 的启动识别不设固定时限，等待系统首次执行完成；版本、平台与非 Electron 校验不变。
+0.6.27：Desktop payload 独立 Node 的启动识别上限为 30 s（实测最慢冷启动 4.07 s 的 7 倍以上余量），超时或插件卸载即终止该子进程；版本、平台与非 Electron 校验不变。
 
 0.6.26：Codex 官方 GitHub `git` 来源的精确 `.git` 后缀在市场映射与每项安装来源分别归一；只读覆盖扩大到 ChatGPT.app 内置 Codex CLI、预发布 CLI 版本、不存在的官方资料目录（未安装）和 HanaMesh 客户端读取的 DSH 桌面版磁盘 profile；`other-runtime` 的 kind 改名为 `other-client`。只读命令与来源冲突拒绝不变，见 INSTALLATION_STATUS.md。
 

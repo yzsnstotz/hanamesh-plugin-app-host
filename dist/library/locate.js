@@ -69,7 +69,15 @@ export async function inferProfileDir(moduleUrl){
  * The shell passes runtimeDir and profileDir to its named entry; prove the entry and this package's
  * profile link before using them. Never infer from cwd, HOME, a port, or a supply overlay.
  */
-export async function inferDesktopLayout({moduleUrl=import.meta.url,argv=process.argv}={}) {
+/**
+ * Upper bound for the one startup probe of the Desktop payload Node. Its first execution waits for the OS, not for
+ * Node: measured 4.07 s and 2.81 s (0.09 s CPU) on the owner Mac when the client ran from its DMG volume, against
+ * 0.26 s for the installed app. 30 s keeps more than 7x headroom over the slowest measured cold start; the former
+ * 1 s cap made the whole session run without Node. A probe that never answers is killed at this bound or when the
+ * plugin is disposed (`signal`), and the payload Node then stays unavailable as before.
+ */
+export const PAYLOAD_NODE_PROBE_TIMEOUT_MS=30_000;
+export async function inferDesktopLayout({moduleUrl=import.meta.url,argv=process.argv,signal,probeTimeoutMs=PAYLOAD_NODE_PROBE_TIMEOUT_MS}={}) {
   const [entry,runtimeDir,profileDir]=[argv?.[1],argv?.[2],argv?.[3]];
   if (![entry,runtimeDir,profileDir].every(value=>typeof value==='string'&&isAbsolute(value))) return undefined;
   const hostRoot=join(runtimeDir,'node_modules/@deepseek-ai/dsh-desktop-host'),hostManifest=await json(join(hostRoot,'package.json'));
@@ -107,10 +115,7 @@ export async function inferDesktopLayout({moduleUrl=import.meta.url,argv=process
     const node=join(payload,'dependencies/node/bin',process.platform==='win32'?'node.exe':'node');
     try {
       await access(node,constants.X_OK);
-      // No startup deadline: the first execution of the bundled binary waits for the OS (seconds on a cold launch,
-      // measured 4 s on the owner Mac and 129 s after a fresh DMG mount); a fixed cap made the client run without
-      // its Node for the whole session, so Claude Code/Codex could never be read.
-      const {stdout}=await promisify(execFile)(node,['-p','JSON.stringify({node:process.versions.node,electron:process.versions.electron})'],{env:{},maxBuffer:1024});
+      const {stdout}=await promisify(execFile)(node,['-p','JSON.stringify({node:process.versions.node,electron:process.versions.electron})'],{env:{},maxBuffer:1024,timeout:probeTimeoutMs,killSignal:'SIGKILL',...(signal?{signal}:{})});
       const actual=JSON.parse(stdout);
       if(actual.node===metadata.node&&actual.electron===undefined)nodeBinary=await realpath(node);
     } catch { /* Unavailable/unproven payload Node stays unavailable; never use Electron. */ }

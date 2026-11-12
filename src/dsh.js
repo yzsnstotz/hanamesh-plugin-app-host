@@ -135,7 +135,10 @@ export async function apply(ctx, config) {
   config ??= {};
   const dataRoot = config.dataRoot ?? join(process.env.DSH_HOME ?? process.env.HOME ?? '.', 'data', 'hanamesh-apps');
   requireCondition(typeof dataRoot === 'string', 'INVALID_ROOT', 'dataRoot is required.');
-  const desktop = await inferDesktopLayout();
+  // The payload Node probe may wait for a cold OS start; unloading the plugin kills it instead of waiting.
+  const layoutProbe = new AbortController();
+  ctx.effect(() => () => layoutProbe.abort(), 'hanameshApps.layoutProbe');
+  const desktop = await inferDesktopLayout({ signal: layoutProbe.signal });
   const transportOrigin = `http://127.0.0.1:${webServer.port}`;
   const parentOrigin = config.parentOrigin ?? desktop?.parentOrigin ?? transportOrigin;
   const frameAncestors = config.frameAncestors ?? desktop?.frameAncestors ?? [];
