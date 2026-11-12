@@ -125,3 +125,5 @@ R115 regression fixtures execute real non-TTY Bash, asdf 0.20.2 official shim an
 未发布候选可在最后追加本人自建、无凭据且由正常 DSH CLI 安装的 profile 路径。回归把该资料复制到新 DSH_HOME，再运行同一安装物；不手改 app 或 dist。默认不传此参数时仍检查 app 原始种子。
 
 DT8 / R204 repair (same 0.6.28 candidate): package metadata lookup uses Node's public module search paths when package.json is not exported, independently of whether the root entry resolves. An existing package with a missing entry is collected as damaged with its real metadata/version; an existing package directory whose metadata cannot be read stays unreadable, never authoritative absence. Explicit peer read failures remain `unknown`. AppHost forwards these facts to Core and adds no compatibility policy.
+
+R206 repair (same 0.6.28 candidate): hidden metadata lookup resolves its physical path with Node's public realpath before establishing the member's peer resolution context. This preserves pnpm peers bound beside the physical member, independently of entry health. Unreadable metadata/peers stay unconfirmed/unknown; only actual absence is collected as missing/null. AppHost still delegates all compatibility decisions to Core.

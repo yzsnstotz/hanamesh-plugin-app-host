@@ -1,5 +1,5 @@
 /** Public package metadata inventory only; never loads a plugin or calculates compatibility. */
-import {readFile,stat} from 'node:fs/promises';
+import {readFile,stat,realpath} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
@@ -14,8 +14,9 @@ async function packageFile(resolver,name){
    const root=join(directory,name);
    try{if(!(await stat(root)).isDirectory())throw Object.assign(new Error('package root invalid'),{code:'ERR_PACKAGE_METADATA_UNAVAILABLE'})}catch(error){if(absent(error))continue;throw error}
    const file=join(root,'package.json');
-   try{if(!(await stat(file)).isFile())throw new Error('metadata unavailable')}catch{throw Object.assign(new Error('metadata unavailable'),{code:'ERR_PACKAGE_METADATA_UNAVAILABLE'})}
-   return file;
+   // Resolve the physical metadata location before creating a member resolver:
+   // pnpm binds peers beside the real package, not beside its profile symlink.
+   try{if(!(await stat(file)).isFile())throw new Error('metadata unavailable');return await realpath(file)}catch{throw Object.assign(new Error('metadata unavailable'),{code:'ERR_PACKAGE_METADATA_UNAVAILABLE'})}
   }
   throw Object.assign(new Error('package absent'),{code:'MODULE_NOT_FOUND'});
  }

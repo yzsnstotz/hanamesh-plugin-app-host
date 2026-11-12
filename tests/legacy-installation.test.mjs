@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdir,writeFile,rm} from 'node:fs/promises';
+import {mkdir,writeFile,readFile,rm,symlink,realpath} from 'node:fs/promises';
+import {createRequire} from 'node:module';
+import {pathToFileURL} from 'node:url';
 import {join} from 'node:path';
 import {scratch} from './helpers.mjs';
 import {createInstallationStatusReader} from '../src/library/installation-status.js';
@@ -62,4 +64,40 @@ test('DT8 A01 hidden metadata resolves without executing healthy entries; existi
  assert.equal((await readLegacyProfileFacts(dir,manifest)).components[0].observation.kind,'unreadable');
  for(const name of names)await rm(join(dir,'node_modules',name),{recursive:true});
  assert.ok((await readLegacyProfileFacts(dir,manifest)).components.every(c=>c.observation.kind==='missing'));
+});
+
+for(const [label,content,expectedPeer,status]of [
+ ['compatible',JSON.stringify({name:'external',version:'1.2.3'}),'1.2.3','installed'],
+ ['incompatible',JSON.stringify({name:'external',version:'0.9.0'}),'0.9.0','incomplete'],
+ ['unreadable','{','unknown','unknown'],
+])test(`DT9 pnpm hidden metadata preserves ${label} physical peer facts`,async t=>{
+ const dir=await profile(t),manifest=JSON.parse(await readFile(join(dir,'package.json'),'utf8'));
+ await rm(join(dir,'node_modules'),{recursive:true});
+ for(const [i,name]of names.entries()){
+  const physical=join(dir,'node_modules/.pnpm',`member${i}`,'node_modules',name);
+  await mkdir(physical,{recursive:true});
+  await writeFile(join(physical,'package.json'),JSON.stringify({name,version:versions[i],exports:{'.':'./index.js'},peerDependencies:i===0?{external:'^1.0.0'}:{}}));
+  await writeFile(join(physical,'index.js'),'throw new Error("plugin code must not execute")');
+  await mkdir(join(dir,'node_modules/@hanamesh'),{recursive:true});
+  await symlink(physical,join(dir,'node_modules',name),'dir');
+ }
+ const peer=join(dir,'node_modules/.pnpm/member0/node_modules/external');
+ await mkdir(peer,{recursive:true});await writeFile(join(peer,'package.json'),content);
+ const resolver=createRequire(pathToFileURL(join(dir,'package.json')));
+ const physicalResolver=createRequire(resolver.resolve(names[0]));
+ if(label==='unreadable')assert.throws(()=>physicalResolver.resolve('external/package.json'),{code:'ERR_INVALID_PACKAGE_CONFIG'});
+ else assert.equal(physicalResolver.resolve('external/package.json'),await realpath(join(peer,'package.json')),'Node resolves the peer from the physical member binding');
+ const {readLegacyProfileFacts}=await import('../src/library/installation-profile.js');
+ const facts=await readLegacyProfileFacts(dir,manifest);
+ assert.ok(facts.components.every(c=>c.observation.kind==='present'));
+ assert.deepEqual(facts.components.map(c=>c.observation.version),versions);
+ assert.equal(facts.components[0].peers.external,expectedPeer,'hidden metadata must retain the physical peer observation');
+ let calls=0;
+ const provider={...core(declaration()),assessLegacyInstallation:async observed=>{
+  calls++;assert.equal(observed.components[0].peers.external,expectedPeer);
+  return verdict(status);
+ }};
+ const read=createInstallationStatusReader({client:'hanamesh',core:()=>provider,profileState:async()=>'absent',otherProfileDir:dir});t.after(()=>read.close());
+ const result=(await read()).observations.find(r=>r.scope.id==='other-runtime');
+ assert.equal(calls,1);assert.equal(result.status,status);assert.deepEqual(result.reason,verdict(status).reason);
 });
