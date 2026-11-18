@@ -1272,6 +1272,112 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
   function ConnectionTabs({selected,navigate}){return h('nav',{className:'hm-connection-tabs','aria-label':t('设置与连接')},...[["hanamesh-account","账号与设备"],["hanamesh-providers","模型连接"],["hanamesh-environment","环境与来源"]].map(([id,label])=>h('button',{type:'button',key:id,'aria-current':id===selected?'page':undefined,onClick:()=>navigate(id)},t(label))));}
   function ProvidersPage({navigate}){useLocale();const[error,setError]=React.useState(false);const go=id=>{try{navigate(id);setError(false);}catch{setError(true);}};return h('div',{className:'hm-apphost-page'},h('div',{className:'hm-apphost-breadcrumb'},t('HanaMesh / 模型连接')),h('header',null,h('div',{className:'hm-apphost-eyebrow'},'MODELS / PROVIDERS'),h('h1',null,t('连接模型，保持掌控。')),h('p',null,t('登录账号不提供模型凭据。沿用宿主连接，按应用分别查看授权。'))),h(ConnectionTabs,{selected:'hanamesh-providers',navigate:go}),error?h('p',{role:'alert'},t('对应页面暂不可用，请确认 HanaMesh Core 已启用。')):null,h('div',{className:'hm-apphost-card'},h(ProvidersSection)),h('footer',null,'HanaMesh · Let every use bloom.'));}
   function EnvironmentContent(){useLocale();const[expanded,setExpanded]=React.useState({});return h('div',{className:'hm-apphost-environment'},h('section',{className:'hm-apphost-card'},h(NodeRuntimeSection)),...[["sources","目录来源",LibrarySourcesSection],["suite","套件安装包来源",SuiteSourceSettingsSection],["handoff","网站安装交接",HandoffSettingsSection]].map(([id,label,Component])=>h('details',{key:id,className:'hm-apphost-card',onToggle:event=>{const open=event.currentTarget.open;setExpanded(previous=>({...previous,[id]:open}));}},h('summary',null,t(label)),expanded[id]?h(Component):h('p',null,t('展开后读取当前设置；不会自动保存或安装。')))));}
+  const nativeMarketCopy={nativeTrust:['第三方插件会在本机运行代码。收录不代表安全背书；仅安装你信任的作者和来源。','Third-party plugins run code on this computer. A listing is not a security endorsement. Install only authors and sources you trust.'],nativeCopy:['复制命令','Copy command'],nativeWebsite:['去网站看','View website'],nativeMore:['显示更多','Show more'],nativeRetry:['重试','Retry'],nativeLoading:['正在读取市场…','Loading the market…'],nativeNoResults:['没有符合条件的条目。','No matching entries.'],nativeModalUnavailable:['当前 DSH 未提供原生确认弹窗，请启用插件管理器或升级 DSH。','The native confirmation dialog is unavailable. Enable the plugin manager or update DSH.']};
+  for(const[key,[zh,en]]of Object.entries(nativeMarketCopy)){COPY.zh[key]=zh;COPY.en[key]=en;}
+  function NativeMarketConfirmation({review,actions,Modal,onClose}){
+    if(!review)return null;
+    if(!Modal||typeof Modal!=='function'&&typeof Modal!=='object')return h('p',{role:'alert'},t(COPY.zh.nativeModalUnavailable));
+    const entry=review.entry,target=review.install;
+    const cancel=()=>{actions.cancel();onClose();};
+    return h(Modal,{open:true,onClose:cancel,title:t('安装确认'),closeLabel:t('关闭'),
+      footer:h('div',{className:'hm-market-actions'},h('button',{type:'button',onClick:cancel},t('取消')),h('button',{type:'button',onClick:()=>{actions.confirm(review);onClose();}},t('确认安装')))},
+      h('h3',null,target.title),h('dl',null,h('dt',null,t('精确版本')),h('dd',null,target.version),h('dt',null,t('发布者')),h('dd',null,entry.publisher?.name??'—'),h('dt',null,t('来源')),h('dd',null,h('code',null,target.spec)),
+        target.registry?h('dd',null,target.registry):null),
+      ...(entry.sourceLinks??[]).map((link,index)=>h('p',{key:index},link.sourceId+' · '+link.sourceUrl)),
+      h('p',{role:'note'},t(COPY.zh.nativeTrust)));
+  }
+  function NativeMarketExternalActions({command,website,copy}){
+    return h('div',{className:'hm-market-actions'},h('button',{type:'button',disabled:!command,onClick:()=>copy(command)},t(COPY.zh.nativeCopy)),
+      h('a',{href:website,target:'_blank',rel:'noopener noreferrer'},t(COPY.zh.nativeWebsite)));
+  }
+  function NativeMarketResults({snapshot,card,onRetry,onMore}){
+    const loading=snapshot.status==='loading';
+    return h('section',{'aria-busy':loading,'data-hanamesh-native-results':''},
+      loading?h('p',{role:'status'},t(COPY.zh.nativeLoading)):null,
+      h('div',{className:'hm-library-grid'},...snapshot.items.map(card),
+        loading&&snapshot.items.length===0?h('div',{'data-hanamesh-market-skeleton':'loading','aria-hidden':true,className:'hm-market-skeleton'},...Array.from({length:6},(_,key)=>h('div',{key,className:'hm-market-skeleton-card'},h('span'),h('span'),h('span')))):null),
+      snapshot.error?h('div',{role:'alert'},h('p',null,String(snapshot.error)),h('button',{type:'button',onClick:onRetry},t(COPY.zh.nativeRetry))):null,
+      !loading&&!snapshot.error&&snapshot.items.length===0?h('p',{role:'status'},t(COPY.zh.nativeNoResults)):null,
+      snapshot.hasMore?h('button',{type:'button',className:'hm-library-more',disabled:loading||Boolean(snapshot.error),onClick:onMore},t(COPY.zh.nativeMore)):null);
+  }
+  // CL6: the native Plugins page owns installation, progress and package management.
+  // The confirmation object is local UI state, never a second installed inventory.
+  function createNativeMarketActions(owner={}){
+    const capabilities=Object.freeze(Object.fromEntries(['install','openPackage','update'].map(key=>[key,typeof owner[key]==='function'])));
+    let current=null;
+    const cancel=()=>{current=null;};
+    return{capabilities,cancel,
+      review(choice){
+        if(!capabilities.install)throw new Error('DSH_INSTALL_UNAVAILABLE');
+        const compatibility=choice?.compatibility;
+        if(!compatibility||typeof compatibility.compatible!=='boolean')throw new Error('DSH_COMPATIBILITY_UNKNOWN');
+        if(!compatibility.compatible&&compatibility.exempted!==true)throw new Error('DSH_INCOMPATIBLE');
+        const target=choice.install;
+        if(!target||typeof target.spec!=='string'||!target.spec||typeof target.version!=='string'||!target.version||typeof target.title!=='string'||!target.title)throw new Error('NATIVE_TARGET_REQUIRED');
+        // Snapshot the reviewed facts: subsequent catalog refreshes cannot change this target.
+        const install=Object.freeze({spec:target.spec,title:target.title,version:target.version,...(target.registry!==undefined?{registry:target.registry}:{})});
+        const reviewed=Object.freeze({...choice,entry:structuredClone(choice.entry),install,compatibility:Object.freeze({...compatibility}),trustRequired:true});
+        current=reviewed;return reviewed;
+      },
+      confirm(review){
+        if(!current||review!==current)throw new Error('CONFIRMATION_STALE');
+        const target=current.install;current=null;
+        // A synchronous rejection is visible to the caller; no fallback CLI or retry.
+        return owner.install(target);
+      },
+      openInstalled(packageName){
+        if(!capabilities.openPackage)throw new Error('DSH_PACKAGE_PAGE_UNAVAILABLE');
+        return owner.openPackage(packageName);
+      },
+    };
+  }
+  // A bounded public-catalog page and an independent native listBundles read.
+  // Like official Discover, previous data stays mounted while a read runs or fails.
+  function createNativeMarketListing({readPage,listBundles}){
+    const listeners=new Set();let generation=0,disposed=false,controller=null,attempt=null;
+    let state=Object.freeze({status:'idle',items:[],bundles:null,error:null,page:0,hasMore:false,query:null,answered:null});
+    const publish=update=>{if(disposed)return;state=Object.freeze({...state,...update});for(const listener of listeners)listener(state);};
+    const run=async request=>{
+      if(disposed)return;
+      const epoch=++generation;controller?.abort();controller=new AbortController();const signal=controller.signal;
+      attempt=request;publish({status:'loading',error:null,query:request.query});
+      const [pageResult,bundleResult]=await Promise.allSettled([
+        Promise.resolve().then(()=>readPage({...request.query,page:request.page,limit:50},{signal})),
+        Promise.resolve().then(()=>listBundles()),
+      ]);
+      if(disposed||epoch!==generation)return;
+      const bundles=bundleResult.status==='fulfilled'&&Array.isArray(bundleResult.value)?bundleResult.value:null;
+      if(pageResult.status==='rejected'){
+        publish({status:'error',bundles,error:String(pageResult.reason?.message??pageResult.reason)});return;
+      }
+      const page=pageResult.value;
+      if(!page||!Array.isArray(page.items)||page.items.length>50||page.page!==request.page||!Number.isSafeInteger(page.totalPages)||page.totalPages<0||page.items.some(item=>typeof item?.hanaId!=='string'||!item.hanaId)){
+        publish({status:'error',bundles,error:'CATALOG_PAGE_INVALID'});return;
+      }
+      const unique=new Map((request.more?state.items:[]).map(item=>[item.hanaId,item]));
+      for(const item of page.items)unique.set(item.hanaId,item);
+      const error=bundles===null?bundleResult.status==='rejected'?String(bundleResult.reason?.message??bundleResult.reason):'DSH_BUNDLES_INVALID':null;
+      publish({status:error?'error':'ready',items:[...unique.values()],bundles,error,page:request.page,hasMore:request.page<page.totalPages,answered:request.query});
+    };
+    return{
+      snapshot:()=>state,
+      subscribe(listener){listeners.add(listener);return()=>listeners.delete(listener);},
+      load(query){return run({query:{...query},page:1,more:false});},
+      more(){if(!state.hasMore||state.status!=='ready')return Promise.resolve();return run({query:state.answered,page:state.page+1,more:true});},
+      retry(){return attempt?run(attempt):Promise.resolve();},
+      dispose(){disposed=true;generation++;controller?.abort();listeners.clear();},
+    };
+  }
+  /** Ports return 'none' only for absent documents; invalid/missing declared files throw. */
+  async function readNativeMarketDetail(target,readers){
+    for(const stage of ['meta','package','repository']){
+      if(typeof readers?.[stage]!=='function')throw new Error('DSH_DETAIL_READER_UNAVAILABLE');
+      const result=await readers[stage](target);
+      if(result?.status==='ready'&&typeof result.markdown==='string')return result;
+      if(result?.status!=='none')throw new Error('DSH_DETAIL_INVALID');
+    }
+    return{status:'none'};
+  }
   function registerAppHostPages(ctx){
     const previous=pageLayout;pageLayout=ctx.layout;const releases=[];
     releases.push(ctx.slots.inject('main',()=>ctx.slots.register({name:'main',key:'hanamesh-library'},()=>h(LibraryOverlay,{embedded:true,mainPage:true}))));
@@ -1283,6 +1389,7 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
 function AppLibraryIcon({size=20}){return h('span',{'aria-hidden':true,style:{display:'block',width:size,height:size,background:'currentColor',maskImage:'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWdyaWQyeDIgbHVjaWRlLWdyaWQtMngyIiBhcmlhLWhpZGRlbj0idHJ1ZSI+PHBhdGggZD0iTTEyIDN2MTgiPjwvcGF0aD48cGF0aCBkPSJNMyAxMmgxOCI+PC9wYXRoPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiPjwvcmVjdD48L3N2Zz4=")',maskSize:'contain',maskRepeat:'no-repeat'}});}
 
 const appHostPageStyles=`
+.hm-market-skeleton{display:contents}.hm-market-skeleton-card{display:flex;flex-direction:column;gap:14px;padding:18px;min-height:150px;border:1px solid var(--dsw-alias-border-l1);border-radius:14px;background:var(--dsw-alias-bg-layer-2)}.hm-market-skeleton-card span{height:14px;border-radius:6px;background:var(--dsw-alias-bg-layer-3);animation:hm-market-loading 1.4s ease-in-out infinite alternate}.hm-market-skeleton-card span:first-child{width:60%;height:20px}.hm-market-skeleton-card span:last-child{width:75%}@keyframes hm-market-loading{to{opacity:.45}}@media(prefers-reduced-motion:reduce){.hm-market-skeleton-card span{animation:none}}
 .hm-apphost-page{height:100%;overflow:auto;box-sizing:border-box;padding:36px 38px;max-width:1360px;margin:auto;color:var(--dsw-alias-label-primary,CanvasText);background:var(--dsw-alias-bg-base,Canvas);font:14px/1.55 var(--dsw-font-family,system-ui)}.hm-apphost-page *{box-sizing:border-box}.hm-apphost-page h1{font-size:32px;line-height:1.25;letter-spacing:-.025em;margin:0}.hm-apphost-page h2{font-size:17px}.hm-apphost-page p{color:var(--dsw-alias-label-secondary);line-height:1.7}.hm-apphost-breadcrumb{font-size:12px;color:var(--dsw-alias-label-tertiary);margin-bottom:28px}.hm-apphost-eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--dsw-alias-brand-primary);margin-bottom:10px}.hm-apphost-page>header{margin-bottom:28px}.hm-apphost-page button,.hm-apphost-page select,.hm-apphost-page input{font:inherit;color:inherit;min-height:44px;padding:10px 14px;border:1px solid var(--dsw-alias-border-l2);border-radius:10px;background:var(--dsw-alias-bg-layer-3);max-width:100%}.hm-apphost-page button{cursor:pointer}.hm-apphost-page button:disabled{opacity:.5;cursor:default}.hm-apphost-page :focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:3px}.hm-connection-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:28px 0 24px}.hm-connection-tabs [aria-current=page]{color:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary)}.hm-apphost-card{padding:22px;border:1px solid var(--dsw-alias-border-l1);border-radius:18px;background:var(--dsw-alias-bg-layer-2);min-width:0}.hm-apphost-environment{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}.hm-apphost-environment>details summary{cursor:pointer;font-weight:600;min-height:28px}.hm-apphost-page .hm-library-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.hm-apphost-page .hm-library-grid article{padding:22px;border-radius:18px;background:var(--dsw-alias-bg-layer-2);border-color:var(--dsw-alias-border-l1);display:flex;flex-direction:column;gap:16px}.hm-apphost-page .hm-library-grid h3{margin:0;font-size:16px}.hm-apphost-page .hm-market-actions{margin-top:auto}.hm-apphost-page .hm-library-toolbar{gap:12px;margin:24px 0}.hm-apphost-page .hm-app-detail{padding:22px;border:1px solid var(--dsw-alias-border-l1);border-radius:18px;background:var(--dsw-alias-bg-layer-2);margin:20px 0;overflow-wrap:anywhere}.hm-apphost-page .hm-app-detail h3{font-size:28px;margin:0 0 12px}.hm-credibility{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.hm-credibility>div{padding:16px;border:1px solid var(--dsw-alias-border-l1);border-radius:14px;background:var(--dsw-alias-bg-layer-1)}.hm-credibility span,.hm-credibility small{display:block;font-size:12px;color:var(--dsw-alias-label-tertiary)}.hm-credibility strong{display:block;font:26px/1.8 var(--dsh-font-family-code-default,monospace)}.hm-apphost-page .hm-install-review{padding:22px;border-radius:18px;background:var(--dsw-alias-bg-layer-2);margin:24px 0}.hm-install-ack{display:flex;align-items:center;gap:10px;margin:18px 0}.hm-install-ack input{width:20px;min-height:20px;flex:none;accent-color:var(--dsw-alias-brand-primary)}.hm-apphost-page .hm-website-link{display:inline-block;min-height:44px;color:var(--dsw-alias-brand-primary);padding:10px 0}.hm-library-tabs{display:flex;gap:5px;padding:4px;border:1px solid var(--dsw-alias-border-l1);border-radius:11px;width:max-content;margin:20px 0}.hm-library-tabs [aria-selected=true]{background:var(--dsw-alias-bg-layer-3);border-color:var(--dsw-alias-brand-primary)}.hm-apphost-page footer{font-size:11px;color:var(--dsw-alias-label-tertiary);margin-top:26px}
 @media(max-width:1000px){.hm-apphost-page .hm-library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:640px){.hm-apphost-page>header{display:block}.hm-apphost-page>header button{margin-top:16px}.hm-apphost-page{padding:24px 18px}.hm-apphost-page h1{font-size:26px}.hm-apphost-page .hm-library-grid,.hm-apphost-environment,.hm-credibility{grid-template-columns:minmax(0,1fr)}.hm-apphost-card{padding:18px}}
 `;
@@ -1305,5 +1412,5 @@ const appHostPageStyles=`
     ctx.effect(()=>{let stopped=false,timer;const tick=async()=>{await pollHandoffsVisibly();if(!stopped)timer=setTimeout(()=>void tick(),handoffPollMs);};void tick();return()=>{stopped=true;clearTimeout(timer);};},'hanamesh-app-host:website-handoff');
     ctx.effect(()=>{globalThis.addEventListener?.('hashchange',consumeInstallTargetHash);consumeInstallTargetHash();return()=>globalThis.removeEventListener?.('hashchange',consumeInstallTargetHash);},'hanamesh-app-host:install-target-navigation');}
   return{name,inject,apply,ProvidersSection,SuiteSourceSettingsSection,LibrarySourcesSection,HandoffSettingsSection,NodeRuntimeSection,LibraryAction,LibraryOverlay,MarketConflictNotice,createMarketSeat,openInstallTarget,
-    registerAppHostPages,EnvironmentContent,credibilityFacts,readCredibility,catalogWebsiteLink,MARKET_SEAT,MARKET_CONFLICT_TEXT,INSTALL_TARGET_HASH,INSTALL_TARGET_CONTRACT_VERSION,marketState:()=>({conflict:marketConflict,entryVisible})};
+    registerAppHostPages,EnvironmentContent,credibilityFacts,readCredibility,catalogWebsiteLink,createNativeMarketActions,createNativeMarketListing,readNativeMarketDetail,NativeMarketConfirmation,NativeMarketExternalActions,NativeMarketResults,MARKET_SEAT,MARKET_CONFLICT_TEXT,INSTALL_TARGET_HASH,INSTALL_TARGET_CONTRACT_VERSION,marketState:()=>({conflict:marketConflict,entryVisible})};
 }});

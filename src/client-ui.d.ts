@@ -48,3 +48,33 @@ export function credibilityFacts(facts?:CredibilityFacts|null):{id:string;label:
 export function readCredibility(source:unknown,item:{id:string},fetcher?:typeof fetch):Promise<CredibilityFacts>;
 /** HanaMesh-view catalog website link; absent for fixtures and other provider protocols. */
 export function catalogWebsiteLink(source:unknown,item:unknown):string|null;
+
+/** CL6 native-market building blocks; full tab migration is not yet activated. */
+export interface NativeMarketInstall {readonly spec:string;readonly title:string;readonly version:string;readonly registry?:string;}
+export interface NativeMarketCompatibility {readonly compatible:boolean;readonly exempted?:boolean;readonly runtimeVersion?:string;readonly requirements?:Readonly<Record<string,string>>;}
+export interface NativeMarketEntry {readonly hanaId:string;readonly publisher?:{readonly name?:string};readonly sourceLinks?:readonly {readonly sourceId:string;readonly sourceUrl:string}[];}
+export interface NativeMarketChoice {readonly entry:NativeMarketEntry;readonly install:NativeMarketInstall;readonly compatibility:NativeMarketCompatibility;}
+export interface NativeMarketReview extends NativeMarketChoice {readonly trustRequired:true;}
+export interface NativeMarketOwner {readonly install?:(target:NativeMarketInstall)=>void;readonly openPackage?:(name:string)=>void;readonly update?:unknown;}
+export interface NativeMarketActions {
+ readonly capabilities:Readonly<{install:boolean;openPackage:boolean;update:boolean}>;
+ review(choice:NativeMarketChoice):NativeMarketReview;
+ confirm(review:NativeMarketReview):void;
+ cancel():void;
+ openInstalled(packageName:string):void;
+}
+export function createNativeMarketActions(owner?:NativeMarketOwner):NativeMarketActions;
+export interface NativeMarketSnapshot {
+ readonly status:'idle'|'loading'|'ready'|'error';readonly items:readonly NativeMarketEntry[];readonly bundles:readonly unknown[]|null;
+ readonly error:string|null;readonly page:number;readonly hasMore:boolean;readonly query:Readonly<Record<string,unknown>>|null;readonly answered:Readonly<Record<string,unknown>>|null;
+}
+export interface NativeMarketListing {
+ snapshot():NativeMarketSnapshot;subscribe(listener:(snapshot:NativeMarketSnapshot)=>void):()=>void;
+ load(query:Readonly<Record<string,unknown>>):Promise<void>;more():Promise<void>;retry():Promise<void>;dispose():void;
+}
+export function createNativeMarketListing(ports:{readPage:(query:Record<string,unknown>&{page:number;limit:number},options:{signal:AbortSignal})=>Promise<{items:NativeMarketEntry[];page:number;totalPages:number}>;listBundles:()=>Promise<unknown[]>}):NativeMarketListing;
+export type NativeMarketDocument={readonly status:'none'}|{readonly status:'ready';readonly markdown:string};
+export function readNativeMarketDetail(target:NativeMarketChoice,readers:Record<'meta'|'package'|'repository',(target:NativeMarketChoice)=>Promise<NativeMarketDocument>>):Promise<NativeMarketDocument>;
+export function NativeMarketConfirmation(props:{review:NativeMarketReview|null;actions:NativeMarketActions;Modal:unknown;onClose:()=>void}):unknown;
+export function NativeMarketExternalActions(props:{command?:string;website:string;copy:(command:string)=>unknown}):unknown;
+export function NativeMarketResults(props:{snapshot:NativeMarketSnapshot;card:(item:NativeMarketEntry)=>unknown;onRetry:()=>void;onMore:()=>void}):unknown;
