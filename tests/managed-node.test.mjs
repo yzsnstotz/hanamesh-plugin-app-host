@@ -3,7 +3,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {join} from 'node:path';
 import {createNodeRuntime,probeStandaloneNode} from '../src/node-runtime/service.js';
-import {nodeBinding} from '../src/library/node-binding.js';
 import {temporary} from './helpers.mjs';
 async function rig(t, extra={}){
  const root=await temporary();let image={schema:1,revision:0,settings:null,active:null},calls=[],start;const started=new Promise(r=>start=r);
@@ -41,10 +40,6 @@ test('MN05 verified commit binds immediately and restores offline; external mode
  const p=await r.plan({});r.prepare({planId:p.planId,confirm:true});await r.settled();assert.equal(r.status().operation.state,'ready');assert.equal(r.executable,join(p.root,'runtime/bin/node'));assert.equal(image().active.sha256,p.sha256);
  const bad=await rig(t,{probe:async()=>{throw new Error('Electron is not standalone Node');}});await assert.rejects(bad.runtime.save({settings:{...bad.runtime.status().settings,mode:'external',externalBinary:process.execPath}}));assert.equal(bad.runtime.executable,undefined);
 });
-test('MN06 dynamic binding snapshots each call and caches the same writer until Node changes',()=>{
- let binary;const made=[];const b=nodeBinding(()=>binary,node=>{const d={ready:!!node,install:()=>node};made.push(d);return d;});
- assert.equal(b.ready,false);assert.equal(b.install(),undefined);binary='/managed/node';assert.equal(b.ready,true);const install=b.install;binary='/managed/node2';assert.equal(install(),'/managed/node');assert.equal(b.install(),'/managed/node2');assert.equal(made.length,3);
-});
 test('MN07 provider/network failure is visible with original cause and never retried; pending preparation blocks settings',async t=>{
  const {runtime:r,calls,started}=await rig(t,{provision:async()=>{throw Object.assign(new Error('certificate chain was rejected'),{code:'SOURCE_FAILED'});}});
  const p=await r.plan({});r.prepare({planId:p.planId,confirm:true});await started;await assert.rejects(r.save({settings:r.status().settings}),{code:'NODE_IN_USE'});await r.settled();
@@ -58,15 +53,6 @@ test('MN08 X03 real SIGKILL after verification cannot publish a ready pointer',a
  assert.equal(checkpoint.point,'node-verified-before-binding');const exited=new Promise(r=>child.once('exit',(code,signal)=>r({code,signal})));child.kill('SIGKILL');assert.equal((await exited).signal,'SIGKILL');
  assert.equal(JSON.parse(await readFile(file,'utf8')).active,null);
  let network=0;const restored=createNodeRuntime({dataRoot:root,platform:'darwin-arm64',kernelRelease:'25.0.0',domain:{global:{get:async()=>JSON.parse(await readFile(file,'utf8'))}},provisionApi:{provision:async()=>network++}});await restored.init();assert.equal(restored.executable,undefined);assert.equal(network,0);await restored.close();
-});
-test('MN09 Node delegates share one profile writer, including operations accepted during replacement',async t=>{
- const {createLibraryInstaller}=await import('../src/library/install.js');const {SerialQueue}=await import('../src/errors.js');const root=await temporary(),profileWriter=new SerialQueue();
- const calls=[];let firstDone,started;const gate=new Promise(r=>firstDone=r),start=new Promise(r=>started=r);
- const make=nodeBinary=>createLibraryInstaller({profileDir:root,profileName:'test',dataRoot:root,dshBin:join(root,'cli.js'),nodeBinary,profileWriter,spawn:async(command,args)=>{calls.push({command,args});if(calls.length===1){started();await gate;}return{code:0};}});
- let binary=process.execPath;const installer=nodeBinding(()=>binary,make);const one=installer.uninstallPlugin({packageName:'fixture-one'});await start;
- binary=join(root,'replacement-node');const two=installer.uninstallPlugin({packageName:'fixture-two'});await new Promise(setImmediate);assert.equal(calls.length,1,'replacement must wait behind the old writer');
- firstDone();await Promise.all([one,two]);assert.equal(calls.length,2);assert.equal(calls[0].command,process.execPath);assert.equal(calls[1].command,binary);
- const source=await (await import('node:fs/promises')).readFile(new URL('../src/dsh.js',import.meta.url),'utf8');assert.match(source,/pluginManagerVersion:locations\.pluginManagerVersion,profileWriter,/,'real DSH entry passes the shared writer to every delegate');
 });
 test('MN10 existing Linux and Windows x64 external Node support CLI while managed preparation stays unavailable',async t=>{
  for(const platform of ['linux-x64','win32-x64']){

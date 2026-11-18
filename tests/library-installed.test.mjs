@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { scanInstalled } from '../src/library/installed.js';
+import { scanInstalled } from '../src/application-inventory.js';
 import { scratch } from './helpers.mjs';
 
 const definition=(id,runtime)=>({id,name:id,singleInstanceOnly:true,deployments:[{id:'local',dataId:'data-v1',mode:'owned',...(runtime?{runtime}:{command:process.execPath}),args:['-c','exec', '{{dataDir}}','{{port}}'],env:{},envAllowlist:[],readiness:{path:'/',status:200,bodyIncludes:id}}]});

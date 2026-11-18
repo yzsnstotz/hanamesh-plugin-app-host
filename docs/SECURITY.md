@@ -1,14 +1,6 @@
-D3（编排11-09授权）：仅公开install-target的有效匿名GET/GET预检对名单外HTTP(S) Origin给精确CORS，披露固定ORIGIN_DENIED与本机拒绝监听存在，不披露客户端能力、安装或允许名单。预检204只使浏览器继续读取拒绝；PNA true响应仅在对应请求头为true时出现。其他接口/Host/凭据/iframe边界不变。详见INSTALL_TARGET.md。
-
-0.6.23：安装状态只在原显式同意之后自动发现当前用户的官方 CLI；不读认证/聊天/配置文件、不修改用户配置。登录 shell 仅输出白名单PATH/管理器/XDG路径的封装JSON，未复制完整环境或模型/API token；正常shell stderr不当失败，插件清单仍要求无stderr。监督器保留管理器PATH及原XDG值/缺省，仅临时工作目录和TMP隔离；CLI 仍限版本与插件/市场只读清单，版本下限和既有 JSON 校验双门。Windows npm shim 解析至具名官方 JS，绝不经 cmd 执行。详见 INSTALLATION_STATUS.md。
-
-0.6.7 installation-status is a separately consented read capability: exact existing loopback Host/approved Origin, credentials omitted, strict POST body before any reader. Core is authoritative; CLI executable/profile/target/budgets are static trusted settings, never browser input. Official list output is whitelisted and no raw paths, unrelated inventory or errors leave the host. A live detached IPC anchor owns cancellation and parent-disconnect group cleanup; no cached installed answer. See INSTALLATION_STATUS.md for exact protocol and scope limits.
-
 D-230: failed activation releases only resources acquired by that AppHost activation, including partially registered routes and optional-service listeners. Once-only releases also serve normal Cordis unload. All failed-startup releases are attempted in reverse order; APPHOST_CLEANUP_FAILED names the internal resource without raw errors or credentials, and logger failures cannot replace the original activation error. No authentication, origin, lease, application or browser policy is relaxed.
 
 D-221: service availability, package binding, readiness and authorized traffic are not proof of application presentation/business success. No verified original fact source is connected, so the adapter emits no automatic Usage record or timestamp and logs only a fixed USAGE_FACT_UNAVAILABLE capability diagnostic. Independent Router counts, including legacy reported bits, do not prove business success or Usage confirmation. No application event/SDK/credential or trust bridge is introduced.
-
-D-214: verification is trusted producer/client-view configuration, never a Target/URL/global-page capability. Normal builds remain off. Verification uses the existing authenticated/authorized endpoints and explicit installation confirmation; showing full public error JSON does not expose internal exceptions or grant application privileges. Native test automation stays card-local and validates actual owned PID/start/PPID/PGID/argv before claiming launcher evidence.
 
 # 安全与运行边界
 
@@ -55,7 +47,6 @@ DSH/宿主 cookie、控制头与 Authorization 默认不传上游；应用 cooki
 
 ## 日志与凭据
 
-市场异步操作失败只投影有界脱敏的Error类型/消息、最多两层cause与既有CLI退出摘要，记录实际执行阶段和operationId；同一安全诊断进入技术详情与宿主logger。拒绝任意details、stack、response对象；Bearer、常见secret字段、URL userinfo/query和Authorization/Cookie行脱敏。不记录环境/请求正文，不承诺识别任意业务敏感文本。原生 registry 查询异常以 REGISTRY_LOOKUP_FAILED 具名并保留原 cause；其它安装异常保持原对象，logger故障不覆盖原异常。
 
 日志有界、按完整行处理、Bearer/常见 token 字段及显式 secret env 值脱敏；超大行丢弃。此规则不可能识别任意业务敏感信息，默认不记录请求体/配置环境。leaseToken 原文只在回执中返回，磁盘保存哈希；工作台不得把 token 放进公开 URL、分析日志或应用 iframe。
 
@@ -73,14 +64,9 @@ For the fixed Desktop workspace only, each full live view binding owns one indep
 
 The workspace checks the precise control origin and the iframe Window; the controlled bootstrap checks exactly `dsh-app://app` and its parent Window. The existing public connection authentication, lease ownership and single-use challenge exchange precede navigation. Authorization appears only in the authenticated response and exact-window message/exchange body, never URLs or logs. One natural control-to-data navigation consumes its own initial grant, then HTTP/resources require the exact data-origin context and live complete binding; WS requires the exact data Origin. Closing, generation rotation and restart invalidate prior authority.
 
-Control serves only bootstrap/exchange, never application documents or resources. Data serves application bytes, never bootstrap authorization pages, so the application ServiceWorker cannot control the bootstrap origin. Only exact registered Host/Origin/Referer/WS origins are admitted; no wildcard localhost, null, aliases or unrelated live grants. Data CSP admits its exact data origin for nested application frames plus the approved workspace ancestor; control CSP does not admit data. Application bodies, SDK, auth/CSRF/CORS and other security headers are unchanged. Ordinary loopback workspace security and the separately specified public install-target endpoint retain their original boundaries.
+Control serves only bootstrap/exchange, never application documents or resources. Data serves application bytes, never bootstrap authorization pages, so the application ServiceWorker cannot control the bootstrap origin. Only exact registered Host/Origin/Referer/WS origins are admitted; no wildcard localhost, null, aliases or unrelated live grants. Data CSP admits its exact data origin for nested application frames plus the approved workspace ancestor; control CSP does not admit data. Application bodies, SDK, auth/CSRF/CORS and other security headers are unchanged. Ordinary loopback workspace security and the Market plugin’s separately specified public install-target endpoint retain their original boundaries.
 
 These are source invariants, not native browser evidence. Component synthetic-header requests, genuine natural native requests, third-party cookie policy, retained frame/worker/SW attacks, same-response bytes, restart and final-tarball U2 are recorded separately. A constructor rejection, skipped browser, draft package or older UI observation cannot close those gates.
-
-
-## 套件兼容声明边界
-
-兼容、完整性与可升级目标由 Core 公开声明唯一决定；App-host 不复制范围/候选规则、不读其内部文件。内部 `coreSuitePlan` 只由可信装配适配器提供，不进入浏览器参数或用户配置。生产装配仅绑定可选 protocol `1` 的 `hanameshCore.getSuiteDeclaration()`，缺源必须明确 `CORE_SUITE_DECLARATION_MISSING` 并禁止升级，不以 registry latest 代替。执行端只校验固定包/精确版本的计划结构、重读确认和物理安装结果；来源及宿主兼容性由 Core 提供方承担，真实包联调、原生运行与 owner 验收仍须各自证据；物理三包齐全不能替代 Core 完整性。升级后的公开状态继续读 Core，物理读回只用于执行确认与失败诊断；Core 服务消失时不再公开缓存的完整已装状态。
 
 
 ## Managed Node trust boundary

@@ -10,13 +10,13 @@ import { clientHarness,settle } from './fixtures/client-ui-harness.mjs';
 test('AH-VL08: actual default90s lease survives idle market client and last-view close ends exact owned group',
  {skip:process.env.HM_REAL_CLIENT_LEASE!=='1',timeout:130_000},async t=>{
  const root=await temporary();let handler,client,host;const calls=[];
- const server=createServer((req,res)=>{if(req.url?.startsWith('/hanamesh/library')){res.setHeader('content-type','application/json');res.end(JSON.stringify(page));}else handler(req,res);});
+ const server=createServer((req,res)=>{if(req.url?.startsWith('/hanamesh/apps/runtime')){res.setHeader('content-type','application/json');res.end(JSON.stringify(page));}else handler(req,res);});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin=`http://127.0.0.1:${server.address().port}`;
  t.after(async()=>{client?.unmount();await host?.dispose();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));await rm(root,{recursive:true,force:true});});
  host=new AppHost({store:new AtomicFileStore(join(root,'store')),dataRoot:join(root,'data'),parentOrigin:origin});
  const def=definition({embedding:'gateway'});host.register(def);await host.init();assert.equal(host.leaseTtlMs,90_000);assert.equal(host.sweepIntervalMs,15_000);
  handler=createHttpHandler(host,{parentOrigin:origin,authenticate:()=>({principalId:'lease-test'}),authorize:()=>true});
- const row={appId:def.id,state:'registered',packageName:'example',definition:def};const page={items:[{id:def.id,kind:'application',displayName:'Example',installed:row}],installed:[row]};
+ const row={appId:def.id,state:'registered',packageName:'example',definition:def};const page={items:[{id:def.id,kind:'application',displayName:'Example',installed:row}],installed:[row],apps:[row]};
  const browserFetch=async(path,init={})=>{calls.push({path,at:Date.now()});return fetch(origin+path,{...init,headers:{...init.headers,origin}});};
  client=await clientHarness({fetch:browserFetch});await until(()=>client.find(node=>node.type==='button'&&node.children.includes('打开')));await client.click('打开');await until(()=>client.find(node=>node.type==='iframe'),{timeout:10_000});
  const iframe=client.find(node=>node.type==='iframe');const instance=host.instanceList('lease-test')[0],initial=host.list('lease-test').views[0];

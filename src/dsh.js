@@ -1,5 +1,4 @@
 import {pathToFileURL} from 'node:url';
-import { createInstallationStatusReader,officialDshDesktopProfile } from './library/installation-status.js';
 /**
  * DSH plugin entry for @hanamesh/dsh-app-host, using the public APIs audited in
  * official DSH 0.2.0-rc.2 and 0.2.1-alpha.2:
@@ -30,20 +29,14 @@ import { routerDomainSpec } from './router/domain.js';
 import { createProviderSources } from './router/sources.js';
 import { createRouter } from './router/broker.js';
 import { createRouterHttpHandler, ROUTER_ROUTES } from './router/routes.js';
-import { libraryDomainSpec } from './library/domain.js';
-import {createNpmVersionCatalog,hostVersionReader} from './library/versions.js';
-import { createLibraryService } from './library/service.js';
-import { createLibraryInstaller } from './library/install.js';
-import { inferDesktopLayout, resolveLibraryLocations } from './library/locate.js';
-import { createLibraryHttpHandler, LIBRARY_ROUTES } from './library/routes.js';
-import { createHandoffQueue, createHandoffHandler, createHandoffListener } from './library/handoff.js';
-import { detectClient } from './library/client-identity.js';
+import {inferDesktopLayout,resolveRuntimeLocations} from './runtime-locations.js';
+import {createApplicationRuntime} from './application-runtime.js';
+import {createApplicationRuntimeHandler,APPLICATION_RUNTIME_ROUTES} from './application-runtime-routes.js';
 import { createUsageEvidence } from './usage-evidence.js';
 import { createReceiptLedger } from './router/receipts.js';
 import { receiptsDomainSpec } from './router/receipts-domain.js';
 import {createNodeRuntime} from './node-runtime/service.js';
 import {nodeRuntimeDomainSpec} from './node-runtime/domain.js';
-import {nodeBinding,nodeStatusBinding} from './library/node-binding.js';
 import {DSH_RANGE} from './dsh-compat.js';
 
 export const name = 'hanamesh-app-host';
@@ -67,25 +60,7 @@ export const Config = z.object({
   nodeBinary: z.string(),
   nodeRuntime:z.object({mode:z.string(),version:z.string(),sourceBase:z.string(),storageRoot:z.string(),externalBinary:z.string()}),
   router: z.object({ codingOauth: z.object({ mode:z.string() }) }),
-  library: z.object({
-    fixture:z.string(),
-    /** Undefined (not configured) → the HanaMesh catalog source; an explicit `[]` → no source. schemastery would
-     *  coerce a missing array to `[]`, so the union keeps "unset" distinguishable from "deliberately empty". */
-    sources:z.union([z.array(z.any()),z.const(undefined)]),
-    /** Locations are inferred from the verified Desktop argv/profile or plain DSH (see library/locate.js). */
-    profileDir:z.string(),profileName:z.string(),dshBin:z.string(),
-    registry:z.string(),
-    versionLookupConcurrency:z.number().min(1).max(16).default(4),
-    versionLookupCacheMs:z.number().min(1).max(2147483647).default(30000),
-    versionLookupTimeoutMs:z.number().min(1).max(2147483647).default(30000),
-    versionLookupMaxBytes:z.number().min(1).default(16777216),
-    /** Publicly named event history capacity; a lost cursor reports resetRequired. */
-    eventRetention:z.number().default(512),
-    /** Website → client handoff listener (library/handoff.js). Unset fields use the defaults shown in the library
-     *  settings page, where they can also be changed (saved values win over this config). */
-    handoff:z.object({enabled:z.boolean(),ports:z.union([z.array(z.number()),z.const(undefined)]),
-      allowedOrigins:z.union([z.array(z.string()),z.const(undefined)]),ttlMs:z.number(),pollMs:z.number()}),
-  }),
+  runtime:z.object({profileDir:z.string()}),
   applications: z.array(z.any()).default([]),
   leaseTtlMs: z.number(),
   sweepIntervalMs: z.number(),
@@ -145,7 +120,7 @@ export async function apply(ctx, config) {
   const transportOrigin = `http://127.0.0.1:${webServer.port}`;
   const parentOrigin = config.parentOrigin ?? desktop?.parentOrigin ?? transportOrigin;
   const frameAncestors = config.frameAncestors ?? desktop?.frameAncestors ?? [];
-  const locations = await resolveLibraryLocations(config.library??{}, {nodeBinary:config.nodeBinary, desktop});
+  const locations=await resolveRuntimeLocations(config.runtime,{moduleUrl:import.meta.url,nodeBinary:config.nodeBinary,desktop});
   // Pair each acquisition immediately, including partial route registration.
   // The same once-only release belongs to both failed startup and Cordis unload.
   const acquired = [];
@@ -186,13 +161,13 @@ export async function apply(ctx, config) {
     });
     own(`listener:${name}`, () => listener.dispose());
   };
-  let host, store, nodeRuntime, library;
+  let host, store, nodeRuntime, applicationRuntime;
   let initialized = false;
   try {
     const nodeDomain=await facility.open(nodeRuntimeDomainSpec);
     own('node-runtime-domain',()=>nodeDomain.close());
     nodeRuntime=createNodeRuntime({domain:nodeDomain,dataRoot,config:config.nodeRuntime,initialBinary:locations.nodeBinary,
-      busy:()=>Boolean(library?.events().operations.length)||Boolean(host?.instanceList(BROWSER_PRINCIPAL).some(i=>!['stopped','failed','interrupted'].includes(i.status)))});
+      busy:()=>Boolean(applicationRuntime?.busy)||Boolean(host?.instanceList(BROWSER_PRINCIPAL).some(i=>!['stopped','failed','interrupted'].includes(i.status)))});
     own('node-runtime',()=>nodeRuntime.close());await nodeRuntime.init();
     const domain = await facility.open(appHostDomainSpec);
     const closeDomain = own('app-domain', () => domain.close());
@@ -207,12 +182,10 @@ export async function apply(ctx, config) {
     const auth = { parentOrigin, transportOrigin, ...browserAuthentication(connection) };
     const handler = createHttpHandler(host, auth);
     for (const path of ROUTES) own(`route:${path}`, webServer.register({ kind:'exact', path, handler }));
-    let credentialService, llmService, oauthService, usageService, coreService, suiteSourceService;
+    let credentialService, llmService, oauthService, usageService;
     optional('credentials', service => { credentialService=service; });
     // Optional Usage service presence does not provide original application success facts.
     optional('hanameshUsage', service => { usageService=service; });
-    optional('hanameshCore', service => { coreService=service; });
-    optional('hanameshSuiteSource', service => { suiteSourceService=service; });
     // Router hourly counts remain local diagnostics, never synthesized Usage open/use facts.
     const receiptsDomain = await facility.open(receiptsDomainSpec);
     own('receipts-domain', () => receiptsDomain.close());
@@ -237,55 +210,13 @@ export async function apply(ctx, config) {
     own('router-observer', host.subscribe(router.observe));
     const routerHandler=createRouterHttpHandler(router,auth);
     for (const path of ROUTER_ROUTES) own(`route:${path}`, webServer.register({kind:'exact',path,handler:routerHandler}));
-    const libraryDomain=await facility.open(libraryDomainSpec);
-    const closeLibraryDomain=own('library-domain', () => libraryDomain.close());
-    // Explicit config wins; infer only proven process/profile locations.
-    const libraryConfig={...(config.library??{}),sources:locations.sources,profileDir:locations.profileDir,profileName:locations.profileName};
-    if(locations.inferred.length&&typeof ctx.logger?.info==='function')ctx.logger.info('hanamesh-app-host library: inferred %s',JSON.stringify(Object.fromEntries(
-      locations.inferred.map(key=>[key,key==='sources'?locations.sources.map(source=>source.manifestUrl):locations[key]]))));
-    // Exact-save capability comes from the host's public package metadata. Older managers use the public CLI
-    // for installs and preserve restart-required; applications and compensation also use that CLI.
-    let dshBin=locations.dshBin;
-    if(!dshBin&&locations.profileDir&&!desktop)try{dshBin=createRequire(join(locations.profileDir,'package.json')).resolve('@deepseek-ai/dsh/lib/bin.js');}catch{dshBin=undefined;}
-    const cliUsable=Boolean(locations.desktopLauncher||dshBin&&(!desktop||locations.desktopCli||config.library?.dshBin));
-    let provisionApi,installer;const profileWriter=new SerialQueue();
-    if(locations.profileDir&&locations.profileName){
-      provisionApi=await import('@hanamesh/lib-provision');
-      installer=nodeBinding(()=>nodeRuntime.executable,nodeBinary=>createLibraryInstaller({profileDir:locations.profileDir,profileName:locations.profileName,dataRoot,
-        ...(cliUsable?{nodeBinary,dshBin,desktopCli:locations.desktopCli,desktopLauncher:locations.desktopLauncher}:{}),pluginManagerVersion:locations.pluginManagerVersion,profileWriter,
-        registry:libraryConfig.registry,provision:provisionApi.provision,remove:provisionApi.remove,ledger:provisionApi.ledger,
-        coreService:()=>coreService,suiteSourceService:()=>suiteSourceService,suiteSourceMode:()=>library?.suiteSourceSettings().mode??'configured',emit:event=>library?.emit(event)}));
-    }
-    /** What a person must do so the library can install, in their words (C-MARKET probe `error.need`). */
-    const unavailable=()=>{
-      if(!locations.profileDir)return[{need:'找不到这个 DSH profile 的目录',how:'用 dsh plugin --profile <名字> add 安装 HanaMesh 应用库，或在插件设置 library.profileDir 里填 profile 目录'}];
-      if(installer?.ready)return[];
-      if(!nodeRuntime.executable)return[{need:'安装环境尚未准备',how:'打开 AppHost「安装环境」，点击「准备安装环境」，核对来源、版本与体积后确认；完成后自动可用，无需重启或填写路径。'}];
-      if(installer?.unavailable?.length)return installer.unavailable;
-      const rows=[];
-      if(!locations.nodeBinary)rows.push({need:'找不到能运行 DSH 命令行的 Node',how:'在 AppHost 插件配置中，将 nodeBinary 填为独立 Node.js 24 的绝对路径（24.13.1 或更新的 24.x）；完全退出后重开。'});
-      if(!dshBin||(desktop&&!locations.desktopCli&&!config.library?.dshBin))rows.push({need:'找不到可在受控进程中运行的 DSH 命令行',how:'恢复客户端随附的公开 dsh 命令启动器，或在插件设置 library.dshBin 里填 dsh 的 lib/bin.js'});
-      return rows;
-    };
-    const identity=await detectClient({desktop});
-    if(typeof ctx.logger?.info==='function')ctx.logger.info('hanamesh-app-host library: client %s (%s)',identity.client,identity.evidence);
-    const versionAnchor=desktop?.runtimeDir?join(desktop.runtimeDir,'package.json'):dshBin;
-    const versionCatalog=versionAnchor?createNpmVersionCatalog({registry:libraryConfig.registry||undefined,anchor:versionAnchor,peerVersion:hostVersionReader(versionAnchor),timeoutMs:libraryConfig.versionLookupTimeoutMs,maxBytes:libraryConfig.versionLookupMaxBytes}):undefined;
-    library=createLibraryService({versionCatalog,domain:{global:libraryDomain.global,close:closeLibraryDomain},host,config:libraryConfig,dataRoot,ledgerReader:provisionApi?.ledger??(async()=>({schema:1,items:{}})),installer,client:identity.client,unavailable,suiteSourceService:()=>suiteSourceService,installationStatus:nodeStatusBinding(()=>nodeRuntime.executable,workerNode=>createInstallationStatusReader({logger:ctx.logger,client:identity.client,core:()=>coreService,workerNode,otherProfileDir:identity.client==='hanamesh'?()=>officialDshDesktopProfile(locations.profileDir):null})),logger:ctx.logger});
-    own('library', () => library.close());
-    await library.init();
-    // rc.27: app bundles register plain `app.json` (no package name); the installed scan knows which npm package ships
-    // which appId, and that package name is the usage-evidence `hanaRef`. Scan failure only costs evidence, never startup.
-    try { for (const row of await library.installed()) if (row.appId && row.packageName) { try { host.bindPackageName(row.appId,row.packageName); } catch (error) { ctx.logger?.warn?.('hanamesh-app-host usage: %s not bound to %s (%s)', row.appId, row.packageName, error?.code ?? error?.message); } } }
-    catch (error) { if (typeof ctx.logger?.debug === 'function') ctx.logger.debug('hanamesh-app-host usage: installed scan unavailable (%s)', error?.code ?? error?.message); }
-    const queue=createHandoffQueue({ttlMs:()=>library.handoffSettings().ttlMs,onError:(message,error)=>ctx.logger?.warn?.('%s: %s',message,error?.message??error)});
-    own('handoff-observer', library.observe(event=>queue.observe(event)));
-    const listener=createHandoffListener({settings:()=>library.handoffSettings(),logger:ctx.logger,
-      handlerFor:port=>createHandoffHandler({library,queue,settings:()=>library.handoffSettings(),port})});
-    own('handoff-listener', () => listener.stop());
-    await listener.start();
-    const libraryHandler=createLibraryHttpHandler(library,{...auth,nodeRuntime,handoff:{queue,listener,restart:()=>listener.start()}});
-    for (const path of LIBRARY_ROUTES) own(`route:${path}`, webServer.register({kind:'exact',path,handler:libraryHandler}));
+    const provision=await import('@hanamesh/lib-provision');
+    applicationRuntime=createApplicationRuntime({host,profileDir:locations.profileDir,dataRoot,ledgerReader:provision.ledger,provision:provision.provision,remove:provision.remove});
+    own('application-runtime',()=>applicationRuntime.close());
+    for(const row of await applicationRuntime.installed())if(row.appId&&row.packageName)host.bindPackageName(row.appId,row.packageName);
+    const runtimeHandler=createApplicationRuntimeHandler(applicationRuntime,{...auth,nodeRuntime});
+    for(const path of APPLICATION_RUNTIME_ROUTES)own(`route:${path}`,webServer.register({kind:'exact',path,handler:runtimeHandler}));
+    own('runtime-facts-seat',ctx.provide('hanameshAppRuntime',{protocolVersion:'1',getNodeBinary:()=>nodeRuntime.executable,getProfileDir:()=>locations.profileDir,getState:()=>nodeRuntime.status()}));
     own('seat', ctx.provide('hanameshApps', host));
   } catch (error) {
     // Cleanup names failures without replacing the original activation error.

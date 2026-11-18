@@ -7,7 +7,6 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 import {setImmediate as observeNextTurn} from 'node:timers/promises';
 import {spawn} from 'node:child_process';
 import {scratch,waitForFixtureFile} from './helpers.mjs';
-import {createLibraryInstaller} from '../src/library/install.js';
 const windows=process.platform==='win32';
 const git=windows?(process.env.PATH??'').split(delimiter).map(dir=>join(dir,'git.exe')).find(existsSync):'/usr/bin/git';
 assert.ok(git,'real Git installation required');
@@ -45,15 +44,6 @@ async function observeOwnedCleanup(root,pid,deadline){
  }
 }
 const input='protocol=https\nhost=fixture.invalid\nusername=fixture\npassword=fixture-only\n\n';
-test('GIT01 every DSH CLI installer receives the full safe Git environment after minimal env rebuilding',async t=>{
- const root=await scratch('git-cli-env-');t.after(()=>rm(root,{recursive:true,force:true}));
- await writeFile(join(root,'package.json'),JSON.stringify({dependencies:{}}));let observed;
- const installer=createLibraryInstaller({profileDir:root,profileName:'desktop',dataRoot:root,
-  nodeBinary:process.execPath,dshBin:join(root,'dsh.mjs'),fetchImpl:async()=>new Response('{"version":"1.2.3"}'),
-  spawn:async(_cmd,_args,options)=>{observed=options.env;return{code:1};}});
- await assert.rejects(()=>installer.install({installTarget:{source:'npm',name:'fixture-plugin',version:'1.2.3',allowBuild:[]}}));
- for(const [key,value] of Object.entries(keys))assert.equal(observed?.[key],value,'DSH child '+key);
-});
 test('GIT02 real Git get/store/erase bypass fake system/global helpers and use only fake gh',async t=>{
  const h=await fixture(t),run=required('spawnGitSafe');
  for(const op of ['fill','approve','reject']){
@@ -105,14 +95,6 @@ test('GIT07 parent SIGTERM ends the owned child and deletes its monitor',async t
  if(windows)await observeOwnedCleanup(h.tmp,childPid,Date.now()+1000);
  assert.throws(()=>process.kill(childPid,0),{code:'ESRCH'});assert.deepEqual(await readdir(h.tmp),[],'SIGTERM trace cleanup');
 });
-test('GIT08 unsafe live manager environment refuses before mutation and reports why',async t=>{
- const prior=process.env.GIT_CONFIG_NOSYSTEM;delete process.env.GIT_CONFIG_NOSYSTEM;
- t.after(()=>{if(prior===undefined)delete process.env.GIT_CONFIG_NOSYSTEM;else process.env.GIT_CONFIG_NOSYSTEM=prior;});
- const root=await scratch('git-manager-env-');t.after(()=>rm(root,{recursive:true,force:true}));let calls=0;
- const installer=createLibraryInstaller({profileDir:root,profileName:'desktop',dataRoot:root,pluginManagerVersion:'0.2.1-alpha.2',pluginManager:()=>({installBundle(){calls++;},removeBundle(){calls++;}})});
- assert.equal(installer.ready,false);assert.equal(installer.live,false);
- await assert.rejects(()=>installer.install({installTarget:{source:'npm',name:'fixture-plugin',version:'1.2.3',allowBuild:[]}}),error=>error.code==='DSH_EXACT_INSTALL_UNAVAILABLE'&&/Git/.test(error.details.need[0].need));assert.equal(calls,0);
-});
 
 test('GIT09 native minimal environment retains the guard across the actual Python driver boundary',async t=>{
  const h=await fixture(t),run=required('spawnGitSafe'),driver=fileURLToPath(new URL('../scripts/native-desktop/lifecycle.py',import.meta.url));
@@ -139,12 +121,6 @@ for(const stopSignal of ['SIGTERM','SIGKILL'])test(`GIT11 ${stopSignal} of an ou
  await observeOwnedCleanup(h.tmp,childPid,Date.now()+1000);
  let alive=true;try{process.kill(childPid,0)}catch(error){if(error.code==='ESRCH')alive=false;else throw error}
  assert.equal(alive,false,'nested detached install must stop when its caller dies');assert.deepEqual(await readdir(h.tmp),[],'both monitor roots removed');
-});
-test('GIT12 even helper-safe host environment cannot bypass the owned monitor through in-process manager',async t=>{
- const root=await scratch('git-live-monitor-');t.after(()=>rm(root,{recursive:true,force:true}));let calls=0;
- const installer=createLibraryInstaller({profileDir:root,profileName:'desktop',dataRoot:root,pluginManagerVersion:'0.2.1-alpha.2',pluginManager:()=>({installBundle(){calls++;},removeBundle(){calls++;}})});
- assert.equal(installer.ready,false,'manager has no public scoped env/monitor port');assert.equal(installer.live,false);
- await assert.rejects(()=>installer.install({installTarget:{source:'npm',name:'fixture-plugin',version:'1.2.3',allowBuild:[]}}));assert.equal(calls,0);
 });
 
 test('GIT13 caller death during supervisor startup leaves no unowned trace window',async t=>{

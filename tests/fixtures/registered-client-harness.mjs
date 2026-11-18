@@ -85,7 +85,7 @@ export async function registeredClient({file, fetch, href, locale}) {
     ...(locale ? {locale} : {}),
     effect(run) {const dispose = run(); effects.push(dispose); return dispose;},
     slots: {inject: (_name, run) => run(), register(descriptor, component) {
-      slots.set(descriptor.id, {descriptor, component}); return () => slots.delete(descriptor.id);
+      slots.set(descriptor.id??descriptor.key, {descriptor, component}); return () => slots.delete(descriptor.id);
     }},
     reflect: {get: name => seats.get(name)},
     provide(name, value) {assert.equal(seats.has(name), false); seats.set(name, value); return () => seats.delete(name);},
@@ -94,7 +94,7 @@ export async function registeredClient({file, fetch, href, locale}) {
   // A real test packaging must supply its own trusted verification configuration.
   module.apply(ctx);
   return {module, slots, seats, rendered, find: predicate => find(predicate, tree), get tree() {return tree;},
-    mountSettings(id){clearRoot();const slot=slots.get(id);assert.ok(slot,'registered settings slot '+id);root=()=>React.createElement(slot.component);render();},
+    mountSettings(id){clearRoot();const slot=slots.get(({ 'hanamesh-node-runtime':'@hanamesh/dsh-app-host','hanamesh-providers':'apphost-models'})[id]??id);assert.ok(slot,'registered settings slot '+id);root=()=>React.createElement(slot.component);render();},
     mountSidebar() {
       clearRoot();
       const action = slots.get('hanamesh-library'), overlay = slots.get('hanamesh-library-overlay');

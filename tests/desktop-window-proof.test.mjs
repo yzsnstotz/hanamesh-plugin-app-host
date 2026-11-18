@@ -8,7 +8,7 @@ import {FixedGateway} from '../src/gateway.js';
 const challenge='a'.repeat(64),origin='http://127.0.0.1:49291';
 test('D26 workspace: wrong origin, null origin and wrong iframe Window cannot request a grant',async t=>{
  const requests=[];const receipt={instance:{appId:'example',status:'ready'},lease:{viewId:'v',expiresAt:Date.now()+60000},leaseToken:'b'.repeat(64),uiUrl:origin+'/__hanamesh_bootstrap/'+challenge};
- const client=await clientHarness({href:'dsh-app://app/',fetch:async(path,init)=>{requests.push({path,init});return{ok:true,json:async()=>path.startsWith('/hanamesh/library')?{items:[{id:'example',kind:'application',displayName:'Example',installed:{state:'registered',appId:'example',definition:{deployments:[{id:'local'}]}}}]}:path==='/apps/open'?receipt:path==='/apps/bootstrap-authorize'?{authorization:'test-only-not-a-real-grant'}:{}};}});t.after(()=>client.unmount());
+ const client=await clientHarness({href:'dsh-app://app/',fetch:async(path,init)=>{requests.push({path,init});return{ok:true,json:async()=>path.startsWith('/hanamesh/apps/runtime')?{apps:[{state:'registered',appId:'example',name:'Example',definition:{deployments:[{id:'local'}]}}]}:path==='/apps/open'?receipt:path==='/apps/bootstrap-authorize'?{authorization:'test-only-not-a-real-grant'}:{}};}});t.after(()=>client.unmount());
  await client.click('打开');await settle();const [frame]=client.dom.querySelectorAll('iframe');
  assert.ok(frame,'opening the installed application must mount an iframe');
  assert.equal(frame.getAttribute('src'),receipt.uiUrl);

@@ -5,9 +5,9 @@ import { clientHarness, fakeClock, settle } from './fixtures/client-ui-harness.m
 test('AH-UI15: Open acknowledges the click while startup is still in flight', async t => {
   let finishOpen;
   const row = { appId: 'example', state: 'registered', packageName: 'example', definition: { deployments: [{ id: 'local' }] } };
-  const page = { items: [{ id: 'example', kind: 'application', displayName: 'Example', installed: row }], installed: [row] };
+  const page = { items: [{ id: 'example', kind: 'application', displayName: 'Example', installed: row }], installed: [row],apps: [row] };
   const receipt = { instance: { id: 'instance-1', appId: 'example', status: 'ready' }, lease: { viewId: 'view-1', generation: 1, expiresAt: Date.now() + 90_000 }, leaseToken: 'token', uiUrl: 'http://127.0.0.1:50001/' };
-  const fetch = async path => path.startsWith('/hanamesh/library')
+  const fetch = async path => path.startsWith('/hanamesh/apps/runtime')
     ? { ok: true, json: async () => page }
     : path === '/apps/open'
       ? new Promise(resolve => { finishOpen = resolve; })
@@ -27,9 +27,9 @@ test('AH-UI15: Open acknowledges the click while startup is still in flight', as
 test('AH-UI16: Close acknowledges the click while owned-process cleanup is still in flight', async t => {
   let finishClose;
   const row = { appId: 'example', state: 'registered', packageName: 'example', definition: { deployments: [{ id: 'local' }] } };
-  const page = { items: [{ id: 'example', kind: 'application', displayName: 'Example', installed: row }], installed: [row] };
+  const page = { items: [{ id: 'example', kind: 'application', displayName: 'Example', installed: row }], installed: [row],apps: [row] };
   const receipt = { instance: { id: 'instance-1', appId: 'example', status: 'ready' }, lease: { viewId: 'view-1', generation: 1, expiresAt: Date.now() + 90_000 }, leaseToken: 'token', uiUrl: 'http://127.0.0.1:50001/' };
-  const fetch = async path => path.startsWith('/hanamesh/library')
+  const fetch = async path => path.startsWith('/hanamesh/apps/runtime')
     ? { ok: true, json: async () => page }
     : path === '/apps/open'
       ? { ok: true, json: async () => receipt }
@@ -53,11 +53,11 @@ test('AH-UI16: Close acknowledges the click while owned-process cleanup is still
 test('AH-UI18: pending Open polls read-only status and resumes exactly once after ready', async t => {
   const clock=fakeClock(),calls=[];
   const row={appId:'example',state:'registered',packageName:'example',definition:{deployments:[{id:'local'}]}};
-  const page={items:[{id:'example',kind:'application',displayName:'Example',installed:row}],installed:[row]};
+  const page={items:[{id:'example',kind:'application',displayName:'Example',installed:row}],installed:[row],apps:[row]};
   const pending={instance:{id:'instance-1',appId:'example',status:'starting'},lease:{viewId:'view-1',generation:1,expiresAt:clock.now()+90_000},leaseToken:'token',uiUrl:null};
   let polls=0;
   const fetch=async(path,init={})=>{calls.push({path,method:init.method??'GET'});let value;
-    if(path.startsWith('/hanamesh/library'))value=page;
+    if(path.startsWith('/hanamesh/apps/runtime'))value=page;
     else if(path==='/apps/open')value=pending;
     else if(path==='/hanamesh/apps')value={instances:[{id:'instance-1',status:++polls>=3?'ready':'starting'}]};
     else if(path==='/apps/resume')value={...pending,instance:{...pending.instance,status:'ready'},uiUrl:'http://127.0.0.1:50001/'};
@@ -75,9 +75,9 @@ test('AH-UI18: pending Open polls read-only status and resumes exactly once afte
 test('AH-UI19: hiding during pending Open closes its exact lease without a late resume',async t=>{
   const clock=fakeClock(),calls=[];
   const row={appId:'example',state:'registered',packageName:'example',definition:{deployments:[{id:'local'}]}};
-  const page={items:[{id:'example',kind:'application',displayName:'Example',installed:row}],installed:[row]};
+  const page={items:[{id:'example',kind:'application',displayName:'Example',installed:row}],installed:[row],apps:[row]};
   const pending={instance:{id:'instance-1',appId:'example',status:'starting'},lease:{viewId:'view-1',generation:1,expiresAt:clock.now()+90_000},leaseToken:'token',uiUrl:null};
-  const fetch=async(path,init={})=>{calls.push({path,body:init.body?JSON.parse(init.body):null});const value=path.startsWith('/hanamesh/library')?page:path==='/apps/open'?pending:path==='/hanamesh/apps'?{instances:[{id:'instance-1',status:'ready'}]}:path==='/apps/close'?{instance:{status:'stopped'}}:null;assert(value,`unexpected route ${path}`);return{ok:true,json:async()=>value};};
+  const fetch=async(path,init={})=>{calls.push({path,body:init.body?JSON.parse(init.body):null});const value=path.startsWith('/hanamesh/apps/runtime')?page:path==='/apps/open'?pending:path==='/hanamesh/apps'?{instances:[{id:'instance-1',status:'ready'}]}:path==='/apps/close'?{instance:{status:'stopped'}}:null;assert(value,`unexpected route ${path}`);return{ok:true,json:async()=>value};};
   const client=await clientHarness({fetch,clock,embedded:false});t.after(()=>client.unmount());await client.show();await client.click('打开');await client.hide();
   await clock.advance(500);
   assert.equal(calls.filter(call=>call.path==='/apps/close').length,1);
@@ -88,11 +88,11 @@ test('AH-UI19: hiding during pending Open closes its exact lease without a late 
 test('AH-UI20: a long read-only startup renews its pending lease without repeated resume writes',async t=>{
   const clock=fakeClock(),startedAt=clock.now(),calls=[];
   const row={appId:'example',state:'registered',packageName:'example',definition:{deployments:[{id:'local'}]}};
-  const page={items:[{id:'example',kind:'application',displayName:'Example',installed:row}],installed:[row]};
+  const page={items:[{id:'example',kind:'application',displayName:'Example',installed:row}],installed:[row],apps:[row]};
   let expiresAt=startedAt+90_000;
   const pending={instance:{id:'instance-1',appId:'example',status:'starting'},lease:{viewId:'view-1',generation:1,expiresAt},leaseToken:'token',uiUrl:null};
   const fetch=async(path,init={})=>{calls.push(path);let value;
-    if(path.startsWith('/hanamesh/library'))value=page;
+    if(path.startsWith('/hanamesh/apps/runtime'))value=page;
     else if(path==='/apps/open')value=pending;
     else if(path==='/hanamesh/apps')value={instances:[{id:'instance-1',status:clock.now()>expiresAt?'stopped':clock.now()-startedAt>=95_000?'ready':'starting'}]};
     else if(path==='/apps/heartbeat'){if(clock.now()>expiresAt)return{ok:false,status:409,json:async()=>({error:{code:'LEASE_EXPIRED'}})};expiresAt=clock.now()+90_000;value={...pending.lease,expiresAt};}
@@ -110,10 +110,10 @@ test('AH-UI20: a long read-only startup renews its pending lease without repeate
 test('AH-UI21: a timed-out pending Open releases its exact lease',async t=>{
   const clock=fakeClock(),calls=[];
   const row={appId:'example',state:'registered',packageName:'example',definition:{deployments:[{id:'local'}]}};
-  const page={items:[{id:'example',kind:'application',displayName:'Example',installed:row}],installed:[row]};
+  const page={items:[{id:'example',kind:'application',displayName:'Example',installed:row}],installed:[row],apps:[row]};
   const pending={instance:{id:'instance-1',appId:'example',status:'starting'},lease:{viewId:'view-1',generation:1,expiresAt:clock.now()+90_000},leaseToken:'token',uiUrl:null};
   const fetch=async(path,init={})=>{calls.push({path,body:init.body?JSON.parse(init.body):null});let value;
-    if(path.startsWith('/hanamesh/library'))value=page;
+    if(path.startsWith('/hanamesh/apps/runtime'))value=page;
     else if(path==='/apps/open')value=pending;
     else if(path==='/hanamesh/apps')value={instances:[{id:'instance-1',status:'starting'}]};
     else if(path==='/apps/heartbeat')value={...pending.lease,expiresAt:clock.now()+90_000};
@@ -130,10 +130,10 @@ test('AH-UI21: a timed-out pending Open releases its exact lease',async t=>{
 test('AH-UI22: a ready-to-starting race never issues a second resume write',async t=>{
   const clock=fakeClock(),calls=[];
   const row={appId:'example',state:'registered',packageName:'example',definition:{deployments:[{id:'local'}]}};
-  const page={items:[{id:'example',kind:'application',displayName:'Example',installed:row}],installed:[row]};
+  const page={items:[{id:'example',kind:'application',displayName:'Example',installed:row}],installed:[row],apps:[row]};
   const pending={instance:{id:'instance-1',appId:'example',status:'starting'},lease:{viewId:'view-1',generation:1,expiresAt:clock.now()+90_000},leaseToken:'token',uiUrl:null};
   const fetch=async(path,init={})=>{calls.push(path);let value;
-    if(path.startsWith('/hanamesh/library'))value=page;
+    if(path.startsWith('/hanamesh/apps/runtime'))value=page;
     else if(path==='/apps/open')value=pending;
     else if(path==='/hanamesh/apps')value={instances:[{id:'instance-1',status:'ready'}]};
     else if(path==='/apps/resume')value=pending;

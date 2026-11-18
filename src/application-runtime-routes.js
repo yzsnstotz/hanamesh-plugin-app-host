@@ -1,0 +1,21 @@
+import {randomUUID} from 'node:crypto';
+import {AppHostError,requireCondition} from './errors.js';
+import {controlOrigins} from './control-origin.js';
+export const NODE_RUNTIME_ROUTES=['/hanamesh/apps/node-runtime','/hanamesh/apps/node-runtime/settings','/hanamesh/apps/node-runtime/plan','/hanamesh/apps/node-runtime/prepare','/hanamesh/apps/node-runtime/cancel'];
+export const APPLICATION_RUNTIME_ROUTES=['/hanamesh/apps/runtime','/apps/runtime/provision','/apps/runtime/remove',...NODE_RUNTIME_ROUTES];
+export function createApplicationRuntimeHandler(runtime,{parentOrigin,transportOrigin,authenticate,authorize,nodeRuntime}){
+ const origins=controlOrigins(parentOrigin,transportOrigin);
+ return async(req,res)=>{const traceId=randomUUID();const send=(status,value)=>{res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'; frame-ancestors 'none'"});res.end(JSON.stringify({...value,traceId}));};
+ try{
+  requireCondition(req.url?.startsWith('/')&&!req.url.startsWith('//')&&!req.url.includes('\\'),'BAD_TARGET','Invalid request target.');const url=new URL(req.url,origins.transport);requireCondition(req.headers.host===new URL(origins.transport).host,'HOST_DENIED','Unknown host.',{},403);requireCondition(!url.search,'UNKNOWN_FIELDS','Application runtime requests take no query.');requireCondition(req.headers['sec-fetch-dest']!=='iframe','FRAME_CONTROL_DENIED','Application frames cannot control the runtime.',{},403);
+  const read=req.method==='GET';requireCondition(read&&['/hanamesh/apps/runtime','/hanamesh/apps/node-runtime'].includes(url.pathname)||req.method==='POST'&&APPLICATION_RUNTIME_ROUTES.includes(url.pathname)&&!['/hanamesh/apps/runtime','/hanamesh/apps/node-runtime'].includes(url.pathname),'METHOD_NOT_ALLOWED','Unsupported method.',{},405);
+  requireCondition(!req.headers.origin||(origins.forwarded?origins.acceptsOrigin(req.headers.origin):req.headers.origin===origins.parent),'ORIGIN_DENIED','Unknown origin.',{},403);
+  if(!read)requireCondition((origins.forwarded?origins.acceptsOrigin(req.headers.origin):req.headers.origin===origins.parent)&&req.headers['x-hanamesh-client']==='workspace-v1','CSRF_DENIED','Explicit workspace write required.',{},403);
+  const subject=await authenticate(req);requireCondition(subject&&typeof subject.principalId==='string','UNAUTHENTICATED','Host authentication required.',{},401);
+  let input={};if(!read){requireCondition(req.headers['content-type']?.split(';')[0].trim()==='application/json','CONTENT_TYPE_REQUIRED','JSON required.',{},415);let bytes=0;const chunks=[];for await(const chunk of req){bytes+=chunk.length;requireCondition(bytes<=65536,'BODY_TOO_LARGE','Request too large.',{},413);chunks.push(chunk);}try{input=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw new AppHostError('INVALID_JSON','Malformed JSON.');}}
+  requireCondition(await authorize(subject,url.pathname,input)===true,'FORBIDDEN','Operation not authorized.',{},403);
+  let value;if(url.pathname==='/hanamesh/apps/runtime')value={apps:await runtime.installed()};else if(url.pathname==='/apps/runtime/provision')value=await runtime.provision(input);else if(url.pathname==='/apps/runtime/remove')value=await runtime.remove(input);else{requireCondition(nodeRuntime,'NODE_RUNTIME_UNAVAILABLE','Application Node runtime is unavailable.',{},503);if(url.pathname.endsWith('/settings'))value=await nodeRuntime.save(input);else if(url.pathname.endsWith('/plan'))value=await nodeRuntime.plan(input);else if(url.pathname.endsWith('/prepare'))value=nodeRuntime.prepare(input);else if(url.pathname.endsWith('/cancel'))value=nodeRuntime.cancel(input);else value=nodeRuntime.status();}
+  send(url.pathname.endsWith('/prepare')?202:200,value);
+ }catch(error){const known=error instanceof AppHostError;const node=NODE_RUNTIME_ROUTES.some(path=>req.url?.split('?')[0]===path);send(known?error.status:500,{error:{code:known?error.code:node?'NODE_ENVIRONMENT_FAILED':'INTERNAL_ERROR',message:known?error.message:node?'无法读取或保存应用运行环境：'+String(error?.message??error).slice(0,1500):'Application runtime operation failed.',...(known?{details:error.details}:node?{details:{cause:error?.code??'NODE_CHECK_FAILED'}}:{})}});}
+ };
+}

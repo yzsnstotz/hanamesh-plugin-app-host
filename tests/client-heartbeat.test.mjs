@@ -4,9 +4,9 @@ import {clientHarness,fakeClock,settle} from './fixtures/client-ui-harness.mjs';
 async function setup(t,{embedded=true,heartbeat,closeResponder,openResponder}={}){
  const clock=fakeClock(),calls=[];const receipt={instance:{id:'instance-1',appId:'example',status:'ready'},lease:{viewId:'view-1',generation:1,expiresAt:clock.now()+90_000},leaseToken:'test-view-token',uiUrl:'http://127.0.0.1:50001/'};
  const row={appId:'example',state:'registered',packageName:'example',definition:{deployments:[{id:'local'}]}};
- const page={items:[{id:'example',kind:'application',displayName:'Example',installed:row}],installed:[row]};
+ const page={items:[{id:'example',kind:'application',displayName:'Example',installed:row}],installed:[row],apps:[row]};
  const fetch=async(path,init={})=>{const body=init.body?JSON.parse(init.body):undefined;calls.push({path,body,signal:init.signal,keepalive:init.keepalive});let value;
-  if(path.startsWith('/hanamesh/library'))value=page;
+  if(path.startsWith('/hanamesh/apps/runtime'))value=page;
   else if(path==='/apps/open'){if(openResponder)return openResponder({path,init,clock,calls,receipt});value=receipt;}
   else if(path==='/apps/heartbeat'){if(heartbeat)return heartbeat({path,init,clock,calls,receipt});value={...receipt.lease,expiresAt:clock.now()+90_000};}
   else if(path==='/apps/close'){if(closeResponder)return closeResponder({path,init,clock,calls,receipt});value={instance:{status:'stopped'}};}

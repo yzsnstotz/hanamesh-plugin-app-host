@@ -28,17 +28,6 @@
       "test": "tests/crash.test.mjs:X02 stopped-views"
     },
     {
-      "id": "library-install",
-      "name": "runtime 账本记录与受管安装记录一起发布",
-      "facts": [
-        "ledger:item",
-        "installed-record"
-      ],
-      "medium": "provision-ledger",
-      "why": "lib-provision 是 runtime 目录与 ownership manifest/ledger 的单写者；应用包已经安装但 runtime 未完成时显式显示 runtime-missing，不冒充可打开。rc.28 插件走同一 dsh plugin add/remove 路径但不涉及账本：只有 profile package.json 一处事实。",
-      "test": "tests/library-install.test.mjs:AH-L04/L05"
-    },
-    {
       "id": "receipt-hour",
       "name": "独立Router诊断行整体发布",
       "facts": [
@@ -48,19 +37,6 @@
       "medium": "single-snapshot:hanamesh_router_receipts",
       "why": "同一(app,路由,小时)诊断行的count/injections/firstAt和遗留reported兼容位在一次去抖global.set整体发布；强杀可丢最后窗口计数，不新增表。不自动发业务Usage或设置reported，遗留位不证明Usage确认。",
       "test": "tests/usage-evidence.test.mjs:AH-U09"
-    },
-    {
-      "id": "suite-source-selection",
-      "name": "套件来源与目录交接配置整体发布",
-      "facts": [
-        "library:suiteSource",
-        "library:sources",
-        "library:handoff",
-        "library:revision"
-      ],
-      "medium": "single-snapshot:hanamesh_library",
-      "why": "设置写入串行读取最新完整镜像；持久成功后才发布内存，失败保持旧选择，不覆盖并发目录或交接字段。",
-      "test": "tests/suite-source.test.mjs:B17 concurrent saves"
     }
   ],
   "boundaries": [
@@ -98,17 +74,6 @@
       "test": "tests/usage-evidence.test.mjs:AH-U04"
     },
     {
-      "id": "market-seat-exclusive",
-      "name": "判定 dshmarket 不在场 → 占用客户端 market 席位",
-      "sides": [
-        "dshmarket-absence-decided",
-        "client-service:market"
-      ],
-      "safeDirection": "dshmarket-absence-decided",
-      "why": "rc.32：壳的「扩展管理」面板只认一个 market 席位（cordis 的 provide 对同名第二次注册直接抛错）。先读席位（reflect.get(\"market\",false)）并问一次 /hanamesh/library/installedPlugins，确认 dshmarket 既没占座也没装，才 provide。宁可席位空着、只留侧栏「市场」入口加一条提示，也不抢座把对方的 provide 打挂；库路由答不上来时 fail open（席位本身不承载持久事实）。",
-      "test": "tests/market-seat.test.mjs:AH-MS01/AH-MS02/AH-MS03"
-    },
-    {
       "id": "node-ready-binding",
       "name": "已核验文件与账本 → 启用独立 Node 指针",
       "sides": [
@@ -118,17 +83,6 @@
       "safeDirection": "provision:verified-owned-tree-and-ledger",
       "why": "确认后单源 SHA 下载，文件与精确平台版本检查通过后再发布 active；强杀可留下未绑定的受管文件，不能先宣称 ready。重开只离线复核，绝不自动下载。",
       "test": "tests/managed-node.test.mjs:MN08 X03 real SIGKILL"
-    },
-    {
-      "id": "suite-source-confirmation",
-      "name": "复读公开来源与精确声明 → 官方CLI执行",
-      "sides": [
-        "current-source-and-core-declaration",
-        "official-exact-suite-cli"
-      ],
-      "safeDirection": "current-source-and-core-declaration",
-      "why": "预览、确认、执行前和异步声明返回时复读；URL/selection/服务身份或精确tuple/物理baseline变化终止旧确认。Core无generation/watch，不虚构观察能力。",
-      "test": "tests/suite-source.test.mjs:B17 execution re-reads"
     }
   ],
   "scope": "REAL_PROCESS + LOCAL_ATOMIC_FILE；不是 DSH 加载、真实浏览器、整机断电或 macOS 验收。",

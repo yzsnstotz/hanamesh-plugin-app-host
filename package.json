@@ -1,7 +1,7 @@
 {
   "name": "@hanamesh/dsh-app-host",
   "version": "0.6.29",
-  "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.x",
+  "description": "HanaMesh application runtime ownership, durable view leases and controlled gateway for official DSH 0.2.x",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
   "repository": {
@@ -31,23 +31,6 @@
     "./client-ui": {
       "types": "./dist/client-ui.d.ts",
       "default": "./dist/client-ui.js"
-    },
-    "./install-target/suite": {
-      "types": "./dist/install-target/suite.d.ts",
-      "default": "./dist/install-target/suite.js"
-    },
-    "./install-target/schema.json": "./schemas/install-target.schema.json",
-    "./install-target/fixtures/*": "./dist/install-target/fixtures/*",
-    "./catalog/suite": {
-      "types": "./dist/catalog/suite.d.ts",
-      "default": "./dist/catalog/suite.js"
-    },
-    "./catalog/fixtures/*": "./dist/catalog/fixtures/*",
-    "./catalog/schema/manifest.json": "./schemas/catalog-source.schema.json",
-    "./catalog/schema/page.json": "./schemas/catalog-provider-page.schema.json",
-    "./installation-status": {
-      "types": "./dist/installation-status.d.ts",
-      "default": "./dist/installation-status.js"
     }
   },
   "files": [
@@ -58,20 +41,16 @@
     "docs/CONTRACT.md",
     "docs/DSH_INTEGRATION.md",
     "docs/APP_PACKAGE.md",
-    "docs/LIBRARY.md",
     "docs/SECURITY.md",
     "docs/PROVENANCE.json",
     "docs/LICENSES.json",
-    "schemas",
     "profile",
-    "docs/INSTALL_TARGET.md",
-    "docs/DSH_COMPATIBILITY.md",
-    "docs/INSTALLATION_STATUS.md"
+    "docs/DSH_COMPATIBILITY.md"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "node scripts/safe-git.mjs node --test --test-reporter=tap --test-concurrency=1 tests/*.test.mjs",
-    "test:contract": "pnpm run build && node --test --test-reporter=tap --test-concurrency=1 tests/install-target-contract.test.mjs tests/catalog-major-compat.test.mjs",
+    "test:contract": "pnpm run build && node --test --test-reporter=tap --test-concurrency=1 tests/cl6-app-runtime-split.test.mjs tests/managed-node-routes.test.mjs tests/descriptor-runtime.test.mjs",
     "test:mutation": "node scripts/safe-git.mjs node scripts/mutations.mjs",
     "test:types": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext tests/consumer.mts",
     "test:native-driver": "node scripts/safe-git.mjs node --test --test-reporter=tap tests/native/driver.test.mjs",
@@ -123,20 +102,6 @@
     "react": "^18.3.1",
     "@deepseek-ai/dsh-app-boot": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0"
   },
-  "hanamesh": {
-    "module": "app-host",
-    "contractVersion": 1,
-    "dshTarget": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
-    "upstreamFilesModified": 0,
-    "installTarget": {
-      "contract": "hanamesh.install-target",
-      "contractVersion": "1",
-      "supported": [
-        "1"
-      ],
-      "schema": "./schemas/install-target.schema.json"
-    }
-  },
   "devDependencies": {
     "@hanamesh/core": "file:vendor/hanamesh-core-0.3.33.tgz",
     "@deepseek-ai/cordis": "4.1.0",
@@ -172,5 +137,11 @@
   "packageManager": "pnpm@10.33.0",
   "bundleDependencies": [
     "@hanamesh/lib-provision"
-  ]
+  ],
+  "hanamesh": {
+    "module": "app-host",
+    "contractVersion": 1,
+    "dshTarget": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+    "upstreamFilesModified": 0
+  }
 }

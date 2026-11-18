@@ -8,7 +8,7 @@ const workspaceOrigin=(...args)=>descriptor.workspaceOrigin(...args);
 import {FixedGateway, ancestorOrigin} from '../src/gateway.js';
 import {setup, definition, input, external, http} from './helpers.mjs';
 import {createHttpHandler} from '../src/routes.js';
-import {createLibraryHttpHandler} from '../src/library/routes.js';
+import {createApplicationRuntimeHandler} from '../src/application-runtime-routes.js';
 import {createRouterHttpHandler} from '../src/router/routes.js';
 import {createServer} from 'node:http';
 
@@ -38,10 +38,10 @@ test('AH-D03: app, market and router accept authenticated Desktop forwarding on 
   const server=createServer();await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>server.close(r)));
   const transportOrigin=`http://127.0.0.1:${server.address().port}`;
   const auth={parentOrigin:'dsh-app://app',transportOrigin,authenticate:async req=>req.headers.authorization==='Bearer fixture'?{principalId:'fixture'}:null,authorize:async()=>true};
-  const apps=createHttpHandler(host,auth),market=createLibraryHttpHandler({install:async()=>({status:'already-installed'}),installedSnapshot:async()=>({plugins:[]})},auth),router=createRouterHttpHandler({enableGateway:async()=>({})},auth);
-  server.on('request',(req,res)=>(req.url.startsWith('/hanamesh/library')?market:req.url.startsWith('/hanamesh/router')?router:apps)(req,res));
+  const apps=createHttpHandler(host,auth),market=createApplicationRuntimeHandler({provision:async()=>({status:'provisioned'}),installed:async()=>[]},auth),router=createRouterHttpHandler({enableGateway:async()=>({})},auth);
+  server.on('request',(req,res)=>(req.url.startsWith('/apps/runtime')?market:req.url.startsWith('/hanamesh/router')?router:apps)(req,res));
   const headers={authorization:'Bearer fixture','x-hanamesh-client':'workspace-v1','content-type':'application/json'};
-  for(const [path,body] of [['/apps/open',input('desktop-view')],['/hanamesh/library/install',{itemId:'fixture'}],['/hanamesh/router/gateway',{enabled:false}]]){
+  for(const [path,body] of [['/apps/open',input('desktop-view')],['/apps/runtime/provision',{itemId:'fixture'}],['/hanamesh/router/gateway',{enabled:false}]]){
     const result=await http(transportOrigin+path,{method:'POST',headers,body:JSON.stringify(body)});assert.equal(result.status,200,JSON.stringify(result.json));
     for(const extra of [{authorization:''},{host:'app'},{origin:'dsh-app://shell'},{'sec-fetch-dest':'iframe'},{'x-hanamesh-client':''}])assert.ok((await http(transportOrigin+path,{method:'POST',headers:{...headers,...extra},body:JSON.stringify(body)})).status>=400);
   }
@@ -51,7 +51,7 @@ test('AH-D03: app, market and router accept authenticated Desktop forwarding on 
 
 test('AH-D08: ordinary HTTP writes still reject missing Origin in all three control planes',async()=>{
   const auth={parentOrigin:'http://127.0.0.1:49123',authenticate:async()=>({principalId:'fixture'}),authorize:async()=>true};
-  for(const [handler,path] of [[createHttpHandler({},auth),'/apps/open'],[createLibraryHttpHandler({},auth),'/hanamesh/library/install'],[createRouterHttpHandler({},auth),'/hanamesh/router/gateway']]){
+  for(const [handler,path] of [[createHttpHandler({},auth),'/apps/open'],[createApplicationRuntimeHandler({},auth),'/apps/runtime/provision'],[createRouterHttpHandler({},auth),'/hanamesh/router/gateway']]){
     let status,body;
     await handler({headers:{host:'127.0.0.1:49123','x-hanamesh-client':'workspace-v1','content-type':'application/json'},url:path,method:'POST'}, {writeHead:value=>{status=value;},end:value=>{body=JSON.parse(value);}});
     assert.equal(status,403);assert.equal(body.error.code,'CSRF_DENIED');

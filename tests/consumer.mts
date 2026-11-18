@@ -1,12 +1,8 @@
 import { AppHost,AtomicFileStore,createHttpHandler,type AppDefinition,type DshStorageBinding } from '../dist/index.js';
 import { WorkspaceAppClient } from '../dist/client.js';
 import { apply,domainBinding,browserAuthentication,type DshPluginConfig } from '../dist/dsh.js';
-import {createMarketSeat,openInstallTarget,type InstallTargetReceipt} from '../dist/client-ui.js';
-const targetReceipt:InstallTargetReceipt=await openInstallTarget({itemId:'catalog-id',packageName:'example-plugin'});
-await createMarketSeat().openInstallTarget({packageName:'example-plugin'});
-// @ts-expect-error Versions and download URLs are resolved by the market, never supplied by callers.
-await openInstallTarget({packageName:'example-plugin',version:'9.0.0',url:'https://example.test/pkg.tgz'});
-void targetReceipt;
+import {ApplicationContent,RuntimeConfiguration} from '../dist/client-ui.js';
+void [ApplicationContent,RuntimeConfiguration];
 const definition:AppDefinition={id:'example',name:'Example',deployments:[{id:'local',dataId:'data1',mode:'owned',command:'/absolute/node',args:['app.mjs','{{port}}','{{dataDir}}'],readiness:{path:'/health',status:200,bodyIncludes:'EXAMPLE'}}]};
 const host=new AppHost({store:new AtomicFileStore('/tmp/example-state'),dataRoot:'/tmp/example-data',parentOrigin:'http://127.0.0.1:40000'});
 host.register(definition);
@@ -30,20 +26,3 @@ const binding:DshStorageBinding=domainBinding({global:{get:()=>null,set:async()=
 const authentication=browserAuthentication({requestRejection:()=>undefined});
 const dshEntry:(ctx:unknown,config:DshPluginConfig)=>Promise<void>=apply;
 void [dshConfig,binding,authentication,dshEntry]; // Type-only exercise, not evidence of real DSH integration.
-
-import {runCatalogProviderSuite,runCatalogConsumerSuite,type CatalogSuiteReport} from '../src/catalog/suite.js';
-const catalogReports:Promise<CatalogSuiteReport>[]=[runCatalogProviderSuite(),runCatalogConsumerSuite()];void catalogReports;
-
-import {INSTALLATION_STATUS_CAPABILITY,type InstallationStatus,type InstallationStatusRequest} from '../dist/installation-status.js';
-const statusRequest:InstallationStatusRequest={contractVersion:'1',consent:'read-installations'};
-declare const observations:InstallationStatus;
-observations.observations[0]?.version satisfies string|null|undefined;
-INSTALLATION_STATUS_CAPABILITY.contract satisfies 'hanamesh.installation-status';void statusRequest;
-
-import type {SuiteSourceSettings,SuiteSourceSettingsInput} from '../dist/dsh.js';
-const sourceChoice:SuiteSourceSettingsInput={mode:'core'};
-// @ts-expect-error URLs are taken from the live Core service or existing plugin configuration.
-const arbitrarySource:SuiteSourceSettingsInput={mode:'core',registry:'https://other.example/'};
-declare const suiteSource:SuiteSourceSettings;
-if(suiteSource.observation.observable)suiteSource.observation.state.status satisfies 'disabled'|'ready'|'failed'|'disposed';
-void [sourceChoice,arbitrarySource];

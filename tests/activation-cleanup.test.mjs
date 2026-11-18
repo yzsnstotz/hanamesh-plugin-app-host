@@ -24,10 +24,10 @@ test('AH-ACT01: failed public bundle activation releases routes before the host 
   await until(() => ctx.get('webServer')?.port > 0);
   const origin = `http://127.0.0.1:${ctx.get('webServer').port}`;
   const facility = ctx.get('storageDomain'), opened = [];
-  const failure = Object.assign(new Error('Library domain could not be opened.'), { code: 'ACTIVATION_STORAGE_UNAVAILABLE' });
+  const failure = Object.assign(new Error('Application Node runtime domain could not be opened.'), { code: 'ACTIVATION_STORAGE_UNAVAILABLE' });
   const storagePort = { async open(spec) {
     opened.push(spec.name);
-    if (spec.name === 'hanamesh_library') throw failure;
+    if (spec.name === 'hanamesh_node_runtime') throw failure;
     return await facility.open(spec);
   } };
   const outcome = Promise.withResolvers();
@@ -49,7 +49,7 @@ test('AH-ACT01: failed public bundle activation releases routes before the host 
     },
   });
   assert.equal(await outcome.promise, failure, 'normal Cordis plugin activation must preserve the actual failure');
-  assert.ok(opened.includes('hanamesh_library'), 'reach the intended failure after earlier public resources were acquired');
+  assert.ok(opened.includes('hanamesh_node_runtime'), 'reach the intended failure after earlier public resources were acquired');
   assert.equal(ctx.get('hanameshApps'), undefined, 'a failed activation must not publish the host seat');
   const response = await http(origin + '/hanamesh/apps', { headers: { origin, authorization: 'Bearer activation-test' } });
   t.diagnostic(`SOURCE failed activation route status=${response.status}; no native CLIENT/U2 evidence`);

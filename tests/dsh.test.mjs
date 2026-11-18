@@ -26,15 +26,6 @@ import {declaration as coreDeclaration,core as suiteCore,names as suiteNames,ver
 function connectionDouble(token) {
   return { requestRejection: request => request.headers?.authorization === `Bearer ${token}` ? undefined : { status: 401 } };
 }
-test('Core suite public method arrives and unloads through real optional Cordis injection',async t=>{
-  const profileRoot=await temporary();for(const [i,name] of suiteNames.entries()){await mkdir(join(profileRoot,'node_modules',name),{recursive:true});await writeFile(join(profileRoot,'node_modules',name,'package.json'),JSON.stringify({name,version:suiteVersions[i]}));}await writeFile(join(profileRoot,'package.json'),JSON.stringify({dependencies:Object.fromEntries(suiteNames.map((name,i)=>[name,suiteVersions[i]])),dsh:{profile:{bundles:suiteNames}}}));t.after(()=>rm(profileRoot,{recursive:true,force:true}));
-  const h=await boot(t,{applications:[],config:{library:{profileDir:profileRoot,profileName:'isolated',fixture:join(import.meta.dirname,'fixtures/catalog/provider-page.json')}}});
-  const item=async()=>{const response=await h.get('/hanamesh/library?category=');assert.equal(response.status,200,JSON.stringify(response.json));return response.json.items.find(row=>row.kind==='suite');};
-  assert.equal((await item()).suiteUpgradeUnavailable,'Core 未提供套件声明');let requests=[];
-  const fiber=h.ctx.plugin(ctx=>{const value=suiteCore(coreDeclaration());ctx.provide('hanameshCore',{...value,getSuiteDeclaration:async(...args)=>{requests.push(args);return value.getSuiteDeclaration(...args);}});});
-  await until(async()=>(await item()).suite.completeness==='complete');assert.ok(requests.every(args=>args.length===0),'market fact reads never request registry candidates');
-  await fiber.dispose();await until(async()=>(await item()).suiteUpgradeUnavailable==='Core 未提供套件声明');assert.equal((await item()).suite.completeness,'unknown');
-});
 async function boot(t, { token = 'browser-session', withPlugin = true, applications = [definition()], config = {} } = {}) {
   const root = await temporary();
   const ctx = new Context();
@@ -165,38 +156,6 @@ test('teardown: a whole-root unload (profile shutdown) never orphans an owned pr
   assert.equal(h.ctx.get('hanameshApps'),undefined);
 });
 
-test('AH-L07 (plugin): an unconfigured library seeds the HanaMesh catalog source through the real Config schema; an explicit [] does not', async t => {
-  const plain = await boot(t, { withPlugin: false });
-  const logged = [];
-  plain.ctx.logger.exporter({ export: message => logged.push(message) });
-  plain.fiber = plain.ctx.plugin(appHost, { dataRoot: join(plain.root, 'app-data'), applications: [definition()], library: { handoff: { enabled: false } } });
-  await until(() => plain.ctx.get('hanameshApps') !== undefined);
-  const seeded = await plain.get('/hanamesh/library/sources');
-  assert.equal(seeded.status, 200, JSON.stringify(seeded.json));
-  assert.deepEqual(seeded.json.sources, [{ manifestUrl: 'https://market.hanamesh.com/catalog-source.json?view=hanamesh', enabled: true }]);
-  const none = await boot(t, { config: { library: { sources: [] } } });
-  const empty = await none.get('/hanamesh/library/sources');
-  assert.equal(empty.status, 200, JSON.stringify(empty.json));
-  assert.deepEqual(empty.json.sources, []);
-  // One structured line names exactly what was inferred (this checkout has no profile above it, so no profileDir/dshBin).
-  const line = logged.find(message => message.type === 'info' && String(message.args[0]).startsWith('hanamesh-app-host library: inferred'));
-  assert.ok(line, JSON.stringify(logged.map(m => m.args[0])));
-  assert.deepEqual(JSON.parse(line.args[1]), { nodeBinary: process.execPath, sources: ['https://market.hanamesh.com/catalog-source.json?view=hanamesh'] });
-  // Plain DSH without a profile above this checkout: the installer stays unavailable, nothing is guessed from cwd or ~/.dsh.
-  const install = await plain.post('/hanamesh/library/install', { itemId: 'x' });
-  assert.equal(install.status, 503); assert.equal(install.json.error.code, 'LIBRARY_INSTALL_UNAVAILABLE');
-});
-
-test('CLI-8 (plugin): persisted old URLs, custom URLs and a saved empty list survive plugin reload without migration',async t=>{
-  const h=await boot(t,{config:{library:{sources:undefined}}});
-  for(const sources of [[{manifestUrl:'https://market.hanamesh.com/catalog-source.json',enabled:true}],[{manifestUrl:'https://catalog.example.com/catalog-source.json',enabled:true}],[]]){
-    const saved=await h.post('/hanamesh/library/sources',{sources});assert.equal(saved.status,200,JSON.stringify(saved.json));const revision=saved.json.revision;
-    await h.fiber.dispose();await until(()=>h.ctx.get('hanameshApps')===undefined);
-    h.fiber=h.ctx.plugin(appHost,{dataRoot:join(h.root,'app-data'),applications:[definition()],library:{handoff:{enabled:false}}});await until(()=>h.ctx.get('hanameshApps')!==undefined);
-    const reloaded=await h.get('/hanamesh/library/sources');assert.equal(reloaded.status,200);assert.deepEqual(reloaded.json.sources,sources);assert.equal(reloaded.json.revision,revision);
-  }
-});
-
 test('AH-U07 (plugin): real Cordis early/absent/late Usage services never turn readiness or traffic into original business facts', async t => {
   // SOURCE/FIXTURE: real Cordis/storage/web/app; connection remains AUTH_DOUBLE.
   const diagnostic = 'USAGE_FACT_UNAVAILABLE: no verified public presentation/success source; runtime readiness, transport and hourly receipts are diagnostics only.';
@@ -310,21 +269,6 @@ test('AH-U07 (plugin): real Cordis early/absent/late Usage services never turn r
   t.diagnostic('AH-U07 SOURCE/FIXTURE: actual apply; early/absent/late service; 303 and HTTP200 paths; Router count=2/reported=false after stop; zero record; fixed diagnostic and throwing logger exercised. Not native CLIENT/U2.');
 });
 
-test('AH-M08 (plugin): rc.28 market routes are registered on the real web server behind the same auth chain; without an installer the plugin seats answer 503, never 500', async t => {
-  const plain = await boot(t);
-  const anonymous = await plain.get('/hanamesh/library/installedPlugins', { authorization: undefined });
-  assert.equal(anonymous.status, 401);
-  const list = await plain.get('/hanamesh/library/installedPlugins');
-  assert.equal(list.status, 200, JSON.stringify(list.json));
-  assert.deepEqual({ plugins: list.json.plugins, apps: list.json.apps, restartRequired: list.json.restartRequired }, { plugins: [], apps: [], restartRequired: false });
-  for (const path of ['/hanamesh/library/plugins/install', '/hanamesh/library/plugins/uninstall', '/hanamesh/library/provision', '/hanamesh/library/uninstall']) {
-    const response = await plain.post(path, {});
-    assert.equal(response.status, 503, `${path}: ${JSON.stringify(response.json)}`); assert.equal(response.json.error.code, 'LIBRARY_INSTALL_UNAVAILABLE');
-  }
-  const csrf = await plain.post('/hanamesh/library/plugins/install', { packageName: 'dsh-plugin-tether' }, { 'x-hanamesh-client': undefined });
-  assert.equal(csrf.status, 403); assert.equal(csrf.json.error.code, 'CSRF_DENIED');
-});
-
 test('the library entry never pulls a DSH-only peer into a plain consumer import graph', async () => {
   // A plain npm consumer (an application package such as @hanamesh/app-vibe-trading) installs this
   // package without the DSH kernel, so nothing reachable from `dist/index.js` may import @deepseek-ai/*.
@@ -348,14 +292,13 @@ test('AH-PG01: real Cordis loads the external provision package and preserves au
   // SOURCE harness only: the DSH command seat is deliberately never executed here.
   // This exercises the actual public provision import and installer binding, not DSH installation.
   h.fiber=h.ctx.plugin(appHost,{dataRoot:join(h.root,'app-data'),applications:[],
-    nodeBinary:process.execPath,library:{profileDir:join(h.root,'profile'),profileName:'contract-source',
-      dshBin:join(h.root,'unexecuted-dsh-command-seat.js'),sources:[],handoff:{enabled:false}}});
+    nodeBinary:process.execPath,runtime:{profileDir:join(h.root,'profile')}});
   await until(()=>h.ctx.get('hanameshApps')!==undefined);
-  assert.equal((await h.get('/hanamesh/library/installedPlugins',{authorization:undefined})).status,401);
-  const list=await h.get('/hanamesh/library/installedPlugins');
+  assert.equal((await h.get('/hanamesh/apps/runtime',{authorization:undefined})).status,401);
+  const list=await h.get('/hanamesh/apps/runtime');
   assert.equal(list.status,200,JSON.stringify(list.json));
   assert.deepEqual(list.json.apps,[]);
-  const rejected=await h.post('/hanamesh/library/provision',{});
+  const rejected=await h.post('/apps/runtime/provision',{});
   assert.equal(rejected.status,400,JSON.stringify(rejected.json));
   assert.equal(rejected.json.error.code,'INVALID_INPUT');
 });
@@ -376,23 +319,8 @@ test('AH-D05: real Cordis apply infers the Desktop parent and profile without su
   let h;try{h=await boot(t,{applications:[]});}finally{process.argv=prior;}
   assert.equal(h.ctx.get('hanameshApps').parentOrigin,'dsh-app://app');
   assert.deepEqual(h.ctx.get('hanameshApps').frameAncestors,[]);
-  const result=await h.get('/hanamesh/library/installedPlugins',{origin:undefined});
-  assert.equal(result.status,200,JSON.stringify(result.json));assert.equal(result.json.plugins.length,1);
-  assert.equal(result.json.plugins[0].packageName,'@hanamesh/dsh-app-host');
-  assert.equal((await h.post('/hanamesh/library/sources',{sources:[]},{origin:undefined})).status,200);
-  assert.equal((await h.post('/hanamesh/library/sources',{sources:[]},{origin:'dsh-app://shell'})).status,403);
-});
-
-
-test('Core declaration missing: real Cordis library exposes the exact reason and cannot produce an upgrade plan',async t=>{
-  const h=await boot(t,{withPlugin:false}),profile=join(h.root,'profile');
-  const dependencies={'@hanamesh/core':'0.3.12','@hanamesh/usage':'0.2.0-rc.34','@hanamesh/dsh-app-host':'0.6.5'};
-  for(const [name,version] of Object.entries(dependencies)){await mkdir(join(profile,'node_modules',name),{recursive:true});await writeFile(join(profile,'node_modules',name,'package.json'),JSON.stringify({name,version}));}
-  await writeFile(join(profile,'package.json'),JSON.stringify({dependencies,dsh:{profile:{bundles:Object.keys(dependencies)}}}));
-  h.fiber=h.ctx.plugin(appHost,{dataRoot:join(h.root,'app-data'),applications:[],nodeBinary:process.execPath,library:{profileDir:profile,profileName:'core-suite-fixture',dshBin:join(h.root,'unexecuted-dsh.js'),sources:[],fixture:fileURLToPath(new URL('./fixtures/catalog/provider-page.json',import.meta.url)),handoff:{enabled:false}}});
-  await until(()=>h.ctx.get('hanameshApps')!==undefined);
-  const list=await h.get('/hanamesh/library?category=');assert.equal(list.status,200,JSON.stringify(list.json));
-  const item=list.json.items.find(i=>i.kind==='suite');assert.equal(item.suiteUpgradeUnavailable,'Core 未提供套件声明');assert.equal(item.suite.components[0].version,'0.3.12');
-  const target=await h.get('/hanamesh/library/target?itemId=hanamesh%3Asuite-upgrade');assert.equal(target.status,503,JSON.stringify(target.json));assert.equal(target.json.error.code,'CORE_SUITE_DECLARATION_MISSING');assert.equal(target.json.error.message,'Core 未提供套件声明');
-  assert.equal((await h.get('/hanamesh/library/target?itemId=hanamesh%3Asuite-upgrade',{authorization:undefined})).status,401);
+  const result=await h.get('/hanamesh/apps/runtime',{origin:undefined});
+  assert.equal(result.status,200,JSON.stringify(result.json));assert.deepEqual(result.json.apps,[]);assert.equal(h.ctx.get('hanameshAppRuntime').getProfileDir(),profile);
+  assert.equal((await h.post('/apps/runtime/provision',{},{origin:undefined})).status,400);
+  assert.equal((await h.post('/apps/runtime/provision',{},{origin:'dsh-app://shell'})).status,403);
 });
