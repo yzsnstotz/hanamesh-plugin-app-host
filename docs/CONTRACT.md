@@ -183,6 +183,6 @@ Storage space budget is archive bytes + twice measured regular-file payload (new
 
 GET `/hanamesh/apps/runtime` 返回 `{apps}`（仅应用声明，不是插件已装清单）。POST `/apps/runtime/provision` 与 `/apps/runtime/remove` 接受已扫描应用的 `{appId,packageName,runtimeItem}`；remove 还必须 `confirm:true`、无活跃实例，只移除声明且归属可证明的运行环境，保留应用数据。上述写入执行原认证/授权、准确 Origin/Host、workspace-v1 与 iframe 拒绝。
 
-应用视图注册到 `hanamesh.home.continue/applications`，模型路由到 `hanamesh.account.models/apphost-models`，技术配置在本包及套件的 `plugins.row.config` 和本包 `plugins.bundle.config`。无侧栏应用库、footer、overlay 或旧 market 席位。
+应用视图注册到 `hanamesh.home.continue/applications`，模型路由到 `hanamesh.account.models/apphost-models`，无 Core 时仍可从本包原生配置页打开和关闭应用；运行环境及模型配置在本包及套件的 `plugins.row.config` 和本包 `plugins.bundle.config`。无侧栏应用库、footer、overlay 或旧 market 席位。
 
 只读 Cordis `hanameshAppRuntime` 协议1：`getNodeBinary()`、`getProfileDir()`、`getState()`。公开的是本包当前事实，消费者不持有生命周期、不写本包存储。

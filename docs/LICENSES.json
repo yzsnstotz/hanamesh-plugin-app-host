@@ -4,7 +4,7 @@
     "version": "0.6.29",
     "license": "SEE LICENSE IN LICENSE",
     "source": "git+https://github.com/yzsnstotz/hanamesh-plugin-app-host.git",
-    "purpose": "Application ownership, view leases, Router forwarding, and application library for official DSH"
+    "purpose": "Application ownership, view leases, runtime provisioning and controlled model forwarding for official DSH"
   },
   "scope": "AppHost own code and declared dependencies/peers; lib-provision 随包分发、源仓不变; original LICENSE retained; no relicensing.",
   "components": {

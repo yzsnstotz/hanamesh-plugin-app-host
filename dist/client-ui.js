@@ -430,6 +430,6 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     for(const key of ['@hanamesh/dsh-app-host#hanamesh-app-host','@hanamesh/hanamesh#hanamesh-app-host'])ctx.effect(()=>ctx.slots.inject('plugins.row.config',()=>ctx.slots.register({name:'plugins.row.config',key},RuntimeConfiguration)),'hanamesh-app-host:runtime-config:'+key);
     ctx.effect(()=>ctx.slots.inject('plugins.bundle.config',()=>ctx.slots.register({name:'plugins.bundle.config',key:'@hanamesh/dsh-app-host'},RuntimeConfiguration)),'hanamesh-app-host:bundle-config');
   }
-  function RuntimeConfiguration({view='page'}={}){if(view==='summary')return h('span',null,t('应用运行环境与模型路由'));return h('div',null,h(NodeRuntimeSection),h(ProvidersSection));}
+  function RuntimeConfiguration({view='page'}={}){if(view==='summary')return h('span',null,t('应用运行环境与模型路由'));return h('div',null,h(ApplicationContent),h(NodeRuntimeSection),h(ProvidersSection));}
   return{name,inject,apply,ProvidersSection,NodeRuntimeSection,ApplicationContent,RuntimeConfiguration};
 }});
