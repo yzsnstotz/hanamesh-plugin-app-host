@@ -324,3 +324,91 @@ test('AH-D05: real Cordis apply infers the Desktop parent and profile without su
   assert.equal((await h.post('/apps/runtime/provision',{},{origin:undefined})).status,400);
   assert.equal((await h.post('/apps/runtime/provision',{},{origin:'dsh-app://shell'})).status,403);
 });
+
+
+async function installedAppFixture(profileDir, packageName, app, publishedName = packageName) {
+  const root = join(profileDir, 'node_modules', packageName);
+  await mkdir(root, { recursive: true });
+  await writeFile(join(root, 'package.json'), JSON.stringify({ name: publishedName, version: '1.0.0', hanamesh: { app: 'app.json' } }));
+  await writeFile(join(root, 'app.json'), JSON.stringify(app));
+}
+
+test('R416-F01: a corrupt installed runtime ledger cannot prevent AppHost startup or healthy application use', async t => {
+  const h = await boot(t, { withPlugin: false });
+  const profileDir = join(h.root, 'profile'), dataRoot = join(h.root, 'app-data');
+  const broken = definition({ id: 'broken' }), healthy = definition({ id: 'healthy' });
+  // Same valid descriptor shape as AH-P01. The fault is real ledger JSON, not an invalid descriptor.
+  delete broken.deployments[0].command;
+  broken.deployments[0].runtime = {
+    manifest: { schema: 1, sources: [{ id: 'local', kind: 'file', base: 'file:///tmp/' }], items: [{
+      id: 'vibe-runtime', version: '0.1.15', kind: 'tar.gz', installTo: 'vibe-runtime',
+      platforms: { 'darwin-arm64': { asset: 'vibe.tgz', sha256: 'a'.repeat(64) } },
+    }] }, item: 'vibe-runtime', exec: 'bin/vibe',
+  };
+  await installedAppFixture(profileDir, 'a-broken', broken);
+  await installedAppFixture(profileDir, 'z-healthy', healthy);
+  await writeFile(join(profileDir, 'package.json'), JSON.stringify({ dependencies: { 'a-broken': '1.0.0', 'z-healthy': '1.0.0' } }));
+  const ledgerDir = join(dataRoot, 'runtimes', 'broken', '.provision');
+  await mkdir(ledgerDir, { recursive: true });
+  const corrupt = '{"schema":1,"items": [PRIVATE_LEDGER_BODY';
+  await writeFile(join(ledgerDir, 'ledger.json'), corrupt);
+  const { ledger } = await import('@hanamesh/lib-provision');
+  await assert.rejects(ledger(join(dataRoot, 'runtimes', 'broken')), { name: 'SyntaxError' });
+  const logged = [];
+  h.ctx.logger.exporter({ levels: { default: 3 }, export: message => logged.push(message) });
+  h.fiber = h.ctx.plugin(appHost, { dataRoot, applications: [broken, healthy], runtime: { profileDir } });
+  await until(() => h.ctx.get('hanameshApps') !== undefined);
+  const host = h.ctx.get('hanameshApps');
+  assert.equal(h.ctx.get('hanameshAppRuntime').protocolVersion, '1');
+  assert.equal((await h.get('/hanamesh/apps')).status, 200);
+  assert.equal((await h.get('/hanamesh/router/receipts')).status, 200);
+  assert.equal((await h.get('/hanamesh/apps/node-runtime')).status, 200);
+  const diagnostics = logged.filter(message => String(message.args[0]).startsWith('APPHOST_STARTUP_SCAN_UNAVAILABLE'));
+  assert.equal(diagnostics.length, 1, 'one visible named startup scan diagnostic');
+  assert.equal(diagnostics[0].type, 'warn');
+  assert.ok(diagnostics[0].args.includes('SyntaxError'));
+  assert.equal(JSON.stringify(logged).includes('PRIVATE_LEDGER_BODY'), false, 'ledger body must never enter the diagnostic');
+  const read = await h.get('/hanamesh/apps/runtime');
+  assert.equal(read.status, 500, 'strict inventory still reports failure, never ready or a successful empty list');
+  assert.equal(read.json.error.code, 'INTERNAL_ERROR');
+  const prepare = await h.post('/apps/runtime/provision', { appId: 'broken', packageName: 'a-broken', runtimeItem: 'vibe-runtime' });
+  assert.equal(prepare.status, 500, 'preparing a corrupt runtime cannot silently repair or ignore its ledger');
+  assert.equal(await readFile(join(ledgerDir, 'ledger.json'), 'utf8'), corrupt);
+  const refused = await h.post('/apps/open', { appId: 'broken', deploymentId: 'local', viewId: 'broken-view' });
+  assert.equal(refused.status, process.platform === 'win32' ? 400 : 409);
+  assert.equal(refused.json.error.code, process.platform === 'win32' ? 'PLATFORM_UNSUPPORTED' : 'RUNTIME_MISSING');
+  assert.equal(host.instanceList(appHost.BROWSER_PRINCIPAL).some(row => row.appId === 'broken' && row.status === 'ready'), false);
+  const opened = await h.post('/apps/open', { appId: 'healthy', deploymentId: 'local', viewId: 'healthy-view' });
+  if (process.platform === 'win32') {
+    assert.equal(opened.status, 400); assert.equal(opened.json.error.code, 'PLATFORM_UNSUPPORTED');
+  } else {
+    assert.equal(opened.status, 200, JSON.stringify(opened.json));
+    const ready = await until(() => host.instanceList(appHost.BROWSER_PRINCIPAL).find(row => row.appId === 'healthy' && row.status === 'ready'));
+    assert.ok(pidAlive(ready.pid));
+    assert.equal((await h.post('/apps/close', { viewId: 'healthy-view', leaseToken: opened.json.leaseToken })).status, 200);
+    assert.equal((await h.post('/apps/stop', { instanceId: ready.id, confirm: true })).status, 200);
+    await until(() => !pidAlive(ready.pid));
+  }
+});
+
+test('R416-F01: one invalid optional package binding leaves subsequent bindings and AppHost services available', async t => {
+  const h = await boot(t, { withPlugin: false });
+  const profileDir = join(h.root, 'profile'), first = definition({ id: 'first' }), healthy = definition({ id: 'healthy' });
+  // Real installed package metadata reaches bindPackageName and is rejected by its npm-name validator.
+  await installedAppFixture(profileDir, 'a-invalid-binding', first, 'invalid package');
+  await installedAppFixture(profileDir, 'z-healthy', healthy);
+  await writeFile(join(profileDir, 'package.json'), JSON.stringify({ dependencies: { 'a-invalid-binding': '1.0.0', 'z-healthy': '1.0.0' } }));
+  const logged = [];
+  h.ctx.logger.exporter({ levels: { default: 3 }, export: message => logged.push(message) });
+  h.fiber = h.ctx.plugin(appHost, { dataRoot: join(h.root, 'app-data'), applications: [first, healthy], runtime: { profileDir } });
+  await until(() => h.ctx.get('hanameshApps') !== undefined);
+  const host = h.ctx.get('hanameshApps');
+  assert.equal(host.packageName('first'), null);
+  assert.equal(host.packageName('healthy'), 'z-healthy', 'continue binding after the failed row');
+  assert.equal(h.ctx.get('hanameshAppRuntime').protocolVersion, '1');
+  assert.equal((await h.get('/hanamesh/apps')).status, 200);
+  const diagnostics = logged.filter(message => String(message.args[0]).startsWith('APPHOST_STARTUP_BINDING_FAILED'));
+  assert.equal(diagnostics.length, 1);
+  assert.equal(diagnostics[0].type, 'warn');
+  assert.deepEqual(diagnostics[0].args.slice(1), ['first', 'invalid package', 'INVALID_PACKAGE_NAME']);
+});

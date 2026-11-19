@@ -213,7 +213,18 @@ export async function apply(ctx, config) {
     const provision=await import('@hanamesh/lib-provision');
     applicationRuntime=createApplicationRuntime({host,profileDir:locations.profileDir,dataRoot,ledgerReader:provision.ledger,provision:provision.provision,remove:provision.remove});
     own('application-runtime',()=>applicationRuntime.close());
-    for(const row of await applicationRuntime.installed())if(row.appId&&row.packageName)host.bindPackageName(row.appId,row.packageName);
+    // Installed package names are optional usage evidence. A scan or one bad binding must
+    // never prevent application/runtime/model services from starting. Strict runtime reads
+    // and mutations below still report ledger failures; no empty or ready result is invented.
+    try {
+      for (const row of await applicationRuntime.installed()) if (row.appId && row.packageName) {
+        try { host.bindPackageName(row.appId, row.packageName); }
+        catch (error) { ctx.logger?.warn?.('APPHOST_STARTUP_BINDING_FAILED %s %s (%s)', row.appId, row.packageName, error?.code ?? error?.name ?? 'UNKNOWN_ERROR'); }
+      }
+    } catch (error) {
+      // Project only the error identifier: parse errors can contain ledger content.
+      ctx.logger?.warn?.('APPHOST_STARTUP_SCAN_UNAVAILABLE (%s)', error?.code ?? error?.name ?? 'UNKNOWN_ERROR');
+    }
     const runtimeHandler=createApplicationRuntimeHandler(applicationRuntime,{...auth,nodeRuntime});
     for(const path of APPLICATION_RUNTIME_ROUTES)own(`route:${path}`,webServer.register({kind:'exact',path,handler:runtimeHandler}));
     own('runtime-facts-seat',ctx.provide('hanameshAppRuntime',{protocolVersion:'1',getNodeBinary:()=>nodeRuntime.executable,getProfileDir:()=>locations.profileDir,getState:()=>nodeRuntime.status()}));

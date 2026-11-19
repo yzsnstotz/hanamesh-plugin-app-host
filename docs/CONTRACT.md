@@ -186,3 +186,7 @@ GET `/hanamesh/apps/runtime` 返回 `{apps}`（仅应用声明，不是插件已
 应用视图注册到 `hanamesh.home.continue/applications`，模型路由到 `hanamesh.account.models/apphost-models`，无 Core 时仍可从本包原生配置页打开和关闭应用；运行环境及模型配置在本包及套件的 `plugins.row.config` 和本包 `plugins.bundle.config`。无侧栏应用库、footer、overlay 或旧 market 席位。
 
 只读 Cordis `hanameshAppRuntime` 协议1：`getNodeBinary()`、`getProfileDir()`、`getState()`。公开的是本包当前事实，消费者不持有生命周期、不写本包存储。
+
+## Optional startup package evidence
+
+The initial installed-application scan only binds package names for usage evidence. A failed scan or individual binding emits the named host warning `APPHOST_STARTUP_SCAN_UNAVAILABLE` / `APPHOST_STARTUP_BINDING_FAILED` with the error code or name (and binding identity), without ledger contents. It never prevents AppHost application, model-router or runtime services from activating. Strict application-runtime inventory, provision and removal still fail on unreadable/corrupt ledgers; startup isolation does not mark any runtime ready or substitute an empty successful inventory.
