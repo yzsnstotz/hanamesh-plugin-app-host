@@ -21,14 +21,14 @@ async function isolatedDefaultPortList() {
     const server=createServer();await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));reservations.push(server);
   }
   const ports=reservations.map(server=>server.address().port);
-  for(const server of reservations)await new Promise(resolve=>server.close(resolve));
-  return ports;
+  let released=false;
+  return {ports,release:async()=>{if(released)return;released=true;for(const server of reservations)await new Promise(resolve=>server.close(resolve));}};
 }
 
 for(const order of [[market,appHost],[appHost,market]]) {
   test(`R491 loopback combination with both default-enabled listeners: ${order.map(p=>p.name).join(' -> ')}`,async t=>{
-    const root=await temporary(),ctx=new Context(),ports=await isolatedDefaultPortList(),fibers=new Map();
-    t.after(async()=>ctx.fiber.dispose());
+    const root=await temporary(),ctx=new Context(),reserved=await isolatedDefaultPortList(),ports=reserved.ports,fibers=new Map();
+    t.after(async()=>{try{await ctx.fiber.dispose();}finally{await reserved.release();}});
     const profile=join(root,'profile');await mkdir(profile);
     await writeFile(join(profile,'package.json'),JSON.stringify({name:'loopback-composition-profile',dependencies:{},dsh:{profile:{bundles:[]}}}));
     ctx.plugin(Storage);ctx.plugin(storageJson,{root:join(root,'storage')});ctx.plugin(storageDomain,{backend:'json'});
@@ -39,6 +39,7 @@ for(const order of [[market,appHost],[appHost,market]]) {
     ctx.provide('hanameshCore',{protocolVersion:'1',getSuiteDeclaration:async()=>{coreReads++;return declaration();}});
     await ctx.start?.();await until(()=>ctx.get('webServer')?.port>0);
     const workspace=`http://127.0.0.1:${ctx.get('webServer').port}`;
+    await reserved.release(); // keep the shared list reserved until the workspace owns its distinct port
     for(const plugin of order) {
       const outcome=Promise.withResolvers();
       const fiber=ctx.plugin({name:plugin.name,inject:plugin.inject,async apply(child){
