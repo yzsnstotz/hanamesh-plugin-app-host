@@ -46,11 +46,18 @@ test('B17 saved choice, source selection/url/loss/replacement after preview inva
  }
 });
 
-test('B17 source settings page names separate registry choice, live unavailable state and failed save without changing saved mode',async t=>{
+test('B17 source settings page explains the suite registry choice, live unavailable state and failed save without changing saved mode',async t=>{
  const {clientHarness,settle}=await import('./fixtures/client-ui-harness.mjs');let mode='configured',fail=false,posts=0;
  const h=await clientHarness({component:'SuiteSourceSettingsSection',fetch:async(_path,input)=>{if(input?.method==='POST'){posts++;if(fail)return{ok:false,json:async()=>({error:{code:'SUITE_SOURCE_SAVE_FAILED',message:'原选择保持'}})};mode=JSON.parse(input.body).mode;}
  return{ok:true,json:async()=>({mode,configuredRegistry:'https://custom.example/',observation:{observable:false,code:'CORE_SUITE_SOURCE_MISSING'}})};}});t.after(()=>h.unmount());await settle();
- assert.match(JSON.stringify(h.tree),/套件安装包来源/);assert.match(JSON.stringify(h.tree),/CORE_SUITE_SOURCE_MISSING/);assert.match(JSON.stringify(h.tree),/https:\/\/custom.example\//);assert.match(JSON.stringify(h.tree),/目录/);assert.equal(posts,0);
+ const rendered=JSON.stringify(h.tree);
+ assert.match(rendered,/套件安装包来源/);
+ assert.match(rendered,/CORE_SUITE_SOURCE_MISSING/);
+ assert.match(rendered,/https:\/\/custom.example\//);
+ assert.match(rendered,/选择 AppHost 安装 HanaMesh 总包与组件时使用的 npm registry。/);
+ assert.match(rendered,/保存选择不会安装。检查、确认和执行前都重新读取当前来源与 Core 兼容声明/);
+ assert.doesNotMatch(rendered,/市场目录源/);
+ assert.equal(posts,0);
  h.find(n=>n.type==='select').props.onChange({target:{value:'core'}});await settle();await h.click('保存套件安装包来源');assert.equal(mode,'core');fail=true;h.find(n=>n.type==='select').props.onChange({target:{value:'configured'}});await settle();await h.click('保存套件安装包来源');assert.equal(mode,'core');assert.match(JSON.stringify(h.tree),/原选择保持/);
 });
 
