@@ -1,10 +1,8 @@
 0.6.31（F02）：`/hanamesh/library/install-target` 与 `/hanamesh/library/installation-status` 的唯一 HTTP 提供方是独立 `@hanamesh/market`。AppHost 从 DSH 精确路由表和自有网站监听都撤掉这两个入口，并不再广告安装状态 HTTP 能力；单独加载 AppHost 时同样不提供，不按 Market 是否在场做兼容回退。下文涉及这两个入口的旧 AppHost 归属描述已被本条取代；协议、CORS、显式同意和取消义务由 Market 现行合约承担。AppHost 应用运行、Node、租约、网关及本单之外的路由不变。
 
-D3（编排11-09授权）：仅公开install-target的有效匿名GET/GET预检对名单外HTTP(S) Origin给精确CORS，披露固定ORIGIN_DENIED与本机拒绝监听存在，不披露客户端能力、安装或允许名单。预检204只使浏览器继续读取拒绝；PNA true响应仅在对应请求头为true时出现。其他接口/Host/凭据/iframe边界不变。详见INSTALL_TARGET.md。
 
 0.6.23：安装状态只在原显式同意之后自动发现当前用户的官方 CLI；不读认证/聊天/配置文件、不修改用户配置。登录 shell 仅输出白名单PATH/管理器/XDG路径的封装JSON，未复制完整环境或模型/API token；正常shell stderr不当失败，插件清单仍要求无stderr。监督器保留管理器PATH及原XDG值/缺省，仅临时工作目录和TMP隔离；CLI 仍限版本与插件/市场只读清单，版本下限和既有 JSON 校验双门。Windows npm shim 解析至具名官方 JS，绝不经 cmd 执行。详见 INSTALLATION_STATUS.md。
 
-0.6.7 installation-status is a separately consented read capability: exact existing loopback Host/approved Origin, credentials omitted, strict POST body before any reader. Core is authoritative; CLI executable/profile/target/budgets are static trusted settings, never browser input. Official list output is whitelisted and no raw paths, unrelated inventory or errors leave the host. A live detached IPC anchor owns cancellation and parent-disconnect group cleanup; no cached installed answer. See INSTALLATION_STATUS.md for exact protocol and scope limits.
 
 D-230: failed activation releases only resources acquired by that AppHost activation, including partially registered routes and optional-service listeners. Once-only releases also serve normal Cordis unload. All failed-startup releases are attempted in reverse order; APPHOST_CLEANUP_FAILED names the internal resource without raw errors or credentials, and logger failures cannot replace the original activation error. No authentication, origin, lease, application or browser policy is relaxed.
 
@@ -109,3 +107,5 @@ An explicitly configured existing standalone Node on Windows x64 may be used by 
 
 
 Installation reader stage diagnostics (0.6.29) are host-only numeric measurements and fixed identifiers, projected before logging. They retain stderr byte counts and `STDERR_PRESENT`/`STDERR_EMPTY`, never stderr text, command paths, argv, environment values or arbitrary exception details. CLI failure still fails closed with its original public reason code. See INSTALLATION_STATUS.md for timing/exit semantics.
+
+公开发现与安装状态 HTTP 的安全准入由 Market 唯一执行，协议见其现行 INSTALL_TARGET / INSTALLATION_STATUS 合约（本仓同名页已链接）。AppHost 的 DSH 路由表和自有网站监听不提供这两个端点，也不广告对应 HTTP 能力。AppHost 保留的内部读取器继续只委托 Core 权威事实，保持静态受信 CLI/目标、白名单输出和精确自有 anchor/reaper 的取消与清理边界；内部读取函数不授浏览器调用权限。

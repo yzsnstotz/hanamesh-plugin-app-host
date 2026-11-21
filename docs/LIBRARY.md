@@ -107,7 +107,7 @@ A2 0.6.22：普通插件必须有 Indexer 已审核的 installMethods 和 oneCli
 
 目录与磁盘已装事实先返回，首屏不等待npm版本查询。客户端随后逐项调用现有 `/hanamesh/library/versions`；同一页面以 `library.versionLookupConcurrency`（默认4，整数1–16）限制在途查询，按项显示最新兼容版本或具名错误。`library.versionLookupCacheMs`（默认30000ms）仅复用同来源、同已装版本的展示结果和在途请求；过期后下一次明确加载才查询，不定时自动重试。历史下拉复用当前新鲜结果；来源或已装版本变化会失效，离开页面/卸载组件取消在途及排队项，旧响应不回写新来源。
 
-浏览器取消经既有HTTP断连生命周期传给registry fetch；原单次timeout、响应预算、匿名和拒绝重定向规则仍生效。展示缓存不进入安装授权：确认和安装仍重新读取精确目标、Core组合与物理baseline。借用dsh-market同一调研SHA的 `MarketSection.tsx` 分离installed/updates读取与展示缓存思路；HTTP取消复用本仓 `installation-status-http.js` 的res close/req aborted模式，不引入上游没有的DSH API。
+浏览器取消经既有HTTP断连生命周期传给registry fetch；原单次timeout、响应预算、匿名和拒绝重定向规则仍生效。展示缓存不进入安装授权：确认和安装仍重新读取精确目标、Core组合与物理baseline。借用dsh-market同一调研SHA的 `MarketSection.tsx` 分离installed/updates读取与展示缓存思路；HTTP取消通过现行读请求的 `res.close` / `req.aborted` 生命周期向下传递，不引入上游没有的DSH API。
 
 
 ## R168 后台套件查询与确认计划
