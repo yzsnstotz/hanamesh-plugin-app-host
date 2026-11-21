@@ -114,7 +114,7 @@ const receipt = await apps.open({appId:'notes',deploymentId:'local',viewId:'stab
 const ready = await apps.waitUntilReady(receipt);
 iframe.src = ready.uiUrl;
 // 按已配置 TTL 的约 1/3 周期 heartbeat({viewId,leaseToken})。
-// 内置市场视图已消费此契约：按回执 expiresAt 串行续租；关闭/隐藏/卸载取消续租并显式 close。
+// AppHost 应用视图按回执 expiresAt 串行续租。关闭、隐藏或卸载时取消续租并显式 close。
 // 关闭或停止必须用该 lease；不依赖 unload 做最终回收。
 ```
 
@@ -222,7 +222,7 @@ GET 的 `observation` 为 `{observable:false,code}` 或 `{observable:true,state}
 
 明确选择 core 后，预览、确认、紧接执行之前各自重新读取当前 source 和 Core `getSuiteDeclaration({registry})`，并在异步声明返回后复核来源。`ready` 仅表示来源可读；兼容性仍唯一由 Core declaration 决定。disabled/failed/disposed 或无有效 registry 为 `409/CORE_SUITE_SOURCE_NOT_READY`；不缓存 ready、不回退配置 registry、不挑最新、不重试。沿用 declarationId、精确 tuple/metadata digest/repository、物理已装 baseline 和本人 planId。URL、selection、选择模式或提供服务的对象身份变化均终止原确认；新预览仍须本人确认。服务对象身份是 AppHost 内存内 opaque token，**不是 Core 的 generation/revision**；protocol 1 没有该事实或 watch，不能声称观察到两次读取间完全消失又恢复原状的事件。
 
-最后调用现有官方 CLI，完整 argv 来自Core的升级 installation，安装一个精确总包；正常市场外部包路径不变。正在执行时源连接丢失由实际 CLI/输运终态报告，不靠重试/退出屏障维持源。Core B17 服务只来自候选 `c5e1a7373b9896c385f14f79a64bb277f43bde5c` 的公开能力；无 Core 运行时 import，无 Desktop hook/bootstrap、三锁或先于插件加载的服务。源码/真实 Cordis+JSON domain（AUTH_DOUBLE）与正常包验证不等同真实原生安装或 owner 验收。
+最后调用正式 DSH CLI，完整 argv 来自 Core 的升级 installation，安装一个精确总包。正在执行时源连接丢失由实际 CLI/输运终态报告，不靠重试/退出屏障维持源。Core B17 服务只来自候选 `c5e1a7373b9896c385f14f79a64bb277f43bde5c` 的公开能力；无 Core 运行时 import，无 Desktop hook/bootstrap、三锁或先于插件加载的服务。源码/真实 Cordis+JSON domain（AUTH_DOUBLE）与正常包验证不等同真实原生安装或 owner 验收。
 
 公开类型位于 `@hanamesh/dsh-app-host/dsh` 的 `SuiteSourceMode/CoreSuiteSourceState/SuiteSourceSettings/SuiteSourceSettingsInput`；页面导出 `SuiteSourceSettingsSection`。回归：`suite-source.test.mjs` B17-CORDIS，变异 M84–M89（M61 检查全部后续读取被错误缓存）。
 
@@ -247,11 +247,10 @@ A2 0.6.22：升级tuple必须带Core生成的installation（name/version/command
 
 应用读回、补齐运行时、卸载与视图打开使用 Core 的 `hanamesh.home.continue` 和 AppHost 的 DSH 原生插件配置入口。应用视图沿用原有 `/apps/open`、`/apps/resume`、`/apps/heartbeat`、`/apps/close` 和独立网关。模型连接使用 `hanamesh-providers`，安装环境使用 AppHost 设置与 `hanamesh.environment.content`。
 
-插件市场位于独立的 `@hanamesh/market`。AppHost 鉴权后的应用安装端点继续由公开 DSH CLI 与 lib-provision 执行，见 [应用安装合约](INSTALL_TARGET.md)。
+独立的 `@hanamesh/market` 在用户确认应用安装后调用 AppHost 的 `hanameshApps.installApplication`。此服务与现有的认证安装端点共用正式 DSH CLI 和 lib-provision。见 [应用安装与运行时](LIBRARY.md#cordis-服务)和[安装目标](INSTALL_TARGET.md)。
 
-## VR1 版本切换（2026-11-10）
+## 精确版本与套件计划
 
-新增市场本机版本路由、兼容检查、确认与恢复义务见 [LIBRARY.md 的 VR1 章节](LIBRARY.md#vr1-市场版本管理)。普通安装协议仍不接受外部版本覆盖。总包依赖可为兼容范围，物理完整性按范围判断；Core 是总包兼容组合的唯一提供方，AppHost 只执行并读回。明确选择的旧总包版本在相同校验下可切换，默认操作仍只升级。
+工作区版本路由在 AppHost 安装时复读精确版本、兼容性和来源。当前套件状态及升级说明见[应用安装与运行时](LIBRARY.md#hanamesh-套件)。Core 提供兼容组合，AppHost 执行并读回。
 
-
-R168：后台套件版本展示使用不登记确认的 Core 只读组合查询，只有显式目标预览登记执行计划。后台完成或在Core读取期间取消，不替换已打开的默认/历史确认；planId、来源、tuple、物理baseline复读与单次确认保护保留。见 [后台查询与确认计划](LIBRARY.md#r168-后台套件查询与确认计划)。
+套件版本查询使用只读 Core 组合读取。用户显式预览目标时才登记执行计划，确认时复读 planId、来源、精确组合和物理基线。确认只可使用一次。
