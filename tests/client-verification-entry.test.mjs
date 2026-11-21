@@ -40,7 +40,7 @@ before(async () => {
 after(async () => {if (buildRoot) await rm(buildRoot, {recursive: true, force: true});});
 
 const target = {itemId: 'example.notes', packageName: 'example-notes', contractVersion: '1'};
-const calls = ['GET /hanamesh/library/install-target', 'GET /hanamesh/library',
+const calls = ['GET /hanamesh/library',
   'GET /hanamesh/library/target', 'POST /hanamesh/library/install',
   'GET /hanamesh/library/events', 'GET /hanamesh/library/installedPlugins',
   'GET /hanamesh/apps', 'POST /apps/open', 'POST /apps/resume',
@@ -122,6 +122,12 @@ test('VE01 test packaging reaches verification via actual apply/sidebar and prov
   m.h.mountMarket({preferredSubsectionId: 'installed'}); await m.flush();
   assert.ok(m.find('C-MARKET 合约验证'), 'the provided market seat preserves the test packaging flag');
   assert.ok(m.find('安装目标开发小界面'));
+  assert.equal(m.find('合约调用').props.value,'GET /hanamesh/library/events');
+  assert.ok(!JSON.stringify(m.find('合约调用')).includes('/hanamesh/library/install-target'));
+  await m.click('调用合约');
+  const reply=m.replies.find(row=>row.url==='/hanamesh/library/events');
+  assert.equal(reply?.status,200,'the normally packaged verification default reaches a real AppHost-owned HTTP route');
+  assert.deepEqual(JSON.parse(m.find('合约调用输出').children.join('')),reply.body);
   assert.equal(m.installs.length, 0, 'entering the test page is read-only');
 });
 

@@ -16,6 +16,7 @@ import { createLibraryInstaller } from '../src/library/install.js';
 import { createLibraryHttpHandler } from '../src/library/routes.js';
 import { clientHarness, fakeClock, settle } from './fixtures/client-ui-harness.mjs';
 import { definition, http, until, attachDefinition } from './helpers.mjs';
+import { marketHttpOwner } from './fixtures/market-http-owner.mjs';
 
 // Evidence: SOURCE/FIXTURE plus a real local app process. CLI, catalog and auth are
 // named counterparts; this never proves the native Desktop or owner acceptance.
@@ -104,8 +105,16 @@ async function provider(t, { available = true, gate, cliFails = false, readbackV
   };
 }
 
+async function discoveryProvider(t, {available=true}={}) {
+  const calls=[];
+  const manager=available?{inspect:async()=>{calls.push('inspect');throw new Error('discovery must never inspect/install a package');}}:undefined;
+  const h=await marketHttpOwner(t,'host',{}, {manager,allowedOrigins:['https://market.example']});
+  const clean=headers=>Object.fromEntries(Object.entries(headers).filter(([,value])=>value!==undefined));
+  return {...h,calls,origin:h.base,get:(path,headers={})=>http(h.base+path,{headers:clean({origin:'https://market.example',...headers})}),post:(path,input,headers={})=>http(h.base+path,{method:'POST',headers:clean({origin:'https://market.example','content-type':'application/json',...headers}),body:JSON.stringify(input)})};
+}
+
 for (const available of [true, false]) test(`CM01/${available}: public website discovery reports installation readiness without exposing profile or authentication`, async t => {
-  const h = await provider(t, { available });
+  const h = await discoveryProvider(t, { available });
   for (const hostname of ['127.0.0.1', 'localhost']) {
     const reply = await h.get(probePath, { host: `${hostname}:${new URL(h.origin).port}`, origin: 'https://market.example', 'x-test-auth': undefined });
     assert.equal(reply.status, 200, 'C-MARKET discovery must be a public read on the named loopback host');
@@ -118,15 +127,15 @@ for (const available of [true, false]) test(`CM01/${available}: public website d
     assert.equal(reply.headers['cache-control'], 'no-store');
     assert.equal(reply.json.error?.code, available ? undefined : 'INSTALL_TARGET_UNAVAILABLE');
     assert.equal(reply.json.suite, undefined, 'Core completeness is unknown: public discovery omits the suite instead of inferring it from an empty physical profile');
-    assert.deepEqual(Object.keys(reply.json).sort(), (available ? ['client', 'ready', 'installTarget', 'traceId'] : ['client', 'ready', 'installTarget', 'error', 'traceId']).sort());
-    assert.ok(!JSON.stringify(reply.json).includes(h.profile));
+    assert.deepEqual(Object.keys(reply.json).sort(), (available ? ['client', 'ready', 'installTarget', 'installationStatus', 'traceId'] : ['client', 'ready', 'installTarget', 'installationStatus', 'error', 'traceId']).sort());
+    assert.equal(reply.json.installationStatus.contract,'hanamesh.installation-status');
+    assert.doesNotMatch(JSON.stringify(reply.json),/profileDir|authorization|leaseToken/);
   }
   assert.equal(h.calls.length, 0);
-  assert.deepEqual(h.service.events().events, []);
 });
 
 for (const available of [true, false]) test(`CM01-facts/${available}: authenticated suite card preserves physical inventory while Core completeness remains unknown`, async t => {
-  const h = await provider(t, { available });
+  const h = await provider(t, { available }), discoveryOwner=await discoveryProvider(t,{available});
   const names=['@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host'],versions=['0.3.12','0.2.0-rc.34','0.6.5'];
   for(const physicallyInstalled of [false,true]){
     if(physicallyInstalled){for(const [i,name] of names.entries()){await mkdir(join(h.profile,'node_modules',name),{recursive:true});await writeFile(join(h.profile,'node_modules',name,'package.json'),JSON.stringify({name,version:versions[i]}));}await writeFile(join(h.profile,'package.json'),JSON.stringify({dependencies:Object.fromEntries(names.map((name,i)=>[name,versions[i]])),dsh:{profile:{bundles:names}}}));}
@@ -137,13 +146,13 @@ for (const available of [true, false]) test(`CM01-facts/${available}: authentica
     assert.deepEqual(item.suite.blocked,[{code:'CORE_SUITE_DECLARATION_MISSING'}]);
     assert.deepEqual(item.suite.components.map(row=>({name:row.name,version:row.version,active:row.active})),names.map((name,i)=>({name,version:physicallyInstalled?versions[i]:null,active:false})));
     assert.equal(item.suite.version,null, 'separate member packages have no selected bundle version');
-    const discovery=await h.get(probePath,{origin:'https://market.example','x-test-auth':undefined});assert.equal(discovery.status,200);assert.equal(discovery.json.suite,undefined);assert.deepEqual(Object.keys(discovery.json).sort(),(available?['client','ready','installTarget','traceId']:['client','ready','installTarget','error','traceId']).sort());assert.ok(!JSON.stringify(discovery.json).includes(h.profile));
+    const discovery=await discoveryOwner.get(probePath);assert.equal(discovery.status,200);assert.equal(discovery.json.suite,undefined);assert.deepEqual(Object.keys(discovery.json).sort(),(available?['client','ready','installTarget','installationStatus','traceId']:['client','ready','installTarget','installationStatus','error','traceId']).sort());assert.ok(!JSON.stringify(discovery.json).includes(h.profile));
   }
   assert.equal(h.calls.length,0);assert.deepEqual(h.service.events().events,[]);
 });
 
 test('CM02: discovery denies unknown hosts, iframe callers and mutation methods without starting an operation', async t => {
-  const h = await provider(t);
+  const h = await discoveryProvider(t);
   for (const [headers, status, code] of [
     [{ host: 'attacker.invalid' }, 403, 'HOST_DENIED'],
     [{ 'sec-fetch-dest': 'iframe' }, 403, 'FRAME_CONTROL_DENIED'],
@@ -257,8 +266,7 @@ async function market(t, { failed = false, recoveryStatus = 'failed', version = 
   const h = await clientHarness({ clock, verification, fetch: async (path, init = {}) => {
     calls.push({ path, input: init.body ? JSON.parse(init.body) : null });
     let value;
-    if (path === probePath) value = { client: 'dsh', ready: true, installTarget: { contract: 'hanamesh.install-target', contractVersion: '1', supported: ['1'], fragmentPrefix: '#hanamesh-install?' }, traceId: 'fixture-probe' };
-    else if (path.startsWith('/hanamesh/library/target?')) value = { contractVersion: '1', item: item(), source: { kind: 'fixture', path: 'fixture-catalog.json' }, traceId: 'fixture-target' };
+    if (path.startsWith('/hanamesh/library/target?')) value = { contractVersion: '1', item: item(), source: { kind: 'fixture', path: 'fixture-catalog.json' }, traceId: 'fixture-target' };
     else if (path === '/hanamesh/library/install') value = { operationId: 'fixture-op', status: 'started', traceId: 'fixture-install' };
     else if (path.startsWith('/hanamesh/library/events?')) {
       complete = !failed;
@@ -335,47 +343,37 @@ test('CM12: the input form for developer verification is absent from a normal cl
   assert.equal(Boolean(m.h.find(n => n.props['aria-label'] === '安装目标开发小界面')), false, 'verification entry belongs only to the test build');
 });
 
-test('CM13: pinned Cordis/webserver registers the discovery route and plugin disposal removes it', async t => {
-  const root = await temporary(), ctx = new Context();
-  t.after(async () => { try { await ctx.fiber.dispose(); } finally { await rm(root, { recursive: true, force: true }); } });
-  ctx.plugin(Storage);
-  ctx.plugin(storageJson, { root: join(root, 'storage') });
-  ctx.plugin(storageDomain, { backend: 'json' });
-  ctx.plugin(WebServer, { host: '127.0.0.1', port: 0 });
-  ctx.provide('connection', { requestRejection: () => ({ status: 401 }) });
-  await ctx.start?.();
-  await until(() => ctx.get('webServer')?.port > 0);
-  const origin = `http://127.0.0.1:${ctx.get('webServer').port}`;
-  const fiber = ctx.plugin(appHost, { dataRoot: join(root, 'apps'), library: { sources: [], handoff: { enabled: false, allowedOrigins: ['https://market.example'] } } });
-  await until(() => ctx.get('hanameshApps'));
-  const reply = await http(origin + probePath, { headers: { origin: 'https://market.example' } });
-  assert.equal(reply.status, 200, 'the real registered route must answer even when no browser session is present');
-  assert.equal(reply.json.ready, false);
-  assert.equal(reply.json.error?.code, 'INSTALL_TARGET_UNAVAILABLE');
-  await fiber.dispose();
-  assert.equal((await http(origin + probePath)).status, 404);
+test('CM13: the public Market plugin registers discovery and its disposal removes it', async t => {
+  const h=await discoveryProvider(t,{available:false});
+  const reply=await h.get(probePath);
+  assert.equal(reply.status,200,'the real registered Market route answers without a browser session');
+  assert.equal(reply.json.ready,false);assert.equal(reply.json.error?.code,'INSTALL_TARGET_UNAVAILABLE');
+  await h.fiber.dispose();
+  assert.equal((await http(h.origin+probePath)).status,404,'disposing only Market removes its route while the real WebServer remains live');
 });
 
-test('CM14: test-client verification lists every C-MARKET HTTP call with editable sample input and observable output', async t => {
-  const m = await market(t, { verification: true });
-  const panel = m.h.find(n => n.props['aria-label'] === 'C-MARKET 合约验证');
-  assert.ok(panel, 'test build exposes the module-owned contract verification panel');
-  for (const path of [probePath, '/hanamesh/library', '/hanamesh/library/target', '/hanamesh/library/install', '/hanamesh/library/events', '/hanamesh/library/installedPlugins', '/hanamesh/apps', '/apps/open', '/apps/resume', '/apps/heartbeat', '/apps/close']) {
-    assert.ok(m.text().includes(path), `the verification entry lists ${path}`);
-  }
-  assert.ok(m.h.find(n => ['textarea', 'input'].includes(n.type) && n.props['aria-label'] === '合约样例输入'));
-  assert.ok(m.h.find(n => n.props['aria-label'] === '合约调用输出'));
-  const choose = m.h.find(n => n.type === 'select' && n.props['aria-label'] === '合约调用');
-  assert.ok(choose, 'a listed call can be selected');
-  choose.props.onChange({ target: { value: 'GET ' + probePath } });
-  await settle();
-  const sample = m.h.find(n => ['textarea', 'input'].includes(n.type) && n.props['aria-label'] === '合约样例输入');
-  sample.props.onChange({ target: { value: '{}' } });
-  await settle();
-  await m.h.click('调用合约');
-  assert.equal(m.calls.filter(c => c.path === probePath).length, 1, 'verification calls the normal provider route');
-  assert.match(JSON.stringify(m.h.find(n => n.props['aria-label'] === '合约调用输出')), /hanamesh.install-target/);
-  assert.equal(m.calls.filter(c => ['/hanamesh/library/install', '/apps/open'].includes(c.path)).length, 0, 'showing verification never installs or opens implicitly');
+test('CM14: test-client verification uses a live AppHost-owned default and keeps the remaining contract calls', async t => {
+  const h=await provider(t),calls=[];
+  const client=await clientHarness({verification:true,fetch:async(path,init={})=>{
+    const call={path,method:init.method??'GET'};calls.push(call);
+    const reply=await http(h.origin+path,{method:init.method??'GET',headers:h.headers,...(init.body?{body:init.body}:{})});
+    call.status=reply.status;
+    return {ok:reply.status>=200&&reply.status<300,status:reply.status,json:async()=>reply.json};
+  }});t.after(()=>client.unmount());
+  const panel=client.find(n=>n.props['aria-label']==='C-MARKET 合约验证');assert.ok(panel);
+  const text=JSON.stringify(client.tree);
+  for(const path of ['/hanamesh/library','/hanamesh/library/target','/hanamesh/library/install','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/apps','/apps/open','/apps/resume','/apps/heartbeat','/apps/close'])assert.ok(text.includes(path),`the verification entry lists ${path}`);
+  const choose=client.find(n=>n.type==='select'&&n.props['aria-label']==='合约调用');
+  assert.equal(choose.props.value,'GET /hanamesh/library/events');
+  assert.ok(!choose.children.some(n=>n.props?.value==='GET '+probePath),'AppHost verification has no retired discovery call');
+  assert.ok(client.find(n=>n.type==='textarea'&&n.props['aria-label']==='合约样例输入'));
+  const before=calls.length;await client.click('调用合约');
+  await until(()=>JSON.stringify(client.find(n=>n.props['aria-label']==='合约调用输出')).includes('events'));
+  assert.equal(calls.slice(before).filter(c=>c.path==='/hanamesh/library/events').length,1,'default verification makes a real AppHost HTTP request');
+  assert.equal(calls.slice(before).find(c=>c.path==='/hanamesh/library/events').status,200);
+  assert.match(JSON.stringify(client.find(n=>n.props['aria-label']==='合约调用输出')),/sequence/);
+  assert.equal(calls.filter(c=>c.path===probePath).length,0);
+  assert.equal(calls.filter(c=>['/hanamesh/library/install','/apps/open'].includes(c.path)).length,0);
 });
 
 test('CM15: an event cursor from before a provider restart reports loss of operation history explicitly', async t => {
