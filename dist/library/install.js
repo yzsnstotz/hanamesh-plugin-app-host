@@ -20,7 +20,7 @@ const packageName=value=>typeof value==='string'&&/^(?:@[a-z0-9][a-z0-9._-]*\/)?
 async function json(path){return JSON.parse(await readFile(path,'utf8'));}
 const defaultSpawn=spawnGitSafe;
 
-async function defaults(){return await import('../provision/index.js');}
+async function defaults(){return await import('@hanamesh/lib-provision');}
 
 /** Runtime-created Python import caches are disposable. Preserve every other unowned file. */
 async function clearGeneratedRuntimeCache(result,runtimeRoot){
@@ -61,7 +61,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
   /** rc.10: one profile writer at a time inside this host; `dsh plugin` itself serialises against other writers per command. */
   requireCondition(profileWriter&&typeof profileWriter.run==='function','INVALID_PROFILE_WRITER','A shared profile writer queue is required.');
   const injected={provision,remove,ledger};
-  /** Injected runtime functions (tests, suites) or the vendored lib-provision export of the same name. */
+  /** Injected runtime functions (tests, suites) or the public lib-provision export of the same name. */
   const runtimeApi=async name=>injected[name]??(await defaults())[name];
   async function installed(packageNameValue){const root=join(profileDir,'node_modules',...packageNameValue.split('/')),pkg=await json(join(root,'package.json'));const appFile=typeof pkg.hanamesh?.app==='string'?pkg.hanamesh.app:'app.json';return{pkg,definition:validateDefinition(await json(join(root,appFile)))};}
   const commandPath=command=>[dirname(command),...(process.platform==='win32'?(process.env.PATH??process.env.Path??'').split(delimiter):['/opt/homebrew/bin','/usr/local/bin','/usr/bin','/bin'])].join(delimiter);

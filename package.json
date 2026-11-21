@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/dsh-app-host",
-  "version": "0.6.29",
+  "version": "0.6.30",
   "description": "HanaMesh application ownership, durable view leases, and application library for official DSH 0.2.x",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
@@ -86,9 +86,10 @@
     "check:devkit-supply": "node scripts/check-devkit-consumption.mjs",
     "check:provision-supply": "node scripts/check-provision-consumption.mjs",
     "install:safe": "node scripts/safe-git.mjs pnpm install --frozen-lockfile",
-    "release:check": "hanamesh-release check --lockfile pnpm-lock.yaml --installation-targets release/installation-targets.json",
-    "release:publish": "hanamesh-release publish --lockfile pnpm-lock.yaml --installation-targets release/installation-targets.json",
-    "prepublishOnly": "hanamesh-release source-guard"
+    "release:check": "npm run verify:closure && hanamesh-release check --lockfile pnpm-lock.yaml --installation-targets release/installation-targets.json",
+    "release:publish": "npm run verify:closure && hanamesh-release publish --lockfile pnpm-lock.yaml --installation-targets release/installation-targets.json",
+    "prepublishOnly": "npm run verify:closure && hanamesh-release source-guard",
+    "verify:closure": "node scripts/verify-pack-closure.mjs"
   },
   "dsh": {
     "bundle": {

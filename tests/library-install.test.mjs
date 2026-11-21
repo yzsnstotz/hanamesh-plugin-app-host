@@ -141,3 +141,10 @@ for(const {id,phase,ownRegistry} of [
   assert.equal(events.find(event=>event.type==='library.install-failed').recovery.status,'restored');
   assert.equal(events.some(event=>event.type==='library.install-done'),false);
 });
+
+// PKG1: invoke the real default provider without injected provision/remove/ledger.
+test('PKG1 default runtime remove reaches the public provider and reports its real ledger error', async()=>{
+ const profile=await scratch('hm-pkg1-provider-'),dataRoot=join(profile,'data');
+ const installer=createLibraryInstaller({profileDir:profile,profileName:'pkg1',dataRoot,nodeBinary:resolve('/opt/node/bin/node'),dshBin:resolve('/opt/dsh/bin.js'),spawn:async()=>({code:0,stdout:'',stderr:''})});
+ await assert.rejects(installer.uninstall({packageName:'@fixture/application',appId:'fixture',runtimeItem:'runtime',running:false}),error=>error.code==='E_NOT_INSTALLED');
+});

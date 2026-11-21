@@ -1,3 +1,5 @@
+0.6.30 候选（PKG1）：应用库默认 provision 调用迁至已声明且随包提供的 @hanamesh/lib-provision 公开 API；发布前解包实际 npm tgz，检查全部 JS/MJS/CJS 的相对依赖闭包。
+
 0.6.29 候选（DT11）：Claude/Codex 只读命令失败在可信宿主日志保留固定命令阶段、退出状态、stderr 字节数/分类及 worker、anchor、CLI、清理耗时；不记录 stderr 原文、路径或环境值。Web 原因码与所有预算、超时、不重试规则保持。见 [状态协议](docs/INSTALLATION_STATUS.md#trusted-command-diagnostics-0629)。
 
 0.6.28 候选（DT7）：无总包的 DSH 单独组件由 Core 公开 `assessLegacyInstallation` 唯一判定。AppHost 只收集实际磁盘包、入口、profile 选择与可观察依赖事实并转述结果，不再按“无总包”直接报未安装。没有新 Core 判定接口或事实不可读时保持未知。见 [状态协议](docs/INSTALLATION_STATUS.md)。
