@@ -21,6 +21,10 @@ for(const outcome of ['success','partial'])test(`a suite ${outcome} does not pro
   await until(findResult);
   const event=findResult();
   assert.ok(event);
-  assert.notEqual((await library.list({category:'plugin'})).items.find(row=>row.kind==='suite')?.suite.status,'installed','the authenticated read must retain Core unknown');
+  const record=(await library.list({category:'plugin'})).items.find(row=>row.kind==='suite');
+  assert.ok(record,'the authenticated inventory must include a suite record');
+  assert.equal(record.suite.status,'unknown');
+  assert.equal(record.suite.completeness,'unknown');
+  assert.deepEqual(record.suite.blocked,[{code:'CORE_SUITE_RUNNING_PHYSICAL_MISMATCH'}]);
   if(outcome==='partial')assert.equal(event.details.actual.status,'installed','physical readback remains diagnostic only');
 });

@@ -269,6 +269,7 @@ export async function apply(ctx, config) {
     catch (error) { if (typeof ctx.logger?.debug === 'function') ctx.logger.debug('hanamesh-app-host usage: installed scan unavailable (%s)', error?.code ?? error?.message); }
     const libraryHandler=createLibraryHttpHandler(library,{...auth,nodeRuntime});
     for (const path of LIBRARY_ROUTES) own(`route:${path}`, webServer.register({kind:'exact',path,handler:libraryHandler}));
+    Object.assign(host,{installApplication: input=>library.installApplication(input)});
     own('seat', ctx.provide('hanameshApps', host));
   } catch (error) {
     // Cleanup names failures without replacing the original activation error.

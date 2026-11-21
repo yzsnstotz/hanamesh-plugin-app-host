@@ -36,7 +36,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy29": "套件升级未完成或结果尚未确认：",
     "copy30": "。请核对已装版本；不会自动重试。",
     "copy47": "套件安装包来源",
-    "copy48": "选择 HanaMesh 总包的 npm 安装包 registry。市场目录源提供浏览清单，在「市场目录源」中单独设置。",
+    "copy48": "选择 AppHost 安装 HanaMesh 总包与组件时使用的 npm registry。",
     "copy49": "安装包来源",
     "copy50": "现有配置（默认）",
     "copy51": "Core 当前本机来源",
@@ -242,7 +242,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     "copy29": "Suite upgrade is incomplete or unconfirmed: ",
     "copy30": ". Check the installed versions. No automatic retry will run.",
     "copy47": "Suite package source",
-    "copy48": "Choose the npm registry for the HanaMesh bundle. Browseable catalogs are configured separately in Market catalog sources.",
+    "copy48": "Choose the npm registry AppHost uses for the HanaMesh bundle and its components.",
     "copy49": "Package source",
     "copy50": "Existing configuration (default)",
     "copy51": "Core’s current local source",
@@ -498,7 +498,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
         h('p',null,t('现有 registry：'),h('code',null,value.configuredRegistry)),
         h('p',null,t('已保存选择：')+(value.mode==='core'?t('Core 当前本机来源'):t('现有配置'))),
         observation?.observable?h('div',null,h('p',{role:'status'},t('Core 来源：')+state.status+' · '+state.selection),state.registry?h('p',null,h('code',null,state.registry)):null,state.lastError?FailureNotice({error:state.lastError}):null):h('div',null,h('p',{role:'status'},t('Core 来源暂不可用。请检查 Core 插件及其来源设置。')),h('details',null,h('summary',null,t('技术详情')),h('code',null,observation?.code??'CORE_SUITE_SOURCE_MISSING'))),
-        h('details',null,h('summary',null,t('使用说明')),h('p',null,t('选择 HanaMesh 总包的 npm 安装包 registry。市场目录源提供浏览清单，在「市场目录源」中单独设置。')),h('p',null,t('保存选择不会安装。检查、确认和执行前都重新读取当前来源与 Core 兼容声明；来源变化后须重新查看并确认。')))):h('p',null,t('正在读取套件安装包来源…')));
+        h('details',null,h('summary',null,t('使用说明')),h('p',null,t('选择 AppHost 安装 HanaMesh 总包与组件时使用的 npm registry。')),h('p',null,t('保存选择不会安装。检查、确认和执行前都重新读取当前来源与 Core 兼容声明；来源变化后须重新查看并确认。')))):h('p',null,t('正在读取套件安装包来源…')));
   }
   function NodeRuntimeSection(){useLocale();
     const[value,setValue]=React.useState(null),[draft,setDraft]=React.useState(null),[plan,setPlan]=React.useState(null),[error,setError]=React.useState(''),[working,setWorking]=React.useState(false);
@@ -559,16 +559,12 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     if(recovery.status==='restored')return recovery.mode==='upgrade'?t('；已恢复到原版本 ')+recovery.previousVersion+t('（已逐项读回）'):t('；已恢复到安装前状态（已逐项读回）');
     const residue=(recovery.residue??[]).map(row=>row.item+(row.reason?'·'+row.reason:'')).join('、');
     return t('；恢复失败')+(recovery.error?'：'+recovery.error.code:'')+t('，未恢复：')+(residue||t('未知'))+(recovery.originals?.dir?t('，安装前原件：')+recovery.originals.dir:'')+t('。未安装成功，也未回到安装前状态，需要人工处理');};
-  // rc.28 market: fixed filters first (everything / applications / plugins), then every category the catalog itself reported.
   const STATE_TEXT={registered:t('已安装'),installed:t('已安装'),'installed-not-loaded':t('需重启'),'uninstalled-not-unloaded':t('已卸载 · 需重启'),'runtime-missing':t('缺运行时'),invalid:t('包无效')};
   // Mirrors PROTECTED_PACKAGES on the host: the suite is never offered an uninstall button (the host answers 403 anyway).
   function RestartNotice({reason}){useLocale();
     return h('p',{role:'status',className:'hm-restart-notice','data-hanamesh-restart':'required'},h('strong',null,t('需重新打开客户端')),' ',reason??t('插件更改需要重新打开客户端后生效。'),' ',h('span',{className:'hm-restart-hint'},t('请完全退出 HanaMesh 客户端或 DSH 后重新打开；关闭窗口不等于退出。')));
   }
 
-  // rc.32: the same market page serves two surfaces — the shell overlay behind the sidebar 「市场」 button
-  // (`embedded` false) and the Extension Management 「市场」 tab through the `market` seat (`embedded` true,
-  // always visible, no close button, `preferredSubsectionId` decides which subsection comes first).
   // A view is a lease, not a permanent anonymous reference. The host's returned expiry determines
   // the renew cadence; serial requests use the same credential and cleanup explicitly releases it.
   function holdViewLease(receipt,onError){
@@ -742,8 +738,6 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
     };
     const close=async()=>{if(closing)return;setClosing(true);try{await heldView.current?.close();setReceipt(null);setError('');}catch(e){setError(e);}finally{if(mounted.current)setClosing(false);}};
     if(!visible)return null;
-    const restartRequired=changed||Boolean(snapshot?.restartRequired);
-    if(!visible)return null;
     const openButton=row=>h('button',{type:'button',disabled:Boolean(openingAppId),onClick:()=>void open(row)},
       openingAppId===row.appId?t('打开中…'):t('打开'));
     const applicationAction=(path,row,label)=>h('button',{type:'button',disabled:pending[row.packageName]?.busy,
@@ -798,7 +792,7 @@ window.__ModuleLoader__.load({id:'@hanamesh/dsh-app-host',factory:function(requi
   }
 
 const appHostPageStyles=`
-.hm-apphost-page{height:100%;overflow:auto;box-sizing:border-box;padding:36px 38px;max-width:1360px;margin:auto;color:var(--dsw-alias-label-primary,CanvasText);background:var(--dsw-alias-bg-base,Canvas);font:14px/1.55 var(--dsw-font-family,system-ui)}.hm-apphost-page *{box-sizing:border-box}.hm-apphost-page h1{font-size:32px;line-height:1.25;letter-spacing:-.025em;margin:0}.hm-apphost-page h2{font-size:17px}.hm-apphost-page p{color:var(--dsw-alias-label-secondary);line-height:1.7}.hm-apphost-breadcrumb{font-size:12px;color:var(--dsw-alias-label-tertiary);margin-bottom:28px}.hm-apphost-eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--dsw-alias-brand-primary);margin-bottom:10px}.hm-apphost-page>header{margin-bottom:28px}.hm-apphost-page button,.hm-apphost-page select,.hm-apphost-page input{font:inherit;color:inherit;min-height:44px;padding:10px 14px;border:1px solid var(--dsw-alias-border-l2);border-radius:10px;background:var(--dsw-alias-bg-layer-3);max-width:100%}.hm-apphost-page button{cursor:pointer}.hm-apphost-page button:disabled{opacity:.5;cursor:default}.hm-apphost-page :focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:3px}.hm-connection-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:28px 0 24px}.hm-connection-tabs [aria-current=page]{color:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary)}.hm-apphost-card{padding:22px;border:1px solid var(--dsw-alias-border-l1);border-radius:18px;background:var(--dsw-alias-bg-layer-2);min-width:0}.hm-apphost-environment{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}.hm-apphost-environment>details summary{cursor:pointer;font-weight:600;min-height:28px}.hm-apphost-page .hm-app-detail{padding:22px;border:1px solid var(--dsw-alias-border-l1);border-radius:18px;background:var(--dsw-alias-bg-layer-2);margin:20px 0;overflow-wrap:anywhere}.hm-apphost-page .hm-app-detail h3{font-size:28px;margin:0 0 12px}.hm-credibility{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.hm-credibility>div{padding:16px;border:1px solid var(--dsw-alias-border-l1);border-radius:14px;background:var(--dsw-alias-bg-layer-1)}.hm-credibility span,.hm-credibility small{display:block;font-size:12px;color:var(--dsw-alias-label-tertiary)}.hm-credibility strong{display:block;font:26px/1.8 var(--dsh-font-family-code-default,monospace)}.hm-apphost-page .hm-install-review{padding:22px;border-radius:18px;background:var(--dsw-alias-bg-layer-2);margin:24px 0}.hm-install-ack{display:flex;align-items:center;gap:10px;margin:18px 0}.hm-install-ack input{width:20px;min-height:20px;flex:none;accent-color:var(--dsw-alias-brand-primary)}.hm-apphost-page .hm-website-link{display:inline-block;min-height:44px;color:var(--dsw-alias-brand-primary);padding:10px 0}.hm-apphost-page footer{font-size:11px;color:var(--dsw-alias-label-tertiary);margin-top:26px}
+.hm-apphost-page{height:100%;overflow:auto;box-sizing:border-box;padding:36px 38px;max-width:1360px;margin:auto;color:var(--dsw-alias-label-primary,CanvasText);background:var(--dsw-alias-bg-base,Canvas);font:14px/1.55 var(--dsw-font-family,system-ui)}.hm-apphost-page *{box-sizing:border-box}.hm-apphost-page h1{font-size:32px;line-height:1.25;letter-spacing:-.025em;margin:0}.hm-apphost-page h2{font-size:17px}.hm-apphost-page p{color:var(--dsw-alias-label-secondary);line-height:1.7}.hm-apphost-breadcrumb{font-size:12px;color:var(--dsw-alias-label-tertiary);margin-bottom:28px}.hm-apphost-eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--dsw-alias-brand-primary);margin-bottom:10px}.hm-apphost-page>header{margin-bottom:28px}.hm-apphost-page button,.hm-apphost-page select,.hm-apphost-page input{font:inherit;color:inherit;min-height:44px;padding:10px 14px;border:1px solid var(--dsw-alias-border-l2);border-radius:10px;background:var(--dsw-alias-bg-layer-3);max-width:100%}.hm-apphost-page button{cursor:pointer}.hm-apphost-page button:disabled{opacity:.5;cursor:default}.hm-apphost-page :focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:3px}.hm-connection-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:28px 0 24px}.hm-connection-tabs [aria-current=page]{color:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary)}.hm-apphost-card{padding:22px;border:1px solid var(--dsw-alias-border-l1);border-radius:18px;background:var(--dsw-alias-bg-layer-2);min-width:0}.hm-apphost-environment{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}.hm-apphost-environment>details summary{cursor:pointer;font-weight:600;min-height:28px}.hm-apphost-page .hm-install-review{padding:22px;border-radius:18px;background:var(--dsw-alias-bg-layer-2);margin:24px 0}.hm-install-ack{display:flex;align-items:center;gap:10px;margin:18px 0}.hm-install-ack input{width:20px;min-height:20px;flex:none;accent-color:var(--dsw-alias-brand-primary)}.hm-apphost-page footer{font-size:11px;color:var(--dsw-alias-label-tertiary);margin-top:26px}
 @media(max-width:640px){.hm-apphost-page>header{display:block}.hm-apphost-page>header button{margin-top:16px}.hm-apphost-page{padding:24px 18px}.hm-apphost-page h1{font-size:26px}.hm-apphost-card{padding:18px}}
 `;
 

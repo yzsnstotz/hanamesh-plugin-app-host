@@ -131,11 +131,24 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
           'INSTALL_READBACK_MISMATCH','The profile does not resolve and enable the reviewed GitHub package.',{expected:spec,spec:added.spec,packageName:actual.name,active:added.bundles.includes(name)},502);
         version=actual.version;
       }else requireCondition(added.spec===version&&added.module===version,'INSTALL_READBACK_MISMATCH','The profile does not resolve the exact version that was added.',{expected:version,spec:added.spec,module:added.module},502);
+      if(context?.applicationVersion!==undefined)requireCondition(version===context.applicationVersion,
+        'INSTALL_READBACK_MISMATCH','The installed application version differs from the review.',{},502);
       if(context?.verify)await context.verify();
       if(kind==='plugin')return{status,kind,packageName:name,version,...(target?{installTarget:target}:{}),...(github?{commit:target.ref}:{})};
-      stage='definition';const record=await installed(name);const declared=record.definition.deployments.map(deployment=>deployment.runtime).find(Boolean);
-      if(declared){stage='provision';const root=runtimeRoot(record.definition.id);runtime={root,base:await runtimeSnapshot(await runtimeApi('ledger'),root)};
-        await (await runtimeApi('provision'))(declared.manifest,{root,only:[declared.item],onProgress:event=>emit({type:'library.provision-progress',appId:record.definition.id,...event})});}
+      stage='definition';
+      const record=await installed(name);
+      if(context?.applicationVersion!==undefined)requireCondition(record.pkg.name===name&&(record.pkg.hanamesh?.app===true||
+        typeof record.pkg.hanamesh?.app==='string'&&record.pkg.hanamesh.app.length>0),
+        'INVALID_DEFINITION','The reviewed installed package does not declare an AppHost application.',{},502);
+      const declared=record.definition.deployments.map(deployment=>deployment.runtime).find(Boolean);
+      if(declared){
+        stage='provision';
+        const root=runtimeRoot(record.definition.id),readLedger=await runtimeApi('ledger');
+        runtime={root,base:await runtimeSnapshot(readLedger,root)};
+        await (await runtimeApi('provision'))(declared.manifest,{root,only:[declared.item],onProgress:event=>emit({type:'library.provision-progress',appId:record.definition.id,...event})});
+        if(context?.applicationVersion!==undefined)requireCondition((await readLedger(root))?.items?.[declared.item],
+          'RUNTIME_READBACK_MISMATCH','The installed application runtime is missing from the ledger.',{},502);
+      }
       return{status:'restart-required',kind,appId:record.definition.id,packageName:name,version,...(target?{installTarget:target}:{}),...(github?{commit:target.ref}:{})};
     }catch(error){noteFailurePhase(error,{baseline:'profile baseline','before-add':'registry fetch',add:'CLI run',readback:'profile readback',definition:'application readback',provision:'runtime provision'}[stage]);error.recovery=await recover({name,stage,base,runtime,operationId,installRegistry});throw error;}
   }
@@ -188,7 +201,7 @@ export function createLibraryInstaller({profileDir,profileName,dataRoot,nodeBina
     async install(item,context){
       requireCondition(item?.installTarget,'NOT_INSTALLABLE','A fixed catalog installation target is required.',{reason:'fixed-install-target-required'});
       const target=packageInstallTarget(item.installTarget);item={...item,installTarget:target,package:{registry:target.source,name:installTargetName(target)}};
-      const kind=isApplication(item)?'application':'plugin';
+      const kind=context?.applicationVersion!==undefined||isApplication(item)?'application':'plugin';
       return await installAs(item,kind,context);
     },
     async provisionRuntime({appId,packageName:installedName,runtimeItem}){return await profileWriter.run(async()=>{const record=await installed(installedName);requireCondition(record.definition.id===appId,'APP_ID_MISMATCH','Installed package app id does not match.');const runtime=record.definition.deployments.map(deployment=>deployment.runtime).find(value=>value?.item===runtimeItem);requireCondition(runtime,'RUNTIME_NOT_DECLARED','Runtime item is not declared.');const result=await (await runtimeApi('provision'))(runtime.manifest,{root:runtimeRoot(appId),only:[runtime.item],onProgress:event=>emit({type:'library.provision-progress',appId,...event})});return{status:'restart-required',appId,packageName:installedName,result};});},

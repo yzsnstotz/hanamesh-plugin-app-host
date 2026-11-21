@@ -43,14 +43,15 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   }
   const settingsWriter=new SerialQueue();
   function persist(update){return settingsWriter.run(async()=>{const next={...update(state),revision:state.revision+1};await domain.global.set(next);state=next;});}
-  async function operation(type,task){const operationId=randomUUID();emit({type:`library.${type}-started`,operationId});const work=Promise.resolve().then(()=>task(operationId)).then(result=>{emit({type:`library.${type}-done`,operationId,result});return result;},error=>{
+  function startOperation(type,task){const operationId=randomUUID();emit({type:`library.${type}-started`,operationId});const work=Promise.resolve().then(()=>task(operationId)).then(result=>{emit({type:`library.${type}-done`,operationId,result});return result;},error=>{
     const details=error.details?.stage==='suite-upgrade'?{stage:'suite-upgrade',actual:error.details.actual,command:error.details.command}:{};
     details.diagnostic=installationDiagnostic(error);
     emit({type:`library.${type}-failed`,operationId,code:error.code??'LIBRARY_OPERATION_FAILED',...(error.recovery?{recovery:error.recovery}:{}),details});
     try{warn('hanamesh-app-host library: %s operation %s failed\n%s',type,operationId,details.diagnostic);}
     catch{try{console.warn('hanamesh-app-host library: diagnostic logger unavailable; operation %s\n%s',operationId,details.diagnostic);}catch{}}
     throw error;
-  }).finally(()=>running.delete(operationId));running.set(operationId,work);work.catch(()=>{});return{operationId,status:'started'};}
+  }).finally(()=>running.delete(operationId));running.set(operationId,work);work.catch(()=>{});return{accepted:{operationId,status:'started'},completed:work};}
+  const operation=(type,task)=>startOperation(type,task).accepted;
   const requireInstaller=(message)=>requireCondition(ready(),'LIBRARY_INSTALL_UNAVAILABLE',message,{need:unavailable()},503);
   /**
    * The host itself loaded/unloaded a plugin (pluginManager `applied`): it no longer waits for a restart. When the profile
@@ -121,11 +122,23 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
     }
     throw new AppHostError('CATALOG_ITEM_MISSING','The market catalog does not contain this target.',{},404);
   }
-  function installItem(item){
-    const key=item.package.name;if(installing.has(key)){const prior=installing.get(key);requireCondition(JSON.stringify(prior.target)===JSON.stringify(item.installTarget),'CATALOG_CHANGED','Another installation of this package is using a different reviewed target.',{},409);return prior.started;}
-    const started=operation('install',async operationId=>{try{return await markLive(await installer.install(item,{operationId}));}finally{installing.delete(key);}});
-    installing.set(key,{started,target:item.installTarget});return started;
+  function startInstall(item,context){
+    const key=item.package.name;
+    const binding=JSON.stringify([item.installTarget,context?.applicationVersion,context?.registry]);
+    const prior=installing.get(key);
+    if(prior){
+      requireCondition(prior.binding===binding,'CATALOG_CHANGED','Another installation of this package is using a different reviewed target.',{},409);
+      return prior;
+    }
+    const started=startOperation('install',async operationId=>{
+      try{return await markLive(await installer.install(item,{...context,operationId}));}
+      finally{installing.delete(key);}
+    });
+    const entry={...started,binding};
+    installing.set(key,entry);
+    return entry;
   }
+  const installItem=item=>startInstall(item).accepted;
   async function findByPackage(packageName){
     requireCondition(text(packageName,214)&&PACKAGE_NAME.test(packageName),'INVALID_INPUT','packageName is required.');
     requireCondition(!protectedPackage(packageName),'PACKAGE_DENIED','The HanaMesh suite is not managed through the market.',{packageName},403);
@@ -145,9 +158,6 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       let items=page.items.map(item=>{const selected=catalogPackageTargets(item)[0];return selected?{...item,installTarget:selected,package:{registry:selected.source,name:installTargetName(selected)}}:item;}).filter(item=>!protectedPackage(item.package?.name)).map(item=>{const row=byPackage.get(item.package?.name)??null;const kind=itemKind(item);
         return{...item,kind,application:isApplication(item),installed:row,upgradeAvailable:npmUpgradeAvailable(item.installTarget,row)};});
       if(config.profileDir&&!cursor&&(!category||category==='plugin')&&(!q||'hanamesh 套件'.includes(q.toLowerCase())))items.unshift({id:'hanamesh:suite',displayName:'HanaMesh 套件',summary:'官方 · 不计分。Core、使用记录与应用库一次装齐。',kind:'suite',official:true,installed:suiteStatus.status==='installed'?{state:'installed',version:suiteStatus.version}:null,suite:suiteStatus,...((installer?.suiteUpgradeUnavailable??suiteStatus.suiteUpgradeUnavailable)?{suiteUpgradeUnavailable:installer?.suiteUpgradeUnavailable??suiteStatus.suiteUpgradeUnavailable}:{})});
-      // Version discovery is optional and starts only through the per-item read route after this list paints.
-      let coreSource;
-      if(state.suiteSource?.mode==='core')try{coreSource=readSuiteSourceState(suiteSourceService());}catch(error){coreSource={code:error.code??'CORE_SUITE_SOURCE_INVALID'};}
       const categories=[...new Set(page.items.flatMap(item=>item.categories??[]))].sort();
       return{source:page.source,items,categories,installed:installedRows,plugins:pluginRows,restartRequired:[...pluginRows,...installedRows].some(row=>RESTART_STATES.has(row.state)),...(bootSnapshotError?{restartBaseline:{known:false,code:bootSnapshotError}}:{}),page:page.page};},
     async versions(input,{signal}={}){
@@ -185,6 +195,26 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
     async upgradeSuite(input){requireInstaller('Suite upgrade is unavailable.');
       requireCondition(input&&Object.keys(input).length===1&&typeof input.planId==='string','INVALID_INPUT','Only the current planId is accepted.');
       return await operation('install',async()=>{try{const result=await installer.upgradeSuite(input);suiteStatus={...await suiteFacts(),restartRequired:true};return result;}catch(error){if(error.details?.stage!=='suite-upgrade')throw error;const actual=await readSuiteStatus(config.profileDir);suiteStatus={...await suiteFacts(),restartRequired:true,upgradeError:error.code??'SUITE_UPGRADE_FAILED'};error.details={...error.details,stage:'suite-upgrade',actual,command:error.details.command};emit({type:'library.install-failed',packageName:SUITE_BUNDLE,code:error.code??'SUITE_UPGRADE_FAILED',details:{stage:'suite-upgrade',actual,command:error.details.command}});throw error;}});
+    },
+    async installApplication(input){
+      requireCondition(input&&typeof input==='object'&&!Array.isArray(input)&&
+        Object.keys(input).every(key=>['target','version','registry'].includes(key)),
+        'INVALID_INPUT','Only the reviewed package target, version and registry are accepted.');
+      const target=packageInstallTarget(input.target);
+      requireCondition(typeof input.version==='string'&&semver.valid(input.version)===input.version&&
+        (target.source!=='npm'||target.version===input.version),'INVALID_INPUT','The reviewed application version must be exact.');
+      if(target.source==='npm'){
+        let url;
+        try{url=new URL(input.registry);}catch{}
+        requireCondition(typeof input.registry==='string'&&url&&
+          (url.protocol==='https:'||url.protocol==='http:'&&['localhost','127.0.0.1','[::1]'].includes(url.hostname))&&
+          !url.username&&!url.password&&!url.search&&!url.hash,'INVALID_REGISTRY','The reviewed npm registry is invalid.');
+      }else requireCondition(input.registry===undefined,'INVALID_REGISTRY','A Git target has no npm registry.');
+      requireInstaller('Prepare the application installation environment in AppHost.');
+      const packageName=installTargetName(target);
+      const item={package:{name:packageName},installTarget:target};
+      const result=await startInstall(item,{applicationVersion:input.version,registry:input.registry}).completed;
+      return{status:'ready',restartRequired:result.status==='restart-required',appId:result.appId,packageName,version:result.version};
     },
     async install(input){requireCondition(input?.itemId!==SUITE_TARGET,'SUITE_CONFIRMATION_REQUIRED','请在客户端确认完整升级计划。',{},403);requireInstaller('Install requires absolute profileDir, nodeBinary, dshBin and profileName.');const{item}=await resolveTarget(input??{});requireCondition(item.installTarget?.source!=='github'||input.installTarget,'INVALID_INPUT','Confirm the displayed fixed GitHub installation target before installing.');if(present(item.installed)&&!item.upgradeAvailable)return{status:'already-installed',itemId:item.id,packageName:item.package.name};return await installItem(item);},
     async provision(input){requireInstaller('Runtime provision is unavailable.');

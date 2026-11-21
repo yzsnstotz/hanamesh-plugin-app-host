@@ -38,3 +38,18 @@ export interface SuiteSourceSettings {
 }
 /** POST accepts exactly this shape; saving selects a source and does not authorize installation. */
 export interface SuiteSourceSettingsInput {mode:SuiteSourceMode;}
+
+/** Application install port on the trusted host-side hanameshApps service. */
+export interface HanaMeshAppsService extends AppHost {
+  installApplication(input: {
+    target: import('./client-ui.js').PackageInstallTarget;
+    version: string;
+    registry?: string;
+  }): Promise<{
+    status: 'ready';
+    restartRequired: boolean;
+    appId: string;
+    packageName: string;
+    version: string;
+  }>;
+}

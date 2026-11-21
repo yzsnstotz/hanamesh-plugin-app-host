@@ -1,16 +1,10 @@
 # HanaMesh AppHost
 
-0.6.31 提供应用运行、视图租约、应用安装和运行环境。已安装应用可从 HanaMesh 首页的「继续使用」或 AppHost 原生插件配置打开、补齐运行时和卸载。HanaMesh 市场由独立的 `@hanamesh/market` 在 DSH 插件页提供。
+0.6.31 提供应用运行、视图租约、应用安装和运行环境。已安装应用可从 HanaMesh 首页的「继续使用」或 AppHost 原生插件配置打开、补齐运行时和卸载。在 DSH 插件页的 HanaMesh 市场确认安装应用后，独立的 `@hanamesh/market` 调用 AppHost 安装精确版本并供给运行时。操作完成时会显示读回结果和重新打开客户端的提示。见[应用安装与运行时](docs/LIBRARY.md)。
 
 0.6.30 候选（PKG1）：应用库默认 provision 调用迁至已声明且随包提供的 @hanamesh/lib-provision 公开 API；发布前解包实际 npm tgz，检查全部 JS/MJS/CJS 的相对依赖闭包。
 
 0.6.27 候选：客户端随附独立 Node 的启动识别上限由 1 秒改为 30 秒（`PAYLOAD_NODE_PROBE_TIMEOUT_MS`）。owner Mac 实测冷启动 4.07 s / 2.81 s（CPU 0.09 s），已安装应用 0.26 s，30 秒留出 7 倍以上余量；旧 1 秒上限会让整次会话没有 Node，安装环境显示未准备。到上限或插件卸载时立即 SIGKILL 该子进程，Node 仍按原规则记为不可用。身份与版本校验不变。
-
-R168：后台套件版本查询与显式安装确认分离，展示读取不替换已打开的默认/历史确认计划；来源、精确组合与物理基线的执行复读保护保持。见 [查询与确认边界](docs/LIBRARY.md#r168-后台套件查询与确认计划)。
-
-R162：预装 `@hanamesh/brand` 的前后端保护身份统一；目录和已装事实先显示，版本信息按项异步补充，受控并发/短期复用并随页面取消。完整预算与边界见 [R162首屏与保护](docs/LIBRARY.md#r162-首屏与保护边界)。
-
-应用库版本管理：卡片和详情显示已装与最新兼容版本；可升级或选择历史 npm 版本，逐次确认后交给正式 DSH CLI 精确安装。失败保留原诊断与逐项恢复结果；需要完全退出并重开。版本查询失败显示错误，不冒充已是最新。详见 [版本管理](docs/LIBRARY.md#vr1-市场版本管理)。
 
 PX3 跨平台候选：Windows 可以运行插件/公开服务、attach 应用、受控只读 CLI 与普通包安装；`owned` 应用仍在创建进程、数据目录及请求凭据之前明确拒绝 `PLATFORM_UNSUPPORTED`。Windows 单测保留真实 attach 的 HTTP/租约/网关断言，并验证 owned 的持久失败、无进程/文件写入及不消费凭据；这些断言不构成 Windows owned 运行支持。独立 Node 可用不扩大 owned 支持；受管 Node 准备仍遵守原平台限制。Windows 本地快照采用文件 flush 加同目录 rename，不承诺断电后目录项持久；Coding OAuth Gateway 文件源因缺私有 ACL 证明继续拒绝，HTTP 提供方不变。各平台实际结果以本分支 GitHub Actions 矩阵收据为准。
 
@@ -18,13 +12,7 @@ PK3 开发供给：`vendor/hanamesh-core-0.3.33.tgz` 是 Core 分支提交 `969a
 
 PK1 兼容候选：开发输入更新为 DSH 0.2.2-rc.1 / Cordis 4.1.0 / Schemastery 3.19.0（适用者）。公开 peer 保留兼容范围，并显式包含 0.2.2 预发布；不锁定用户宿主版本。本分支尚未发布，安装和原生加载结果以 PK1 交件为准。
 
-0.6.22 候选：普通插件只执行目录固定目标；缺 installMethods 即拒绝。套件安装命令只消费 Core，删除普通包名的元数据查询和规则加载。
-
-0.6.15 候选：市场保留官方 CLI 的 stdout/stderr 真实失败原因并脱敏，在卡片与安装确认的技术详情中显示。正文显示 pnpm 真实错误类别；宿主发布时间检查失败时列出受影响包与实际 cutoff；HanaMesh 总包安装/升级使用精确发布版本，发布后即可验收；不修改 profile、pnpm 供应链策略或安装执行路径。
-
 官方桌面 0.2.0-rc.2 自带 pnpm 11.7.0 对同一包的多条精确 `minimumReleaseAgeExclude` 只采用首条，旧版条目会遮住后列新版，整份 lockfile 检查因而可阻断无关插件安装。本机桌面 0.2.1-rc.3 自带的 pnpm 11.28.5 已合并这些条目，相同样本通过；未推定首次修复版本。请通过官方渠道升级 DSH，保留失败的技术详情；AppHost 不绕过该检查。见 [兼容说明](docs/DSH_COMPATIBILITY.md)。
-
-0.6.14：严格读取标准分发目录的精确 npm 三目标与 agentPlugins，保留历史固定 GitHub DTO；目录事实仅展示，不决定兼容或升级。R1-COMBO-01 原始 26 条目响应已纳入回归。
 
 0.6.13 候选只消费新 npm 三包身份；插件 id、服务与存储不变。Core、Usage、AppHost、总包与当前 Brand 受保护，Recommender 不属于套件。0.6.12 原件保持原行为。
 >
@@ -36,28 +24,24 @@ PK1 兼容候选：开发输入更新为 DSH 0.2.2-rc.1 / Cordis 4.1.0 / Schemas
 
 # 0.6.10 · B17 已审合拢
 
-C 复审 Docs `2d95591d` 已关闭 `b13e60a` 两项P3；本版合入普通插件内的 Core 套件安装包来源选择、持久设置和复读失效保护，并通过 lib-provision 公开 ledger 修正默认 runtime 账本读取。保留0.6.9的独立Node准备、完全退出后重开指引、宿主公开主题token和F02严格拒绝旧目录；不改客户端。原生适用证据属于各固定候选，合拢后的源码/正常包另验，不冒完整安装、mac x64/Windows或owner验收。PKG/PRE/静态种子仍开。
+C 复审 Docs `2d95591d` 已关闭 `b13e60a` 两项P3；本版合入普通插件内的 Core 套件安装包来源选择、持久设置和复读失效保护，并通过 lib-provision 公开 ledger 修正默认 runtime 账本读取。保留0.6.9的独立Node准备、完全退出后重开指引、宿主公开主题token；不改客户端。原生适用证据属于各固定候选，合拢后的源码/正常包另验，不冒完整安装、mac x64/Windows或owner验收。PKG/PRE/静态种子仍开。
 
-> B17：「套件安装包来源」默认现有 registry，也可明确消费 Core 当前公开本机来源；目录清单独立。预览、确认、执行前及异步声明后复读，来源变化终止旧确认，不回退。只在正常插件加载后生效，不承接初装/首 profile。见[公开合约](docs/CONTRACT.md#b17-套件安装包来源2026-10-21-候选)。
+> B17：「套件安装包来源」默认现有 registry，也可明确消费 Core 当前公开本机来源。预览、确认、执行前及异步声明后复读，来源变化终止旧确认，不回退。只在正常插件加载后生效，不承接初装/首 profile。见[公开合约](docs/CONTRACT.md#b17-套件安装包来源2026-10-21-候选)。
 
 > 0.6.9历史：该版不含B17，曾披露默认runtime ledger相对路径缺失；本版已合入已审公开provider修复。Node ready仍不代表完整应用运行验收。
 
-
 > 2026-10-21 · Managed Node candidate: plugin Settings → 安装环境 → review and confirm one-source SHA-verified preparation → later operations automatically use standalone Node without restarting DSH. macOS arm64/x64 implementation only; Windows unsupported. Editable named settings and evidence boundaries: [contract](docs/CONTRACT.md#plugin-managed-standalone-node-2026-10-21-candidate). No silent acquisition, Electron guardian or client change.
-> 2026-10-21候选：所有客户端均按「完全退出后重新打开」指引处理需重启状态；移除旧壳专用重启深链及parent消息，不改客户端、不自动重启。下方rc.28/rc.32重启桥是已被本候选取代的历史记录。
-
-CLI-8：未配置来源的新用户默认请求 HanaMesh 视图（`https://market.hanamesh.com/catalog-source.json?view=hanamesh`）。已保存的旧 URL、自定义来源或手动清空列表均保持原样；显式 `sources: []` 仍不播种。
+> 2026-10-21候选：所有客户端均按「完全退出后重新打开」指引处理需重启状态；移除旧壳专用重启深链及parent消息，不改客户端、不自动重启。
 
 > 2026-10-15 · 0.6.2 compatibility candidate: public host peers admit official DSH `0.2.0-rc.2` and `0.2.1-alpha.2` with Cordis `4.0.4` / `4.0.5-alpha.1` and Schemastery `3.18.4` / `3.18.5-alpha.1`; development inputs stay exact. The rc.2 plugin manager has no public `saveExact` option. A proven packaged macOS Desktop uses its unchanged shipped `runtime/cli/bin/dsh` launcher for exact installs and reports `restart-required`; alpha.2 keeps the public live manager path. If neither a verified exact-save manager nor the supported public CLI is available, discovery reports `ready:false` and a concrete reason before installation mutates the profile. Existing browsing and application-view APIs remain available. See [the public API audit and validation limits](docs/DSH_COMPATIBILITY.md). Source checks and fixture results do not establish native or owner acceptance.
-
 
 > D-230 / 0.5.9 candidate: each acquired AppHost route, optional-service listener, observer, resolver, domain and host now registers its release immediately. Failed activation drains the acquired resources and preserves the original error; cleanup failures produce only a named APPHOST_CLEANUP_FAILED diagnostic. Normal unload uses the same once-only releases. Ordinary-app admission, original presentation/success facts, native isolation and final-package U2 remain separate gates.
 
 > D-221 / 0.5.8 candidate: runtime readiness, HTTP/resources/WS and hourly Router receipts no longer synthesize Usage open/use. No verified public presentation/business-success source is connected; USAGE_FACT_UNAVAILABLE preserves unknown state. Router diagnostics remain available. Real source facts, native isolation and final-package U2 are still pending. Historical rc.27/rc.30 hourly reporting descriptions below are superseded by this correction.
 
-> D-214 / 0.5.7 implementation candidate: the owned verification build connects the normal client Loader/apply/sidebar/market to the existing contract page and retains complete public success/rejection JSON. Release builds default off; installation still requires confirmation. The separate owned native driver uses the fixed upstream public launcher and records actual process argv/version. Package, real Desktop and ordinary application U2 evidence remain separate.
+> D-214 / 0.5.7 implementation candidate: the owned verification build connects the normal client Loader/apply to the existing contract page and retains complete public success/rejection JSON. Release builds default off; installation still requires confirmation. The separate owned native driver uses the fixed upstream public launcher and records actual process argv/version. Package, real Desktop and ordinary application U2 evidence remain separate.
 
-> D-202 / 0.5.6 implementation candidate: fixed upstream `d743267388641bc76f17c45ce8b4c231aed1d32c`, official DSH `0.2.1-alpha.2`, Cordis `4.0.5-alpha.1`, Schemastery `3.18.5-alpha.1`, React `18.3.1`. This candidate retains current catalog/market/verification behavior and adds proven Desktop layout discovery, the public reserved-profile CLI, and separate exact localhost control/data origins. `@hanamesh/lib-provision@0.2.1` is bundled from its approved unchanged Git source with its original LICENSE. This is not a release, native U2 pass or owner ACCEPTED. Current evidence is in the card run directory, separate from historical packages and native observations.
+> D-202 / 0.5.6 implementation candidate: fixed upstream `d743267388641bc76f17c45ce8b4c231aed1d32c`, official DSH `0.2.1-alpha.2`, Cordis `4.0.5-alpha.1`, Schemastery `3.18.5-alpha.1`, React `18.3.1`. This candidate retains application verification behavior and adds proven Desktop layout discovery, the public reserved-profile CLI, and separate exact localhost control/data origins. `@hanamesh/lib-provision@0.2.1` is bundled from its approved unchanged Git source with its original LICENSE. This is not a release, native U2 pass or owner ACCEPTED. Current evidence is in the card run directory, separate from historical packages and native observations.
 
 # HanaMesh app-host · 0.2.0-rc.2 本地候选
 
@@ -65,30 +49,20 @@ CLI-8：未配置来源的新用户默认请求 HanaMesh 视图（`https://marke
 
 > NPM-APPHOST-01（2026-10-05）：本地候选 `0.2.0-rc.10` 对齐官方 `@deepseek-ai/dsh@0.2.0-rc.2`、Cordis `4.0.4`、Schemastery `3.18.4` 与 storage-domain `0.2.0-rc.2`。`@hanamesh/lib-provision@0.1.0-rc.3` 仅以已核 SHA-256 的 vendor tgz 在构建期内联，公共 registry E404，因此不声明为运行时 peer。owner D-2026-10-05-02 已确认该自有代码可分发；内联代码的自有分发授权原文随 canonical rc3 包复制，不推断新增 MIT 或再许可授权。包级许可分区见 [`LICENSE`](LICENSE) 与 [`docs/LICENSES.json`](docs/LICENSES.json)。本地官方 DSH 装配不等于公开 npm 安装门或产品验收。
 
-> rc.41（2026-10-01，P01-U05-RI 修复）：真实原生市场重装 Vibe 时，受管 Python runtime 卸载后留有32个运行时生成的 `__pycache__/*.pyc`，后续原子提升因目标目录无所有权清单而拒绝（`E_PROMOTE`）。AppHost 在 lib-provision 精确移除受管文件后仅清理由该 runtime 生成的 Python 字节码及空目录；未知残留继续保留并报告 `RUNTIME_RESIDUE`，不以 force 覆盖。两项回归、模块 check/types 通过；仍需固定消费者组合和独立原生产品复验。
-
-> rc.40（2026-10-01，P01 关闭→打开/闲置恢复候选）：市场待启动视图每 250ms 只读查询实例状态，实例 ready 后仅调用一次 `/apps/resume` 获取应用 URL；长启动按原 lease TTL 续租，取消或超时释放精确 lease。已打开视图回到前台或 `pageshow` 时立即续租，遇 `LEASE_EXPIRED` / `INSTANCE_NOT_READY` 清除失效应用帧，保留市场「打开」供显式重试。未改租约 TTL、关闭即停机或应用启动路径。需原生 rc.19 + P01 组合独立验证。
-
-> rc.38（2026-09-30）：实机验证发现 DSH Settings 固定层级 1000 遮住工作区默认 overlay 20；仅当应用视图投射时把既有 shell.overlay 提到 1001，关闭后自动恢复默认层级。
-> rc.39（2026-09-30）：原生「扩展管理 › 市场」打开应用时，原有 iframe、关闭按钮和视图租约保持在 app-host Market owner 内，但应用帧固定铺满窗口并覆盖 DSH Settings（设置层 z-index 1000），关闭后返回市场。原版 Vibe 的 Sessions 入口需要至少 768 CSS px；rc.37/38 的 shell.overlay 投射在原生客户端被设置层遮住，均未作为交付版本。完整 P01 仍须实机独立复验。
+> rc.41（2026-10-01，P01-U05-RI 修复）：重装 Vibe 时，受管 Python runtime 卸载后留有32个运行时生成的 `__pycache__/*.pyc`，后续原子提升因目标目录无所有权清单而拒绝（`E_PROMOTE`）。AppHost 在 lib-provision 精确移除受管文件后仅清理由该 runtime 生成的 Python 字节码及空目录；未知残留继续保留并报告 `RUNTIME_RESIDUE`，不以 force 覆盖。两项回归、模块 check/types 通过；仍需固定消费者组合和独立原生产品复验。
 
 > rc.36（2026-09-30）：冷恢复时将中断实例的旧活跃视图租约与实例状态在同一持久镜像中失效；再次打开的新视图关闭后，不再等旧租约 TTL 才停机。原视图仍可按原身份显式恢复并轮换凭据。完整产品流程另行独立验证。
-
-> rc.35（2026-09-30，本机有限修复）：内置市场的「打开」和「关闭视图」在请求进行中立即显示「打开中…」「关闭中…」并阻止重复点击。owned 应用进程在 TERM 后已退出时，guardian 依据 launcher 的 `app-exit` 提前结束等待，仍清理并确认整个精确自有进程组，之后才释放锁和发布 stopped；顽固应用仍保留声明的 stopGraceMs。P01-U02/P08 真正客户端组合验收另行记录。
-
-> rc.34（2026-09-29）：内置市场的活跃应用视图按既有回执 expiresAt 周期消费 `/apps/heartbeat`；关闭视图、隐藏、卸载和 pagehide 取消续租并显式释放原 lease。服务端默认 TTL/sweep、runtime/provider/应用 UI 均未改变；完整产品独立真实 UI 验证另跑，详 `docs/acceptance/recovery-20260929-client-heartbeat/REPORT.md`。
 
 > rc.33（2026-09-29，本机有限修复）：owned 启动将死主锁/孤儿回收与新 launcher/app 握手分阶段限时；回收预算为既有 5s bootstrap + 声明 stopGraceMs + 2s kill 确认，所有权确认之后的新启动仍限 5s。未改安全身份判定、公开配置或 UI；完整 P01/P08 产品验证另由真实 profile 执行。
 
 > rc.31（2026-09-22）：修 rc.30 的回归——库入口 `dist/index.js` 经 `router/receipts.js` 静态引入了 DSH 专属 peer `@deepseek-ai/dsh-storage-domain`，使只装本包的应用包（如 Vibe）`import` 即 `ERR_MODULE_NOT_FOUND`。storage-domain 规格移到 `src/router/receipts-domain.js`（只由插件入口 `src/dsh.js` 打开），并加守卫测试：从 `dist/index.js` 可达的模块图里不得出现 `@deepseek-ai/*`。
 
-> rc.30（2026-09-22）：= rc.28（HanaMesh 市场）+ Router 使用回执：每小时 `{appId, providerId, model, hour, count}` 本地账（storage-domain `hanamesh_router_receipts`、`GET /hanamesh/router/receipts`），在 UTC 整点结束或该应用最后一个活实例停止时，随 `use` 事件经 usage 席位上报（`targetRef=appId` + 该小时请求最多的路由行作 `receipt`）；需 usage ≥ 0.2.0-rc.7。
+> rc.30（2026-09-22）：Router 使用回执：每小时 `{appId, providerId, model, hour, count}` 本地账（storage-domain `hanamesh_router_receipts`、`GET /hanamesh/router/receipts`），在 UTC 整点结束或该应用最后一个活实例停止时，随 `use` 事件经 usage 席位上报（`targetRef=appId` + 该小时请求最多的路由行作 `receipt`）；需 usage ≥ 0.2.0-rc.7。
 
 > 分支 `t6-usage-receipts`（2026-09-22，设计定案 §3「协议层」，T6，**未发版**，由派发 session 合入下一 rc）：**Router 使用回执。** app-host 自己的 storage domain `hanamesh_router_receipts` 按小时记 `{appId, providerId, model, hour, count}`（Router 每次注入记路由与 `injections`，网关每次转发 `count+1`；不记内容、不记值），`GET /hanamesh/router/receipts[?appId=]` 可查本地账。usage 席位上报的 `use` 事件改为在 **UTC 小时结束或应用最后一个活实例停止时**发出（`occurredAt` 仍是该小时首个转发请求；同 key 一小时一条不变），并附 `targetRef=appId` 与该小时的 `receipt {providerId, model, count}`；无席位只记本地账不报错；宿主死机前未报的小时在下次启动由账本补报（席位按 key 去重）。需要 usage `0.2.0-rc.7`（席位接受三个可选键；更早版本会 `rejected INVALID_RECORD_INPUT`，只 debug 日志）。
 
 > rc.27（2026-09-21，用户定，STATUS `P2-USE-EVENTS`）：**应用的使用证据由 app-host 上报。** 此前 app-host 从不调用 usage 插件的 record 座位，应用既没有 `open` 也没有 `use` 事件。现在：`ctx.inject(['hanameshUsage'])` 可选取得座位（鸭子类型 `record()`，三插件仍互不 import；缺席/不兼容/抛错/`rejected` 只 debug 日志，永不阻止启动或转发）；`open` = 实例到达 `ready` 一次（`open:<appId>:<instanceId>`）；`use` = 该实例网关真正转发了已授权请求且应用回应非 401/403，每应用每 UTC 小时一次（`use:<appId>:<YYYYMMDDHH>`，时间取桶内第一个请求）；引导票据、网关拒绝、宿主就绪探针不计。`hanaRef` = 应用 npm 包名：描述符新增可选 `packageName`（向后兼容），缺省由启动时的已安装扫描 `host.bindPackageName()` 绑定，两者都没有则该应用不产生证据。`sourcePlugin = '@hanamesh/dsh-app-host'`。新面：`host.packageName/bindPackageName/onActivity`、`FixedGateway({onForward})`、`createUsageEvidence()`、`list().apps[].packageName`。契约见 `docs/CONTRACT.md`「应用使用证据」；AH-U01–U07 测试（U07 为真实 Cordis 根，座位先于/后于本插件提供两种顺序），M11/M12 变异。
 
-> rc.26（2026-09-21，O3 stage-4 官方 DSH 发行路径 PRD §A.8）：**纯 DSH CLI profile（只 `dsh plugin add hanamesh-core` + 应用包，无桌面壳 overlay）下的应用库可用。** ① `library.sources` **未配置**时默认 `[{manifestUrl:'https://market.hanamesh.com/catalog-source.json?view=hanamesh',enabled:true}]`（首启仍只在存储为空时播种；显式 `sources: []` 表示不要来源，保持为空——schema 用 `union([array, undefined])` 区分「未设」与「空数组」，旧版 schemastery 把未设强制成 `[]` 的行为不再影响）；② `library.profileDir` 缺省时从本包**自身真实安装位置**推断：`import.meta.url` 向上找到名为 `@hanamesh/dsh-app-host` 的包根并 `realpath`，再向上找第一个 `node_modules/@hanamesh/dsh-app-host` 解析到该真实根、且 `package.json` 的 `dependencies` / `dsh.profile.bundles` 提到 hanamesh 的祖先目录——pnpm `.pnpm` 存储路径永不被返回，只返回链接它的 profile；`profileName` = `basename(profileDir)`；`dshBin` = `process.argv[1]` **仅当**它以 `/@deepseek-ai/dsh/lib/bin.js` 结尾（启动本进程的 DSH CLI），否则再尝试从 profile 解析（失败不再抛错，只是安装不可用）；`nodeBinary` = `process.execPath` **仅当** `process.versions.electron` 未定义（K5：Electron 宿主仍须显式配置，否则 `NODE_RUNTIME_REQUIRED` fail-closed）。显式配置永远优先（桌面壳 overlay 全部显式，行为不变）；推断结果以一行结构化日志 `hanamesh-app-host library: inferred {...}` 打出。效果：CLI 安装且已注册的 Vibe 在库里显示为 `registered` → 卡片「打开」而非「安装」；安装/卸载/补齐 runtime 在纯 DSH 上可用（走 `node bin.js plugin --profile <name> add/remove`，与桌面桥完全相同）。AH-L07–L10 测试（含真实 Cordis 根经 Config schema 的 L07 plugin 用例），M10 变异。
 > rc.25（2026-09-21，STATUS `APP-RUNTIME-LOCK`）：桌面壳整棵进程树被强杀（DSH + guardian 一起死）后，应用数据根下的 `.runtime.lock` 不再永久卡住下一次「打开」。锁记录现在带 owner pid + 进程启动时间令牌、guardian 创建的子进程（launcher / app 的 pid + 启动令牌 + 可执行文件）和端口；再次 acquire 时：owner 活着 → 仍 `DATA_ROOT_BUSY`，`details.pid` 给出活着的 pid；owner 死了（pid 不存在，或同 pid 但启动时间不同 = pid 复用）→ 逐个核对记录的子进程：已消失或被别的进程复用 pid 的忽略，**只有 pid + 启动令牌 + 可执行文件三者都对得上的孤儿**才被 SIGTERM→SIGKILL 后接管锁；活着但证明不了是我们的 → 仍 `DATA_ROOT_BUSY`，`details.pid`/`details.ownerPid` 指出该进程。只用 Node 内建（macOS/Linux 用 `ps -o lstart=` / `/proc`，Windows 退化为只判 pid 存活、永不接管活进程）。AH-L01–L06 测试（L05/L06 真 SIGKILL guardian + 宿主后再开），M09 变异。
 > rc.24（2026-09-21）：模型随路由——路由表加「模型」列（所路由供应商的模型列表 / 文本框；「应用默认」= 清单默认值），`POST /hanamesh/router/model`；自动路由行选模型即成为同供应商的显式 grant。
 > rc.23（2026-09-21）：Router 不再替应用选模型——自动路由时 `{{model|默认}}` 落到应用声明的默认值，不再取供应商模型列表第一项（用户在 Vibe 里被塞了 `gpt-5.3-codex-spark` 的根因）；无 `providers` 的派生槽位不自动路由、plan 标 `derived`、路由表不显示。
@@ -178,8 +152,6 @@ rc.1 原始输入当时标注 `UNLICENSED`，不是 MIT/Apache 授权声明；�
 AppHost `0.2.0-rc.5` 内联 canonical `@hanamesh/lib-provision@0.1.0-rc.3`，源码提交 `e8707089409ffd3483fc4c964d6032c370dae634`，vendor SHA-256 `b7d149dcbf51c30fd0226fb170afdf268501057b0c7149903c02c17abe93b2c7`。原 build 验证归档摘要并提取 `lib/`、`LICENSE` 与 `THIRD_PARTY_NOTICES.md`；两个分发记录保留上游原文。根 `SEE LICENSE IN LICENSE` / AppHost MIT 分区保持，`dist/provision/**` 自有分发记录不改为 MIT。业务源码与公开 API 不变，无新增依赖或运行时功能；devkit 仍精确 rc1。只交工程新包，未发布 npm 或安装物，产品界面与干净机未运行。
 
 ## 应用安装目标
-
-AppHost rc7 提供 `market.openInstallTarget({itemId?,packageName?})` 及同名公开客户端出口。市场查询自己的当前目录、显示四字段确认；只在用户明确确认后走原鉴权安装路由，重复输入共享安装状态。市场顶部「安装目标」小界面调用同一入口；fixture 来源醒目标注。输入/调用方式、回执及 HTTP 语义见 [INSTALL_TARGET.md](docs/INSTALL_TARGET.md)。本轮源码/包自测不代统一客户端安装、真实首步或 owner 验收。
 
 安装目标合约（rc8，`hanamesh.install-target` v1，只加不改）：schema `schemas/install-target.schema.json`（出口 `./install-target/schema.json`），提供方 fixture 和一致性套件随包（`./install-target/suite`、`./install-target/fixtures/*`）。调用方可选声明 `contractVersion: '1'`；不声明保持 rc7 语义，其他值明确拒绝 `CONTRACT_VERSION_UNSUPPORTED`。见 [INSTALL_TARGET.md](docs/INSTALL_TARGET.md#合约版本与一致性套件)。
 

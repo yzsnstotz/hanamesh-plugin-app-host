@@ -67,6 +67,7 @@ async function boot(t, { token = 'browser-session', withPlugin = true, applicati
 test('H01 (harness half): the plugin activates on a real Cordis root and provides ctx.hanameshApps', async t => {
   const h = await boot(t);
   const host = h.ctx.get('hanameshApps');
+  assert.equal(typeof host.installApplication,'function');
   for (const method of ['register', 'start', 'stop', 'stopAll', 'instance', 'instanceList', 'logTail', 'open', 'close']) assert.equal(typeof host[method], 'function', method);
   assert.deepEqual(host.list().apps.map(a => a.id), ['example']);
   const [types, consistency] = await Promise.all([

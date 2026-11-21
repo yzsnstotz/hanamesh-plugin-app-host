@@ -1,5 +1,6 @@
 // AppHost mutation targets, name filters and invariant-specific failure reasons.
 export const cases=[
+{id:'DT7-legacy-verdict-discarded',file:'src/library/suite.js',from:'if(declaration.legacy)return{...declaration.legacy,',to:'if(false)return{...declaration.legacy,',test:'tests/suite-legacy.test.mjs',pattern:'DT7 current runtime forwards Core legacy verdict installed',reason:/Expected values to be strictly equal/},
 
  {id:'R168-background-registers-plan',file:'src/library/service.js',from:'const plan=await installer.readSuiteUpgrade();',to:'const plan=await installer.prepareSuiteUpgrade();',test:'tests/suite-query-race.test.mjs',pattern:'^R168-F01',reason:/R168: background discovery must preserve the explicit confirmation plan/},
  {id:'R168-display-port-registers-plan',file:'src/library/install.js',from:'readSuiteUpgrade:readSuite,',to:'readSuiteUpgrade:previewSuite,',test:'tests/suite-query-race.test.mjs',pattern:'^R168-F01',reason:/R168: background discovery must preserve the explicit confirmation plan/},

@@ -1,112 +1,17 @@
-# AppHost 应用安装与读回
+# 应用安装与运行时
 
-## 范围
+在 DSH 插件页的 HanaMesh 市场选择应用并确认。Market 把已审核的安装目标和精确版本交给 AppHost 的 Cordis 服务。AppHost 使用当前 profile 的正式 DSH CLI 安装，读回已保存的包与精确版本，验证应用定义，并在同一次操作内供给声明的运行时。完成后显示结果及完全退出、重新打开客户端的提示。
 
-AppHost 从当前 profile 读取已装应用。HanaMesh 首页的「继续使用」和 AppHost 原生插件配置使用这份清单打开应用、补齐运行时或卸载。AppHost 的应用安装 API 独立解析启用的应用目录并调用 DSH CLI。插件目录浏览与原生插件管理由独立 Market 插件提供。
+应用定义验证、安装读回或运行时供给失败时，AppHost 通过正式 CLI 补偿，并重新检查选中包、版本、依赖和锁。恢复结果会随失败返回。安装、卸载和运行时补齐共享 AppHost 的 profile 写入限制。已安装应用可从 HanaMesh 首页的「继续使用」或 AppHost 插件配置打开、补齐运行时或卸载。
 
-## 目录源
+## Cordis 服务
 
-- `library.fixture` 只用于受控验收；内容必须符合 `schemas/catalog-provider-page.schema.json`。
-- `library.sources` **未配置**时默认为 HanaMesh 目录源 `https://market.hanamesh.com/catalog-source.json?view=hanamesh`（rc.26；显式 `[]` = 不要来源）；可有多项，但浏览时必须恰好启用一项。目录 manifest 接受标准端口 HTTPS；HTTPS 本机回环 127.0.0.1、::1、localhost 及 *.localhost 可使用任意端口；本机回环 127.0.0.1、::1、localhost 另接受任意端口 HTTP（Node URL 解析后精确匹配主机名，安全上下文回环例外）。无凭据/fragment，仅允许可选查询 view=hanamesh；endpoint 和重定向必须保持完整同源（协议、主机、端口），不把主机别名互换。新默认仅在初始 revision=0 且来源为空时播种，已保存旧来源、自定义来源和手动清空列表均不自动改写。
-- 请求固定 `Accept: application/json` 与 `Accept-Encoding: identity`；最多三次同源跳转，拒绝压缩响应与超过 2 MiB 的响应。
-- `categories` 含 `hanamesh-app` 且 `package.registry` 为 `npm` 的条目是应用（安装后读 `app.json`、供给 runtime）；其它 `package.registry` 为 `npm` 的条目是插件（rc.28 起同样可装卸，只跑 `dsh plugin add/remove`）；无 npm 包的条目（repository-only）只展示。
+`hanameshApps.installApplication({target, version, registry?})` 供可信宿主插件在用户确认后调用。目标是带精确版本的 npm 安装目标或带完整提交 SHA 的 GitHub 安装目标。对于 npm，Market 传入本次已审核的 registry。GitHub 目标使用固定提交。成功回执为 `{status:'ready',appId,packageName,version,restartRequired}`。这个状态表示安装及运行时读回已完成。包激活仍可能需要重新打开 DSH。
 
-## Profile 与安装
-
-钉版本 DSH 没有向插件公开 profile 目录或 profile 名。桌面壳通过 overlay 显式给出 `library.profileDir`（绝对路径）、`library.profileName`、`library.dshBin` 与 `nodeBinary`，显式值永远优先。**纯 DSH CLI profile（rc.26）** 下缺省值按 `CONTRACT.md`「应用库配置」推断：`profileDir` 来自本包自身真实安装位置所属的 profile、`profileName` 为其目录名、`dshBin` 只取启动本进程的 `@deepseek-ai/dsh/lib/bin.js`、`nodeBinary` 只在非 Electron 进程取 `process.execPath`。Electron 下仍必须由 dsh-runtime/core 提供绝对 `nodeBinary`；应用库不会在 Electron 里回退到 `process.execPath`。
-
-rc.10：add 之后的读回、定义校验或 provision 失败按基线补偿（新装 `dsh plugin remove`、升级 `dsh plugin add` 原规格，runtime 按 ownership 回收或按原定义重供），逐项读回后在 `library.install-failed` 的 `recovery` 里报告 `not-needed`/`restored`/`failed`；详见 `INSTALL_TARGET.md`「安装失败后的恢复」。
-
-安装/卸载完成只返回 `restart-required`，绝不静默重启 DSH。卸载只删除包与 lib-provision 账本认领的 runtime 文件，保留 `<dataRoot>` 下应用数据；彻底删除需用户手动处理对应数据目录。
-
-## 状态与路由
-
-已安装应用扫描给出 `registered`、`installed-not-loaded`、`runtime-missing` 或 `invalid`；已安装插件扫描（rc.28）给出 `installed`、`installed-not-loaded`、`uninstalled-not-unloaded` 或 `invalid`。浏览器路由为 `/hanamesh/library`、`/hanamesh/library/sources`、`/hanamesh/library/install`、`/hanamesh/library/provision`、`/hanamesh/library/uninstall`、`/hanamesh/library/events`、`/hanamesh/library/installedPlugins`、`/hanamesh/library/plugins/install` 和 `/hanamesh/library/plugins/uninstall`，全部复用 app-host 的 Host/Origin/iframe/auth/CSRF 防护链。
-
-应用打开仍只走 app-host 的视图租约 API；页面只保存临时 receipt，不拥有第二份实例状态。
-
-## 锁定产物
-
-私有 `@hanamesh/lib-provision` 不作为 package dependency 或 peer。build 校验 vendor tgz 的 SHA-256 后提取 `lib/**` 到 `dist/provision/`，并带入 notices 与独立 `LICENSE` 声明；来源、SHA-256 与许可分区记录在 `docs/PROVENANCE.json`、`docs/LICENSES.json` 和根 `LICENSE`。
-
-
-## rc.16 · 浏览语义（2026-09-20 线上目录门后定）
-
-- `GET /hanamesh/library?q=&category=&cursor=`：`category` 缺省为 `hanamesh-app`（本页是**应用库**，只列应用条目）；显式 `category=`（空）列出来源的全部条目；`q` 与 `cursor` 原样透传给目录源的 `/v1/plugins`（`limit=50`）。未知参数 → `UNKNOWN_FIELDS`。
-- 客户端：搜索框（回车/「搜索」）、「只看应用」开关（默认开）、「更多」按 `page.nextCursor` 追加。
-- 背景：真实来源 `market.hanamesh.com` 有 12,121 条，rc.15 之前只显示按更新时间排序的前 50 条且无搜索，应用条目实际不可达。
-
-## rc.28 · 市场浏览语义
-
-- 市场页默认 `category=`（全部）；筛选：全部 / 应用（`hanamesh-app`）/ 插件（客户端视图：本页非应用的 npm 条目）/ 目录页里出现过的类别（累积自 `categories`）。路由 `/hanamesh/library` 的缺省 `category=hanamesh-app` 不变（向后兼容）。
-- 卡片：`kind · 发布者 · 类别`；已装行显示实际状态与版本；「升级」出现在 `upgradeAvailable` 时，npm 仅按 Indexer 固定 target.version 比较；确认页不显示目录版本；插件「卸载」走 `plugins/uninstall`。页面底部「已安装」列出应用与插件（含 bundle 未启用为 profile 层的提示）。
-- 「需重新打开客户端」横幅：任一装卸操作完成后，或列表 `restartRequired` 为真时显示；所有渠道均提示完全退出 HanaMesh 客户端或 DSH 后重新打开，关闭窗口不等于退出。不提供旧壳深链或 postMessage 重启桥；只有正式宿主重启 API 供给后才另行接入。
-
-### 0.3.0 · catalog major compatibility
-
-Catalog `manifestVersion` / `schemaVersion` accept valid SemVer with major 1, including additive minor/patch inputs; different majors and malformed versions remain refused. Schema field checks and HTTPS/same-origin controls remain enforced. Known optional additions (attribution notice / item updatedAt) are preserved; arbitrary unknown fields remain invalid. Install-target `contractVersion: "1"`, storage schema numbers and installed-package exact readback are distinct fields and retain their original grammar. This does not claim that a 0.x package caret includes every minor.
-
-Both SOURCE fixture sets and suites ship as `@hanamesh/dsh-app-host/catalog/suite` (`runCatalogProviderSuite`, `runCatalogConsumerSuite`) with schema exports under `catalog/schema/`. The default consumer suite drives this package's actual catalog loader against labelled transport fixtures; it is not a live market or product acceptance gate. Version grammar follows [SemVer 2.0.0](https://semver.org/).
+AppHost 的安装环境使用同一正式 DSH CLI、profile 和独立 Node。关于认证的工作区安装接口、已审目录目标与恢复结果，请参阅[安装目标](INSTALL_TARGET.md)。
 
 ## HanaMesh 套件
 
-市场只显示一张官方、不计分的「HanaMesh 套件」卡。完整性只显示 Core 的 `completeness`，同时展示 `installed` 的要求范围、实际版本、状态和 `blocked` 的具名原因；Core 缺席或读取失败时完整性为 unknown，并保留物理包版本供诊断。Core、使用记录、应用库不再分别作为普通可安装卡。品牌插件只属于 HanaMesh 自有客户端。
+Core 的协议 `'1'` 声明负责套件状态、组件兼容性和精确升级目标。AppHost 在当前 profile 消费其 `completeness`、组件版本与具名阻断原因。Core 缺席或事实无法读取时，套件显示 `unknown`。总包缺席时，当前客户端可以显示 Core 给出的旧组件判定。总包、Core、Usage、AppHost 及当前 Brand 包受普通安装与卸载保护。
 
-DSH 首次安装使用公开 Core 精确发布元数据中的 `hanameshSuiteInstall.command`；已运行客户端的修复命令使用 Core 声明 `installCommand`。两者由 Core 同一格式器提供，只安装总包的精确版本，完全退出后安装并重新打开。缺命令显示具名不可用，不自造组件命令。
-
-套件版本范围、是否完整、候选来源及兼容/升级规则唯一属于 Core。App-host 只读物理安装版本，不能用它们推导兼容或安装许可；不自行读取 npm latest、计算组件组合、校验候选宿主 peers 或持有 Core 的版本范围副本。普通安装/卸载接口继续拒绝套件包。
-
-DSH 入口通过既有 optional injection 监听 `hanameshCore` 出现/卸载，仅消费字符串 protocol `'1'` 的可选 `getSuiteDeclaration`（C-CORE D）。市场事实读取不传 request，不触发候选 registry 网络；查询升级时传入实际执行 `registry`。缺方法、旧 Core 或卸载后明确显示 **Core 未提供套件声明**，「检查兼容升级」不可点；直接查询升级目标返回503 `CORE_SUITE_DECLARATION_MISSING`，不回退 getHealth、内部 profile、旧范围或 registry latest。DTO 形状无效返回 `CORE_SUITE_DECLARATION_INVALID`；具名 Core 错误保持传播，事实读取失败为 unknown。
-
-公开 adapter 仅检查 DTO/精确命令的形状与固定三包边界，不重算范围、Node、peer、来源或升级排序。默认展示 `upgrades` 的第一条组合，保留完整 `declarationId`、规范 registry、目标身份/来源/摘要/版本及物理基线；其他候选的 blocked 行不会否决这条 Core 已提供的有效组合。`completeness` 非 complete、来源不符或没有组合分别明确拒绝。`createLibraryInstaller({coreSuitePlan})` 仍是内部归一化执行测试接缝，不是公开 Core DTO、配置项或浏览器权限；替身测试不能证明真实 Core 包接通。
-
-本人确认当前计划才执行一次官方 CLI；执行前重读并比较 declarationId、registry、选中组合和 Core 物理基线（checkedAt 不参与比较），再检查磁盘版本及启用清单；改变/撤回即拒绝，不静默重试。安装后按精确 profile/module 版本和启用状态读回，不以 Core 回执冒充实际安装结果。网站只能经允许名单交接此意图。
-
-成功须读回三个精确保存的版本、实际解析版本与启用状态，随后完全退出并重新打开客户端。安装命令失败或读回不符时，界面显示实际组件状态、错误与同一行补齐命令；部分变更不冒充成功或未安装，不自动静默重试。
-
-套件卡不把 Core 版本当作 agent 套件分发版本：`suite.version` 保持为 Core 实际版本，界面明确标为 Core，组件逐项显示。`unknown` 表示 Core 无法确认事实，不等于组件缺失。预览阶段被 Core 拒绝时说明尚未执行安装，保留具名 blocked 原因；已执行失败仍显示物理读回及修复步骤。网站四渠道面板和 Claude/Codex 安装状态不从 App-host 监听是否存在推断。
-
-### 0.6.8 · HanaMesh 目录展示字段
-
-HanaMesh 视图原样保留可选 `official:boolean`（包括 false）与 C-INDEXER-CATALOG 的 `SuitePresentationDTO`；suite 的角色、组件、版本事实及 GitHub 精确 ref 按公开形状逐层校验，未知字段和畸形字段仍拒绝。历史可选版本事实缺省时不补猜。旧 major-1 视图不增加这些字段。该展示信息不构成安装权限；兼容与升级仍只读取公开 Core 声明。
-
-### 宿主主题（2026-10-21候选）
-
-市场覆盖页、内嵌应用框、表单控件与状态提示消费正式 DSH ui-theme 的公开 `--dsw-alias-bg-layer-2`、`label-primary/secondary`、`border-l2`、`state-error/success/warn/business-*` token，不写白底黑字或新增全局色。主题值与切换仍归宿主；不修改客户端或覆盖其它插件。缺主题提供方时不能把本候选截图当正式宿主支持。
-
-
-0.6.12：目录条目的展示/跳转链接（`sourceLinks.sourceUrl`、`homepage`、`repository.url`、`publisher.url`）接受 fragment 并原样保留；目录自身 attribution 展示链接亦保留 fragment。manifest 来源和 `transport.endpoint` 等请求 URL 校验不变。单条非法仍拒绝整个 provider page，不返回部分结果。
-
-## 0.6.16 · 安装查询来源与失败诊断
-
-D1: DSH suite installation and upgrades use only @hanamesh/hanamesh. Core owns the bundle metadata and exact three dependency targets. A confirmed strict CLI add changes the bundle once; readback checks its saved version, activation and locked physical children. The suite display version is the bundle version. Ordinary market install/remove denies the bundle.
-
-
-A2 0.6.22：普通插件必须有 Indexer 已审核的 installMethods 和 oneClickInstall.allowed:true；仅执行其 npm 精确版本或完整 GitHub SHA。缺目标具名拒绝，不根据包名查可变版本标签。CLI 使用显式 library.registry（若有），否则保留宿主原生 registry 配置。删除普通插件按包名内部直装方法、元数据查询及其专用设置/规则加载。套件仅透传 Core installCommand。安装失败保留脱敏 CLI/读回诊断及补偿结果；精确版本发布后即可原生验收。
-
-## VR1 市场版本管理
-
-应用库/应用详情显示已装版本与最新兼容版本，一键升级默认选择该精确版本；“选择历史版本”列出发布版本，不兼容版本禁用。npm 发布元数据只用于发现，版本选择再次验证 Node、可观察 peer 和公开 DSH `evaluatePluginCompatibility`，缺失事实不会启用安装。总包继续由 Core 的 `getSuiteDeclaration({registry,profile,bundleVersion})` 决定三个业务组件的兼容组合。Theme 为总包分发依赖，不增加业务成员。
-
-新增插件自有的认证同源路由：GET `/hanamesh/library/versions?itemId=...`、GET `/hanamesh/library/version-target?itemId=...&version=...`、POST `/hanamesh/library/version/install`。后者只接受当前目录身份、精确版本及复读的安装目标，不接受 URL、命令或浏览器提供的 registry。已确认的总包仍 POST `/hanamesh/library/suite/upgrade`，GET `/hanamesh/library/suite/status` 返回从总包解析的物理组件读回。原 install-target v1 的 `/target` 与 `/install` 继续拒绝任意 version 字段；不改变。
-
-普通插件安装/升级/历史切换均复用 `dsh plugin --profile <实际profile> add --save-exact <name>@<version>`。总包执行 Core 提供的精确 argv；执行前按相同的显式版本请求复读来源、声明与物理 baseline。命令运行、精确读回或组件验证失败，先通过同一正式 CLI 补偿，再逐项比较依赖、包、选择与锁；原失败和恢复失败都可见，未核实不报告恢复成功。不会自动重试，不直接写 DSH 的 profile/lock，不全局放宽成熟期。安装后提示完全退出并重开；读回使用总包内部解析的真实子包，而非要求子包成为 profile 直接依赖。
-
-版本查询使用与安装一致的配置 registry；总包选择 Core 来源时从其公开 source state 读取并拒绝未就绪状态。`library.versionLookupTimeoutMs`（默认 30000）与 `library.versionLookupMaxBytes`（默认 16777216）限制每次匿名、拒绝重定向的读取。查询仅发生于页面上已装 npm 项和主动展开版本，不遍历整个市场；失败显示错误。
-
-参考：dsh-market `f76b5f58ec553aba91b964f009a8561eea175011` 的 `src/updates.ts`、`src/routes.ts`、`src/official-desktop.ts`；DSH 0.2.2-rc.1 `dsh-plugin-manager` README 的 `listVersions`/`updateBundle`、`dsh-client-ui-plugin-manager` 版本确认 UI。DSH 的版本接口只列新版，`updateBundle` 拒绝旧版；本市场的完整历史切换沿用已有受监测正式 CLI，不移除旧包后再装，也不修改 DSH 本体。
-
-原生验收补充：总包确认页单独显示精确总包的已装→目标版本，即使三个业务成员未变。正式安装 CLI 保留宿主经绝对路径校验的 XDG_DATA_HOME，使 pnpm 沿用该 profile 首次安装的数据根；不转发任意环境、API token 或 proxy，不改 store、不重装依赖以掩盖 store 冲突。
-
-
-## R162 首屏与保护边界
-
-当前预装Brand包名为 `@hanamesh/brand`，与总包、Core、Usage、AppHost同属普通市场保护名单；已装事实可以读到它，但不提供卸载入口，服务与安装器都在执行正式CLI之前拒绝装卸。退休Brand包名不保留保护别名；普通第三方插件仍可卸载。
-
-目录与已装清单先返回。显式版本查询经 `/hanamesh/library/versions` 单独执行。连接关闭时取消在途 registry 读取，沿用单次期限、响应上限、匿名请求和拒绝重定向。确认和安装各自复读精确目标、Core 组合及磁盘版本。
-
-## R168 后台套件查询与确认计划
-
-后台 `/hanamesh/library/versions` 通过安装器内部只读组合入口读取同一 Core 兼容声明，不登记 planId，不写入或替换用户确认计划。只有用户显式打开默认或历史目标确认时才登记新的执行计划；展示查询完成、失败或在 Core 读取期间取消，都不得使已打开的确认失效。Core 公开协议没有传入取消信号的接口；取消后丢弃展示结果，不虚构该接口，也不依赖撤销已登记计划。
-
-执行仍验证本人 planId，并重新核对来源、Core声明/精确tuple与物理baseline；确认只可使用一次。该分离不缓存执行权限，也不删除 `SUITE_PLAN_CHANGED` 保护。回归 `tests/suite-query-race.test.mjs` 将真实 service、installer 与公开Core适配器连接起来，挂起后台metadata/Core读取后分别确认默认/历史目标，并验证取消后原确认仍执行原精确版本。
+「套件安装包来源」可选择现有 registry 或 Core 当前提供的本机来源。预览、确认和执行都复读来源与套件声明。来源或精确目标变化后需要重新确认。
