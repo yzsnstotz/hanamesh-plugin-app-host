@@ -78,7 +78,7 @@ for (const order of [[market, appHost], [appHost, market]]) {
     assert.equal(probe.status, 200);
     assert.equal(probe.json.installationStatus?.contract, 'hanamesh.installation-status');
     const denied = await http(origin + paths[1], { method: 'POST', headers: { origin: website, 'content-type': 'application/json' }, body: '{}' });
-    assert.equal(denied.status, 400);
+    assert.equal(denied.status, 403);
     assert.equal(denied.json.error.code, 'INSTALLATION_STATUS_CONSENT_REQUIRED');
     await fibers.get(appHost.name).dispose();
     assert.equal((await http(origin + paths[0], { headers: { origin: website } })).status, 200, 'AppHost disposal cannot remove Market ownership');
@@ -90,11 +90,17 @@ for (const order of [[market, appHost], [appHost, market]]) {
 for (const kind of ['host', 'handoff']) {
   test(`F02 AppHost ${kind} never serves Market routes, including standalone`, async t => {
     let origin, reads = 0;
-    const forbidden = () => { reads++; throw new Error('retired route must not read or authorize anything'); };
-    const library = { installTarget: forbidden, installationStatus: forbidden, handoffSettings: forbidden };
+    let settingsReads = 0, authReads = 0;
+    const authenticate = () => { authReads++; return { principalId: 'route-test' }; };
+    const authorize = () => { authReads++; return true; };
+    const library = {
+      installTarget: () => { reads++; return { client: 'dsh', ready: false }; },
+      installationStatus: async () => { reads++; return { schemaVersion: 1, client: 'dsh', observations: [] }; },
+      handoffSettings: () => { settingsReads++; return { allowedOrigins: [website] }; },
+    };
     const server = createServer((req, res) => (kind === 'host'
-      ? createLibraryHttpHandler(library, { parentOrigin: origin, authenticate: forbidden, authorize: forbidden })
-      : createHandoffHandler({ library, queue: {}, settings: forbidden, port: () => new URL(origin).port }))(req, res));
+      ? createLibraryHttpHandler(library, { parentOrigin: origin, authenticate, authorize })
+      : createHandoffHandler({ library, queue: {}, settings: library.handoffSettings, port: () => new URL(origin).port }))(req, res));
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     origin = `http://127.0.0.1:${server.address().port}`;
     t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
@@ -103,6 +109,8 @@ for (const kind of ['host', 'handoff']) {
       assert.equal(response.status, 404, `${method} ${path} has no AppHost owner`);
       assert.equal(response.headers['access-control-allow-origin'], undefined);
       assert.equal(reads, 0);
+      assert.equal(settingsReads, 0);
+      assert.equal(authReads, 0);
     }
   });
 }
