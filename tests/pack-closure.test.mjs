@@ -1,14 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp, mkdir, writeFile, rm, symlink} from 'node:fs/promises';
-import {tmpdir} from 'node:os';
+import {mkdir, writeFile, rm, symlink} from 'node:fs/promises';
+import {scratch} from './helpers.mjs';
 import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {relativeReferences, checkTarball, scanPackage} from '../scripts/verify-pack-closure.mjs';
 
 async function fixture(t, files) {
-  const root = await mkdtemp(join(tmpdir(), 'pack-closure-test-'));
+  const root = await scratch('pack-closure-test-');
   t.after(() => rm(root, {recursive: true, force: true}));
   for (const [name, content] of Object.entries({'package/package.json': '{"name":"@fixture/closure","version":"1.0.0","type":"module"}', ...files})) {
     await mkdir(join(root, name, '..'), {recursive: true});

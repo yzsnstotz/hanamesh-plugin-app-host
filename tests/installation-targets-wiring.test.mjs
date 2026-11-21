@@ -12,7 +12,7 @@ const expected=[{dsh:'0.2.2-rc.1',pnpm:'11.28.5',os:'darwin',cpu:'arm64'},{dsh:'
 test('release targets are explicit in both publication paths and the exact archive verifier',()=>{
  assert.deepEqual(targets(),expected);
  const pkg=JSON.parse(readFileSync(join(root,'package.json'),'utf8'));
- for(const [script,verb] of [['release:check','check'],['release:publish','publish']])assert.equal(pkg.scripts[script],`hanamesh-release ${verb} --lockfile pnpm-lock.yaml --installation-targets ${matrixFile}`);
+ for(const [script,verb] of [['release:check','check'],['release:publish','publish']])assert.equal(pkg.scripts[script],`npm run verify:closure && hanamesh-release ${verb} --lockfile pnpm-lock.yaml --installation-targets ${matrixFile}`);
  const verifier=readFileSync(join(root,'scripts/verify-package.mjs'),'utf8');
  assert.match(verifier,/installationTargets:/);assert.match(verifier,/release\/installation-targets\.json/);
  assert.doesNotMatch(verifier,/process\.platform|process\.arch|catch\s*\(|skip-platform/);
