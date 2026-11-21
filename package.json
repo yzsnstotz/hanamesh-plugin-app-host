@@ -168,7 +168,10 @@
     "@deepseek-ai/dsh-util-file-drag": "0.2.2-rc.1",
     "@shikijs/langs": "4.4.3",
     "@types/node": "24.13.4",
-    "@types/js-yaml": "4.0.9"
+    "@types/js-yaml": "4.0.9",
+    "@hanamesh/market": "^0.1.1",
+    "@deepseek-ai/dsh-plugin-manager": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-plugin-detail": "0.2.2-rc.1"
   },
   "packageManager": "pnpm@10.33.0",
   "bundleDependencies": [
