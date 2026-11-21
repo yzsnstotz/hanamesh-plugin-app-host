@@ -1,9 +1,3 @@
-D3（编排11-09授权）：仅公开install-target的有效匿名GET/GET预检对名单外HTTP(S) Origin给精确CORS，披露固定ORIGIN_DENIED与本机拒绝监听存在，不披露客户端能力、安装或允许名单。预检204只使浏览器继续读取拒绝；PNA true响应仅在对应请求头为true时出现。其他接口/Host/凭据/iframe边界不变。详见INSTALL_TARGET.md。
-
-0.6.23：安装状态只在原显式同意之后自动发现当前用户的官方 CLI；不读认证/聊天/配置文件、不修改用户配置。登录 shell 仅输出白名单PATH/管理器/XDG路径的封装JSON，未复制完整环境或模型/API token；正常shell stderr不当失败，插件清单仍要求无stderr。监督器保留管理器PATH及原XDG值/缺省，仅临时工作目录和TMP隔离；CLI 仍限版本与插件/市场只读清单，版本下限和既有 JSON 校验双门。Windows npm shim 解析至具名官方 JS，绝不经 cmd 执行。详见 INSTALLATION_STATUS.md。
-
-0.6.7 installation-status is a separately consented read capability: exact existing loopback Host/approved Origin, credentials omitted, strict POST body before any reader. Core is authoritative; CLI executable/profile/target/budgets are static trusted settings, never browser input. Official list output is whitelisted and no raw paths, unrelated inventory or errors leave the host. A live detached IPC anchor owns cancellation and parent-disconnect group cleanup; no cached installed answer. See INSTALLATION_STATUS.md for exact protocol and scope limits.
-
 D-230: failed activation releases only resources acquired by that AppHost activation, including partially registered routes and optional-service listeners. Once-only releases also serve normal Cordis unload. All failed-startup releases are attempted in reverse order; APPHOST_CLEANUP_FAILED names the internal resource without raw errors or credentials, and logger failures cannot replace the original activation error. No authentication, origin, lease, application or browser policy is relaxed.
 
 D-221: service availability, package binding, readiness and authorized traffic are not proof of application presentation/business success. No verified original fact source is connected, so the adapter emits no automatic Usage record or timestamp and logs only a fixed USAGE_FACT_UNAVAILABLE capability diagnostic. Independent Router counts, including legacy reported bits, do not prove business success or Usage confirmation. No application event/SDK/credential or trust bridge is introduced.
@@ -104,6 +98,3 @@ On Windows the optional Coding OAuth Gateway **file** source remains unreachable
 
 
 An explicitly configured existing standalone Node on Windows x64 may be used by the controlled CLI supervisor. It is executed only for the fixed Node probe, with an empty PATH, bounded output and a two-second deadline; the response must match the selected OS/architecture, Node 24 version floor and absence of Electron. That external selection does not enable managed downloads/preparation or owned application launch.
-
-
-Installation reader stage diagnostics (0.6.29) are host-only numeric measurements and fixed identifiers, projected before logging. They retain stderr byte counts and `STDERR_PRESENT`/`STDERR_EMPTY`, never stderr text, command paths, argv, environment values or arbitrary exception details. CLI failure still fails closed with its original public reason code. See INSTALLATION_STATUS.md for timing/exit semantics.

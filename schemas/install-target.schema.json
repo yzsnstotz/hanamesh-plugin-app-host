@@ -11,14 +11,13 @@
     ],
     "package": "@hanamesh/dsh-app-host",
     "since": "0.2.0-rc.8",
-    "fragmentPrefix": "#hanamesh-install?",
     "routes": {
       "resolve": "GET /hanamesh/library/target",
       "install": "POST /hanamesh/library/install"
     },
     "loopback": {
       "since": "0.2.0-rc.9",
-      "scope": "library HTTP routes and install-target navigation",
+      "scope": "authenticated application installation HTTP routes and client confirmation",
       "aliases": [
         "127.0.0.1",
         "localhost"

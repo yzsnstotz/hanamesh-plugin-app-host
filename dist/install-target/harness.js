@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 export const settle=async()=>{for(let i=0;i<40;i++)await Promise.resolve();};
 
-/** Timers only advance when asked, so market polling never runs on its own during a suite. */
+/** Timers only advance when asked, so operation polling never runs on its own during a suite. */
 function frozenClock(){let now=1_700_000_000_000,sequence=0;const timers=new Map();
   return{Date:{now:()=>now},setTimeout(fn,ms){const id=++sequence;timers.set(id,{fn,at:now+ms});return id;},clearTimeout(id){timers.delete(id);},
     /** rc.10: advance the frozen clock and run the timers now due (e.g. one market event poll). */
@@ -24,11 +24,11 @@ export async function loadClient({fetch:transport}){
   const listeners=new Map(),document={visibilityState:'visible',createElement:()=>({textContent:'',remove(){}}),head:{append(){}},addEventListener(){},removeEventListener(){}};
   const window={__ModuleLoader__:{load:module=>{loaded=module;}},self:{},top:{},parent:{postMessage(){}}};
   const clock=frozenClock();
-  const scope={window,fetch,location:{hash:''},crypto:globalThis.crypto,console,URLSearchParams,AbortController,Date:clock.Date,setTimeout:clock.setTimeout,clearTimeout:clock.clearTimeout,
+  const scope={window,fetch,location:{},crypto:globalThis.crypto,console,URLSearchParams,AbortController,Date:clock.Date,setTimeout:clock.setTimeout,clearTimeout:clock.clearTimeout,
     addEventListener(name,fn){listeners.set(name,fn);},removeEventListener(name,fn){if(listeners.get(name)===fn)listeners.delete(name);}};
   new Function('window','document','globalThis','setTimeout','clearTimeout','Date',source)(window,document,scope,scope.setTimeout,scope.clearTimeout,clock.Date);
   const module=loaded.factory(id=>{if(id!=='react')throw new Error('Unexpected client require: '+id);return React;});
-  function render(){cursor=0;tree=module.LibraryOverlay({embedded:true});for(const effect of pendingEffects.splice(0))effect();return tree;}
+  function render(){cursor=0;tree=module.ApplicationContent();for(const effect of pendingEffects.splice(0))effect();return tree;}
   function find(node,predicate){if(!node)return;if(Array.isArray(node)){for(const child of node){const match=find(child,predicate);if(match)return match;}return;}if(typeof node!=='object')return;if(predicate(node))return node;return find(node.children,predicate);}
   module.apply({effect:run=>{disposers.push(run());},slots:{inject:(_n,run)=>run(),register:()=>()=>{}},reflect:{get:()=>undefined},provide:()=>()=>{}});
   render();await idle();
@@ -40,6 +40,5 @@ export async function loadClient({fetch:transport}){
     async click(label){const button=find(tree,node=>node.type==='button'&&node.children.includes(label));if(!button)throw new Error('No visible button '+label);button.props.onClick();await idle();},
     idle,
     async tick(ms){clock.advance(ms);await idle();},
-    async navigate(hash){scope.location.hash=hash;listeners.get('hashchange')?.();await idle();},
     unmount(){dead=true;for(const dispose of disposers)dispose?.();for(const hook of hooks)hook?.cleanup?.();}};
 }

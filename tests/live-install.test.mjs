@@ -5,7 +5,6 @@ import assert from 'node:assert/strict';
 import { mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { createLibraryInstaller } from '../src/library/install.js';
-import { detectClient, containingApp } from '../src/library/client-identity.js';
 import { temporary } from './helpers.mjs';
 
 async function profile(t) {
@@ -37,17 +36,6 @@ test('without a public CLI even an exact-save manager refuses with the missing m
  const dir=await profile(t),installer=createLibraryInstaller({profileDir:dir,profileName:'desktop',dataRoot:dir,fetchImpl:registry('1.0.0')});
  assert.equal(installer.ready,false);assert.equal(installer.live,false);
  await assert.rejects(installer.install(item),error=>error.code==='DSH_EXACT_INSTALL_UNAVAILABLE'&&/Git/.test(error.details.need[0].need));
-});
-
-test('client identity comes from the containing app bundle id only', async () => {
-  assert.equal(containingApp(resolve('/Applications/HanaMesh.app/Contents/Resources/app/runtime')), resolve('/Applications/HanaMesh.app'));
-  assert.equal(containingApp(resolve('/opt/dsh/runtime')), undefined);
-  assert.deepEqual(await detectClient({}), { client: 'dsh', evidence: 'not-desktop' });
-  const desktop = { runtimeDir: resolve('/Applications/HanaMesh.app/Contents/Resources/app/runtime') };
-  assert.deepEqual(await detectClient({ desktop, readBundleId: async () => 'com.hanamesh.desktop' }), { client: 'hanamesh', evidence: 'bundle-id:com.hanamesh.desktop' });
-  assert.equal((await detectClient({ desktop, readBundleId: async () => 'com.deepseek.harness' })).client, 'dsh');
-  const unreadable = await detectClient({ desktop, readBundleId: async () => { throw Object.assign(new Error('x'), { code: 'ENOENT' }); } });
-  assert.deepEqual(unreadable, { client: 'dsh', evidence: 'bundle-id-unreadable:ENOENT' });
 });
 
 test('live result from an admitted installer updates the service loaded baseline (public service fixture)',async t=>{

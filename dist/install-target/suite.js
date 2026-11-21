@@ -1,8 +1,7 @@
 /**
  * Install-target contract conformance suite (hanamesh.install-target v1), shipped with the provider package.
  * Provider cases drive this package's real HTTP routes, library service and client module against the bundled
- * test catalog; consumer cases check what a caller hands to the market; the chain feeds consumer output into the
- * real provider. Fixture data is a test catalog and is labelled as such in the market UI.
+ * test catalog. The client identifies fixture data in the installation confirmation.
  */
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join, dirname, resolve } from 'node:path';
@@ -20,10 +19,10 @@ const SCHEMA_URL=new URL('../../schemas/install-target.schema.json',import.meta.
 const FIXTURES=new URL('./fixtures/',import.meta.url);
 const ROUTE='/hanamesh/library/target';
 
-/** Schema, provider declaration and both fixture sets as shipped. */
+/** Schema, provider declaration and provider fixtures as shipped. */
 export async function loadContract(){
-  const [schema,pkg,provider,consumer,recovery]=await Promise.all([json(SCHEMA_URL),json(new URL('../../package.json',import.meta.url)),json(new URL('provider-cases.json',FIXTURES)),json(new URL('consumer-cases.json',FIXTURES)),json(new URL('install-failure-cases.json',FIXTURES))]);
-  return{schema,contract:schema['x-hanamesh-contract'],declaration:pkg.hanamesh?.installTarget,packageVersion:pkg.version,provider,consumer,recovery,catalogPath:fileURLToPath(new URL(provider.catalog,FIXTURES))};
+  const [schema,pkg,provider,recovery]=await Promise.all([json(SCHEMA_URL),json(new URL('../../package.json',import.meta.url)),json(new URL('provider-cases.json',FIXTURES)),json(new URL('install-failure-cases.json',FIXTURES))]);
+  return{schema,contract:schema['x-hanamesh-contract'],declaration:pkg.hanamesh?.installTarget,packageVersion:pkg.version,provider,recovery,catalogPath:fileURLToPath(new URL(provider.catalog,FIXTURES))};
 }
 
 /** Validates the JSON Schema keywords the contract uses; returns readable violations. */
@@ -231,14 +230,9 @@ export async function runProviderSuite(){
     });
     client=await loadClient({fetch:host.browserFetch});
     for(const item of cases.targets)await record(item.id+'/client',item.semantic,item.note,async()=>{
-      let receipt;try{receipt=await client.module.openInstallTarget(item.input);}catch(error){if(!item.expect.error)throw error;expectEqual(String(error.message),item.expect.error,'client refusal');await client.idle();if(!client.text().includes(item.expect.error))throw new Error('refusal is not visible in the market');return;}
+      let receipt;try{receipt=await client.module.openInstallTarget(item.input);}catch(error){if(!item.expect.error)throw error;expectEqual(String(error.message),item.expect.error,'client refusal');await client.idle();if(!client.text().includes(item.expect.error))throw new Error('refusal is not visible in the client');return;}
       if(item.expect.error)throw new Error('client accepted '+JSON.stringify(receipt));
       const errors=validate(schema,receipt,'#/$defs/receipt');if(errors.length)throw new Error(errors.join('; '));expectEqual(receipt,item.expect,'receipt');
-    });
-    for(const item of cases.fragments)await record(item.id+'/fragment',item.semantic,item.note,async()=>{
-      await client.navigate(item.fragment);const text=client.text();
-      if(item.expect.status==='confirmation-required'){if(!client.button('确认安装')||!client.button('取消'))throw new Error('no market confirmation');if(!text.includes('测试目录（fixture）'))throw new Error('fixture catalog is not labelled');return;}
-      if(client.button('确认安装'))throw new Error('refused fragment still offers confirmation');if(!text.includes(item.expect.error))throw new Error('refusal '+item.expect.error+' is not visible');
     });
     await record('PC01','cancel','cancelling a confirmation sends no install',async()=>{
       await client.module.openInstallTarget({packageName:'@hanamesh-fixture/install-target-plugin'});await client.idle();await client.click('取消');
@@ -252,10 +246,10 @@ export async function runProviderSuite(){
       expectEqual(host.installs,['@hanamesh-fixture/install-target-app'],'installer calls');
     });
     client.unmount();client=await loadClient({fetch:host.browserFetchFor(host.origins[1])});
-    await record('PC03','confirm','localhost fragment reaches confirmation, cancellation does not install, explicit confirmation installs once',async()=>{
+    await record('PC03','confirm','localhost client request reaches confirmation, cancellation does not install, explicit confirmation installs once',async()=>{
       const postsBefore=host.posts.length,installsBefore=host.installs.length;
-      await client.navigate('#hanamesh-install?packageName=%40hanamesh-fixture%2Finstall-target-plugin&contractVersion=1');
-      if(!client.button('确认安装'))throw new Error('localhost fragment did not reach confirmation');
+      await client.module.openInstallTarget({packageName:'@hanamesh-fixture/install-target-plugin',contractVersion:'1'});await client.idle();
+      if(!client.button('确认安装'))throw new Error('localhost client request did not reach confirmation');
       await client.click('取消');expectEqual([host.posts.length,host.installs.length],[postsBefore,installsBefore],'localhost cancellation');
       await client.module.openInstallTarget({packageName:'@hanamesh-fixture/install-target-plugin',contractVersion:'1'});await client.idle();
       await client.acknowledgeInstall();const confirm=client.button('确认安装');confirm.props.onClick();confirm.props.onClick();await client.idle();
@@ -265,85 +259,4 @@ export async function runProviderSuite(){
   }finally{client?.unmount();await host.close();}
   await runRecoveryProvider(contract,record);
   return summary({contract:contract.contract.name,contractVersion:contract.contract.version,package:'@hanamesh/dsh-app-host@'+contract.packageVersion,loopback:{parentOrigin:host.origin,origins:host.origins,sameInstanceSamePort:true}});
-}
-
-/**
- * Consumer conformance. `consumer` is `{name, contractVersion?, navigate(workspaceUrl,target), handshake?(declaration)}`:
- * navigate returns `{ok:true,url}` (normal navigation of the same workspace) or `{ok:false,code}`; a consumer that declares
- * a contractVersion must also implement handshake → `{ok:boolean,code?}`. Consumers without a declaration are v1 callers.
- */
-export async function runConsumerSuite(consumer){
-  const contract=await loadContract();const {schema,consumer:cases}=contract;const {record,summary}=recorder('consumer');
-  const declared=consumer.contractVersion;
-  await record('CD01','declaration','consumer declaration is absent (v1) or a supported version with a handshake',async()=>{
-    if(declared===undefined)return'no declaration: unversioned v1 caller';
-    if(!contract.contract.supported.includes(declared))throw new Error('declares unsupported version '+JSON.stringify(declared));
-    if(typeof consumer.handshake!=='function')throw new Error('a versioned consumer must implement handshake');
-  });
-  for(const workspaceUrl of cases.workspaces??[cases.workspace])for(const item of cases.targets)await record(item.id+(new URL(workspaceUrl).hostname==='localhost'?'/localhost':''),item.expect==='navigate'?'public':'invalid',item.note,async()=>{
-    const result=await consumer.navigate(workspaceUrl,item.target);
-    if(item.expect==='refuse'){if(result?.ok!==false||result.url)throw new Error('consumer forwarded an invalid target: '+JSON.stringify(result));return;}
-    if(result?.ok!==true){if(item.optional)return'skipped';throw new Error('consumer refused a valid target: '+JSON.stringify(result));}
-    const workspace=new URL(workspaceUrl),url=new URL(result.url);
-    expectEqual([url.origin,url.pathname,url.search],[workspace.origin,workspace.pathname,workspace.search],'workspace origin/path/authentication');
-    const prefix=contract.contract.fragmentPrefix;if(!url.hash.startsWith(prefix))throw new Error('fragment does not start with '+prefix);
-    const params=new URLSearchParams(url.hash.slice(prefix.length)),keys=[...params.keys()];
-    if(new Set(keys).size!==keys.length)throw new Error('duplicate fragment fields');
-    const fields=Object.fromEntries(params);if(fields.installTarget!==undefined)fields.installTarget=JSON.parse(fields.installTarget);
-    const errors=validate(schema,fields);if(errors.length)throw new Error(errors.join('; '));
-    expectEqual(fields,{...item.target,...(declared===undefined?{}:{contractVersion:declared})},'fragment fields');
-  });
-  for(const item of cases.handshake)await record(item.id,'handshake',item.note,async()=>{
-    if(declared===undefined)return'skipped';
-    const result=await consumer.handshake(item.provider);
-    if(item.expect==='accept'){if(result?.ok!==true)throw new Error('refused a compatible provider: '+JSON.stringify(result));return;}
-    if(result?.ok!==false)throw new Error('accepted an incompatible provider declaration');
-    expectEqual(result.code,'CONTRACT_VERSION_UNSUPPORTED','refusal code');
-  });
-  for(const item of contract.recovery.presentation)await record(item.id,'recovery-presentation',item.note,async()=>{
-    if(typeof consumer.presentInstallFailure!=='function')return'skipped';
-    const shown=await consumer.presentInstallFailure({type:'library.install-failed',operationId:'fixture-operation',code:'FIXTURE_FAILURE',...(item.recovery?{recovery:item.recovery}:{})});
-    expectEqual([shown?.installed,shown?.restored],[item.expect.installed,item.expect.restored],'presentation');
-    if(item.expect.version)expectEqual(shown.version,item.expect.version,'restored version');
-    if(item.expect.residue)expectEqual(shown.residue,item.expect.residue,'residue shown');
-  });
-  return summary({contract:contract.contract.name,contractVersion:contract.contract.version,consumer:consumer.name??'unnamed',declared:declared??null});
-}
-
-/** Chain: consumer output → this package's real fragment entry, catalog resolution and confirmation; nothing installs. */
-export async function runChainSuite(consumer){
-  const contract=await loadContract();const {consumer:cases}=contract;const {record,summary}=recorder('chain');
-  const host=await startProvider(contract);let client;
-  try{
-    for(const workspaceOrigin of host.origins){
-    client=await loadClient({fetch:host.browserFetchFor(workspaceOrigin)});
-    const workspaceUrl=workspaceOrigin+'/workspace/fixture-session?token=fixture-token#previous';
-    const aliasSuffix='/'+new URL(workspaceOrigin).hostname;
-    if(consumer.contractVersion!==undefined)await record('CX00'+aliasSuffix,'handshake','consumer accepts this provider package declaration',async()=>{const result=await consumer.handshake(contract.declaration);if(result?.ok!==true)throw new Error('consumer refused the shipped provider: '+JSON.stringify(result));});
-    for(const item of cases.targets.filter(c=>c.expect==='navigate'))await record('CX-'+item.id+aliasSuffix,'public',item.note+' → market confirmation',async()=>{
-      const result=await consumer.navigate(workspaceUrl,item.target);if(result?.ok!==true){if(item.optional)return'skipped';throw new Error('consumer refused');}
-      await client.navigate(new URL(result.url).hash);
-      if(!client.button('确认安装'))throw new Error('market did not reach confirmation: '+client.text().slice(0,400));
-      const fields=Object.fromEntries(new URLSearchParams(new URL(result.url).hash.slice(contract.contract.fragmentPrefix.length)));
-      if(fields.installTarget!==undefined)fields.installTarget=JSON.parse(fields.installTarget);
-      const resolved=await client.module.openInstallTarget(fields);
-      expectEqual(resolved.itemId,item.resolves,'resolved catalog item');expectEqual([host.posts.length,host.installs.length],[0,0],'installs');
-      await client.click('取消');
-    });
-    await record('CX-MISMATCH'+(new URL(workspaceOrigin).hostname==='localhost'?'/localhost':''),'version-mismatch','the same navigation declaring an unsupported version is refused by the market',async()=>{
-      const item=cases.targets.find(c=>c.expect==='navigate'&&!c.optional);const result=await consumer.navigate(workspaceUrl,item.target);
-      const url=new URL(result.url),params=new URLSearchParams(url.hash.slice(contract.contract.fragmentPrefix.length));params.set('contractVersion','2');
-      await client.navigate(contract.contract.fragmentPrefix+params);
-      if(client.button('确认安装')||!client.text().includes('CONTRACT_VERSION_UNSUPPORTED'))throw new Error('unsupported declaration was not refused visibly');
-      expectEqual([host.posts.length,host.installs.length],[0,0],'installs');
-    });
-    client.unmount();
-    }
-    for(const caseId of ['RB04','RB10','RB11'])await record('CX-'+caseId,'recovery-presentation','real provider install-failed event for '+caseId+' → consumer presentation',async()=>{
-      if(typeof consumer.presentInstallFailure!=='function')return'skipped';
-      const item=contract.recovery.cases.find(row=>row.id===caseId),event=await runRecoveryCase(contract,item,{check:false});const shown=await consumer.presentInstallFailure(event);
-      expectEqual([shown?.installed,shown?.restored],[false,item.expect.status!=='failed'],'presentation of the real provider event');
-    });
-  }finally{client?.unmount();await host.close();}
-  return summary({contract:contract.contract.name,contractVersion:contract.contract.version,consumer:consumer.name??'unnamed',declared:consumer.contractVersion??null});
 }

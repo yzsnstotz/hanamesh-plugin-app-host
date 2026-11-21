@@ -6,8 +6,6 @@ import { scanInstalled, scanInstalledPlugins, snapshotProfileDependencies, readP
 import {packageInstallTarget,installTargetName,sameInstallTarget,catalogPackageTargets,pinnedGithubSpec} from './github-target.js';
 import {SUITE_BUNDLE,SUITE_TARGET,SUITE_PACKAGES,readSuiteStatus,CORE_SUITE_DECLARATION_MISSING,readSuiteSourceState} from './suite.js';
 import { PROTECTED_PACKAGES } from './install.js';
-import { handoffSettings } from './handoff.js';
-import { INSTALLATION_STATUS_CAPABILITY } from '../installation-status.js';
 import {installationDiagnostic} from './diagnostics.js';
 
 /** Install-target contract version this market implements (schemas/install-target.schema.json). */
@@ -20,10 +18,9 @@ const present=row=>row&&['registered','installed','installed-not-loaded'].includ
 const npmUpgradeAvailable=(target,row)=>Boolean(target?.source==='npm'&&row?.version&&row.state!=='uninstalled-not-unloaded'&&upgradeAvailable(target.version,row.version));
 
 /**
- * `client`: which client this host is ('dsh' | 'hanamesh', see client-identity.js). `unavailable`: when there is no
- * installer, the facts that are missing, in words a person can act on (`[{need, how}]`); probes and 503s carry them.
+ * `unavailable` supplies actionable installation environment guidance on 503 responses.
  */
-export function createLibraryService({domain,host,config={},dataRoot,ledgerReader,installer,client='dsh',unavailable=()=>[],installationStatus,versionCatalog,suiteSourceService=()=>undefined,logger}){
+export function createLibraryService({domain,host,config={},dataRoot,ledgerReader,installer,unavailable=()=>[],versionCatalog,suiteSourceService=()=>undefined,logger}){
   const warn=(message,...args)=>{if(typeof logger?.warn==='function')logger.warn(message,...args);else console.warn(message,...args);};
   const ready=()=>typeof installer?.install==='function'&&installer.ready!==false;
   let suiteStatus={status:'unknown',version:null,components:[]};
@@ -34,8 +31,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   requireCondition(Number.isSafeInteger(versionLookupConcurrency)&&versionLookupConcurrency>=1&&versionLookupConcurrency<=16,'INVALID_INPUT','library.versionLookupConcurrency must be an integer from 1 to 16.');
   requireCondition(Number.isSafeInteger(versionLookupCacheMs)&&versionLookupCacheMs>0&&versionLookupCacheMs<=2147483647,'INVALID_INPUT','library.versionLookupCacheMs must be a positive timer budget.');
   requireCondition(Number.isSafeInteger(eventRetention)&&eventRetention>0,'INVALID_INPUT','library.eventRetention must be a positive safe integer.');
-  const observers=new Set();
-  const emit=event=>{const value={sequence:++sequence,at:Date.now(),...event};events.push(value);if(events.length>eventRetention)events.shift();for(const observer of observers){try{observer(value);}catch(error){warn('hanamesh-app-host library: event observer failed (%s): %s',value.type,error?.message??error);}}return value;};
+  const emit=event=>{const value={sequence:++sequence,at:Date.now(),...event};events.push(value);if(events.length>eventRetention)events.shift();return value;};
   // Real sources hold ~10k entries (2026-09-20: market.hanamesh.com 12,121). `/hanamesh/library` keeps its rc.16 default
   // (`category=hanamesh-app`, backward compatible); the rc.28 market page asks for `category=''` (everything) explicitly.
   const catalog=({q='',category='hanamesh-app',cursor}={})=>loadCatalog({fixture:config.fixture,sources:state.sources,fetchImpl:config.fetchImpl,query:q,category,cursor});
@@ -140,7 +136,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   }
   const runningApp=appId=>host.instanceList().some(instance=>instance.appId===appId&&!['stopped','failed','interrupted'].includes(instance.status));
   return{
-    async init(){state=await domain.global.get();if(state.revision===0&&state.sources.length===0&&Array.isArray(config.sources)&&config.sources.length){const sources=config.sources.map((source,index)=>({manifestUrl:validateManifestUrl(source.manifestUrl).href,enabled:source.enabled===true||(source.enabled!==false&&index===0)}));requireCondition(sources.filter(source=>source.enabled).length===1,'CATALOG_SOURCE_REQUIRED','Exactly one catalog source must be enabled.');await persist(current=>({...current,sources}));}
+    async init(){const stored=await domain.global.get();const {schema,revision,sources,suiteSource}=stored;state={schema,revision,sources,...(suiteSource?{suiteSource}:{})};if(state.revision===0&&state.sources.length===0&&Array.isArray(config.sources)&&config.sources.length){const sources=config.sources.map((source,index)=>({manifestUrl:validateManifestUrl(source.manifestUrl).href,enabled:source.enabled===true||(source.enabled!==false&&index===0)}));requireCondition(sources.filter(source=>source.enabled).length===1,'CATALOG_SOURCE_REQUIRED','Exactly one catalog source must be enabled.');await persist(current=>({...current,sources}));}
       // rc.28: the dependency set at boot is the "loaded" baseline for plugin restart states; unreadable → everything counts as
       // loaded, logged and reported as `restartBaseline` on list() so the market can say restart states are unknown.
       if(config.profileDir){try{bootDependencies=await snapshotProfileDependencies(config.profileDir);}catch(error){bootDependencies=undefined;bootSnapshotError=error?.code??'PROFILE_READ_FAILED';warn('hanamesh-app-host library: boot profile snapshot unreadable (%s); restart states cannot be told',bootSnapshotError);}}
@@ -184,22 +180,12 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       try{await persist(current=>({...current,suiteSource:selection}));}catch(error){throw new AppHostError('SUITE_SOURCE_SAVE_FAILED','套件安装包来源保存失败；原选择保持。',{},500);}
       return this.suiteSourceSettings();
     },
-    /** Effective website handoff settings: saved (library settings page) → plugin config `library.handoff` → proposed defaults. */
-    handoffSettings(){return handoffSettings(state.handoff??config.handoff??{});},
-    async replaceHandoffSettings(input){const next=handoffSettings(input);await persist(current=>({...current,handoff:next}));return next;},
-    observe(listener){observers.add(listener);return()=>observers.delete(listener);},
     async replaceSources(input){requireCondition(Array.isArray(input?.sources)&&input.sources.length<=16,'INVALID_SOURCES','sources must be an array of at most 16 entries.');const sources=input.sources.map(source=>({manifestUrl:validateManifestUrl(source.manifestUrl).href,enabled:source.enabled===true}));requireCondition(sources.length===0||sources.filter(source=>source.enabled).length===1,'CATALOG_SOURCE_REQUIRED','Exactly one catalog source must be enabled.');await persist(current=>({...current,sources}));return this.sources();},
     /** `{itemId, packageName?}`: applications and plugins take the same path (`dsh plugin add --save-exact`); also the upgrade path. */
     resolveTarget,
     resolveVersionTarget:input=>{requireCondition(typeof input?.version==='string','INVALID_INPUT','Select an exact version.');return resolveTarget(input,true);},
     suiteStatus:()=>readSuiteStatus(config.profileDir),
     async installVersion(input){requireInstaller('Version installation is unavailable.');requireCondition(typeof input?.version==='string'&&input.itemId!==SUITE_TARGET,'INVALID_INPUT','Select an exact catalog plugin version.');const {item}=await resolveTarget(input,true);if(present(item.installed)&&!item.upgradeAvailable)return{status:'already-installed',itemId:item.id,packageName:item.package.name};return installItem(item);},
-    /** Public discovery is metadata only: no profile, authentication or installed rows. */
-    installationStatus,
-    installTarget(){const need=ready()?[]:unavailable();return{client,ready:ready(),...(typeof installationStatus==='function'?{installationStatus:INSTALLATION_STATUS_CAPABILITY}:{}),...((suiteStatus.status!=='unknown'||suiteStatus.restartRequired)&&!installer?.suiteUpgradeUnavailable?{suite:structuredClone(suiteStatus)}:{}),installTarget:{contract:'hanamesh.install-target',contractVersion:INSTALL_TARGET_CONTRACT_VERSION,supported:[INSTALL_TARGET_CONTRACT_VERSION],fragmentPrefix:'#hanamesh-install?'},
-      ...(!ready()?{error:{code:'INSTALL_TARGET_UNAVAILABLE',message:need.length?'应用库还不能安装：'+need.map(row=>row.need).join('；'):'Controlled installer is unavailable.',need}}:{})};},
-    /** Plugin changes load without a restart (the host's public plugin manager is present). */
-    get live(){return Boolean(installer?.live);},
     async upgradeSuite(input){requireInstaller('Suite upgrade is unavailable.');
       requireCondition(input&&Object.keys(input).length===1&&typeof input.planId==='string','INVALID_INPUT','Only the current planId is accepted.');
       return await operation('install',async()=>{try{const result=await installer.upgradeSuite(input);suiteStatus={...await suiteFacts(),restartRequired:true};return result;}catch(error){if(error.details?.stage!=='suite-upgrade')throw error;const actual=await readSuiteStatus(config.profileDir);suiteStatus={...await suiteFacts(),restartRequired:true,upgradeError:error.code??'SUITE_UPGRADE_FAILED'};error.details={...error.details,stage:'suite-upgrade',actual,command:error.details.command};emit({type:'library.install-failed',packageName:SUITE_BUNDLE,code:error.code??'SUITE_UPGRADE_FAILED',details:{stage:'suite-upgrade',actual,command:error.details.command}});throw error;}});
@@ -225,6 +211,6 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
     installedPlugins,
     async installedSnapshot(){const plugins=await installedPlugins(),apps=await installed();return{plugins,apps,restartRequired:[...plugins,...apps].some(row=>RESTART_STATES.has(row.state))};},
     events(after=0){requireCondition(Number.isSafeInteger(after)&&after>=0,'INVALID_CURSOR','Invalid library event cursor.');return{events:events.filter(event=>event.sequence>after),sequence,operations:[...running.keys()],resetRequired:after>sequence||(events.length>0&&after<events[0].sequence-1)};},
-    async close(){installationStatus?.close?.();await Promise.allSettled([...running.values()]);await settingsWriter.drained();await domain.close();},emit,
+    async close(){await Promise.allSettled([...running.values()]);await settingsWriter.drained();await domain.close();},emit,
   };
 }

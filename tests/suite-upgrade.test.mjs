@@ -36,7 +36,7 @@ test('resolved target versions with stale saved specifications cannot report sui
 
 test('failed partial suite upgrade refreshes discovery and publishes actual versions with repair guidance',async t=>{
   const root=await profile(t),{createLibraryService}=await import('../src/library/service.js');let state={schema:1,revision:0,sources:[]};
-  const service=await createLibraryService({domain:{global:{get:async()=>state,set:async value=>{state=value;}},close:async()=>{}},host:{instanceList:()=>[]},dataRoot:root,config:{profileDir:root,fixture:join(import.meta.dirname,'fixtures/catalog/provider-page.json')},installer:{ready:true,install:async()=>{},upgradeSuite:async()=>{
+  const service=await createLibraryService({domain:{global:{get:async()=>state,set:async value=>{state=value;}},close:async()=>{}},host:{instanceList:()=>[],list:()=>({apps:[]})},dataRoot:root,config:{profileDir:root,fixture:join(import.meta.dirname,'fixtures/catalog/provider-page.json')},installer:{ready:true,install:async()=>{},upgradeSuite:async()=>{
     await writeFile(join(root,'node_modules/@hanamesh/core/package.json'),JSON.stringify({name:'@hanamesh/core',version:targets['@hanamesh/core']}));
     const error=new Error('partial CLI failure');error.code='DSH_PLUGIN_FAILED';error.details={stage:'suite-upgrade',actual:await readSuiteStatus(root),command:SUITE_INSTALL_COMMAND};throw error;
   }}}).init();t.after(()=>service.close());
@@ -44,7 +44,7 @@ test('failed partial suite upgrade refreshes discovery and publishes actual vers
   for(let i=0;i<100&&!service.events().events.some(e=>e.operationId===op.operationId&&e.type==='library.install-failed');i++)await new Promise(r=>setTimeout(r,5));
   const event=service.events().events.find(e=>e.operationId===op.operationId&&e.type==='library.install-failed');
   assert.equal(event.details.actual.components[0].version,targets['@hanamesh/core']);assert.equal(event.details.command,SUITE_INSTALL_COMMAND);
-  const discovery=service.installTarget().suite;assert.equal(discovery.version,'0.1.0');assert.equal(discovery.upgradeError,'DSH_PLUGIN_FAILED');assert.equal(discovery.restartRequired,true);
+  const discovery=(await service.list({category:'plugin'})).items.find(row=>row.kind==='suite').suite;assert.equal(discovery.version,'0.1.0');assert.equal(discovery.upgradeError,'DSH_PLUGIN_FAILED');assert.equal(discovery.restartRequired,true);
 });
 
 test('suite failure UI shows partial versions and the repair command without claiming not installed',async t=>{

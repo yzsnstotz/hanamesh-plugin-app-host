@@ -79,7 +79,7 @@ for(const version of ['0.2.0-rc.2',undefined])test(`manager ${version??'unknown'
   await assert.rejects(installer.install(item),error=>error.code==='DSH_EXACT_INSTALL_UNAVAILABLE'&&error.details.need.some(row=>/精确版本/.test(row.need)));
   assert.equal(calls,0);assert.equal(await readFile(join(h.profileDir,'package.json'),'utf8'),before);
   const library=createLibraryService({domain:{global:{get:()=>({schema:1,revision:0,sources:[]}),set:async()=>{}},close:async()=>{}},host:{},dataRoot:h.root,config:{profileDir:h.profileDir},installer,unavailable:()=>installer.unavailable});
-  await library.init();const probe=library.installTarget();assert.equal(probe.ready,false);assert.match(probe.error.message,/精确版本/);assert.ok(probe.error.need.length);await library.close();
+  await library.init();await assert.rejects(library.install({packageName:'example-notes'}),error=>error.code==='LIBRARY_INSTALL_UNAVAILABLE'&&error.status===503&&error.details.need.some(row=>/精确版本/.test(row.need)));await library.close();
 });
 
 test('alpha.2 manager also uses monitored public CLI instead of an unscoped live install',async t=>{
@@ -93,7 +93,7 @@ test('alpha.2 manager also uses monitored public CLI instead of an unscoped live
 
 test('public peers admit official rc.2 and supported alpha peers while development versions remain pinned',async()=>{
   const pkg=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
-  assert.equal(pkg.version,'0.6.30');
+  assert.equal(pkg.version,'0.6.31');
   assert.equal(pkg.peerDependencies['@deepseek-ai/dsh-storage-domain'],'>=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0');
   assert.equal(pkg.peerDependencies['@deepseek-ai/cordis'],'>=4.0.4 <4.2.0-0 || >=4.0.5-alpha.1 <4.2.0-0');
   assert.equal(pkg.peerDependencies['@deepseek-ai/schemastery'],'>=3.18.4 <3.20.0-0 || >=3.18.5-alpha.1 <3.20.0-0');

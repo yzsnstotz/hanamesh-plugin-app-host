@@ -30,7 +30,7 @@ const target=kind==='suite'?'@hanamesh/hanamesh@0.1.5':definitions[kind].slice(0
 await command(['plugin','--profile',profile,'add','--save-exact','--registry='+registry,target]);
 const patch=[{id:'update-notifier',disabled:true}];
 if(roles.includes('core'))patch.push({id:'hanamesh-core',config:{serverOrigin:null,websiteOrigin:null,allowSystemBrowser:false,sharedIdentityDir:join(process.env.DSH_HOME,'shared-identity')}});
-if(roles.includes('apphost'))patch.push({id:'hanamesh-app-host',config:{dataRoot:join(process.env.DSH_HOME,'apps'),nodeBinary:process.execPath,library:{sources:[],handoff:{enabled:false},registry}}});
+if(roles.includes('apphost'))patch.push({id:'hanamesh-app-host',config:{dataRoot:join(process.env.DSH_HOME,'apps'),nodeBinary:process.execPath,library:{sources:[],registry}}});
 await writeFile(join(dir,'cordis.patch.yml'),JSON.stringify(patch,null,2));
 let app,primaryError,rootReleased=false;const pluginFibers=[];
 const receipt={scope:'REAL_PUBLIC_DSH_WEB_PROFILE_NODE_HOST_NOT_GUI',kind,profile,runtimeVersion:getDshRuntimeVersion(),node:process.version,modelRequests:0,entries:[]};

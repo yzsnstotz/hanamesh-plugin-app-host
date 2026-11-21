@@ -1,10 +1,8 @@
-# HanaMesh 市场（原应用库）
-
-> rc.28：入口改名「市场」，插件与应用同一入口、同一 `dsh plugin add/remove` 路径；已装列表含插件；可升级 / 需重启；新路由与响应形状见 `CONTRACT.md`「市场」。下文旧称「应用库」的段落仍然成立。
+# AppHost 应用安装与读回
 
 ## 范围
 
-应用库是 app-host 自带的 DSH 页面，不依赖第三方市场。它读取一个启用的目录源，同时独立扫描当前 profile 已安装的应用包；由 Community Market 安装的同一包会被接管，不做宿主市场探测。
+AppHost 从当前 profile 读取已装应用。HanaMesh 首页的「继续使用」和 AppHost 原生插件配置使用这份清单打开应用、补齐运行时或卸载。AppHost 的应用安装 API 独立解析启用的应用目录并调用 DSH CLI。插件目录浏览与原生插件管理由独立 Market 插件提供。
 
 ## 目录源
 
@@ -90,7 +88,7 @@ A2 0.6.22：普通插件必须有 Indexer 已审核的 installMethods 和 oneCli
 
 应用库/应用详情显示已装版本与最新兼容版本，一键升级默认选择该精确版本；“选择历史版本”列出发布版本，不兼容版本禁用。npm 发布元数据只用于发现，版本选择再次验证 Node、可观察 peer 和公开 DSH `evaluatePluginCompatibility`，缺失事实不会启用安装。总包继续由 Core 的 `getSuiteDeclaration({registry,profile,bundleVersion})` 决定三个业务组件的兼容组合。Theme 为总包分发依赖，不增加业务成员。
 
-新增插件自有的认证同源路由：GET `/hanamesh/library/versions?itemId=...`、GET `/hanamesh/library/version-target?itemId=...&version=...`、POST `/hanamesh/library/version/install`。后者只接受当前目录身份、精确版本及复读的安装目标，不接受 URL、命令或浏览器提供的 registry。已确认的总包仍 POST `/hanamesh/library/suite/upgrade`，GET `/hanamesh/library/suite/status` 返回从总包解析的物理组件读回。原 install-target v1 的 `/target` 与 `/install` 继续拒绝任意 version 字段；网站交接不改变。
+新增插件自有的认证同源路由：GET `/hanamesh/library/versions?itemId=...`、GET `/hanamesh/library/version-target?itemId=...&version=...`、POST `/hanamesh/library/version/install`。后者只接受当前目录身份、精确版本及复读的安装目标，不接受 URL、命令或浏览器提供的 registry。已确认的总包仍 POST `/hanamesh/library/suite/upgrade`，GET `/hanamesh/library/suite/status` 返回从总包解析的物理组件读回。原 install-target v1 的 `/target` 与 `/install` 继续拒绝任意 version 字段；不改变。
 
 普通插件安装/升级/历史切换均复用 `dsh plugin --profile <实际profile> add --save-exact <name>@<version>`。总包执行 Core 提供的精确 argv；执行前按相同的显式版本请求复读来源、声明与物理 baseline。命令运行、精确读回或组件验证失败，先通过同一正式 CLI 补偿，再逐项比较依赖、包、选择与锁；原失败和恢复失败都可见，未核实不报告恢复成功。不会自动重试，不直接写 DSH 的 profile/lock，不全局放宽成熟期。安装后提示完全退出并重开；读回使用总包内部解析的真实子包，而非要求子包成为 profile 直接依赖。
 

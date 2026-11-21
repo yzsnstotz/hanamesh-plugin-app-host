@@ -45,13 +45,12 @@ test('R25 M2 npm fixed targets upgrade in target preview, market list and instal
  const result=await service.install({itemId:item.id,installTarget:npm});assert.equal(result.status,'started','the new fixed target is not already-installed');await service.close();assert.deepEqual(installedTarget,npm);
 });
 
-test('R25 M2 confirmation has no retired directory version, shows reviewed npm version and upgrade has no version suffix',async t=>{
+test('R25 M2 confirmation has no retired directory version, shows reviewed npm version',async t=>{
  const item={id:'r25',displayName:'Reviewed plugin',kind:'plugin',package:{registry:'npm',name:npm.name},installTarget:npm,installed:{packageName:npm.name,state:'installed',version:'1.0.0'},upgradeAvailable:true};
  const client=await loadClient({fetch:async path=>{
   if(path.startsWith('/hanamesh/library/target?'))return Response.json({source:{kind:'fixture'},item});
-  return Response.json({items:[item],plugins:[],installed:[],handoffs:[],pollMs:1500});
+  return Response.json({items:[item],plugins:[],installed:[]});
  }});t.after(()=>client.unmount());
- assert(client.button('升级'),'upgrade action is shown without a catalog version suffix');
  await client.module.openInstallTarget({itemId:item.id,installTarget:npm});await client.idle();
  assert(!client.text().includes('目录未提供版本'),'confirmation has no retired version placeholder');
  assert(!client.text().includes('"children":["版本"]'),'confirmation has no version label');

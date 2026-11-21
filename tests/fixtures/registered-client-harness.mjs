@@ -1,5 +1,5 @@
 // SOURCE fixture: load a producer-built client and render only registered slots
-// or the actual provided market seat. Never inject LibraryOverlay props here.
+// or the actual registered AppHost configuration. Never inject LibraryOverlay props here.
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {fakeClock} from './client-ui-harness.mjs';
@@ -48,7 +48,7 @@ export async function registeredClient({file, fetch, href, locale}) {
       active = instances.get(key) ?? [];
       instances.set(key, active);
       cursor = 0;
-      if (node.type === module.LibraryOverlay) rendered.push({...node.props});
+      if (node.type === module.ApplicationContent) rendered.push({...node.props});
       const value = node.type(node.props);
       active = undefined;
       return resolve(value, `${key}/result`);
@@ -85,7 +85,7 @@ export async function registeredClient({file, fetch, href, locale}) {
     ...(locale ? {locale} : {}),
     effect(run) {const dispose = run(); effects.push(dispose); return dispose;},
     slots: {inject: (_name, run) => run(), register(descriptor, component) {
-      slots.set(descriptor.id, {descriptor, component}); return () => slots.delete(descriptor.id);
+      slots.set(descriptor.id??descriptor.key, {descriptor, component}); return () => slots.delete(descriptor.id??descriptor.key);
     }},
     reflect: {get: name => seats.get(name)},
     provide(name, value) {assert.equal(seats.has(name), false); seats.set(name, value); return () => seats.delete(name);},
@@ -95,17 +95,11 @@ export async function registeredClient({file, fetch, href, locale}) {
   module.apply(ctx);
   return {module, slots, seats, rendered, find: predicate => find(predicate, tree), get tree() {return tree;},
     mountSettings(id){clearRoot();const slot=slots.get(id);assert.ok(slot,'registered settings slot '+id);root=()=>React.createElement(slot.component);render();},
-    mountSidebar() {
+    mountRuntimeConfiguration() {
       clearRoot();
-      const action = slots.get('hanamesh-library'), overlay = slots.get('hanamesh-library-overlay');
-      assert.ok(action && overlay, 'actual apply must register normal sidebar and overlay slots');
-      root = () => [React.createElement(action.component), React.createElement(overlay.component)];
-      render();
-    },
-    mountMarket(options = {}) {
-      clearRoot();
-      const seat = seats.get('market'); assert.ok(seat, 'actual apply must provide market seat');
-      root = () => seat.render(options); render();
+      const slot=slots.get('@hanamesh/dsh-app-host');
+      assert.ok(slot,'normal AppHost bundle configuration slot');
+      root=()=>React.createElement(slot.component);render();
     },
     hashchange(hash) {scope.location.hash = hash; listeners.get('hashchange')?.();},
     dispose() {

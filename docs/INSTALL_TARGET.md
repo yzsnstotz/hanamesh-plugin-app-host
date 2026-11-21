@@ -1,152 +1,21 @@
-# 客户端市场安装目标入口
+# AppHost 应用安装合约
 
-## 0.6.21 候选 · 固定 GitHub 安装目标
+AppHost 在已认证的 DSH 工作区解析、安装和读回固定应用包。请求沿用 AppHost 的授权、Host、Origin 和 iframe 边界。写请求带同源 Origin、JSON 正文与 `X-HanaMesh-Client: workspace-v1`。
 
-目标新增 `installTarget`，采用 C-INDEXER-CATALOG 已确认的两个形状：
-
-```ts
-type PackageInstallTarget =
-  | {source:'npm';name:string;version:string;allowBuild:string[]}
-  | {source:'github';repo:string;ref:string;path:string|null;packageName:string;allowBuild:string[]};
-```
-
-GitHub ref 必须是收录时固定的完整 40 位 SHA，不在安装时解析分支。结构化目标必须带 itemId；App-host 从自己的启用目录 installMethods 解析并逐字段核对，整个条目 oneClickInstall.allowed=false 时拒绝，不能换用同名 npm 包。条目必须提供 installMethods 和 oneClickInstall.allowed:true，并选中匹配的固定目标；缺 installMethods、未获准或无匹配目标时返回 NOT_INSTALLABLE / details.reason=fixed-install-target-required（或提供方具名原因），不得退回 package 展示名解析可变版本。HanaMesh 视图拒绝退休的 latestVersion/license，确认页不显示版本行，升级按钮不拼目录版本；npm 升级按 installTarget.version 与已装实际版本比较。GET target/导航片段将 installTarget JSON 编码；POST install/网站 handoff 使用对象。响应 item.installTarget 是客户端确认回传的预期目标。目录 SHA、路径或构建许可变化会拒绝 CATALOG_CHANGED，必须重新查看；不能在确认之后自动换目标。
-
-确认沿现有市场表面，展示完整仓库、commit、子目录；allowBuild 非空时单列「会在本机执行构建脚本」和名单，并说明 pnpm 会保存许可。取消或预览不执行 CLI。本人确认后，仅调用原受控 `dsh plugin --profile <profile> add --save-exact [--allow-build=<项>…] github:owner/repo#<SHA>[&path:<目录>]`，每段都是独立 argv，不执行来源 command。npm 目标直接使用收录时固定的精确版本，不在安装时再解析版本。
-
-GitHub CLI exit 0 后还须核对 profile 精确保存的 Git spec、模块包名/版本、dsh.bundle 和 profile 启用列表，随后报告 restart-required；重开后由原生 DSH 加载。不自行 clone/build，不改上游，不用进程内安装器。失败补偿沿原 CLI；pnpm-workspace.yaml 若发生变化，恢复报告保留 build-permissions 残留及原文件，不擅自撤销或静默宣称恢复。handoff 事件按完整目标匹配，不能只靠同名包把另一个 SHA 报为成功。
-
-网站发现（0.6.23候选，编排11-09授权D3）：DSH本地与交接监听共用`install-target-http.js`。仅获准来源可读取客户端能力；名单外的有效HTTP/HTTPS来源，对无查询、无Cookie/Authorization、非iframe的精确`GET /hanamesh/library/install-target`，返回精确`Access-Control-Allow-Origin: <请求Origin>`、`Vary: Origin`及固定`403 {"error":{"code":"ORIGIN_DENIED","message":"This website is not allowed to read discovery."}}`。无客户端类型/能力/ready/版本/清单/允许名单/traceId；不调用能力或安装清单读取器。该最小拒绝有意允许网站识别本机存在拒绝它的监听，不代表任何安装或读取授权。无`*`/Allow-Credentials/Set-Cookie。无Origin的本机工具及获准工作区读取保留。
-
-预检：精确同一路径的有效GET预检返回204空正文、精确Origin和`Access-Control-Allow-Methods: GET`，使浏览器能继续GET并读到403；不把403放在预检上。仅请求带`Access-Control-Request-Private-Network: true`时返回`Access-Control-Allow-Private-Network: true`；普通预检和实际GET均不带该响应头。Vary包含Origin、Access-Control-Request-Method、Access-Control-Request-Headers、Access-Control-Request-Private-Network；无Max-Age缓存。请求额外headers、非GET预检、非法PNA值被拒绝且不授CORS；名单外预检必须显式声明GET。获准来源/本机工具的旧OPTIONS缺省method保持可用。依据：[Fetch预检成功状态](https://fetch.spec.whatwg.org/#cors-preflight-fetch)、[Chrome PNA预检](https://developer.chrome.com/blog/private-network-access-preflight)。现代Chrome的[LNA本机访问权限](https://developer.chrome.com/docs/modern-web-guidance/guides/security/local-network-access)独立生效，此响应不绕过浏览器授权。
-
-错误Host、绝对/双斜线/反斜线target、opaque或畸形Origin、名单外凭据/查询/非探测方法、iframe均不获此拒绝CORS例外；installation-status、交接、库存、设置、安装等接口继续原名单/同意/认证与确认规则。
-
-轮询设置：`pollMs` 写入应用库真实 storage domain；保存、卸载再加载后保持。旧记录没有该字段时使用既有配置/默认 1500 ms，不重写其它存储数据。
-
-AppHost `0.2.0-rc.10`（安装目标入口自 rc7；合约声明与随包套件自 rc8；安装失败恢复结果自 rc10）。目标输入、目录解析、确认、安装与结果全部归本模块；调用方只传目录标识，负责呈现原市场表面。
-
-## Desktop 正常导航入口
-
-在当前已认证的同一 DSH 工作区 URL 上设置片段 `#hanamesh-install?itemId=<encoded-id>&packageName=<encoded-name>`，至少一个字段；不要变更 workspace 的 origin、路径或已有认证参数。AppHost 客户端正常加载或 hashchange 时读取这个公开片段，调用下面同一入口。重复查询字段和额外字段拒绝。无需导入另一个插件、DOM 自动点击、executeJavaScript、私有组件状态或特权 postMessage；壳只做自己的协议校验、前置窗口和正常导航。AppHost 模块需已由产品正常供应加载；旧 rc2 不认识此协议。
-
-## 客户端公开入口
-
-在 DSH 的正常客户端模块系统中取得 `@hanamesh/dsh-app-host` 的公开客户端模块，调用 `openInstallTarget({itemId?, packageName?})`。已有客户端 `market` service 也提供同名方法：`market.openInstallTarget(target)`；原 `market.render({preferredSubsectionId})` 与 `setSettingsVisible()` 保持原协议。
-
-至少一个标识；两者都给时必须匹配同一条目录项。可选 installTarget 仅为上述目录目标的预期值；其它字段（包括顶层 version、url、downloadUrl）拒绝。itemId 最长 160 字符；packageName 按 npm 包名语法校验、最长 214 字符。壳不得解析目录、代填版本/下载地址、点击私有 DOM、注入脚本、代按确认或访问组件状态。
-
-入口先显现 AppHost 自己的侧栏市场覆盖层。若宿主已用 market 席位拥有市场表面（setSettingsVisible(false)），调用方需选中/呈现现有 market.render() 表面，AppHost 不叠加第二个覆盖层。即使尚未挂载，目标确认也保存在本客户端模块内，正常挂载后读回；不跨 profile 保存。
-
-Promise 在目录解析后返回 `{status,itemId?,packageName?}`：
-
-| status | 意义 |
+| 端点 | 作用 |
 | --- | --- |
-| confirmation-required | 市场已按当前目录显示名称、包名和目录来源；结构化 GitHub 目标另显示完整 SHA/子目录；尚未安装 |
-| installing | 相同目录项已有安装进行中，复用该状态 |
-| already-installed | 当前 profile 已安装且目录没有升级，不重复安装 |
-| superseded | 解析过程中收到更新目标或取消，旧输入不再打开确认 |
+| GET `/hanamesh/library/target` | 以目录条目 ID 或包名解析精确目标。可声明 `contractVersion: '1'`。 |
+| POST `/hanamesh/library/install` | 重新核对目录目标后，经公开 DSH CLI 安装精确包。GitHub 安装提交完整已确认目标。 |
+| GET `/hanamesh/library/events` | 按操作 ID 区分受理、完成和失败。游标丢失时返回 `resetRequired`。 |
+| GET `/hanamesh/library/installedPlugins` | 列出该 profile 实际读取到的应用、插件及是否需要重启。 |
+| POST `/hanamesh/library/provision`、`/hanamesh/library/uninstall` | 按应用、包名与受管 runtime 标识补齐运行时或卸载。 |
 
-错误时 Promise reject，市场同时显示错误。这个回执不表示安装完成。用户按「确认安装」后，市场自己发起原 install 请求、跟踪原 events、显示结果并刷新「已安装」。取消不会发 install 请求。相同目标以目录 id 归并客户端状态，以实际包名归并宿主进行中的 install operation。安装成功后的可打开状态沿用原 AppHost 应用视图/租约；普通 DSH 插件沿原宿主入口打开，需重启时保留原提示。
+安装确认展示精确 npm 版本，或 GitHub 仓库、完整 commit、子目录及批准的本机构建名单。执行前复读目标。安装失败记录原始阶段、诊断、补偿结果和残留，完成后读回精确包身份与版本。
 
-## HTTP 契约
-
-只读 `GET /hanamesh/library/target?itemId=...&packageName=...` 接受两个标识及可选 JSON 编码 installTarget。宿主用当前市场目录逐页解析，返回 `{item,source,traceId}`；item 含 kind、installed、upgradeAvailable、选定 installTarget 和原目录元数据，source 含市场自己的 manifestUrl；fixture 来源明确标「测试目录」。查询不会安装。
-
-同实例同端口的精确 `127.0.0.1:<port>` 与 `localhost:<port>` Host 同时可用（同一 parentOrigin 配置，无切换）。Origin 若出现必须与本次请求 Host 的 http origin 精确一致；两个别名仍是不同的浏览器 origin，不允许跨别名请求。未知 Host、其他端口、IPv6/尾点别名、外来或 opaque Origin 明确拒绝；非 iframe、authenticate、authorize 检查保持。GET 允许同源浏览器默认不带 Origin；不接受外来 Origin。实际安装只用原 `POST /hanamesh/library/install`，要求精确同源 Origin、`X-HanaMesh-Client: workspace-v1`、资源端身份及授权；重新解析当前目录，不信任请求内版本或地址。进行中返回原 `202 {operationId,status:'started'}`；相同包且相同结构化目标共享该 operationId，目标不同拒绝 CATALOG_CHANGED。已经安装且没有目录升级时返回 `200 {status:'already-installed',itemId,packageName}`。安装事件/结果与既有安装器不改。结构化 npm 来源只执行收录时固定的精确版本；GitHub 只执行已确认的 SHA。最终已安装版本来自 profile 扫描，GitHub 还须读回精确来源与启用项，均与操作结果一致才报告读回成功。
-
-## 合约版本与一致性套件
-
-契约名 `hanamesh.install-target`，当前版本 `1`。正式协议以 C-MARKET 文档为准；随包 schema `schemas/install-target.schema.json`（出口 `@hanamesh/dsh-app-host/install-target/schema.json`）描述既有目标字段，`x-hanamesh-contract` 节记录版本、片段前缀、路由与拒绝规则，不替代正式文档。
-
-**变更说明（rc8，小版本，只加不改）：** 新增可选字段 `contractVersion`，可出现在 `openInstallTarget` 入参、`#hanamesh-install?` 片段与 `GET /hanamesh/library/target`、`POST /hanamesh/library/install` 的输入中；`GET target` 的 200 结果新增 `contractVersion:'1'`；包 `package.json` 的 `hanamesh.installTarget` 声明提供方实现的版本。itemId/packageName、字段语法、确认、取消、auth、同源与既有拒绝码都不变。影响：Desktop 现有不带版本的安装链接按 v1 照常工作，无需改动；要声明版本时由唯一宿主收尾卡改钉 rc8 后再做。Vibe 钉的应用包协议（rc2）与本契约无关，不受影响。
-
-**变更说明（rc9，只加同实例别名）：** library 路由允许同一端口的两个精确回环 Host，各自必须使用本 origin 的正常 DSH 认证。目标字段、版本 1、目录解析、明确确认、取消、安装事务与失败回滚不改；不新增依赖、配置或权限。schema 的 `loopback` 节与双方 fixture/suite 覆盖两别名及跨 Origin/未知 Host/port/iframe/CSRF/auth/版本拒绝。范围限 library HTTP 与安装目标导航；应用网关、app/router 控制路由及其他插件不变。现有 127 消费方保持，localhost 消费方保持自己的 URL/auth 参数；Desktop/Vibe 无需本轮改动。
-
-**变更说明（rc10，只加安装失败的恢复结果）：** `GET /hanamesh/library/events` 里安装操作的 `library.install-failed` 事件新增 `recovery` 对象（schema `$defs/recovery`、`$defs/installFailed`，`x-hanamesh-contract.installRecovery` 节）；`code` 仍是原失败码。目标字段、版本 1、目录解析、确认、取消、版本固定、同源/auth/非 iframe、按包 operation 去重都不变；不新增依赖、peer、vendor 或配置。影响：消费方（P06 市场门、Desktop 收尾）按 rc10 读取恢复结果；不读 `recovery` 的消费方保持原行为，但不得把没有 `recovery` 的失败当作「已恢复」。Desktop 无需本轮改动。
-
-**握手：**
-- 不带 `contractVersion`：保持 rc7 的 v1 语义。
-- `contractVersion:'1'`：接受，其余语义不变。
-- 其他任何值（含空串）：在其他字段检查之前明确拒绝 `CONTRACT_VERSION_UNSUPPORTED`（HTTP 400，`details.supported:['1']`；客户端 reject 同名码并在市场显示）。不解析目录、不安装、不静默降级。新版本调用方的额外字段也按版本不符拒绝，不当作普通字段错误。
-- 调用方声明了版本时应先读提供方声明（`hanamesh.installTarget`），`supported` 不含自己的版本、或没有声明（rc7 及更早）时自己拒绝，不发送。
-
-**随包内容：**
-
-| 出口 | 内容 |
-| --- | --- |
-| `./install-target/schema.json` | schema 与契约元数据 |
-| `./install-target/suite` | `runProviderSuite()`、`runConsumerSuite(consumer)`、`runChainSuite(consumer)`、`validate()`、`loadContract()` |
-| `./install-target/fixtures/catalog.json` | 测试目录（市场界面标「测试目录（fixture）」） |
-| `./install-target/fixtures/provider-cases.json` | 提供方用例：公开、版本匹配/不符、无效、缺目录，HTTP/客户端/片段三条入口 |
-| `./install-target/fixtures/consumer-cases.json` | 消费方用例：合法目标导航、无效目标拒绝、提供方声明握手 |
-| `./install-target/fixtures/reference-consumer.js` | 消费方 fixture：规则全部从 schema 读取（测试用，不是产品编码 API） |
-
-提供方套件在同一配置同一随机端口通过两个别名驱动本包真实的 HTTP 路由、目录服务与客户端模块（测试目录 + 计数安装器），覆盖 auth/同源/非 iframe/授权拒绝、取消不安装、只有明确确认才经原路由安装一次。链路套件把消费方生成的导航片段交给本包真实的片段入口，确认到达市场确认且不安装，并验证同一导航改报不支持的版本会被明确拒绝。
-
-**运行（在安装了本包的消费方项目里）：**
+`@hanamesh/dsh-app-host/install-target/schema.json` 定义版本 1 的数据。`@hanamesh/dsh-app-host/install-target/suite` 暴露 `runProviderSuite()`、`validate()` 与 `loadContract()`。套件在独立回环端口验证安装目标、鉴权、确认、结果读回及失败恢复。正常包可运行：
 
 ```sh
 node node_modules/@hanamesh/dsh-app-host/dist/install-target/run.js provider
-node node_modules/@hanamesh/dsh-app-host/dist/install-target/run.js consumer --module ./my-consumer.mjs --export consumer
-node node_modules/@hanamesh/dsh-app-host/dist/install-target/run.js consumer            # 随包消费方 fixture（v1 声明）
-node node_modules/@hanamesh/dsh-app-host/dist/install-target/run.js consumer --unversioned
 ```
 
-消费方对象 `{name, contractVersion?, navigate(workspaceUrl, target) → {ok:true,url}|{ok:false,code}, handshake?(declaration) → {ok,code?}}`；导出也可以是返回该对象的无参工厂。每个套件输出一行 JSON 报告，有失败时退出码 1。
-
-## 安装失败后的恢复（rc10）
-
-一次安装（应用或插件、新装或升级）按以下顺序进行，同一宿主内同一时间只有一个 profile 写者（安装、补偿、卸载、provision 串行；`dsh plugin` 自己按每条命令加 profile 写锁）：
-
-1. **基线**：profile `package.json` 里本包的规格、`dsh.profile.bundles`、`pnpm-lock.yaml`、`node_modules` 实际解析的版本；provision 前再记 runtime 根的 lib-provision ledger。
-2. 官方 `dsh plugin add --save-exact <包>@<审核目标精确版本>`；GitHub 使用目录中的完整40位SHA和已确认构建许可。
-3. **读回**：profile 规格与实际解析版本都等于固定版本才继续，否则 `INSTALL_READBACK_MISMATCH`。
-4. 应用：读 `app.json` 校验定义 → 随包 lib-provision 供给声明的 runtime。
-
-第 2–4 步任一步失败（含 CLI 失败）都先比对基线：
-
-| 情况 | 补偿 | 结果 |
-| --- | --- | --- |
-| 什么都没变（add 前失败、CLI 未写入） | 无 | `not-needed`，逐项读回相等 |
-| 新装 | `dsh plugin remove <包>`（只剩残留模块/锁时 `dsh plugin install`）；本次新认领的 runtime 项由 lib-provision 按 ownership 删除 | `restored`，读回等于安装前 |
-| 升级 | `dsh plugin add` 原规格（精确版本带 `--save-exact`）；被替换的 runtime 项按恢复后的原定义重新 provision | `restored`，读回等于原精确版本与原 runtime |
-| 补偿命令失败、读回不等、并发写者改过 profile、runtime 留有未认领文件 | 不重试，不手改 profile/store/metadata | `failed`：`error`（补偿自身的错误码）、`residue`（每个不等项的 expected/actual/reason）、`originals`（安装前 `package.json`/`pnpm-lock.yaml`/runtime ledger 保存在 `<dataRoot>/library-recovery/<operationId>/`） |
-
-`checks` 逐项列出 dependency、module、bundle、lockfile、bundles 与 `runtime:<item>` 的 expected/actual/ok。别的写者在此期间改动的其他依赖永不撤销，lockfile 因此无法证明已恢复时报 `CONCURRENT_PROFILE_WRITE`。未认领文件与 `<dataRoot>` 下的应用数据从不删除。失败不会自动重试。
-
-补偿的 `add` / `install` 沿用本次正向安装选中的同一 registry：显式源继续传 `--registry=<source>`，pnpm 自有源（`null`）继续省略该参数。回滚不会重新选源、重新解析版本或退到默认公共源；`remove` 参数保持原样。恢复动作列表保留原包操作摘要，不加入 registry URL。
-
-市场显示：`安装失败：<原码>（原因）` 后接 `已恢复到安装前状态（已逐项读回）` / `已恢复到原版本 x（已逐项读回）` / `安装前状态未被改动（已逐项读回）`；`failed` 显示 `恢复失败：<码>，未恢复：<项>，安装前原件：<目录>。未安装成功，也未回到安装前状态，需要人工处理`，不会显示为成功或「已回滚」。
-
-**已知边界（不是隐藏限制）：** 官方 DSH 没有公开「跨多条 `dsh plugin` 命令持有 profile 写锁」或「外部回滚整个 add」的端口，所以宿主外的并发写者只能被检出并如实报告，不能被阻止。runtime 读回以 lib-provision ledger 为准；promote 与 ledger 之间的进程崩溃由 lib-provision `verify` 负责，不在本流程内调用。provision 对无当前平台资产的项返回 `unsupported` 而不抛错，沿用 rc9，不视为失败。
-
-**随包验证（SOURCE）：** `./install-target/fixtures/install-failure-cases.json` 与 `./install-target/fixtures/source-profile.js`。提供方套件 RB01–RB15 覆盖新装/升级 × add 前/CLI/add 后校验/provision 失败及补偿自身失败、并发写者、未认领文件，RS01/RS02 成功读回，RU01/RU02 用本包真实客户端显示；消费方套件 RP01–RP05 检查消费方的失败呈现（可选方法 `presentInstallFailure(event) → {installed,restored,version?,residue?}`，没有该方法的消费方记 skipped），链路套件 CX-RB04/RB10/RB11 把真实提供方事件交给消费方。官方 CLI 与 lib-provision 在套件里是临时 profile 上的具名替身，结果只代表 SOURCE，不代表真实安装或 REAL_UI 产品门。
-
-## 测试版验证入口（D-180）
-
-测试包装只在自己的验证入口渲染 `LibraryOverlay({verification:true})`，或调用 `market.render({verification:true})`。默认 `verification:false`，正常版本不显示开发表单或合约验证面板；正常导航触发的确认框始终可见。开关不能由网站 Target 或 URL 片段开启。
-
-测试版「安装目标」表单：填写目录 ID/包名→查看→正常四字段确认→确认安装/取消。另一个「C-MARKET 合约验证」面板列出探测、目录、目标、安装、事件、已装列表、应用列表和 open/resume/heartbeat/close，每项可编辑 JSON 样例并查看返回。路径/方法固定，租约只使用当前授权调用的真实回执；无自动安装或打开。选择 install 仍进入同一正常确认框，不能代按确认。错误直接可见，认证/同源/非 iframe 检查不放宽；输出只在当前验证视图显示，不上传、不写公开 URL。
-
-## 本机公开探测与目录消费（D-180）
-
-`GET /hanamesh/library/install-target` 无参数，精确回环 Host、非 iframe，允许跨源匿名只读探测。返回 `{client:'dsh',ready,installTarget:{contract:'hanamesh.install-target',contractVersion:'1',supported:['1'],fragmentPrefix:'#hanamesh-install?'},traceId,error?}`；缺安装器 `ready:false` 且 `error.code='INSTALL_TARGET_UNAVAILABLE'`。只这一项依本页“网站发现”规则带精确Origin CORS、no-store，不发 Cookie/Allow-Credentials，不返回 profile、已装行、工作区认证地址、命令或租约。独立 DSH 默认报 dsh；没有真实 Desktop 公开证据时不推断 HanaMesh 品牌。其余控制路径仍按原 DSH 认证与准确同源授权执行。
-
-C-WEB-CATALOG 第1版的显式 `catalog-source.json?view=hanamesh` 与 manifest 的 `/v1/plugins?view=hanamesh` 可配置为目录来源。旧无 view 源仍严格按 catalog-major-1，不混 schema 或静默降级。新 DTO 保留 id=itemId、可空 npm 身份及公开 sourceLinks；q 是子串查询，目标按精确身份匹配，空页仍有游标则续翻。只给包名时遍历确认唯一目录身份；多个身份返回409 CATALOG_TARGET_AMBIGUOUS。无 npm 包仅浏览；来源链接/分类/目录版本都不能成为启动或安装权限。CATALOG_CHANGED 中止本轮、不拼代或自动重试，其余提供方公开错误保持原 code；故障不退 fixture。
-
-安装事件是当前宿主内存历史。`events.resetRequired` 指游标来自重启前或已丢失的保留段；`library.eventRetention` 为正安全整数，默认512，可显式配置。客户端对不可追溯且不再进行中的操作显示结果未知并刷新已装列表，不从空事件推断取消/成功，不自动重装。终态仍须匹配 operationId；完成后的错包/错版本/缺行读回统一显示 INSTALL_READBACK_MISMATCH。
-
-## 本轮供给与验证边界
-
-本包需要通过 Desktop owning 的正常本地冻结包供应进入统一客户端；当前 Desktop rc13 的 AppHost 固定 rc2，装配尚待 Desktop 卡消费本次包。公开 npm 发布与安装包发布不在本卡范围。本轮源码/HTTP/客户端 hook harness 证据不代替正式 HanaMesh.app 的安装、小界面首步与截图。
-
-## D-214 正常客户端测试包装
-
-生产构建仍为 `pnpm run build`，Loader 调用 `apply(ctx)` 时验证默认关闭；目标 URL 或全局变量不能开启。`apply(ctx,{verification:true})` 仅为可信本方测试包装，沿正常侧栏“市场”/shell.overlay及本方注册的market席位传给既有LibraryOverlay。公开 `market.render({verification:true})` 测试用法保留。
-
-在本卡新的隔离目录运行 `node scripts/pack-verification.mjs --destination <本卡新目录> --version 0.5.7-verification.0`。包装器不覆盖既有目录，不复制node_modules；按冻结锁正常安装，隔离包prepack执行 `node scripts/build.mjs --verification`，再正常pnpm pack。仅该产物的自有Loader工厂包装apply传true，模块id/manifest/正常浏览器路径保留。默认源码树拒绝verification构建覆盖生产dist。
-
-测试版通过公开plugin add正常安装此tgz并加载，在正常侧栏市场或宿主使用的本方market席位进入“C-MARKET 合约验证”，选择11项调用、编辑JSON、明确调用，显示提供方完整公开响应及拒绝JSON。安装调用只解析目标并弹正常确认；取消无POST，确认才发一次正常安装请求。202受理仍不能当已装成功。
-
-release与verification产物分别记录版本/来源/sha/许可/bundle及严格消费者证据；测试包验证页不证明正常release包普通应用U2或owner接受。
+测试构建通过 AppHost 原生插件配置打开合约验证面板，默认读取安装环境。输入可编辑，面板显示完整的成功或拒绝响应。安装调用仍需核对来源并显式确认。

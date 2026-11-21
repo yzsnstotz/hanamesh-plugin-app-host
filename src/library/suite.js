@@ -124,13 +124,6 @@ export function createCoreSuiteAdapter({core=()=>undefined,registry,suiteSourceM
     return{available:true,bundle:{name:SUITE_BUNDLE,from:declaration.bundleVersion,to:selectedUpgrade.bundle.version},components,installation:selectedUpgrade.installation,installCommand:declaration.installCommand,sourceBinding:binding,declarationId:declaration.declarationId,registry:declaration.registry,selectedUpgrade,physicalBaseline:declaration.installed,upgrades:declaration.upgrades,blocked:declaration.blocked};
   };
   Object.defineProperty(get,'unavailable',{get:()=>current()?null:CORE_SUITE_DECLARATION_MISSING});
-  get.assessLegacy=async facts=>{
-    const service=current();
-    requireCondition(service&&typeof service.assessLegacyInstallation==='function','CORE_LEGACY_ASSESSOR_MISSING','Core 未提供旧组件只读判定接口。',{},503);
-    const result=await service.assessLegacyInstallation(facts);
-    requireCondition(current()===service,'CORE_LEGACY_ASSESSOR_MISSING','Core 判定接口已变化。',{},503);
-    return validateLegacyAssessment(result);
-  };
   get.readFacts=async()=>{
     const declaration=await read();
     if(declaration.legacy)return{...declaration.legacy,version:null,completeness:declaration.completeness,blocked:[...declaration.blocked.filter(row=>row.code.startsWith('CORE_SUITE_CLIENT_PEER_')),...declaration.legacy.issues.map(({code,moduleName})=>({code,moduleName}))]};

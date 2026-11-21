@@ -63,12 +63,6 @@ test('normal library discovery shows missing Core declaration while retaining ac
   await assert.rejects(library.resolveTarget({itemId:'hanamesh:suite-upgrade'}),{code:'CORE_SUITE_DECLARATION_MISSING',message:missing});
 });
 
-test('the actual market component renders the missing declaration and disables upgrade',async t=>{
-  const h=await clientHarness({fetch:async()=>({ok:true,json:async()=>({items:[{id:'hanamesh:suite',kind:'suite',summary:'official',suiteUpgradeUnavailable:missing,suite:{status:'installed',version:'0.3.12',components:[]}}],installed:[],plugins:[],page:{}})})});t.after(()=>h.unmount());await settle();
-  assert.ok(JSON.stringify(h.tree).includes(missing));
-  const button=h.find(n=>n.type==='button'&&n.children.includes('检查兼容升级'));assert.ok(button);assert.equal(button.props.disabled,true);
-});
-
 test('Core refusal before CLI does not claim partial installation or require restart and repair',async t=>{
   const root=await profile();let state={schema:1,revision:0,sources:[]},provided=true,writes=0;
   const installer=createLibraryInstaller({profileDir:root,profileName:'desktop',dataRoot:root,nodeBinary:process.execPath,dshBin:join(root,'dsh.js'),coreSuitePlan:async()=>provided?approved():null,fetchImpl:noRegistry,spawn:async()=>{writes++;return{code:0};}});
@@ -78,7 +72,7 @@ test('Core refusal before CLI does not claim partial installation or require res
   for(let i=0;i<100&&!library.events().events.some(e=>e.operationId===operation.operationId&&e.type==='library.install-failed');i++)await new Promise(r=>setTimeout(r,5));
   const event=library.events().events.find(e=>e.operationId===operation.operationId&&e.type==='library.install-failed');
   assert.equal(event.code,'CORE_SUITE_DECLARATION_MISSING');assert.equal(event.details?.stage,undefined);
-  assert.notEqual(library.installTarget().suite.restartRequired,true);assert.equal(writes,0);
+  assert.notEqual((await library.list({category:'plugin'})).items.find(row=>row.kind==='suite').suite.restartRequired,true);assert.equal(writes,0);
 });
 
 test('a direct suite target displays the missing Core declaration instead of only its error code or repair advice',async t=>{

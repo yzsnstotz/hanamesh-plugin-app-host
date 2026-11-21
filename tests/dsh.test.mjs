@@ -35,11 +35,11 @@ test('Core suite public method arrives and unloads through real optional Cordis 
   await until(async()=>(await item()).suite.completeness==='complete');assert.ok(requests.every(args=>args.length===0),'market fact reads never request registry candidates');
   await fiber.dispose();await until(async()=>(await item()).suiteUpgradeUnavailable==='Core 未提供套件声明');assert.equal((await item()).suite.completeness,'unknown');
 });
-async function boot(t, { token = 'browser-session', withPlugin = true, applications = [definition()], config = {} } = {}) {
-  const root = await temporary();
+async function boot(t, { token = 'browser-session', withPlugin = true, applications = [definition()], config = {}, root:reusedRoot } = {}) {
+  const root = reusedRoot??await temporary();
   const ctx = new Context();
   // Register ownership immediately: activation failure must still close the real HTTP listener.
-  t.after(async () => { await ctx.fiber?.dispose?.(); await rm(root, { recursive: true, force: true }); });
+  t.after(async () => { await ctx.fiber?.dispose?.(); if(!reusedRoot)await rm(root, { recursive: true, force: true }); });
   const activationErrors=[];ctx.logger.exporter({export:message=>{if(message.type==='error')activationErrors.push(message.args.map(value=>value instanceof Error?{name:value.name,code:value.code,message:value.message}:String(value)).slice(0,4));}});
   ctx.plugin(Storage);
   ctx.plugin(storageJson, { root: join(root, 'storages') });
@@ -54,8 +54,7 @@ async function boot(t, { token = 'browser-session', withPlugin = true, applicati
   const origin = `http://127.0.0.1:${ctx.get('webServer').port}`;
   let fiber;
   if (withPlugin) {
-    // Tests never bind the real handoff ports (39317…); handoff routes are covered in handoff.test.mjs on random ports.
-    fiber = ctx.plugin(appHost, { dataRoot: join(root, 'app-data'), applications, ...config, library: { handoff: { enabled: false }, ...config.library } });
+    fiber = ctx.plugin(appHost, { dataRoot: join(root, 'app-data'), applications, ...config });
     try{await until(() => ctx.get('hanameshApps') !== undefined);}catch(error){throw new Error('AppHost activation did not provide hanameshApps: '+JSON.stringify(activationErrors).slice(-6000),{cause:error});}
   }
   const headers = { origin, authorization: `Bearer ${token}`, 'content-type': 'application/json', 'x-hanamesh-client': 'workspace-v1' };
@@ -129,7 +128,7 @@ test('H09/dispose: unloading the plugin removes its routes, stops owned instance
   assert.equal(h.ctx.get('hanameshApps'), undefined);
   assert.equal((await h.get('/hanamesh/apps')).status, 404, 'route must be gone after unload');
   // The domain is closed: a fresh plugin instance can open it again (single-open per name).
-  h.fiber = h.ctx.plugin(appHost, { dataRoot: join(h.root, 'app-data'), applications: [definition()], library: { handoff: { enabled: false } } });
+  h.fiber = h.ctx.plugin(appHost, { dataRoot: join(h.root, 'app-data'), applications: [definition()], library:{sources:[]} });
   await until(() => h.ctx.get('hanameshApps') !== undefined);
   assert.equal((await h.get('/hanamesh/apps')).status, 200);
 });
@@ -141,7 +140,7 @@ test('AC-26 shape: without the connection service the plugin never activates, so
   ctx.plugin(WebServer, { host: '127.0.0.1', port: 0 });
   await ctx.start?.(); await until(() => ctx.get('webServer')?.port > 0);
   t.after(async () => { await ctx.fiber?.dispose?.(); await rm(root, { recursive: true, force: true }); });
-  ctx.plugin(appHost, { dataRoot: join(root, 'app-data'), applications: [definition()], library: { handoff: { enabled: false } } });
+  ctx.plugin(appHost, { dataRoot: join(root, 'app-data'), applications: [definition()], library:{sources:[]} });
   await new Promise(r => setTimeout(r, 300));
   assert.equal(ctx.get('hanameshApps'), undefined);
   assert.equal((await http(`http://127.0.0.1:${ctx.get('webServer').port}/hanamesh/apps`)).status, 404);
@@ -169,7 +168,7 @@ test('AH-L07 (plugin): an unconfigured library seeds the HanaMesh catalog source
   const plain = await boot(t, { withPlugin: false });
   const logged = [];
   plain.ctx.logger.exporter({ export: message => logged.push(message) });
-  plain.fiber = plain.ctx.plugin(appHost, { dataRoot: join(plain.root, 'app-data'), applications: [definition()], library: { handoff: { enabled: false } } });
+  plain.fiber = plain.ctx.plugin(appHost, { dataRoot: join(plain.root, 'app-data'), applications: [definition()] });
   await until(() => plain.ctx.get('hanameshApps') !== undefined);
   const seeded = await plain.get('/hanamesh/library/sources');
   assert.equal(seeded.status, 200, JSON.stringify(seeded.json));
@@ -192,7 +191,7 @@ test('CLI-8 (plugin): persisted old URLs, custom URLs and a saved empty list sur
   for(const sources of [[{manifestUrl:'https://market.hanamesh.com/catalog-source.json',enabled:true}],[{manifestUrl:'https://catalog.example.com/catalog-source.json',enabled:true}],[]]){
     const saved=await h.post('/hanamesh/library/sources',{sources});assert.equal(saved.status,200,JSON.stringify(saved.json));const revision=saved.json.revision;
     await h.fiber.dispose();await until(()=>h.ctx.get('hanameshApps')===undefined);
-    h.fiber=h.ctx.plugin(appHost,{dataRoot:join(h.root,'app-data'),applications:[definition()],library:{handoff:{enabled:false}}});await until(()=>h.ctx.get('hanameshApps')!==undefined);
+    h.fiber=h.ctx.plugin(appHost,{dataRoot:join(h.root,'app-data'),applications:[definition()],library:{sources:[]}});await until(()=>h.ctx.get('hanameshApps')!==undefined);
     const reloaded=await h.get('/hanamesh/library/sources');assert.equal(reloaded.status,200);assert.deepEqual(reloaded.json.sources,sources);assert.equal(reloaded.json.revision,revision);
   }
 });
@@ -207,7 +206,7 @@ test('AH-U07 (plugin): real Cordis early/absent/late Usage services never turn r
   const logged = [];
   first.ctx.logger.exporter({ levels: { default: 3 }, export: message => logged.push(message) });
   first.ctx.provide('hanameshUsage', seat);
-  first.fiber = first.ctx.plugin(appHost, { dataRoot: join(first.root, 'app-data'), applications: [app], library: { handoff: { enabled: false } } });
+  first.fiber = first.ctx.plugin(appHost, { dataRoot: join(first.root, 'app-data'), applications: [app], library:{sources:[]} });
   await until(() => first.ctx.get('hanameshApps') !== undefined);
   const diagnosticMessages = logged.filter(message => String(message.args[0]).startsWith('USAGE_FACT_UNAVAILABLE'));
   assert.deepEqual(diagnosticMessages.map(message => message.args), [[diagnostic]], 'fixed bounded source-unavailable diagnostic, without app data or credentials');
@@ -221,7 +220,7 @@ test('AH-U07 (plugin): real Cordis early/absent/late Usage services never turn r
     assert.deepEqual((await first.get('/hanamesh/router/receipts?appId=example')).json.items,[],'refused launch cannot generate transport receipts');
     const alone=await boot(t,{withPlugin:false});let loggerFailures=0;
     alone.ctx.logger.exporter({levels:{default:3},export:message=>{if(message.args[0]===diagnostic){loggerFailures++;throw new Error('fixture diagnostic sink failure');}}});
-    alone.fiber=alone.ctx.plugin(appHost,{dataRoot:join(alone.root,'app-data'),applications:[app],library:{handoff:{enabled:false}}});
+    alone.fiber=alone.ctx.plugin(appHost,{dataRoot:join(alone.root,'app-data'),applications:[app],library:{sources:[]}});
     await until(()=>alone.ctx.get('hanameshApps')!==undefined);assert.equal(loggerFailures,1);assert.equal(alone.ctx.get('hanameshUsage'),undefined);
     await assertOwnedPlatformRejection(alone.ctx.get('hanameshApps'),{appId:'example',deploymentId:'local',viewId:'view-u07b'},{principal:appHost.BROWSER_PRINCIPAL});
     const late={calls:[],record:async value=>{late.calls.push(value);return{disposition:'withheld'}}};
@@ -270,7 +269,7 @@ test('AH-U07 (plugin): real Cordis early/absent/late Usage services never turn r
   alone.ctx.logger.exporter({ levels: { default: 3 }, export: message => {
     if (message.args[0] === diagnostic) { loggerFailures++; throw new Error('fixture diagnostic sink failure'); }
   } });
-  alone.fiber = alone.ctx.plugin(appHost, { dataRoot: join(alone.root, 'app-data'), applications: [app], library: { handoff: { enabled: false } } });
+  alone.fiber = alone.ctx.plugin(appHost, { dataRoot: join(alone.root, 'app-data'), applications: [app], library:{sources:[]} });
   await until(() => alone.ctx.get('hanameshApps') !== undefined);
   assert.equal(loggerFailures, 1, 'the throwing sink was actually reached during real plugin apply');
   assert.equal(alone.ctx.get('hanameshUsage'), undefined);
@@ -349,7 +348,7 @@ test('AH-PG01: real Cordis loads the external provision package and preserves au
   // This exercises the actual public provision import and installer binding, not DSH installation.
   h.fiber=h.ctx.plugin(appHost,{dataRoot:join(h.root,'app-data'),applications:[],
     nodeBinary:process.execPath,library:{profileDir:join(h.root,'profile'),profileName:'contract-source',
-      dshBin:join(h.root,'unexecuted-dsh-command-seat.js'),sources:[],handoff:{enabled:false}}});
+      dshBin:join(h.root,'unexecuted-dsh-command-seat.js'),sources:[]}});
   await until(()=>h.ctx.get('hanameshApps')!==undefined);
   assert.equal((await h.get('/hanamesh/library/installedPlugins',{authorization:undefined})).status,401);
   const list=await h.get('/hanamesh/library/installedPlugins');
@@ -389,10 +388,31 @@ test('Core declaration missing: real Cordis library exposes the exact reason and
   const dependencies={'@hanamesh/core':'0.3.12','@hanamesh/usage':'0.2.0-rc.34','@hanamesh/dsh-app-host':'0.6.5'};
   for(const [name,version] of Object.entries(dependencies)){await mkdir(join(profile,'node_modules',name),{recursive:true});await writeFile(join(profile,'node_modules',name,'package.json'),JSON.stringify({name,version}));}
   await writeFile(join(profile,'package.json'),JSON.stringify({dependencies,dsh:{profile:{bundles:Object.keys(dependencies)}}}));
-  h.fiber=h.ctx.plugin(appHost,{dataRoot:join(h.root,'app-data'),applications:[],nodeBinary:process.execPath,library:{profileDir:profile,profileName:'core-suite-fixture',dshBin:join(h.root,'unexecuted-dsh.js'),sources:[],fixture:fileURLToPath(new URL('./fixtures/catalog/provider-page.json',import.meta.url)),handoff:{enabled:false}}});
+  h.fiber=h.ctx.plugin(appHost,{dataRoot:join(h.root,'app-data'),applications:[],nodeBinary:process.execPath,library:{profileDir:profile,profileName:'core-suite-fixture',dshBin:join(h.root,'unexecuted-dsh.js'),sources:[],fixture:fileURLToPath(new URL('./fixtures/catalog/provider-page.json',import.meta.url))}});
   await until(()=>h.ctx.get('hanameshApps')!==undefined);
   const list=await h.get('/hanamesh/library?category=');assert.equal(list.status,200,JSON.stringify(list.json));
   const item=list.json.items.find(i=>i.kind==='suite');assert.equal(item.suiteUpgradeUnavailable,'Core 未提供套件声明');assert.equal(item.suite.components[0].version,'0.3.12');
   const target=await h.get('/hanamesh/library/target?itemId=hanamesh%3Asuite-upgrade');assert.equal(target.status,503,JSON.stringify(target.json));assert.equal(target.json.error.code,'CORE_SUITE_DECLARATION_MISSING');assert.equal(target.json.error.message,'Core 未提供套件声明');
   assert.equal((await h.get('/hanamesh/library/target?itemId=hanamesh%3Asuite-upgrade',{authorization:undefined})).status,401);
+});
+
+test('B17-CORDIS: suite source survives JSON domain reopen and observes the optional Core source',async t=>{
+  const first=await boot(t,{config:{library:{sources:[]}}});
+  const path='/hanamesh/library/suite-source';
+  assert.equal((await first.get(path)).json.mode,'configured');
+  assert.equal((await first.post('/hanamesh/library/sources',{sources:[]})).status,200);
+  assert.equal((await first.post(path,{mode:'core'})).status,200);
+  assert.equal((await first.get(path)).json.observation.code,'CORE_SUITE_SOURCE_MISSING');
+  let state={protocolVersion:'1',status:'ready',selection:'custom',registry:'http://127.0.0.1:43123/',archiveCount:3,lastError:null};
+  const sourceFork=first.ctx.plugin(ctx=>ctx.provide('hanameshSuiteSource',{protocolVersion:'1',getState:()=>state}));
+  await until(async()=>(await first.get(path)).json.observation.observable===true);
+  assert.deepEqual((await first.get(path)).json.observation.state,state);
+  state={...state,status:'disposed',registry:null};
+  assert.equal((await first.get(path)).json.observation.state.status,'disposed');
+  await sourceFork.dispose();
+  await until(async()=>(await first.get(path)).json.observation.code==='CORE_SUITE_SOURCE_MISSING');
+  await first.ctx.fiber.dispose();
+  const reopened=await boot(t,{root:first.root,config:{library:{sources:[]}}});
+  assert.equal((await reopened.get(path)).json.mode,'core');
+  assert.deepEqual((await reopened.get('/hanamesh/library/sources')).json.sources,[]);
 });

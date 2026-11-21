@@ -12,9 +12,9 @@ import assert from 'node:assert/strict';import {createRequire} from 'node:module
 import {AppHost,AtomicFileStore} from '@hanamesh/dsh-app-host';
 import {WorkspaceAppClient} from '@hanamesh/dsh-app-host/client';
 import {runCatalogProviderSuite,runCatalogConsumerSuite} from '@hanamesh/dsh-app-host/catalog/suite';
-import {runProviderSuite,runConsumerSuite,runChainSuite} from '@hanamesh/dsh-app-host/install-target/suite';
+import {runProviderSuite} from '@hanamesh/dsh-app-host/install-target/suite';
 import pkg from '@hanamesh/dsh-app-host/package.json' with {type:'json'};
-for(const api of [AppHost,AtomicFileStore,WorkspaceAppClient,runCatalogProviderSuite,runCatalogConsumerSuite,runProviderSuite,runConsumerSuite,runChainSuite])assert.equal(typeof api,'function');
+for(const api of [AppHost,AtomicFileStore,WorkspaceAppClient,runCatalogProviderSuite,runCatalogConsumerSuite,runProviderSuite])assert.equal(typeof api,'function');
 assert.equal(pkg.version,${JSON.stringify(pkg.version)});assert.equal(pkg.dependencies['@hanamesh/devkit'],undefined);
 assert.equal(pkg.peerDependencies['@hanamesh/devkit'],undefined);
 assert.throws(()=>createRequire(import.meta.url).resolve('@hanamesh/devkit'),{code:'MODULE_NOT_FOUND'});

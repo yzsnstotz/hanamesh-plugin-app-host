@@ -207,68 +207,6 @@
       }
     }
   ],
-  "fragments": [
-    {
-      "id": "PF01",
-      "semantic": "public",
-      "note": "legacy fragment without declaration",
-      "fragment": "#hanamesh-install?packageName=%40hanamesh-fixture%2Finstall-target-plugin",
-      "expect": {
-        "status": "confirmation-required",
-        "itemId": "fixture.install-target.plugin"
-      }
-    },
-    {
-      "id": "PF02",
-      "semantic": "version-match",
-      "note": "declared v1 fragment",
-      "fragment": "#hanamesh-install?itemId=fixture.install-target.plugin&packageName=%40hanamesh-fixture%2Finstall-target-plugin&contractVersion=1",
-      "expect": {
-        "status": "confirmation-required",
-        "itemId": "fixture.install-target.plugin"
-      }
-    },
-    {
-      "id": "PF03",
-      "semantic": "version-mismatch",
-      "note": "unsupported declaration",
-      "fragment": "#hanamesh-install?packageName=%40hanamesh-fixture%2Finstall-target-plugin&contractVersion=2",
-      "expect": {
-        "status": "failed",
-        "error": "CONTRACT_VERSION_UNSUPPORTED"
-      }
-    },
-    {
-      "id": "PF04",
-      "semantic": "invalid",
-      "note": "duplicate field",
-      "fragment": "#hanamesh-install?packageName=%40hanamesh-fixture%2Finstall-target-plugin&packageName=evil",
-      "expect": {
-        "status": "failed",
-        "error": "INVALID_INPUT"
-      }
-    },
-    {
-      "id": "PF05",
-      "semantic": "invalid",
-      "note": "extra download location",
-      "fragment": "#hanamesh-install?packageName=%40hanamesh-fixture%2Finstall-target-plugin&url=https%3A%2F%2Fevil.example",
-      "expect": {
-        "status": "failed",
-        "error": "INVALID_INPUT"
-      }
-    },
-    {
-      "id": "PF06",
-      "semantic": "missing-catalog",
-      "note": "identifier absent from the catalog",
-      "fragment": "#hanamesh-install?packageName=%40hanamesh-fixture%2Fnot-in-catalog",
-      "expect": {
-        "status": "failed",
-        "error": "CATALOG_ITEM_MISSING"
-      }
-    }
-  ],
   "loopback": {
     "aliases": [
       "127.0.0.1",

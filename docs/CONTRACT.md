@@ -1,12 +1,6 @@
-0.6.29：官方安装清单读取失败仅在可信宿主日志增加固定命令阶段、退出状态、stderr 字节数/分类和分阶段耗时；公开 observation/reason DTO、所有预算与不重试行为不变。见 [诊断边界](INSTALLATION_STATUS.md#trusted-command-diagnostics-0629)。
-
 0.6.27：Desktop payload 独立 Node 的启动识别上限为 30 s（实测最慢冷启动 4.07 s 的 7 倍以上余量），超时或插件卸载即终止该子进程；版本、平台与非 Electron 校验不变。
 
-0.6.26：Codex 官方 GitHub `git` 来源的精确 `.git` 后缀在市场映射与每项安装来源分别归一；只读覆盖扩大到 ChatGPT.app 内置 Codex CLI、预发布 CLI 版本、不存在的官方资料目录（未安装）和 HanaMesh 客户端读取的 DSH 桌面版磁盘 profile；`other-runtime` 的 kind 改名为 `other-client`。只读命令与来源冲突拒绝不变，见 INSTALLATION_STATUS.md。
-
-0.6.7 adds the explicitly consented public installation-status capability on both existing library listeners. Full request/response, strict refusals, automatic official-reader discovery and minimum-version support and scope/lifecycle are defined in [INSTALLATION_STATUS.md](INSTALLATION_STATUS.md); it does not authorize installation or alter recording consent.
-
-# 公开契约 v1（候选，0.1.0-rc.41；rc.41 卸载 runtime 时清理生成的 Python 字节码缓存、未知残留仍 fail-closed；rc.40 市场只读查询待启动实例，ready 后一次 resume；前台即时 heartbeat 与失效帧显式清理；rc.39 Market seat 内打开应用时将原有应用帧固定铺满原生窗口并覆盖 Settings，同一回执/租约/关闭动作；rc.38 投射时仅提升 shell.overlay 层级以盖过原生 Settings；rc.35 市场开关按钮即时反馈、owned 应用已退出时提前结束 TERM 等待并确认精确进程组终止；rc.34 内置市场消费 heartbeat/视图清理；rc.33 owned 回收与启动握手分阶段限时；rc.32 客户端 `market` 席位与 dshmarket 互斥、壳内重启改走 postMessage 桥（见「市场席位」）；rc.28 HanaMesh 市场：插件与应用同路径装卸、已装含插件、可升级/需重启、`installedPlugins` 与 `plugins/*` 路由、`LIB-PROVISION-INPUT` 400（见「市场」）；rc.27 应用使用证据经 usage 插件 record 座位上报（见「应用使用证据」）；rc.26 应用库默认目录源 + 纯 DSH 位置推断（见「应用库配置」）；rc.15 目录条目校验补 updatedAt；rc.16 应用库默认 category=hanamesh-app、q/cursor 透传；rc.13/rc.14 与 rc.12 契约相同：rc.13 补许可证/repository/精确 peer，rc.14 去掉客户端对 hanameshCore 的读取）
+# AppHost 公开契约 v1 · 0.6.31
 
 冷恢复中断实例时，将对应旧活跃租约失效并在同一镜像记 `view.expired(reason=host-restart)`；旧视图仍可按原身份恢复并轮换凭据，新视图关闭不受旧租约占用。只有确认进程组退出后才持久发布 `stopped`。
 
@@ -167,23 +161,6 @@ DSH 绑定必须提供同一个 `single` domain 的一次完整镜像 publish �
 
 0.6.13 候选：套件 npm 身份为 `@hanamesh/core`、`@hanamesh/usage`、`@hanamesh/dsh-app-host`；Core 声明的 `core.name`、`moduleName`、升级目标和返回的 `packageName` 按这些新名精确比较，旧名声明不当作新三包。插件 id、`hanameshMarket` 服务、路由与存储键保持；普通 Recommender 不受保护、不加入套件。首装/补齐精确命令见 LIBRARY.md；已发布 0.6.12 原件不包含该适配。
 
-## 市场席位（rc.32，设计定案 2026-09-22 §4，T5）
-
-客户端模块（`./client-ui`，浏览器包）在 DSH 客户端的 cordis 上下文上提供服务 **`market`**：
-
-| 成员 | 形状 | 谁调用 |
-|---|---|---|
-| `render(options?)` | `options.preferredSubsectionId?: string` → React 元素 | 壳面板 `dsh-tauri-panel-extension`「扩展管理」的「市场」标签体；今天只传 `'installed'` |
-| `setSettingsVisible(visible)` | `boolean` → `void` | 面板接管市场时 `false`、dispose 时 `true` |
-
-席位名与形状取自钉死的 `dsh-tauri-panel-extension@1.0.0`（随 `hanamesh-desktop-tauri` 发布，`src-tauri/resources/node_modules/`）：它 `ctx.reflect.get('market')` 取值，`typeof value.render !== 'function'` 时当作没有；不是猜的名字。`render()` 返回的就是「HanaMesh 市场」页本身（内嵌形态：常显、无「关闭」按钮、`preferredSubsectionId==='installed'` 时「已安装」排在目录之前）；`setSettingsVisible(false)` 收起侧栏「市场」入口与覆盖页，`true` 恢复。无壳（官方 DSH 浏览器直开）时没有面板读这个席位，`provide` 不生效属正常，市场仍走侧栏入口。
-
-Market seat 的「打开」保留原 receipt/heartbeat/close owner；应用 iframe 与「关闭视图」固定铺满原生窗口，覆盖 Settings 窄栏。关闭或 seat 卸载时视图清空，原 owner 只释放一次精确租约。无 seat 的侧栏市场仍走原来的 shell.overlay 视图。
-
-**与 dshmarket 互斥（同名席位只能其一）**：cordis 的 `provide` 对同一名字的第二次注册直接抛 `service "market" has been registered at <…>`，抢座会把对方打挂。因此占座前先做两项判定——`ctx.reflect.get('market', false)`（非严格：尚未 active 的提供者也算占座）与一次 `GET /hanamesh/library/installedPlugins`（`plugins[]` 里有 `dshmarket` 即视为在场，无论是否已加载）。任一命中就**不 provide**，改为：宿主日志一条 warn，市场页顶部一条 `role="status"` 提示（`data-hanamesh-market-conflict="dshmarket"`），写明两者只能其一；其它功能（侧栏入口、覆盖页、安装/卸载/重启提示）全部照常，不报错。库路由答不上来（网络/宿主异常）时 fail open，照常占座——席位不承载任何持久事实。X01 边界 `market-seat-exclusive`。
-
-**壳内重启（rc.32 改）**：`hanamesh://restart` 在壳 iframe 内改走壳已有的入站 postMessage 桥 —— `window.parent.postMessage({type:'hanamesh://restart'}, '*')`，与壳 → iframe 的 `hanamesh://bound-refresh` 同一命名空间；壳按 `event.source`/`event.origin` 校验来源后调用自己的重启。原因：WKWebView 不会把 iframe 内发起的自定义 scheme 导航交给系统，`location.assign('hanamesh://restart')` 在壳内不可达。`hanamesh://restart` 这个 URL 仍是系统级入口（外部浏览器 / `open hanamesh://restart`），由壳 `deep_link.rs` 的 `restart` 分支处理。官方 DSH 直开浏览器时仍只提示「请手动重启 DSH」。
-
 ## 应用使用证据（D-221，C-USAGE-LOCAL 第1版）
 
 `instance.ready`、成功授权/HTTP资源转发、WebSocket升级、小时桶关闭、应用停止与旧receipt恢复都不能证明实际界面呈现或成功业务操作。AppHost目前没有连接已核实的普通应用公开原事实源，因此**不自动调用 Usage record**，不以接收端时钟、运行时就绪时间或流量时间制造事实。
@@ -226,7 +203,7 @@ Authenticated same-origin routes (normal workspace CSRF and connection cookie):
 - POST `/hanamesh/library/node-runtime/prepare`: exactly `{planId,confirm:true}`; accepts only the current unchanged plan. Starts one asynchronous operation with an operationId. Public lib-provision receives one confirmed source, immutable asset SHA, AbortSignal and visible progress; no automatic source switch or retry.
 - POST `/hanamesh/library/node-runtime/cancel`: `{operationId}`; cancels only the active preparation, not accepted business operations. No new binding until file, ledger and independent version/platform/Electron checks complete, then the complete active record is persisted before ready.
 
-Public install-target remains read-only and unchanged. Preparation never weakens authentication/CORS or guardian admission. Subsequent AppHost spawns, library CLI supervisors and installation readers capture the new standalone binding without restarting DSH. In-flight operations retain their delegate; settings/preparation reject while library/host operations are in use.
+Preparation never weakens authentication/CORS or guardian admission. Subsequent AppHost spawns, library CLI supervisors capture the new standalone binding without restarting DSH. In-flight operations retain their delegate; settings/preparation reject while library/host operations are in use.
 
 Support implementation: macOS13.5+ arm64/x64, known Node24.13.1 or24.22.0 (default24.22.0). Windows managed Node preparation remains unsupported (`supported:false` describes managed preparation). Windows x64 accepts an explicitly selected existing standalone Node for controlled CLI and installation-reader operations only, after the fixed probe verifies actual Node 24 version, OS/architecture and absence of Electron; a verified external selection may report `ready:true`. Owned application launch remains unsupported and fails before spawn or credential projection. Automatic installation readers have a separate Windows discovery/owned-tree implementation; their native proof remains required. mac x64 native proof is tracked separately from its signed archive integrity. No client or upstream files change. No npm lifecycle download.
 
@@ -247,7 +224,7 @@ GET 的 `observation` 为 `{observable:false,code}` 或 `{observable:true,state}
 
 最后调用现有官方 CLI，完整 argv 来自Core的升级 installation，安装一个精确总包；正常市场外部包路径不变。正在执行时源连接丢失由实际 CLI/输运终态报告，不靠重试/退出屏障维持源。Core B17 服务只来自候选 `c5e1a7373b9896c385f14f79a64bb277f43bde5c` 的公开能力；无 Core 运行时 import，无 Desktop hook/bootstrap、三锁或先于插件加载的服务。源码/真实 Cordis+JSON domain（AUTH_DOUBLE）与正常包验证不等同真实原生安装或 owner 验收。
 
-公开类型位于 `@hanamesh/dsh-app-host/dsh` 的 `SuiteSourceMode/CoreSuiteSourceState/SuiteSourceSettings/SuiteSourceSettingsInput`；页面导出 `SuiteSourceSettingsSection`。回归：`suite-source.test.mjs`、`handoff-integration.test.mjs` B17-CORDIS，变异 M84–M89（M61 检查全部后续读取被错误缓存）。
+公开类型位于 `@hanamesh/dsh-app-host/dsh` 的 `SuiteSourceMode/CoreSuiteSourceState/SuiteSourceSettings/SuiteSourceSettingsInput`；页面导出 `SuiteSourceSettingsSection`。回归：`suite-source.test.mjs` B17-CORDIS，变异 M84–M89（M61 检查全部后续读取被错误缓存）。
 
 
 B17 review repair（同0.6.8候选）：`AppHost` 未注入 `runtimeLedgerReader` 时，默认经正常依赖 `@hanamesh/lib-provision` 的公开 `ledger(root)` 读取 `<dataRoot>/runtimes/<appId>/.provision/ledger.json`。不存在的历史 `./provision/index.js` 导入已撤除；不复制账本实现或回退其它根。匹配版本与可执行检查仍 fail-closed。`AH-P05` 与正常tgz消费者均不注入 reader，使用有效真实账本启动实际 runtime、读回就绪响应与应用数据；M90检验错误导入不能回归。这仍不等于真实桌面应用的 owner 验收。
@@ -266,48 +243,15 @@ A2 0.6.22：普通插件必须有 Indexer 已审核的 installMethods 和 oneCli
 
 A2 0.6.22：升级tuple必须带Core生成的installation（name/version/command/args），name/version与该tuple一致。AppHost传实际profile和可选配置来源；未配置来源由Core显式声明。CLI直接执行args；confirmation同时绑定该定义。installCommand是Core的可空修复展示文本，不解析命令前缀。旧Core缺定义不回退自拼。
 
-## CL1 HanaMesh client pages (2026-11-10 candidate)
+## AppHost 客户端入口
 
-AppHost adds keyed main entries `hanamesh-library` and `hanamesh-providers`. Sidebar list id `hanamesh-library` (order 11, label 应用库) addresses the matching main key. The existing market seat, overlay fallback, website install-target entry, exact install/readback, app receipts, leases and close ownership remain intact; new layout-aware entry actions select the main page without creating a Session. The legacy footer action is hidden when the native main navigation is available.
+应用读回、补齐运行时、卸载与视图打开使用 Core 的 `hanamesh.home.continue` 和 AppHost 的 DSH 原生插件配置入口。应用视图沿用原有 `/apps/open`、`/apps/resume`、`/apps/heartbeat`、`/apps/close` 和独立网关。模型连接使用 `hanamesh-providers`，安装环境使用 AppHost 设置与 `hanamesh.environment.content`。
 
-Core declares root-scoped list slot `hanamesh.environment.content` as a child of main key `hanamesh-environment`. AppHost registers its own `EnvironmentContent` there: installation environment and lazily opened catalog/suite-source/handoff forms. Those forms use their original authenticated routes and stores; opening the environment does not read every closed form or save/install anything. Tabs select Core keys `hanamesh-account` / `hanamesh-environment` and AppHost `hanamesh-providers`. No sibling source import, Core allowlist change or host root/sidebar/conversation replacement is involved.
-
-The library includes local installed/all tabs and a source-preserving details view. Installation confirmation shows the exact reviewed npm version or full GitHub ref/path/build permission, and requires acknowledgement of the **current resolved target object** before its original confirm action can post. A newly resolved target clears that acknowledgement; server-side fixed-target reread remains authoritative. The shipped conformance harness includes an explicit `acknowledgeInstall()` step before confirmation. Old directory `latestVersion` is still rejected/not displayed.
-
-The current catalog-view DTO has no public GitHub stars / npm downloads / platform install people / usage people fields. Details render each as unavailable with a reason, never as zero or a local-inventory substitute. The website SearchSignals DTO is a different contract, and store installation次数 is not 人数. Supplying these figures needs a formally added catalog-view DTO; this candidate does not relax validation or perform request-time GitHub/npm calls. A “在网站查看” link is derived only from the reviewed HanaMesh-view catalog provider; fixture/other-provider routes are not guessed. No trading or asset UI is added to the client.
-
-Scoped page styles consume the same host theme tokens. The library glyph reuses the supplied DS1 asset. Source/fixture checks do not establish real DSH loading or design screenshot acceptance; those remain separate CL1 gates.
-
-### CL1 existing public credibility reads (2026-11-10)
-
-On detail open only, the client uses the reviewed HanaMesh catalog origin's existing
-`GET /api/v2/hanas/:id` and `GET /hm/v1/custody/hanas/:id/popularity` public reads.
-The first is WX11/WX12's projection of Host 0.6.54+ `/v1/indexer/signals/changes`:
-`githubStars` becomes `signals.stars`, with `npmDownloads30d`, nullable
-`storeInstalls30d` and `checkedAt`. The second supplies `users30d` and its own
-`asOf`. DSH installs are 30-day counts, never unique installation people; neither
-npm downloads nor `installCount` is substituted. All missing/invalid/error values
-show “暂无”; real zero stays zero, and timestamps remain separate.
-
-No new backend, signal-feed consumption, source scraping, polling or catalog DTO
-extension. Both requests omit credentials, refuse redirects and time out after
-8 seconds; identity must match the selected item. Source routes are derived only
-for the reviewed `/catalog-source.json?view=hanamesh` provider. Other catalog
-providers and unavailable/CORS-denied public reads retain “暂无”. The source's
-browser access rules are respected; there is no proxy/CORS bypass. Closing or
-switching details ignores stale replies.
+插件市场位于独立的 `@hanamesh/market`。AppHost 鉴权后的应用安装端点继续由公开 DSH CLI 与 lib-provision 执行，见 [应用安装合约](INSTALL_TARGET.md)。
 
 ## VR1 版本切换（2026-11-10）
 
-新增市场本机版本路由、兼容检查、确认与恢复义务见 [LIBRARY.md 的 VR1 章节](LIBRARY.md#vr1-市场版本管理)。此能力不扩大 install-target v1/网站交接输入；普通安装协议仍不接受外部版本覆盖。总包依赖可为兼容范围，物理完整性按范围判断；Core 是总包兼容组合的唯一提供方，AppHost 只执行并读回。明确选择的旧总包版本在相同校验下可切换，默认操作仍只升级。
+新增市场本机版本路由、兼容检查、确认与恢复义务见 [LIBRARY.md 的 VR1 章节](LIBRARY.md#vr1-市场版本管理)。普通安装协议仍不接受外部版本覆盖。总包依赖可为兼容范围，物理完整性按范围判断；Core 是总包兼容组合的唯一提供方，AppHost 只执行并读回。明确选择的旧总包版本在相同校验下可切换，默认操作仍只升级。
 
 
 R168：后台套件版本展示使用不登记确认的 Core 只读组合查询，只有显式目标预览登记执行计划。后台完成或在Core读取期间取消，不替换已打开的默认/历史确认；planId、来源、tuple、物理baseline复读与单次确认保护保留。见 [后台查询与确认计划](LIBRARY.md#r168-后台套件查询与确认计划)。
-
-## DT7 · 0.6.28 legacy component installation observations
-
-The optional Core protocol-1 `assessLegacyInstallation` is the sole evaluator of no-bundle member facts. AppHost inventories public metadata, entry/selection facts and per-member peer resolution, then validates and forwards its result. Missing assessor and unreadable facts remain unknown. No-bundle runtime declarations forward optional `legacy`; total-bundle and executable upgrade gates remain unchanged. See [INSTALLATION_STATUS.md](INSTALLATION_STATUS.md). No request or observation DTO field is added; legacy states use existing status/reason/blocked fields and null bundle version.
-
-R204 repair: metadata exports and entry health are independent observations. Hidden package.json with a broken entry remains an installed damaged member, not missing; metadata read failure remains unconfirmed. Explicit unreadable peers are sent as unknown, distinct from disk-unresolved host injections. Core remains the sole status evaluator.
-
-R206 repair (same 0.6.28 candidate): hidden metadata lookup resolves its physical path with Node's public realpath before establishing the member's peer resolution context. This preserves pnpm peers bound beside the physical member, independently of entry health. Unreadable metadata/peers stay unconfirmed/unknown; only actual absence is collected as missing/null. AppHost still delegates all compatibility decisions to Core.

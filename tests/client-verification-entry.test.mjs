@@ -40,7 +40,7 @@ before(async () => {
 after(async () => {if (buildRoot) await rm(buildRoot, {recursive: true, force: true});});
 
 const target = {itemId: 'example.notes', packageName: 'example-notes', contractVersion: '1'};
-const calls = ['GET /hanamesh/library/install-target', 'GET /hanamesh/library',
+const calls = ['GET /hanamesh/library/node-runtime', 'GET /hanamesh/library',
   'GET /hanamesh/library/target', 'POST /hanamesh/library/install',
   'GET /hanamesh/library/events', 'GET /hanamesh/library/installedPlugins',
   'GET /hanamesh/apps', 'POST /apps/open', 'POST /apps/resume',
@@ -52,8 +52,6 @@ async function setup(t, mode) {
   const item = {id: target.itemId, displayName: 'Notes fixture', package: {registry: 'npm', name: target.packageName},
     latestVersion: '1.2.3', kind: 'application', installed: null, upgradeAvailable: false};
   const library = {
-    installTarget: () => ({client: 'dsh', ready: true, installTarget: {contract: 'hanamesh.install-target',
-      contractVersion: '1', supported: ['1'], fragmentPrefix: '#hanamesh-install?'}}),
     installedSnapshot: async () => ({plugins: [], apps: [], restartRequired: false}),
     list: async () => ({source, items: [item], categories: ['hanamesh-app'], installed: [], plugins: [],
       restartRequired: false, page: {}}),
@@ -113,24 +111,16 @@ async function setup(t, mode) {
   return {h, find, flush, click, choose, traffic, replies, authorized, installs};
 }
 
-test('VE01 test packaging reaches verification via actual apply/sidebar and provided market seat', async t => {
-  const m = await setup(t, 'verification');
-  m.h.mountSidebar(); await m.flush(); await m.click('市场');
-  assert.ok(m.h.rendered.some(props => props.verification === true),
-    'VERIFICATION_FLAG_NOT_FORWARDED: test packaging must pass true through actual registered overlay');
-  assert.ok(m.find('C-MARKET 合约验证'), 'normal sidebar navigation opens the test verification page');
-  m.h.mountMarket({preferredSubsectionId: 'installed'}); await m.flush();
-  assert.ok(m.find('C-MARKET 合约验证'), 'the provided market seat preserves the test packaging flag');
-  assert.ok(m.find('安装目标开发小界面'));
-  assert.equal(m.installs.length, 0, 'entering the test page is read-only');
+test('VE01 test packaging reaches verification through normal AppHost configuration',async t=>{
+  const m=await setup(t,'verification');m.h.mountRuntimeConfiguration();await m.flush();
+  assert.ok(m.h.rendered.some(props=>props.verification===true));
+  assert.ok(m.find('AppHost 合约验证'));assert.ok(m.find('安装目标开发小界面'));
+  assert.equal(m.installs.length,0);
 });
 
 test('VE02 registered test client selects/edits calls and displays complete real HTTP success and rejection', async t => {
   const m = await setup(t, 'verification');
-  // Existing C-MARKET test-wrapper API through the seat actually registered by
-  // apply, not a direct LibraryOverlay call. VE01/VE05 separately forbid using
-  // this explicit prop as a substitute for test packaging's normal navigation.
-  m.h.mountMarket({verification: true}); await m.flush();
+  m.h.mountRuntimeConfiguration(); await m.flush();
   const selector = m.find('合约调用');
   assert.ok(selector, 'VERIFICATION_ENTRY_NOT_WIRED: test package normal market entry must expose selector');
   assert.deepEqual(selector.children.flat(Infinity).map(option => option.props.value), calls);
@@ -151,32 +141,24 @@ test('VE02 registered test client selects/edits calls and displays complete real
 });
 
 test('VE03 test-panel install selection requires normal confirmation; cancel is inert and confirm posts once', async t => {
-  const m = await setup(t, 'verification'); m.h.mountMarket({verification: true}); await m.flush();
+  const m = await setup(t, 'verification'); m.h.mountRuntimeConfiguration(); await m.flush();
   await m.choose('POST /hanamesh/library/install', target); await m.click('调用合约');
   assert.equal(m.installs.length, 0, 'calling install in verification only resolves the target');
-  assert.ok(m.find('市场安装确认'), 'normal confirmation is still required');
+  assert.ok(m.find('安装确认'), 'normal confirmation is still required');
   await m.click('取消'); assert.equal(m.installs.length, 0);
   await m.choose('POST /hanamesh/library/install', target); await m.click('调用合约');
   await acknowledgeInstall(m);await m.click('确认安装'); assert.deepEqual(m.installs.map(input => ({contractVersion: '1', ...input})), [target]);
   assert.equal(m.traffic.filter(row => row.method === 'POST' && row.url === '/hanamesh/library/install').length, 1);
 });
 
-test('VE04 default production packaging hides verification and target URL cannot turn it on', async t => {
-  const m = await setup(t, 'release'); m.h.mountSidebar(); await m.flush(); await m.click('市场');
-  assert.equal(m.find('C-MARKET 合约验证'), undefined); assert.equal(m.find('安装目标开发小界面'), undefined);
-  m.h.mountMarket(); await m.flush(); assert.equal(m.find('C-MARKET 合约验证'), undefined);
-  m.h.hashchange('#hanamesh-install?' + new URLSearchParams({...target, verification: 'true'})); await m.flush();
-  assert.equal(m.find('C-MARKET 合约验证'), undefined); assert.equal(m.find('安装目标开发小界面'), undefined);
-  assert.match(JSON.stringify(m.h.tree), /INVALID_INPUT/);
-  m.h.hashchange('#hanamesh-install?' + new URLSearchParams(target)); await m.flush();
-  assert.ok(m.find('市场安装确认'), 'ordinary production target confirmation remains usable');
-  assert.equal(m.find('C-MARKET 合约验证'), undefined); await m.click('取消');
-  assert.equal(m.installs.length, 0);
-});
-
-test('VE05 test packaging enables its normally provided market seat without caller-injected props', async t => {
-  const m = await setup(t, 'verification');
-  m.h.mountMarket({preferredSubsectionId: 'installed'}); await m.flush();
-  assert.ok(m.find('C-MARKET 合约验证'),
-    'VERIFICATION_SEAT_NOT_WIRED: test packaging normal market seat must preserve true automatically');
+test('VE04 production configuration hides verification and ignores retired navigation', async t => {
+  const m=await setup(t,'release');m.h.mountRuntimeConfiguration();await m.flush();
+  assert.equal(m.find('AppHost 合约验证'),undefined);
+  assert.equal(m.find('安装目标开发小界面'),undefined);
+  m.h.hashchange('#hanamesh-install?'+new URLSearchParams(target));await m.flush();
+  assert.equal(m.find('安装确认'),undefined);
+  assert.equal(m.traffic.some(row=>row.url.startsWith('/hanamesh/library/target')),false);
+  await m.h.module.openInstallTarget(target);await m.flush();
+  assert.ok(m.find('安装确认'));await m.click('取消');
+  assert.equal(m.installs.length,0);
 });

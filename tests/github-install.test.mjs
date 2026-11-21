@@ -8,11 +8,9 @@ import {scratch} from './helpers.mjs';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
 import {loadClient} from '../src/install-target/harness.js';
-import {createHandoffQueue} from '../src/library/handoff.js';
 import {createLibraryHttpHandler} from '../src/library/routes.js';
 import {createServer} from 'node:http';
 import {validate,loadContract} from '../src/install-target/suite.js';
-import {createReferenceConsumer} from '../src/install-target/fixtures/reference-consumer.js';
 
 const fixtureDshBin=resolve('fixture/dsh/bin.js');
 const sha='0123456789abcdef0123456789abcdef01234567';
@@ -151,25 +149,11 @@ test('GitHub HTTP target resolves encoded data and install rejects a changed com
   assert.equal(refused.status,409);assert.equal((await refused.json()).error.code,'CATALOG_CHANGED');assert.equal(installs,0);
 });
 
-test('GitHub handoff progress is bound to the same SHA and build list, not merely a matching package name',()=>{
-  const queue=createHandoffQueue(),other={...target,ref:'b'.repeat(40)};
-  const create=installTarget=>queue.create({origin:'https://market.example',target:{itemId:'demo',installTarget},item:{id:'demo',package:{name:'dsh-demo'},installTarget}});
-  const first=create(target),second=create(other);
-  queue.report({handoffId:first.handoffId,state:'shown'});queue.report({handoffId:second.handoffId,state:'shown'});
-  assert.deepEqual(queue.get(first.handoffId).installTarget,target);
-  queue.observe({type:'library.install-started',packageName:'dsh-demo',installTarget:target});
-  queue.observe({type:'library.install-done',packageName:'dsh-demo',installTarget:target,status:'restart-required'});
-  assert.equal(queue.get(first.handoffId).state,'installed');assert.equal(queue.get(second.handoffId).state,'shown');
-});
-
-test('GitHub public target schema and authenticated navigation preserve the full structured target',async()=>{
+test('GitHub public target schema preserve the full structured target',async()=>{
   const {schema}=await loadContract(),input={itemId:'demo',installTarget:target};
   assert.deepEqual(validate(schema,input),[]);
   assert.notDeepEqual(validate(schema,{installTarget:target}),[]);
   for(const invalid of [{...target,ref:'main'},{...target,path:'../escape'},{...target,allowBuild:true}])assert.notDeepEqual(validate(schema,{...input,installTarget:invalid}),[]);
-  const result=createReferenceConsumer().navigate('http://localhost:4321/workspace?auth=fixture',input);
-  assert.equal(result.ok,true);const url=new URL(result.url);assert.equal(url.search,'?auth=fixture');
-  assert.deepEqual(JSON.parse(new URLSearchParams(url.hash.slice('#hanamesh-install?'.length)).get('installTarget')),target);
 });
 
 test('GitHub client confirmation displays the repository, full SHA, path and local build warning, then submits exactly that reviewed target',async t=>{
@@ -181,7 +165,7 @@ test('GitHub client confirmation displays the repository, full SHA, path and loc
       return Response.json({source:{kind:'fixture'},item:{id:'demo',displayName:'Demo',kind:'plugin',package:{registry:'github',name:'dsh-demo'},installTarget:target,installed:null,upgradeAvailable:false}});
     }
     if(path==='/hanamesh/library/install')return Response.json({operationId:'op-github',status:'started'},{status:202});
-    return Response.json({items:[],plugins:[],installed:[],handoffs:[],pollMs:1500});
+    return Response.json({apps:[],plugins:[]});
   }});t.after(()=>client.unmount());
   await client.module.openInstallTarget({itemId:'demo',installTarget:target});await client.idle();
   for(const text of ['acme/mono',sha,'plugins/demo','会在本机执行构建脚本','sharp'])assert(client.text().includes(text),'confirmation shows '+text);

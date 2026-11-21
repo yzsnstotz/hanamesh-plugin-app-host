@@ -8,10 +8,10 @@ export function fakeClock(){
   return{now:()=>now,Date:{now:()=>now},setTimeout(fn,ms){const id=++sequence;timers.set(id,{fn,at:now+ms});return id;},clearTimeout(id){timers.delete(id);},
     async advance(ms){const end=now+ms;while(true){const next=[...timers].sort((a,b)=>a[1].at-b[1].at)[0];if(!next||next[1].at>end)break;now=next[1].at;timers.delete(next[0]);next[1].fn();await settle();}now=end;await settle();},get pending(){return timers.size;}};
 }
-export async function clientHarness({fetch,clock,embedded=true,verification=false,href,framed=true,component='LibraryOverlay',mainPage=false}={}){
+export async function clientHarness({fetch,clock,embedded=true,verification=false,href,framed=true,component='ApplicationContent'}={}){
   const dom=createHostDom();
   const source=await readFile(new URL('../../src/client-ui.js',import.meta.url),'utf8');
-  let loaded,tree,cursor=0,dead=false,scheduled=false,props={embedded,verification,mainPage};const hooks=[],pendingEffects=[];
+  let loaded,tree,cursor=0,dead=false,scheduled=false,props={visible:embedded,verification};const hooks=[],pendingEffects=[];
   const schedule=()=>{if(!dead&&!scheduled){scheduled=true;queueMicrotask(()=>{scheduled=false;if(!dead)render();});}};
   const React={createElement:(type,props,...children)=>({type,props:props??{},children}),
     useState(initial){const id=cursor++;if(!hooks[id])hooks[id]={value:typeof initial==='function'?initial():initial};return[hooks[id].value,next=>{hooks[id].value=typeof next==='function'?next(hooks[id].value):next;schedule();}];},
@@ -33,6 +33,6 @@ export async function clientHarness({fetch,clock,embedded=true,verification=fals
     hashchange(hash){scope.location.hash=hash;listeners.get('hashchange')?.();},
     unmount(){dead=true;dom.clear();for(const hook of hooks)hook?.cleanup?.();},pagehide(){listeners.get('pagehide')?.();},pageshow(){listeners.get('pageshow')?.();},
     visibility(state){document.visibilityState=state;documentListeners.get('visibilitychange')?.();},
-    async show(){module.LibraryAction().props.onClick();await settle();},async hide(){const close=find(tree,node=>node.type==='button'&&node.children.includes('关闭'));assert(close);close.props.onClick();await settle();}};
+    async show(){props={...props,visible:true};render();await settle();},async hide(){props={...props,visible:false};render();await settle();}};
   render();await settle();return api;
 }

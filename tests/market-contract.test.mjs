@@ -23,7 +23,7 @@ const runRoot = resolve(import.meta.dirname, '../..');
 const catalogFixture = resolve('tests/fixtures/catalog/reviewed-page.json');
 const appTarget = { itemId: 'com.hanamesh.vibe-trading', packageName: '@hanamesh/app-vibe-trading', contractVersion: '1' };
 const pluginTarget = { itemId: 'com.hanamesh.utility-plugin', packageName: '@hanamesh/utility-plugin', contractVersion: '1' };
-const probePath = '/hanamesh/library/install-target';
+const applicationPath = '/hanamesh/library/installedPlugins';
 const fixtureLeaseToken = 'a'.repeat(64);
 
 async function temporary() {
@@ -88,7 +88,7 @@ async function provider(t, { available = true, gate, cliFails = false, readbackV
   let state = { schema: 1, revision: 0, sources: [] };
   service = await createLibraryService({
     domain: { global: { get: async () => structuredClone(state), set: async value => { state = structuredClone(value); } }, close: async () => {} },
-    host, dataRoot, config: { fixture: catalogFixture, profileDir: profile, handoff: {allowedOrigins: ['https://market.example']} },
+    host, dataRoot, config: { fixture: catalogFixture, profileDir: profile },
     ledgerReader: async () => ({ schema: 1, items: {} }), installer,
   }).init();
   server.on('request', createLibraryHttpHandler(service, {
@@ -104,27 +104,6 @@ async function provider(t, { available = true, gate, cliFails = false, readbackV
   };
 }
 
-for (const available of [true, false]) test(`CM01/${available}: public website discovery reports installation readiness without exposing profile or authentication`, async t => {
-  const h = await provider(t, { available });
-  for (const hostname of ['127.0.0.1', 'localhost']) {
-    const reply = await h.get(probePath, { host: `${hostname}:${new URL(h.origin).port}`, origin: 'https://market.example', 'x-test-auth': undefined });
-    assert.equal(reply.status, 200, 'C-MARKET discovery must be a public read on the named loopback host');
-    assert.equal(reply.json.client, 'dsh', 'standalone official DSH is not evidence of the HanaMesh Desktop');
-    assert.equal(reply.json.ready, available);
-    assert.deepEqual(reply.json.installTarget, { contract: 'hanamesh.install-target', contractVersion: '1', supported: ['1'], fragmentPrefix: '#hanamesh-install?' });
-    assert.equal(reply.headers['access-control-allow-origin'], 'https://market.example', 'only an approved website can read discovery without credentials');
-    assert.equal(reply.headers['access-control-allow-credentials'], undefined);
-    assert.equal(reply.headers['set-cookie'], undefined);
-    assert.equal(reply.headers['cache-control'], 'no-store');
-    assert.equal(reply.json.error?.code, available ? undefined : 'INSTALL_TARGET_UNAVAILABLE');
-    assert.equal(reply.json.suite, undefined, 'Core completeness is unknown: public discovery omits the suite instead of inferring it from an empty physical profile');
-    assert.deepEqual(Object.keys(reply.json).sort(), (available ? ['client', 'ready', 'installTarget', 'traceId'] : ['client', 'ready', 'installTarget', 'error', 'traceId']).sort());
-    assert.ok(!JSON.stringify(reply.json).includes(h.profile));
-  }
-  assert.equal(h.calls.length, 0);
-  assert.deepEqual(h.service.events().events, []);
-});
-
 for (const available of [true, false]) test(`CM01-facts/${available}: authenticated suite card preserves physical inventory while Core completeness remains unknown`, async t => {
   const h = await provider(t, { available });
   const names=['@hanamesh/core','@hanamesh/usage','@hanamesh/dsh-app-host'],versions=['0.3.12','0.2.0-rc.34','0.6.5'];
@@ -137,26 +116,25 @@ for (const available of [true, false]) test(`CM01-facts/${available}: authentica
     assert.deepEqual(item.suite.blocked,[{code:'CORE_SUITE_DECLARATION_MISSING'}]);
     assert.deepEqual(item.suite.components.map(row=>({name:row.name,version:row.version,active:row.active})),names.map((name,i)=>({name,version:physicallyInstalled?versions[i]:null,active:false})));
     assert.equal(item.suite.version,null, 'separate member packages have no selected bundle version');
-    const discovery=await h.get(probePath,{origin:'https://market.example','x-test-auth':undefined});assert.equal(discovery.status,200);assert.equal(discovery.json.suite,undefined);assert.deepEqual(Object.keys(discovery.json).sort(),(available?['client','ready','installTarget','traceId']:['client','ready','installTarget','error','traceId']).sort());assert.ok(!JSON.stringify(discovery.json).includes(h.profile));
   }
   assert.equal(h.calls.length,0);assert.deepEqual(h.service.events().events,[]);
 });
 
-test('CM02: discovery denies unknown hosts, iframe callers and mutation methods without starting an operation', async t => {
+test('CM02: installed read denies unknown hosts, iframe callers and mutation methods without starting an operation', async t => {
   const h = await provider(t);
   for (const [headers, status, code] of [
     [{ host: 'attacker.invalid' }, 403, 'HOST_DENIED'],
     [{ 'sec-fetch-dest': 'iframe' }, 403, 'FRAME_CONTROL_DENIED'],
   ]) {
-    const reply = await h.get(probePath, headers);
+    const reply = await h.get(applicationPath, headers);
     assert.deepEqual([reply.status, reply.json.error?.code], [status, code]);
   }
-  const write = await h.post(probePath, appTarget);
+  const write = await h.post(applicationPath, appTarget);
   assert.deepEqual([write.status, write.json.error?.code], [405, 'METHOD_NOT_ALLOWED']);
   assert.equal(h.calls.length, 0);
 });
 
-test('CM03: public discovery does not make target resolution, installed rows, events or installation public', async t => {
+test('CM03: AppHost does not make target resolution, installed rows, events or installation public', async t => {
   const h = await provider(t);
   for (const path of ['/hanamesh/library/target?packageName=' + encodeURIComponent(appTarget.packageName), '/hanamesh/library/installedPlugins', '/hanamesh/library/events']) {
     const unauthenticated = await h.get(path, { 'x-test-auth': undefined });
@@ -257,8 +235,7 @@ async function market(t, { failed = false, recoveryStatus = 'failed', version = 
   const h = await clientHarness({ clock, verification, fetch: async (path, init = {}) => {
     calls.push({ path, input: init.body ? JSON.parse(init.body) : null });
     let value;
-    if (path === probePath) value = { client: 'dsh', ready: true, installTarget: { contract: 'hanamesh.install-target', contractVersion: '1', supported: ['1'], fragmentPrefix: '#hanamesh-install?' }, traceId: 'fixture-probe' };
-    else if (path.startsWith('/hanamesh/library/target?')) value = { contractVersion: '1', item: item(), source: { kind: 'fixture', path: 'fixture-catalog.json' }, traceId: 'fixture-target' };
+    if (path.startsWith('/hanamesh/library/target?')) value = { contractVersion: '1', item: item(), source: { kind: 'fixture', path: 'fixture-catalog.json' }, traceId: 'fixture-target' };
     else if (path === '/hanamesh/library/install') value = { operationId: 'fixture-op', status: 'started', traceId: 'fixture-install' };
     else if (path.startsWith('/hanamesh/library/events?')) {
       complete = !failed;
@@ -269,18 +246,18 @@ async function market(t, { failed = false, recoveryStatus = 'failed', version = 
       ] };
     } else if (path === '/apps/open') value = { instance: { id: 'fixture-instance', appId: 'market-example', deploymentId: 'local', dataId: 'data-v1', mode: 'owned', runtimeId: 'fixture-runtime', status: 'ready' }, lease: { principalId: 'market-fixture', viewId: JSON.parse(init.body).viewId, instanceId: 'fixture-instance', generation: 1, status: 'active', createdAt: clock.now(), expiresAt: clock.now() + 90_000, originalSessionId: null }, leaseToken: fixtureLeaseToken, uiUrl: 'http://127.0.0.1:49201/', originalSessionId: null, traceId: 'fixture-open' };
     else if (path === '/apps/close') value = { instanceId: 'fixture-instance', alreadyClosed: false, instance: { id: 'fixture-instance', appId: 'market-example', deploymentId: 'local', dataId: 'data-v1', mode: 'owned', runtimeId: 'fixture-runtime', status: 'stopped' }, traceId: 'fixture-close' };
-    else value = { source: { kind: 'fixture', path: 'fixture-catalog.json' }, items: [item()], categories: ['hanamesh-app'], installed: row() ? [row()] : [], plugins: [], page: { nextCursor: null, total: 1 }, restartRequired: complete && !registered, traceId: 'fixture-library' };
+    else value = { source: { kind: 'fixture', path: 'fixture-catalog.json' }, items: [item()], categories: ['hanamesh-app'], apps: row() ? [row()] : [], plugins: [], page: { nextCursor: null, total: 1 }, restartRequired: complete && !registered, traceId: 'fixture-library' };
     return { ok: true, json: async () => value };
   } });
   t.after(() => h.unmount());
   return { h, calls, clock, text: () => JSON.stringify(h.tree) };
 }
 
-test('CM08: normal navigation shows the market confirmation; cancelling sends neither install nor app open', async t => {
+test('CM08: local target resolution shows the installation confirmation; cancelling sends neither install nor app open', async t => {
   const m = await market(t), disposers = [];
   m.h.module.apply({ effect: run => { disposers.push(run()); }, slots: { inject: (_n, run) => run(), register: () => () => {} }, reflect: { get: () => undefined }, provide: () => () => {} });
   t.after(() => disposers.forEach(dispose => dispose?.()));
-  m.h.hashchange('#hanamesh-install?' + new URLSearchParams(appTarget));
+  await m.h.module.openInstallTarget(appTarget);
   await settle();
   for (const field of ['Ordinary fixture app', appTarget.packageName, '测试目录']) assert.ok(m.text().includes(field));
   await m.h.click('取消');
@@ -325,7 +302,7 @@ test('CM11: wrong installed version is reported as the C-MARKET readback error a
   await acknowledgeInstall(m.h);await m.h.click('确认安装'); await m.clock.advance(1000);
   assert.match(m.text(), /INSTALL_READBACK_MISMATCH/, 'the public contract error must survive the client readback check');
   assert.doesNotMatch(m.text(), /安装完成，请查看已安装列表/);
-  const dialog = m.h.find(n => n.props['aria-label'] === '市场安装确认');
+  const dialog = m.h.find(n => n.props['aria-label'] === '安装确认');
   assert.ok(dialog);
   assert.doesNotMatch(JSON.stringify(dialog), /"打开"/);
 });
@@ -335,7 +312,7 @@ test('CM12: the input form for developer verification is absent from a normal cl
   assert.equal(Boolean(m.h.find(n => n.props['aria-label'] === '安装目标开发小界面')), false, 'verification entry belongs only to the test build');
 });
 
-test('CM13: pinned Cordis/webserver registers the discovery route and plugin disposal removes it', async t => {
+test('CM13: pinned Cordis/webserver registers the installed application route and plugin disposal removes it', async t => {
   const root = await temporary(), ctx = new Context();
   t.after(async () => { try { await ctx.fiber.dispose(); } finally { await rm(root, { recursive: true, force: true }); } });
   ctx.plugin(Storage);
@@ -346,36 +323,12 @@ test('CM13: pinned Cordis/webserver registers the discovery route and plugin dis
   await ctx.start?.();
   await until(() => ctx.get('webServer')?.port > 0);
   const origin = `http://127.0.0.1:${ctx.get('webServer').port}`;
-  const fiber = ctx.plugin(appHost, { dataRoot: join(root, 'apps'), library: { sources: [], handoff: { enabled: false, allowedOrigins: ['https://market.example'] } } });
+  const fiber = ctx.plugin(appHost, { dataRoot: join(root, 'apps'), library: { sources: [] } });
   await until(() => ctx.get('hanameshApps'));
-  const reply = await http(origin + probePath, { headers: { origin: 'https://market.example' } });
-  assert.equal(reply.status, 200, 'the real registered route must answer even when no browser session is present');
-  assert.equal(reply.json.ready, false);
-  assert.equal(reply.json.error?.code, 'INSTALL_TARGET_UNAVAILABLE');
+  const reply = await http(origin + applicationPath, { headers: { origin: 'https://market.example' } });
+  assert.equal(reply.status,403,'the live registered route rejects the foreign origin');
   await fiber.dispose();
-  assert.equal((await http(origin + probePath)).status, 404);
-});
-
-test('CM14: test-client verification lists every C-MARKET HTTP call with editable sample input and observable output', async t => {
-  const m = await market(t, { verification: true });
-  const panel = m.h.find(n => n.props['aria-label'] === 'C-MARKET 合约验证');
-  assert.ok(panel, 'test build exposes the module-owned contract verification panel');
-  for (const path of [probePath, '/hanamesh/library', '/hanamesh/library/target', '/hanamesh/library/install', '/hanamesh/library/events', '/hanamesh/library/installedPlugins', '/hanamesh/apps', '/apps/open', '/apps/resume', '/apps/heartbeat', '/apps/close']) {
-    assert.ok(m.text().includes(path), `the verification entry lists ${path}`);
-  }
-  assert.ok(m.h.find(n => ['textarea', 'input'].includes(n.type) && n.props['aria-label'] === '合约样例输入'));
-  assert.ok(m.h.find(n => n.props['aria-label'] === '合约调用输出'));
-  const choose = m.h.find(n => n.type === 'select' && n.props['aria-label'] === '合约调用');
-  assert.ok(choose, 'a listed call can be selected');
-  choose.props.onChange({ target: { value: 'GET ' + probePath } });
-  await settle();
-  const sample = m.h.find(n => ['textarea', 'input'].includes(n.type) && n.props['aria-label'] === '合约样例输入');
-  sample.props.onChange({ target: { value: '{}' } });
-  await settle();
-  await m.h.click('调用合约');
-  assert.equal(m.calls.filter(c => c.path === probePath).length, 1, 'verification calls the normal provider route');
-  assert.match(JSON.stringify(m.h.find(n => n.props['aria-label'] === '合约调用输出')), /hanamesh.install-target/);
-  assert.equal(m.calls.filter(c => ['/hanamesh/library/install', '/apps/open'].includes(c.path)).length, 0, 'showing verification never installs or opens implicitly');
+  assert.equal((await http(origin + applicationPath)).status, 404);
 });
 
 test('CM15: an event cursor from before a provider restart reports loss of operation history explicitly', async t => {

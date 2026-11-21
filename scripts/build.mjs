@@ -17,8 +17,8 @@ await rm(`${root}/dist`,{recursive:true,force:true});await mkdir(`${root}/dist`)
 await cp(`${root}/src`,`${root}/dist`,{recursive:true});
 if(verification){
   const file=resolve(root,'dist/client-ui.js'),source=await readFile(file,'utf8');
-  const marker='return{name,inject,apply,ProvidersSection';
+  const marker='return{name,inject,apply,';
   if(source.split(marker).length!==2)throw new Error('AppHost client factory export is not unique.');
-  await writeFile(file,source.replace(marker,'return{name,inject,apply:ctx=>apply(ctx,{verification:true}),ProvidersSection'));
+  await writeFile(file,source.replace(marker,'return{name,inject,apply:ctx=>apply(ctx,{verification:true}),'));
 }
 console.error('Build completed: AppHost ESM modules and public type declarations; provision is bundled by the normal pack command.');

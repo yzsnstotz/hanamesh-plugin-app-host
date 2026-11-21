@@ -1,9 +1,8 @@
 import { AppHost,AtomicFileStore,createHttpHandler,type AppDefinition,type DshStorageBinding } from '../dist/index.js';
 import { WorkspaceAppClient } from '../dist/client.js';
 import { apply,domainBinding,browserAuthentication,type DshPluginConfig } from '../dist/dsh.js';
-import {createMarketSeat,openInstallTarget,type InstallTargetReceipt} from '../dist/client-ui.js';
+import {openInstallTarget,type InstallTargetReceipt} from "../src/client-ui.js";
 const targetReceipt:InstallTargetReceipt=await openInstallTarget({itemId:'catalog-id',packageName:'example-plugin'});
-await createMarketSeat().openInstallTarget({packageName:'example-plugin'});
 // @ts-expect-error Versions and download URLs are resolved by the market, never supplied by callers.
 await openInstallTarget({packageName:'example-plugin',version:'9.0.0',url:'https://example.test/pkg.tgz'});
 void targetReceipt;
@@ -34,11 +33,6 @@ void [dshConfig,binding,authentication,dshEntry]; // Type-only exercise, not evi
 import {runCatalogProviderSuite,runCatalogConsumerSuite,type CatalogSuiteReport} from '../src/catalog/suite.js';
 const catalogReports:Promise<CatalogSuiteReport>[]=[runCatalogProviderSuite(),runCatalogConsumerSuite()];void catalogReports;
 
-import {INSTALLATION_STATUS_CAPABILITY,type InstallationStatus,type InstallationStatusRequest} from '../dist/installation-status.js';
-const statusRequest:InstallationStatusRequest={contractVersion:'1',consent:'read-installations'};
-declare const observations:InstallationStatus;
-observations.observations[0]?.version satisfies string|null|undefined;
-INSTALLATION_STATUS_CAPABILITY.contract satisfies 'hanamesh.installation-status';void statusRequest;
 
 import type {SuiteSourceSettings,SuiteSourceSettingsInput} from '../dist/dsh.js';
 const sourceChoice:SuiteSourceSettingsInput={mode:'core'};

@@ -22,7 +22,7 @@ test('B17 owned selection persists, rejects unknown fields and preserves catalog
  const domain={global:{get:async()=>structuredClone(state),set:async v=>{if(fail)throw new Error('refused');state=structuredClone(v);}},close:async()=>{}};
  const open=()=>createLibraryService({domain,host:{instanceList:()=>[]},config:{registry:'https://custom.example/'}}).init();let library=await open();
  assert.equal(library.suiteSourceSettings().mode,'configured');await assert.rejects(library.replaceSuiteSourceSettings({mode:'core',registry:'https://wrong.example/'}),{code:'INVALID_SUITE_SOURCE_SETTINGS'});
- await library.replaceSuiteSourceSettings({mode:'core'});assert.deepEqual(state.sources,[]);assert.deepEqual(state.handoff,initial.handoff);library=await open();assert.equal(library.suiteSourceSettings().mode,'core');fail=true;await assert.rejects(library.replaceSuiteSourceSettings({mode:'configured'}),{code:'SUITE_SOURCE_SAVE_FAILED'});assert.equal(library.suiteSourceSettings().mode,'core');assert.equal(state.suiteSource.mode,'core');
+ await library.replaceSuiteSourceSettings({mode:'core'});assert.deepEqual(state.sources,[]);assert.equal(Object.hasOwn(state,'handoff'),false);library=await open();assert.equal(library.suiteSourceSettings().mode,'core');fail=true;await assert.rejects(library.replaceSuiteSourceSettings({mode:'configured'}),{code:'SUITE_SOURCE_SAVE_FAILED'});assert.equal(library.suiteSourceSettings().mode,'core');assert.equal(state.suiteSource.mode,'core');
 });
 
 test('B17 strict owned HTTP settings require auth, origin, exact JSON and no query; current source is observable only',async t=>{
@@ -57,8 +57,8 @@ test('B17 source settings page names separate registry choice, live unavailable 
 test('B17 concurrent saves serialize one whole AppHost snapshot',async()=>{
  let state={schema:1,revision:3,sources:[]},first=true,release,entered;const started=new Promise(r=>entered=r),gate=new Promise(r=>release=r);const writes=[];
  const library=await createLibraryService({domain:{global:{get:async()=>state,set:async next=>{if(first){first=false;entered();await gate;}writes.push(structuredClone(next));state=structuredClone(next);}},close:async()=>{}},host:{instanceList:()=>[]}}).init();
- const saveSource=library.replaceSuiteSourceSettings({mode:'core'});await started;const saveCatalog=library.replaceSources({sources:[{manifestUrl:'https://catalog.example/source.json',enabled:true}]});const saveHandoff=library.replaceHandoffSettings({enabled:false});release();await Promise.all([saveSource,saveCatalog,saveHandoff]);
- assert.equal(state.suiteSource.mode,'core');assert.deepEqual(state.sources,[{manifestUrl:'https://catalog.example/source.json',enabled:true}]);assert.equal(state.handoff.enabled,false);assert.deepEqual(writes.map(w=>w.revision),[4,5,6]);
+ const saveSource=library.replaceSuiteSourceSettings({mode:'core'});await started;const saveCatalog=library.replaceSources({sources:[{manifestUrl:'https://catalog.example/source.json',enabled:true}]});const restoreSource=library.replaceSuiteSourceSettings({mode:'configured'});release();await Promise.all([saveSource,saveCatalog,restoreSource]);
+ assert.equal(state.suiteSource.mode,'configured');assert.deepEqual(state.sources,[{manifestUrl:'https://catalog.example/source.json',enabled:true}]);assert.deepEqual(writes.map(w=>w.suiteSource.mode),['core','core','configured']);assert.deepEqual(writes.map(w=>w.revision),[4,5,6]);
 });
 
 test('B17 execution re-reads the public source and declaration after confirmation and refuses a concurrent source change',async()=>{

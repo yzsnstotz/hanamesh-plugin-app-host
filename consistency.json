@@ -51,15 +51,14 @@
     },
     {
       "id": "suite-source-selection",
-      "name": "套件来源与目录交接配置整体发布",
+      "name": "套件来源与应用目录配置整体发布",
       "facts": [
         "library:suiteSource",
         "library:sources",
-        "library:handoff",
         "library:revision"
       ],
       "medium": "single-snapshot:hanamesh_library",
-      "why": "设置写入串行读取最新完整镜像；持久成功后才发布内存，失败保持旧选择，不覆盖并发目录或交接字段。",
+      "why": "设置写入串行读取最新完整镜像；持久成功后才发布内存，失败保持旧选择，不覆盖并发目录字段。",
       "test": "tests/suite-source.test.mjs:B17 concurrent saves"
     }
   ],

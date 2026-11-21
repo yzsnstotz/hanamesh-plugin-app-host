@@ -6,32 +6,22 @@ function localeRuntime(){let active='en';const subscribers=new Set(),dicts=new M
 const settings={mode:'managed',version:'24.22.0',sourceBase:'https://nodejs.org/dist',storageRoot:'/owned/node',externalBinary:''};
 test('host locale changes all owned settings labels and Node controls without changing saved values or downloading',async t=>{
  const locale=localeRuntime(),calls=[];
- const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async(path,init)=>{calls.push({path,init});return{ok:true,json:async()=>path.endsWith('/node-runtime')?{settings,names:{mode:'运行方式',version:'Node 版本',sourceBase:'下载来源',storageRoot:'存放位置',externalBinary:'已有独立 Node 路径'},versions:['24.22.0'],supported:true,ready:false}:path.endsWith('installedPlugins')?{plugins:[]}:{handoffs:[],pollMs:1500}};}});
+ const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async(path,init)=>{calls.push({path,init});return{ok:true,json:async()=>path.endsWith('/node-runtime')?{settings,names:{mode:'运行方式',version:'Node 版本',sourceBase:'下载来源',storageRoot:'存放位置',externalBinary:'已有独立 Node 路径'},versions:['24.22.0'],supported:true,ready:false}:path.endsWith('installedPlugins')?{plugins:[]}:{apps:[]}};}});
  t.after(()=>h.dispose());h.mountSettings('hanamesh-node-runtime');await flush();
  assert.match(JSON.stringify(h.tree),/Prepare installation environment/);assert.doesNotMatch(JSON.stringify(h.tree),/[\u3400-\u9fff]/);
  for(const slot of h.slots.values())if(slot.descriptor.label)assert.equal(typeof slot.descriptor.label,'string','registrant-localized navigation label');;
  locale.set('zh');await flush();assert.equal(h.slots.get('hanamesh-node-runtime').descriptor.label,'安装环境');assert.match(JSON.stringify(h.tree),/准备安装环境/);assert.equal(calls.filter(c=>c.init?.method==='POST').length,0);
  h.dispose();assert.equal(locale.subscriptions,0);
 });
-test('catalog failure has actionable localized copy and the exact original code only in folded diagnostics',async t=>{
- const locale=localeRuntime();const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async path=>({ok:!path.startsWith('/hanamesh/library?'),json:async()=>path.startsWith('/hanamesh/library?')?{error:{code:'INVALID_CATALOG_MANIFEST',message:'Retain selected view.',details:{view:'hanamesh'}}}:path.endsWith('installedPlugins')?{plugins:[]}:{handoffs:[],pollMs:1500}})});t.after(()=>h.dispose());await flush();h.mountMarket();await flush();
- const alert=h.find(n=>n.props?.role==='alert');assert.ok(alert);assert.match(JSON.stringify(alert),/catalog/i);assert.ok(h.find(n=>n.type==='details'&&!n.props.open));assert.ok(h.find(n=>n.type==='summary'&&n.children.includes('Technical details')));
- assert.match(JSON.stringify(h.tree),/Retain selected view/);assert.match(JSON.stringify(h.tree),/hanamesh/);locale.set('zh');await flush();assert.ok(h.find(n=>n.type==='summary'&&n.children.includes('技术详情')));
-});
-
-test('website handoff failure follows a later locale switch and retains its raw reason',async t=>{
- const locale=localeRuntime();const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async path=>({ok:!path.endsWith('/handoffs'),json:async()=>path.endsWith('/handoffs')?{error:{code:'HANDOFF_UNAVAILABLE',message:'Handoff original reason',details:{listener:'unavailable'}}}:path.endsWith('/handoff-settings')?{listener:{status:'unavailable',need:'真实端口不可用'}}:{plugins:[]}})});t.after(()=>h.dispose());await flush();h.mountSettings('hanamesh-library-handoff');await flush();assert.match(JSON.stringify(h.tree),/Website handoff could not be read/);locale.set('zh');await flush();assert.doesNotMatch(JSON.stringify(h.tree),/Website handoff could not be read/);assert.match(JSON.stringify(h.tree),/网站交接：读取交接失败/);assert.match(JSON.stringify(h.tree),/HANDOFF_UNAVAILABLE/);assert.match(JSON.stringify(h.tree),/Handoff original reason/);
-});
-
 test('normal installation target resolution preserves detailed refusal in localized failure surface',async t=>{
- const locale=localeRuntime();const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async path=>({ok:!path.startsWith('/hanamesh/library/target?'),json:async()=>path.startsWith('/hanamesh/library/target?')?{error:{code:'CATALOG_ITEM_MISSING',message:'Exact target unavailable',details:{itemId:'example'}}}:path.endsWith('installedPlugins')?{plugins:[]}:{handoffs:[],pollMs:1500}})});t.after(()=>h.dispose());await flush();h.mountMarket();await assert.rejects(h.module.openInstallTarget({itemId:'example'}));await flush();assert.ok(h.find(n=>n.type==='summary'&&n.children.includes('Technical details')));assert.match(JSON.stringify(h.tree),/Exact target unavailable/);assert.match(JSON.stringify(h.tree),/CATALOG_ITEM_MISSING/);
+ const locale=localeRuntime();const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async path=>({ok:!path.startsWith('/hanamesh/library/target?'),json:async()=>path.startsWith('/hanamesh/library/target?')?{error:{code:'CATALOG_ITEM_MISSING',message:'Exact target unavailable',details:{itemId:'example'}}}:path.endsWith('installedPlugins')?{plugins:[]}:{apps:[]}})});t.after(()=>h.dispose());await flush();h.mountRuntimeConfiguration();await assert.rejects(h.module.openInstallTarget({itemId:'example'}));await flush();assert.ok(h.find(n=>n.type==='summary'&&n.children.includes('Technical details')));assert.match(JSON.stringify(h.tree),/Exact target unavailable/);assert.match(JSON.stringify(h.tree),/CATALOG_ITEM_MISSING/);
 });
 
 function visibleText(node){if(Array.isArray(node))return node.map(visibleText).join(' ');if(!node||typeof node!=='object')return typeof node==='string'?node:'';return node.type==='details'?'':visibleText(node.children);}
 for(const language of ['zh','en'])test(`provider source and state use readable ${language} labels while exact records stay folded`,async t=>{
  const locale=localeRuntime();locale.set(language);
  const providers=[['configured','dsh-models'],['absent','dsh-models'],['unreachable','coding-oauth-gateway'],['gateway-off','coding-oauth-gateway'],['future-state','future-source']].map(([state,source],i)=>({id:'provider-'+i,displayName:'Provider '+i,source,state,models:['model-A'],value:'must-not-render-secret'}));
- const calls=[];const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async(path,init)=>{calls.push({path,init});return{ok:true,json:async()=>path.endsWith('/providers')?{providers}:path.endsWith('/apps')?{apps:[]}:{handoffs:[],pollMs:1500}};}});t.after(()=>h.dispose());h.mountSettings('hanamesh-providers');await flush();
+ const calls=[];const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async(path,init)=>{calls.push({path,init});return{ok:true,json:async()=>path.endsWith('/providers')?{providers}:path.endsWith('/apps')?{apps:[]}:{apps:[]}};}});t.after(()=>h.dispose());h.mountSettings('hanamesh-providers');await flush();
  const shown=visibleText(h.tree);
  for(const raw of ['dsh-models','absent','gateway-off','unreachable','future-state','future-source'])assert.ok(!shown.includes(raw),raw+' is not primary copy');
  for(const text of language==='zh'?['已配置','尚未配置','暂时无法连接','网关已关闭','状态暂不可用','DSH 模型设置']:['Configured','Not configured','Cannot connect right now','Gateway is off','Status unavailable','DSH model settings'])assert.ok(shown.includes(text),text);
@@ -43,7 +33,7 @@ for(const language of ['zh','en'])test(`provider source and state use readable $
 
 test('future provider routing state is unknown without exposing its code or offering a grant action',async t=>{
  const locale=localeRuntime();const calls=[];
- const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async(path,init)=>{calls.push({path,init});return{ok:true,json:async()=>path.endsWith('/providers')?{providers:[]}:path.endsWith('/apps')?{apps:[{id:'app-one',name:'Test App'}]}:path.includes('/plan?')?{items:[{state:'future-routing-state',entry:{env:'APP_API_KEY',purpose:'Application access'}}]}:{handoffs:[],pollMs:1500}};}});t.after(()=>h.dispose());h.mountSettings('hanamesh-providers');await flush();
+ const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async(path,init)=>{calls.push({path,init});return{ok:true,json:async()=>path.endsWith('/providers')?{providers:[]}:path.endsWith('/apps')?{apps:[{id:'app-one',name:'Test App'}]}:path.includes('/plan?')?{items:[{state:'future-routing-state',entry:{env:'APP_API_KEY',purpose:'Application access'}}]}:{apps:[]}};}});t.after(()=>h.dispose());h.mountSettings('hanamesh-providers');await flush();
  assert.match(visibleText(h.tree),/Status unavailable/);assert.doesNotMatch(visibleText(h.tree),/future-routing-state/);
  assert.ok(h.find(n=>n.type==='details'&&!n.props.open&&JSON.stringify(n).includes('future-routing-state')));
  assert.ok(!h.find(n=>n.type==='button'&&visibleText(n).match(/Restore|Revoke/)));
@@ -52,7 +42,7 @@ test('future provider routing state is unknown without exposing its code or offe
 
 for(const unknown of ['constructor','toString','__proto__'])test(`inherited key ${unknown} remains unknown in source, provider state and route state`,async t=>{
  const locale=localeRuntime();const calls=[];
- const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async(path,init)=>{calls.push({path,init});return{ok:true,json:async()=>path.endsWith('/providers')?{providers:[{id:'provider-unknown',displayName:'Unknown Provider',source:unknown,state:unknown,models:[]}]}:path.endsWith('/apps')?{apps:[{id:'app-one',name:'Test App'}]}:path.includes('/plan?')?{items:[{state:unknown,entry:{env:'APP_API_KEY',purpose:'Application access'}}]}:{handoffs:[],pollMs:1500}};}});t.after(()=>h.dispose());h.mountSettings('hanamesh-providers');await flush();
+ const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async(path,init)=>{calls.push({path,init});return{ok:true,json:async()=>path.endsWith('/providers')?{providers:[{id:'provider-unknown',displayName:'Unknown Provider',source:unknown,state:unknown,models:[]}]}:path.endsWith('/apps')?{apps:[{id:'app-one',name:'Test App'}]}:path.includes('/plan?')?{items:[{state:unknown,entry:{env:'APP_API_KEY',purpose:'Application access'}}]}:{apps:[]}};}});t.after(()=>h.dispose());h.mountSettings('hanamesh-providers');await flush();
  assert.match(visibleText(h.tree),/Source unavailable/);assert.equal(visibleText(h.tree).split('Status unavailable').length-1,2);
  assert.ok(h.find(n=>n.type==='details'&&!n.props.open&&JSON.stringify(n).includes(unknown)));
  assert.ok(!h.find(n=>n.type==='button'&&visibleText(n).match(/Restore|Revoke/)));assert.equal(calls.filter(c=>c.init?.method==='POST').length,0);
@@ -65,16 +55,4 @@ for(const language of ['zh','en'])test(`R1 provider guidance uses host ${languag
  assert.ok(shown.includes(language==='zh'?'DSH「模型」':'DSH Models'));
  assert.ok(h.find(n=>n.type==='details'&&!n.props.open&&visibleText(n.children).includes(language==='zh'?'技术详情':'Technical details')));
  if(language==='zh')assert.doesNotMatch(shown,/Models/);
-});
-for(const language of ['zh','en'])test(`R1 handoff ${language} controls precede folded implementation and preserve saved values`,async t=>{
- const locale=localeRuntime();locale.set(language);const calls=[];
- const settings={enabled:true,ports:[39317,39318],allowedOrigins:['https://market.hanamesh.com'],ttlMs:300000,pollMs:1500};
- const names=Object.fromEntries(Object.keys(settings).map(k=>[k,'library.handoff.'+k]));
- const rules=[{rule:'只在本机 127.0.0.1 上监听，请求的 Host 必须是 127.0.0.1 或 localhost 加监听端口',why:'防止别的机器或 DNS 重绑定的网页冒充本机'},{rule:'交接请求体不超过 4096 字节',why:'合法请求只有插件 id、包名、合约版本三项，最长不到 500 字节；更大的一定不是交接'}];
- const h=await registeredClient({file:new URL('../src/client-ui.js',import.meta.url),locale,href:'http://127.0.0.1:45678',fetch:async(path,init)=>{calls.push({path,init});return{ok:true,json:async()=>path.endsWith('/handoff-settings')?{settings,defaults:settings,names,rules,listener:{status:'disabled'}}:{handoffs:[]}};}});t.after(()=>h.dispose());h.mountSettings('hanamesh-library-handoff');await flush();
- const shown=visibleText(h.tree);assert.doesNotMatch(shown,/DNS|4096|字节|request body|Host must|library\.handoff/i);
- const children=h.tree.children.flat(Infinity);assert.ok(children.findIndex(n=>n?.props?.className==='hm-handoff-settings')<children.findIndex(n=>n?.type==='details'));
- assert.ok(h.find(n=>n.type==='details'&&!n.props.open&&JSON.stringify(n).includes('4096')));
- await h.find(n=>n.type==='button'&&visibleText(n)===(language==='zh'?'保存并重新监听':'Save and restart listener')).props.onClick();await flush();
- const write=calls.find(c=>c.init?.method==='POST');assert.deepEqual(JSON.parse(write.init.body),settings);
 });

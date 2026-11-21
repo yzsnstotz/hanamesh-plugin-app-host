@@ -16,7 +16,7 @@ test('AH-VL08: actual default90s lease survives idle market client and last-view
  host=new AppHost({store:new AtomicFileStore(join(root,'store')),dataRoot:join(root,'data'),parentOrigin:origin});
  const def=definition({embedding:'gateway'});host.register(def);await host.init();assert.equal(host.leaseTtlMs,90_000);assert.equal(host.sweepIntervalMs,15_000);
  handler=createHttpHandler(host,{parentOrigin:origin,authenticate:()=>({principalId:'lease-test'}),authorize:()=>true});
- const row={appId:def.id,state:'registered',packageName:'example',definition:def};const page={items:[{id:def.id,kind:'application',displayName:'Example',installed:row}],installed:[row]};
+ const row={appId:def.id,state:'registered',packageName:'example',definition:def};const page={items:[{id:def.id,kind:'application',displayName:'Example',installed:row}],apps:[row]};
  const browserFetch=async(path,init={})=>{calls.push({path,at:Date.now()});return fetch(origin+path,{...init,headers:{...init.headers,origin}});};
  client=await clientHarness({fetch:browserFetch});await until(()=>client.find(node=>node.type==='button'&&node.children.includes('打开')));await client.click('打开');await until(()=>client.find(node=>node.type==='iframe'),{timeout:10_000});
  const iframe=client.find(node=>node.type==='iframe');const instance=host.instanceList('lease-test')[0],initial=host.list('lease-test').views[0];

@@ -29,7 +29,7 @@ test('AH-D10: unloading the plugin during a pending payload Node probe kills the
   const appHost=await import(pathToFileURL(join(repo,'src/dsh.js')).href);
   const errors=[];ctx=new Context();ctx.logger.exporter({export(message){if(message.type==='error')errors.push(message)}});
   ctx.provide('webServer',{port:49123});ctx.provide('storageDomain',{open(){throw new Error('no acquisition expected after unload')}});ctx.provide('connection',{requestRejection(){}});
-  const fiber=ctx.plugin(appHost,{dataRoot:join(root,'data'),library:{sources:[],handoff:{enabled:false}}});
+  const fiber=ctx.plugin(appHost,{dataRoot:join(root,'data'),library:{sources:[]}});
   for(let i=0;i<300&&!pid;i++){try{pid=Number((await readFile(witness,'utf8')).trim())}catch{await pause(10)}}
   assert.ok(pid>0,'the probe child must have started');
   let settled=false;const disposing=Promise.resolve(fiber.dispose()).then(()=>{settled=true});

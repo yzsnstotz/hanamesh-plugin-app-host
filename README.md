@@ -1,10 +1,10 @@
+# HanaMesh AppHost
+
+0.6.31 提供应用运行、视图租约、应用安装和运行环境。已安装应用可从 HanaMesh 首页的「继续使用」或 AppHost 原生插件配置打开、补齐运行时和卸载。HanaMesh 市场由独立的 `@hanamesh/market` 在 DSH 插件页提供。
+
 0.6.30 候选（PKG1）：应用库默认 provision 调用迁至已声明且随包提供的 @hanamesh/lib-provision 公开 API；发布前解包实际 npm tgz，检查全部 JS/MJS/CJS 的相对依赖闭包。
 
-0.6.29 候选（DT11）：Claude/Codex 只读命令失败在可信宿主日志保留固定命令阶段、退出状态、stderr 字节数/分类及 worker、anchor、CLI、清理耗时；不记录 stderr 原文、路径或环境值。Web 原因码与所有预算、超时、不重试规则保持。见 [状态协议](docs/INSTALLATION_STATUS.md#trusted-command-diagnostics-0629)。
-
-0.6.28 候选（DT7）：无总包的 DSH 单独组件由 Core 公开 `assessLegacyInstallation` 唯一判定。AppHost 只收集实际磁盘包、入口、profile 选择与可观察依赖事实并转述结果，不再按“无总包”直接报未安装。没有新 Core 判定接口或事实不可读时保持未知。见 [状态协议](docs/INSTALLATION_STATUS.md)。
-
-0.6.27 候选：客户端随附独立 Node 的启动识别上限由 1 秒改为 30 秒（`PAYLOAD_NODE_PROBE_TIMEOUT_MS`）。owner Mac 实测冷启动 4.07 s / 2.81 s（CPU 0.09 s），已安装应用 0.26 s，30 秒留出 7 倍以上余量；旧 1 秒上限会让整次会话没有 Node，Claude Code/Codex 只读检测恒为 `AGENT_READER_NODE_REQUIRED`、安装环境显示未准备。到上限或插件卸载时立即 SIGKILL 该子进程，Node 仍按原规则记为不可用。身份与版本校验不变。
+0.6.27 候选：客户端随附独立 Node 的启动识别上限由 1 秒改为 30 秒（`PAYLOAD_NODE_PROBE_TIMEOUT_MS`）。owner Mac 实测冷启动 4.07 s / 2.81 s（CPU 0.09 s），已安装应用 0.26 s，30 秒留出 7 倍以上余量；旧 1 秒上限会让整次会话没有 Node，安装环境显示未准备。到上限或插件卸载时立即 SIGKILL 该子进程，Node 仍按原规则记为不可用。身份与版本校验不变。
 
 R168：后台套件版本查询与显式安装确认分离，展示读取不替换已打开的默认/历史确认计划；来源、精确组合与物理基线的执行复读保护保持。见 [查询与确认边界](docs/LIBRARY.md#r168-后台套件查询与确认计划)。
 
@@ -12,21 +12,11 @@ R162：预装 `@hanamesh/brand` 的前后端保护身份统一；目录和已装
 
 应用库版本管理：卡片和详情显示已装与最新兼容版本；可升级或选择历史 npm 版本，逐次确认后交给正式 DSH CLI 精确安装。失败保留原诊断与逐项恢复结果；需要完全退出并重开。版本查询失败显示错误，不冒充已是最新。详见 [版本管理](docs/LIBRARY.md#vr1-市场版本管理)。
 
-0.6.26 候选：Codex 官方 GitHub 市场 URL 的 `.git` 后缀按精确仓库身份归一；市场映射与每项安装来源独立校验，不同仓库、凭据、查询、fragment 仍拒绝。CD2 扩大只读覆盖：ChatGPT 桌面 App 内置 Codex CLI、SemVer 预发布版本（仍须不低于最低版本）；官方用户资料目录不存在即判未安装；HanaMesh 客户端从磁盘读取 DSH 桌面版 profile（`~/.dsh/profiles/desktop`）给出 DSH 渠道已安装/未安装。检测不执行安装或配置写入，见[安装状态](docs/INSTALLATION_STATUS.md)。
-
-0.6.25 候选：本机 HTTPS 目录允许回环端口及 *.localhost，修复彩排种子初始化阻断检测监听；公网 HTTPS 非标准端口仍拒绝。Claude 官方 GitHub 市场清单按 repo 身份核对，保留不同来源拒绝。安装物回归命令见[安装状态](docs/INSTALLATION_STATUS.md)，不以页面打开代替检测通过。
-
 PX3 跨平台候选：Windows 可以运行插件/公开服务、attach 应用、受控只读 CLI 与普通包安装；`owned` 应用仍在创建进程、数据目录及请求凭据之前明确拒绝 `PLATFORM_UNSUPPORTED`。Windows 单测保留真实 attach 的 HTTP/租约/网关断言，并验证 owned 的持久失败、无进程/文件写入及不消费凭据；这些断言不构成 Windows owned 运行支持。独立 Node 可用不扩大 owned 支持；受管 Node 准备仍遵守原平台限制。Windows 本地快照采用文件 flush 加同目录 rename，不承诺断电后目录项持久；Coding OAuth Gateway 文件源因缺私有 ACL 证明继续拒绝，HTTP 提供方不变。各平台实际结果以本分支 GitHub Actions 矩阵收据为准。
-
-R115返修（同0.6.23候选）：登录shell按退出结果和封装JSON解析成功，忽略正常stderr；所选CLI保留管理器PATH与XDG目录/缺省，不再用空临时XDG隐藏全局版本。真实Bash/asdf/mise启动链回归与工具来源见 [安装状态](docs/INSTALLATION_STATUS.md)。
-
-0.6.23 候选：install-target 对名单外有效网站提供精确CORS的固定403来源拒绝，GET预检以204和按需PNA头支持浏览器读回；不开放能力/清单/安装权限。同意检测后自动发现当前用户的 Claude Code / Codex 官方 CLI，无手动读取器入口；接受不低于 2.1.301 / 0.162.1 且版本格式与清单 JSON 校验通过的版本。安装布局、优先级、只读边界及具名预算见 [安装状态](docs/INSTALLATION_STATUS.md)。
 
 PK3 开发供给：`vendor/hanamesh-core-0.3.33.tgz` 是 Core 分支提交 `969a89a1f7e383fca7d6aefa7f27507d3a1605d5` 的正常归档，仅供开发与公开合约测试；SHA256 和来源见 `vendor/core-fixture.json`，安装仍严格检查真实 peers。这不是已发布的 npm Core，也不进入运行时依赖。
 
 PK1 兼容候选：开发输入更新为 DSH 0.2.2-rc.1 / Cordis 4.1.0 / Schemastery 3.19.0（适用者）。公开 peer 保留兼容范围，并显式包含 0.2.2 预发布；不锁定用户宿主版本。本分支尚未发布，安装和原生加载结果以 PK1 交件为准。
-
-0.6.21 候选：普通市场和网站交接消费 Indexer 的固定 GitHub SHA/子目录/包名/构建名单。客户端沿原确认页展示来源、完整 commit 与本机构建提示；确认回传同一目标，目录更新不得换 SHA。执行仍走受控官方 DSH CLI / pnpm，读回精确来源与启用项后报告需完全退出重开；没有改上游或另写安装器。详见 [安装目标](docs/INSTALL_TARGET.md)。初轮已完成隔离 DSH、网站及真实 DTO 验收；本轮 R25 另修未匹配固定目标时的拒绝与退休目录版本字段，仍待复审，不宣称已发布。
 
 0.6.22 候选：普通插件只执行目录固定目标；缺 installMethods 即拒绝。套件安装命令只消费 Core，删除普通包名的元数据查询和规则加载。
 
@@ -35,8 +25,6 @@ PK1 兼容候选：开发输入更新为 DSH 0.2.2-rc.1 / Cordis 4.1.0 / Schemas
 官方桌面 0.2.0-rc.2 自带 pnpm 11.7.0 对同一包的多条精确 `minimumReleaseAgeExclude` 只采用首条，旧版条目会遮住后列新版，整份 lockfile 检查因而可阻断无关插件安装。本机桌面 0.2.1-rc.3 自带的 pnpm 11.28.5 已合并这些条目，相同样本通过；未推定首次修复版本。请通过官方渠道升级 DSH，保留失败的技术详情；AppHost 不绕过该检查。见 [兼容说明](docs/DSH_COMPATIBILITY.md)。
 
 0.6.14：严格读取标准分发目录的精确 npm 三目标与 agentPlugins，保留历史固定 GitHub DTO；目录事实仅展示，不决定兼容或升级。R1-COMBO-01 原始 26 条目响应已纳入回归。
-
-> I51 R1 返修（待复审）：供应商指引跟随宿主中英菜单，默认正文只写用途和结果；实现解释、交接固定规则及具名设置默认值保留在技术详情。交接的保存操作与套件来源选择前置，自有字段按单列排列；设置值、默认值、权限、读写协议均不变。
 
 0.6.13 候选只消费新 npm 三包身份；插件 id、服务与存储不变。Core、Usage、AppHost、总包与当前 Brand 受保护，Recommender 不属于套件。0.6.12 原件保持原行为。
 >
@@ -58,18 +46,10 @@ C 复审 Docs `2d95591d` 已关闭 `b13e60a` 两项P3；本版合入普通插件
 > 2026-10-21 · Managed Node candidate: plugin Settings → 安装环境 → review and confirm one-source SHA-verified preparation → later operations automatically use standalone Node without restarting DSH. macOS arm64/x64 implementation only; Windows unsupported. Editable named settings and evidence boundaries: [contract](docs/CONTRACT.md#plugin-managed-standalone-node-2026-10-21-candidate). No silent acquisition, Electron guardian or client change.
 > 2026-10-21候选：所有客户端均按「完全退出后重新打开」指引处理需重启状态；移除旧壳专用重启深链及parent消息，不改客户端、不自动重启。下方rc.28/rc.32重启桥是已被本候选取代的历史记录，市场席位其它行为不变。
 
-> 0.6.7 四渠道只读状态桥：允许的网站本人点击后，使用能力广告指向的严格 POST 读取当前 Core 声明和显式配置的官方 CLI 清单；缺供给、失败与未覆盖作用域均具名 unknown，不跨 runtime / CLI / 桌面 App 推断已装。协议、必填设置、支持版本与取消规则见 [Installation status](docs/INSTALLATION_STATUS.md)。
-
 CLI-8：未配置来源的新用户默认请求 HanaMesh 视图（`https://market.hanamesh.com/catalog-source.json?view=hanamesh`）。已保存的旧 URL、自定义来源或手动清空列表均保持原样；显式 `sources: []` 仍不播种。
-
-> 0.6.6 套件定稿：兼容声明与升级规则唯一归 Core，App-host 只消费可选 protocol `1` 的公开 `getSuiteDeclaration()`。本地单卡显示官方、不计分、Core 与每个组件的实际版本；未知完整性与未执行的升级检查明确区分。agent 套件 0.1.0 是渠道分发版本，不作为 DSH 三组件版本。网站单卡、四渠道平铺面板与 agent 本机状态由网站及渠道提供方提供；App-host 的回环探测仅证明本监听对应的 DSH / HanaMesh 客户端。详见 [套件边界](docs/LIBRARY.md)。
 
 > 2026-10-15 · 0.6.2 compatibility candidate: public host peers admit official DSH `0.2.0-rc.2` and `0.2.1-alpha.2` with Cordis `4.0.4` / `4.0.5-alpha.1` and Schemastery `3.18.4` / `3.18.5-alpha.1`; development inputs stay exact. The rc.2 plugin manager has no public `saveExact` option. A proven packaged macOS Desktop uses its unchanged shipped `runtime/cli/bin/dsh` launcher for exact installs and reports `restart-required`; alpha.2 keeps the public live manager path. If neither a verified exact-save manager nor the supported public CLI is available, discovery reports `ready:false` and a concrete reason before installation mutates the profile. Existing browsing and application-view APIs remain available. See [the public API audit and validation limits](docs/DSH_COMPATIBILITY.md). Source checks and fixture results do not establish native or owner acceptance.
 
-0.6.5 历史交付：Git 依赖安装先清除继承的凭据 helper，再只使用 gh；安装与测试入口监测到 osxkeychain 即失败。套件能力沿用 0.6.4：套件只显示一张官方卡，读回实际组件版本；兼容升级展示三个固定组件的版本变化并需本人确认，升级后完全退出并重开。原有DSH 本地 `install-target` 与网站交接监听共用允许网站名单，未获准网站不能读客户端能力；`library.handoff.pollMs` 保存后在真实存储重启中保留，旧记录缺字段仍用默认值。
-
-> 2026-10-15 · 0.6.1（核查修正）：①探测只回答「允许交接的网站」，别的网站拿不到客户端、就绪、缺什么；②交接出错不再被吞：过期分成「客户端没来取 / 确认框打不开 / 弹出后没回复」，确认框打不开报 `HANDOFF_OPEN_FAILED` 带原因，上报失败、读取失败在应用库里提示并写日志；免重启装完读回 profile 失败会照实提示；③轮询间隔成为设置 `library.handoff.pollMs`（默认 1500 毫秒）；去掉端口数、网站数、过期上下限、预检缓存、读包标识超时这些写死的限值，剩下的固定规则在设置页逐条列出并说明原因；④品牌插件 `@hanamesh/brand` 在保护名单，不可从市场卸载；⑤测试临时目录全部在进程退出时删除（失败也删），有守卫测试。
-> 2026-10-15 · 0.6.0（第 2 段 Session E）：①网站交接——应用库在 127.0.0.1 上另起交接监听（默认端口 39317/39318/39319），网站探测、交接、轮询状态，客户端窗口弹出原有确认，用户确认才安装（C-MARKET 2026-10-15 追加）；②宿主有公开 `pluginManager` 时插件安装/卸载改由它完成，装完即加载、无需重启（结果 `applied`）；③探测返回真实客户端 `dsh`/`hanamesh` 和「还不能安装」的具体原因；④设置页新增「网站安装交接」，端口、允许的网站、过期时间都可见可改。
 
 > D-230 / 0.5.9 candidate: each acquired AppHost route, optional-service listener, observer, resolver, domain and host now registers its release immediately. Failed activation drains the acquired resources and preserves the original error; cleanup failures produce only a named APPHOST_CLEANUP_FAILED diagnostic. Normal unload uses the same once-only releases. Ordinary-app admission, original presentation/success facts, native isolation and final-package U2 remain separate gates.
 
@@ -80,8 +60,6 @@ CLI-8：未配置来源的新用户默认请求 HanaMesh 视图（`https://marke
 > D-202 / 0.5.6 implementation candidate: fixed upstream `d743267388641bc76f17c45ce8b4c231aed1d32c`, official DSH `0.2.1-alpha.2`, Cordis `4.0.5-alpha.1`, Schemastery `3.18.5-alpha.1`, React `18.3.1`. This candidate retains current catalog/market/verification behavior and adds proven Desktop layout discovery, the public reserved-profile CLI, and separate exact localhost control/data origins. `@hanamesh/lib-provision@0.2.1` is bundled from its approved unchanged Git source with its original LICENSE. This is not a release, native U2 pass or owner ACCEPTED. Current evidence is in the card run directory, separate from historical packages and native observations.
 
 # HanaMesh app-host · 0.2.0-rc.2 本地候选
-
-> J1S3-AH-03 / D-180：新增 C-MARKET 的匿名回环探测与严格 HanaMesh 目录视图消费，安装受理/终态/精确读回分开呈现，事件丢失不自动重装；开发表单及合约验证面板默认隐藏，仅测试包装 `verification:true` 启用。沿既有 DSH 扩展点，不改变应用启动/进程/租约所有权。源码与包验证不等同真实 Desktop 或 owner 验收，协议与测试入口见 `docs/INSTALL_TARGET.md`。
 
 > 历史 METADATA-DEVKIT-VENDOR-APPHOST-01（2026-10-06，现已由下方0.4.0正常源供给替代）：既有开发工具 `@hanamesh/devkit` 更新为精确 optional peer `0.1.0-rc.2` 与同版 file vendor，SHA256 `ae815e589c3e5a573e407da5c982bb0fc8df15b57683ebbfaccd828d9dd588e0`。devkit 不进入运行时依赖或随包代码；canonical 分发授权原文记录于 `docs/LICENSES.json`，不新增 MIT 或再许可。AppHost 根许可分区和内联 provision rc3 保持不变。
 
@@ -203,7 +181,7 @@ rc.1 原始输入当时标注 `UNLICENSED`，不是 MIT/Apache 授权声明；�
 
 AppHost `0.2.0-rc.5` 内联 canonical `@hanamesh/lib-provision@0.1.0-rc.3`，源码提交 `e8707089409ffd3483fc4c964d6032c370dae634`，vendor SHA-256 `b7d149dcbf51c30fd0226fb170afdf268501057b0c7149903c02c17abe93b2c7`。原 build 验证归档摘要并提取 `lib/`、`LICENSE` 与 `THIRD_PARTY_NOTICES.md`；两个分发记录保留上游原文。根 `SEE LICENSE IN LICENSE` / AppHost MIT 分区保持，`dist/provision/**` 自有分发记录不改为 MIT。业务源码与公开 API 不变，无新增依赖或运行时功能；devkit 仍精确 rc1。只交工程新包，未发布 npm 或安装物，产品界面与干净机未运行。
 
-## 市场接收安装目标（P06）
+## 应用安装目标
 
 AppHost rc7 提供 `market.openInstallTarget({itemId?,packageName?})` 及同名公开客户端出口。市场查询自己的当前目录、显示四字段确认；只在用户明确确认后走原鉴权安装路由，重复输入共享安装状态。市场顶部「安装目标」小界面调用同一入口；fixture 来源醒目标注。输入/调用方式、回执及 HTTP 语义见 [INSTALL_TARGET.md](docs/INSTALL_TARGET.md)。本轮源码/包自测不代统一客户端安装、真实首步或 owner 验收。
 
