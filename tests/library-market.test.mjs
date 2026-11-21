@@ -175,26 +175,19 @@ test('AH-M06 (LIB-PROVISION-INPUT): missing or malformed provision / uninstall /
   await service.close();
 });
 
-test('AH-M07 (client source): the entry is 「市场」, cards carry kind/state/upgrade, and a plugin change keeps a manual complete-exit/reopen notice in every carrier',async()=>{
+test('AH-M07: AppHost retains application actions and manual restart guidance',async()=>{
   const source=await readFile(new URL('../src/client-ui.js',import.meta.url),'utf8');
-  assert.match(source,/onClick:\(\)=>showLibrary\(\)},t\('市场'\)\)/,'sidebar entry');
-  assert.match(source,/好工具，让想法走得更远。/,'library page title');assert.match(source,/key:'hanamesh-library'/,'additive main key');
-  assert.match(source,/localizedSection\(ctx,'hanamesh-library-sources',19,"市场目录源"/,'settings section');
+  assert.match(source,/name:'hanamesh\.home\.continue',id:'applications'/);
+  assert.match(source,/name:'plugins\.bundle\.config',key:'@hanamesh\/dsh-app-host'/);
+  assert.doesNotMatch(source,/hanamesh-library-overlay|hanamesh-library-sources|createMarketSeat/);
   assert.doesNotMatch(source,/hanamesh:\/\/restart|requestRestart|window\.parent\.postMessage/);
   assert.match(source,/请完全退出 HanaMesh 客户端或 DSH 后重新打开/);
   assert.match(source,/'data-hanamesh-restart':'required'/);
-  assert.match(source,/\['',t\('全部'\)\],\['hanamesh-app',t\('应用'\)\],\['plugin',t\('插件'\)\]/,'fixed filters');
-  assert.match(source,/seenCategories/,'catalog categories join the filter');
-  assert.match(source,/'\/hanamesh\/library\/plugins\/uninstall'/);
-  assert.match(source,/item\.upgradeAvailable\)action=/,'upgrade action');
-  assert.match(source,/t\('升级'\)/);
-  assert.doesNotMatch(source,/目录未提供版本/);assert.match(source,/data-hanamesh-latest-version/);
   assert.match(source,/'installed-not-loaded':t\('需重启'\)/);
-  const clientProtected=JSON.parse(source.match(/const PROTECTED=new Set\((\[[^\]]*\])\)/)[1].replaceAll("'",'"'));
-  assert.deepEqual(clientProtected.sort(),[...PROTECTED_PACKAGES].sort(),'no uninstall button for the suite (brand included), same list as the host');
+  assert.match(source,/'\/hanamesh\/library\/provision'/);
+  assert.match(source,/'\/hanamesh\/library\/uninstall'/);
   assert.doesNotMatch(source,/ctx\.get\(/,'the browser bundle never reads host services');
 });
-
 
 test('R162-F01 scoped Brand is a disk fact but both uninstall layers reject before mutation',async t=>{
  const profile=await profileFixture(t,{dependencies:{'@hanamesh/brand':'0.1.4','dsh-plugin-tether':'0.1.17'},packages:{'@hanamesh/brand':{version:'0.1.4',dsh:{bundle:{patch:'./patch.yml'}}},'dsh-plugin-tether':{version:'0.1.17',dsh:{bundle:{patch:'./patch.yml'}}}}});
@@ -212,5 +205,5 @@ test('R162-F02 catalog and disk facts return without invoking suspended version 
  let state={revision:0,sources:[]},reads=0;let release,mark;const suspended=new Promise(resolve=>{release=resolve}),started=new Promise(resolve=>{mark=resolve});
  const service=await createLibraryService({domain:{global:{get:async()=>state,set:async v=>{state=v}},close:async()=>{}},host:{list:()=>({apps:[]})},config:{profileDir:profile.profile,fixture},versionCatalog:{read:async()=>{reads++;mark();await suspended;return{latestVersion:'1.1.0',versions:[]}}}}).init();t.after(()=>{release();return service.close()});
  const pending=service.list({category:''});assert.equal(await Promise.race([pending.then(()=> 'listed'),started.then(()=> 'version-read')]),'listed','the list must settle before a version lookup starts');
- assert.equal(reads,0,'listing must not start optional npm version reads');const page=await pending;assert(page.items.length>0);assert(page.plugins.some(row=>row.packageName==='@hanamesh/utility-plugin'));assert.equal(page.versionQueries.concurrency,4);
+ assert.equal(reads,0,'listing must not start optional npm version reads');const page=await pending;assert(page.items.length>0);assert(page.plugins.some(row=>row.packageName==='@hanamesh/utility-plugin'));assert.equal(Object.hasOwn(page,'versionQueries'),false);
 });

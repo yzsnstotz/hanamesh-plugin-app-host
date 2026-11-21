@@ -17,7 +17,7 @@ while the physical `Contents/Resources/runtime` contains the public command laun
 | `src/dsh.js`, `src/router/sources.js` | Optional credentials `describe`, `resolve`, `describeRecord`; llm `listProviders`, `listModels` | Present; consumed signatures unchanged |
 | `src/library/install.js` | Optional `pluginManager.installBundle`, `removeBundle`, application outcome | Methods present; **rc.2 lacks install option `saveExact`** |
 | `src/library/desktop-cli.js` | `runDesktopCli(runtimeDir,supportDir)` | Public in both versions; standalone Node cannot import ASAR |
-| `src/client-ui.js` | `window.__ModuleLoader__.load({id,factory})`, React 18, Cordis effects/market seat | Present |
+| `src/client-ui.js` | `window.__ModuleLoader__.load({id,factory})`, React 18, Cordis effects and settings slots | Present |
 | `src/client-ui.js` | slots `inject`, `register`, `settings.section`, `sidebar.footer.action`, `shell.overlay` | Present; consumed registry and slot contracts unchanged |
 
 The package's settings/locale client dependencies provide assembly ordering; AppHost calls no direct settings/locale

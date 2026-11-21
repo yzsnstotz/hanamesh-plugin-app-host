@@ -11,7 +11,7 @@ export interface DshPluginConfig {
   dataRoot?: string; parentOrigin?: string; frameAncestors?: string[]; nodeBinary?: string; router?:{codingOauth?:{mode?:'http'|'file'}};
   /** `sources` undefined → the HanaMesh catalog source; explicit `[]` → none. `profileDir`/`profileName`/`dshBin` (and
    *  `nodeBinary`) are inferred from the proven Desktop layout or plain DSH when undefined — see docs/CONTRACT.md 「应用库配置」; explicit values win. */
-  library?:{fixture?:string;sources?:Array<{manifestUrl:string;enabled?:boolean}>;profileDir?:string;profileName?:string;dshBin?:string;registry?:string;versionLookupTimeoutMs?:number;versionLookupMaxBytes?:number;versionLookupConcurrency?:number;versionLookupCacheMs?:number;eventRetention?:number};
+  library?:{fixture?:string;sources?:Array<{manifestUrl:string;enabled?:boolean}>;profileDir?:string;profileName?:string;dshBin?:string;registry?:string;versionLookupTimeoutMs?:number;versionLookupMaxBytes?:number;eventRetention?:number};
   applications?: AppDefinition[]; leaseTtlMs?: number; sweepIntervalMs?: number;
 }
 /** Adapt an open `ctx.storageDomain` handle (single layout, global snapshot) to the store binding. */

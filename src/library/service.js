@@ -27,9 +27,6 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
   const suiteFacts=async()=>installer?.suiteFacts?await installer.suiteFacts():{...await readSuiteStatus(config.profileDir),status:'unknown',completeness:'unknown',blocked:[{code:'CORE_SUITE_DECLARATION_MISSING'}],suiteUpgradeUnavailable:CORE_SUITE_DECLARATION_MISSING};
   const events=[];let sequence=0;let state;const running=new Map(),installing=new Map();let bootDependencies;
   const eventRetention=config.eventRetention??512;
-  const versionLookupConcurrency=config.versionLookupConcurrency??4,versionLookupCacheMs=config.versionLookupCacheMs??30000;
-  requireCondition(Number.isSafeInteger(versionLookupConcurrency)&&versionLookupConcurrency>=1&&versionLookupConcurrency<=16,'INVALID_INPUT','library.versionLookupConcurrency must be an integer from 1 to 16.');
-  requireCondition(Number.isSafeInteger(versionLookupCacheMs)&&versionLookupCacheMs>0&&versionLookupCacheMs<=2147483647,'INVALID_INPUT','library.versionLookupCacheMs must be a positive timer budget.');
   requireCondition(Number.isSafeInteger(eventRetention)&&eventRetention>0,'INVALID_INPUT','library.eventRetention must be a positive safe integer.');
   const emit=event=>{const value={sequence:++sequence,at:Date.now(),...event};events.push(value);if(events.length>eventRetention)events.shift();return value;};
   // Real sources hold ~10k entries (2026-09-20: market.hanamesh.com 12,121). `/hanamesh/library` keeps its rc.16 default
@@ -151,9 +148,8 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
       // Version discovery is optional and starts only through the per-item read route after this list paints.
       let coreSource;
       if(state.suiteSource?.mode==='core')try{coreSource=readSuiteSourceState(suiteSourceService());}catch(error){coreSource={code:error.code??'CORE_SUITE_SOURCE_INVALID'};}
-      const versionQueries=versionCatalog?{concurrency:versionLookupConcurrency,cacheMs:versionLookupCacheMs,scope:JSON.stringify([state.revision,config.registry??'https://registry.npmjs.org/',state.suiteSource??null,coreSource??null])}:null;
       const categories=[...new Set(page.items.flatMap(item=>item.categories??[]))].sort();
-      return{source:page.source,items,categories,...(versionQueries?{versionQueries}:{}),installed:installedRows,plugins:pluginRows,restartRequired:[...pluginRows,...installedRows].some(row=>RESTART_STATES.has(row.state)),...(bootSnapshotError?{restartBaseline:{known:false,code:bootSnapshotError}}:{}),page:page.page};},
+      return{source:page.source,items,categories,installed:installedRows,plugins:pluginRows,restartRequired:[...pluginRows,...installedRows].some(row=>RESTART_STATES.has(row.state)),...(bootSnapshotError?{restartBaseline:{known:false,code:bootSnapshotError}}:{}),page:page.page};},
     async versions(input,{signal}={}){
       requireCondition(input&&Object.keys(input).length===1&&typeof input.itemId==='string','INVALID_INPUT','Only itemId is accepted.');
       requireCondition(versionCatalog,'PLUGIN_VERSIONS_UNAVAILABLE','Version discovery is unavailable.',{},503);

@@ -305,6 +305,10 @@ test('CM11: wrong installed version is reported as the C-MARKET readback error a
   const dialog = m.h.find(n => n.props['aria-label'] === '安装确认');
   assert.ok(dialog);
   assert.doesNotMatch(JSON.stringify(dialog), /"打开"/);
+  assert.equal(m.h.find(n=>n.props['data-hanamesh-installed']===appTarget.packageName),undefined);
+  await m.h.click('关闭');
+  assert.ok(m.h.find(n=>n.props['data-hanamesh-installed']===appTarget.packageName));
+  assert.equal(m.calls.filter(c=>c.path==='/apps/open').length,0);
 });
 
 test('CM12: the input form for developer verification is absent from a normal client build', async t => {
