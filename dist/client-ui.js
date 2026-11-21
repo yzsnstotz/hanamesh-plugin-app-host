@@ -956,7 +956,6 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
     }};
   }
   const VERIFICATION_CALLS=[
-    {method:'GET',path:'/hanamesh/library/install-target',sample:{}},
     {method:'GET',path:'/hanamesh/library',sample:{category:''}},
     {method:'GET',path:'/hanamesh/library/target',sample:{itemId:'example.notes',packageName:'example-notes',contractVersion:'1'}},
     {method:'POST',path:'/hanamesh/library/install',sample:{itemId:'example.notes',packageName:'example-notes',contractVersion:'1'}},
@@ -977,7 +976,7 @@ h('div',{className:'hm-source-add'},h('input',{value:draft,placeholder:'https://
     const[detailId,setDetailId]=React.useState(null),[acceptedTarget,setAcceptedTarget]=React.useState(null),[libraryTab,setLibraryTab]=React.useState('all'),[credibility,setCredibility]=React.useState(null);
     React.useEffect(()=>{let live=true;setCredibility(null);if(detailId&&visible)void readCredibility(snapshot?.source,{id:detailId}).then(value=>{if(live)setCredibility(value);});return()=>{live=false;};},[detailId,visible,snapshot?.source?.manifestUrl]);
     const[target,updateTarget]=React.useState(targetSelection),[targetItemId,setTargetItemId]=React.useState(''),[targetPackageName,setTargetPackageName]=React.useState('');
-    const[verificationCall,setVerificationCall]=React.useState('GET /hanamesh/library/install-target'),[verificationInput,setVerificationInput]=React.useState('{}'),[verificationOutput,setVerificationOutput]=React.useState(null),[verifying,setVerifying]=React.useState(false);
+    const[verificationCall,setVerificationCall]=React.useState('GET /hanamesh/library/events'),[verificationInput,setVerificationInput]=React.useState('{}'),[verificationOutput,setVerificationOutput]=React.useState(null),[verifying,setVerifying]=React.useState(false);
     const verificationBusy=React.useRef(false);
     const verify=async()=>{
       if(verification!==true||verificationBusy.current)return;

@@ -1,32 +1,16 @@
-0.6.31（F02）：`/hanamesh/library/install-target` 与 `/hanamesh/library/installation-status` 的唯一 HTTP 提供方是独立 `@hanamesh/market`。AppHost 从 DSH 精确路由表和自有网站监听都撤掉这两个入口，并不再广告安装状态 HTTP 能力；单独加载 AppHost 时同样不提供，不按 Market 是否在场做兼容回退。下文涉及这两个入口的旧 AppHost 归属描述已被本条取代；协议、CORS、显式同意和取消义务由 Market 现行合约承担。AppHost 应用运行、Node、租约、网关及本单之外的路由不变。
+# AppHost 内部安装状态读取与类型 · contract 1
 
-# Public installation status bridge · contract 1
+## HTTP 所有权
 
-AppHost 0.6.7 supplies metadata discovery and a separate, explicitly consented read. Discovery never launches a reader. This is an installation observation, not permission to install/upgrade, a Usage consent change, compatibility calculation, or proof of another client.
+公开网站发现及安装状态 HTTP 的唯一提供方是 `@hanamesh/market`。AppHost 不注册 `/hanamesh/library/install-target` 或 `/hanamesh/library/installation-status`，自有回环监听也不处理它们，且不广告这项 HTTP 能力。Market 缺席时 AppHost 同样不接管。
 
-## Discovery and request
+网站请求、能力广告、同意/CORS/Host 准入、同一响应监听上的读取和取消语义，请直接查 Market 现行 [INSTALL_TARGET.md](https://github.com/yzsnstotz/hanamesh-core/blob/market-v0.1.1/packages/hanamesh-market/INSTALL_TARGET.md) 与 [INSTALLATION_STATUS.md](https://github.com/yzsnstotz/hanamesh-core/blob/market-v0.1.1/packages/hanamesh-market/INSTALLATION_STATUS.md)。本页不复制 HTTP 实现或把旧 AppHost 监听描述成提供方。
 
-Both the existing website handoff listener and the DSH local library listener add optional `installationStatus` to `GET /hanamesh/library/install-target`:
-
-```json
-{"contract":"hanamesh.installation-status","contractVersion":"1","path":"/hanamesh/library/installation-status"}
-```
-
-The field is advertised independently of `ready` (which describes controlled installation). Consumers must use the path on that same responder only, and only when the capability/contract is present. Old providers have no capability; do not probe a guessed path.
-
-Only after the person's explicit “检测本机安装状态” click, send `POST` to that path with `credentials:'omit'`, `Content-Type: application/json`, and exactly:
-
-```json
-{"contractVersion":"1","consent":"read-installations"}
-```
-
-The owning listener enforces its existing exact loopback Host. Origin is required: handoff allows only `library.handoff.allowedOrigins`; the DSH library additionally permits its actual workspace/transport origins. Null/unlisted/missing Origin is rejected, with no CORS grant for the rejected origin. Cookie or Authorization, query fields, iframe control, absolute/protocol-relative/backslash targets, wrong method/content type, invalid JSON, extra fields, unsupported contract or missing exact consent are rejected **before** any directory/CLI/Core read. The body limit is the existing `HANDOFF_BODY_MAX_BYTES` (4096), not a new configurable default. OPTIONS returns 204 with exact approved Origin, POST/content-type and Private Network Access; it performs no read. No credentials or persistent consent are accepted.
-
-Responses use JSON, `Cache-Control:no-store`, nosniff and frame-denying CSP. After the listener's preliminary Host/target/frame checks and successful allowed-Origin admission, subsequent named refusals carry CORS; preliminary safety refusals can omit CORS. Errors use `{error:{code,message,details?},traceId}`; messages never include raw reader output, paths or exceptions.
+本页继续描述 AppHost 保留的内部只读函数、已导出的数据类型、Core 事实委托和精确自有子进程生命周期；这些条款不授予浏览器调用、安装/升级或 Usage 记录权限。受信调用方负责在一次显式同意后使用读取 port；读取器本身不注册 HTTP。
 
 ## Response
 
-Public types and capability are exported at `@hanamesh/dsh-app-host/installation-status`.
+AppHost 保留的数据类型及协议常量仍导出于 `@hanamesh/dsh-app-host/installation-status`；常量本身不代表 AppHost 提供相应 HTTP 入口。网站消费者使用 Market 的公开类型/协议。
 
 ```ts
 interface InstallationStatus {
@@ -56,7 +40,7 @@ Current runtime status/version/components come only from the optional public Cor
 
 ## Automatic official CLI discovery
 
-AppHost 0.6.23 discovers Claude Code and Codex for the current OS user after the consented request. There is no manual reader setting; the former `library.installationReaders` option and public reader configuration type are removed. Browser requests cannot supply paths, commands, environment or profile selection. The registered suite identity is `hanamesh@hanamesh`, with the exact HTTPS source `https://github.com/yzsnstotz/hanamesh-plugins`, as in the existing suite catalog contract.
+The retained internal reader discovers Claude Code and Codex for the current OS user only when explicitly invoked by its trusted caller after consent; it exposes no AppHost HTTP route. There is no manual reader setting; the former `library.installationReaders` option and public reader configuration type are removed. Browser requests cannot supply paths, commands, environment or profile selection. The registered suite identity is `hanamesh@hanamesh`, with the exact HTTPS source `https://github.com/yzsnstotz/hanamesh-plugins`, as in the existing suite catalog contract.
 
 Selection is deterministic: the first executable in the inherited absolute PATH directories wins; if absent on macOS/Linux, query the user's interactive login shell once (`-ilc`), extracting only the named infrastructure-path environment in a framed JSON value. This follows [VS Code's shell environment practice](https://code.visualstudio.com/docs/configure/command-line#_how-do-i-detect-when-a-shell-was-launched-by-vs-code). No full environment dump is collected. Like [VS Code's implementation](https://github.com/microsoft/vscode/blob/main/src/vs/platform/shell/node/shellEnv.ts), shell stderr is separate from success: exit/result and a valid framed payload decide success. Normal Bash non-TTY diagnostics are discarded, not treated as failure; both streams still count toward the existing byte budget. Plugin inventory commands retain their clean-stderr requirement. Shell startup noise and stderr never enter public output. Next search the fixed layouts below in listed order. Finally, scan the listed manager version directories in order, newest Node SemVer first within each directory. Relative/empty PATH segments are excluded. Do not run every candidate or switch to a second CLI when the selected command fails, is old or returns an invalid inventory. Executable names alone are not a signature guarantee; the fixed official version syntax and inventory schema are validated before returning facts.
 
@@ -92,7 +76,7 @@ Commands run with an empty stdin in a disposable neutral cwd, only named HOME/co
 
 ## Refusals, unknown reasons, and lifecycle
 
-HTTP refusals: `HOST_DENIED`, `ORIGIN_DENIED`, `FRAME_CONTROL_DENIED`, `CREDENTIALS_NOT_ACCEPTED` (403), `METHOD_NOT_ALLOWED` (405), `CONTENT_TYPE_REQUIRED` (415), `BODY_TOO_LARGE` (413), `BAD_TARGET`, `INVALID_JSON`, `UNKNOWN_FIELDS`, `INSTALLATION_STATUS_CONTRACT_UNSUPPORTED` (400), `INSTALLATION_STATUS_CONSENT_REQUIRED` (403), `INSTALLATION_STATUS_UNAVAILABLE` (503). A caller/provider cancellation has `INSTALLATION_STATUS_CANCELLED` (499 when still connected); disconnected clients receive no result.
+HTTP 拒绝及状态码由上文链接的 Market 合约唯一描述。内部读取取消仍为 `INSTALLATION_STATUS_CANCELLED`，取消或关闭后不发布迟到的读取结果。
 
 Per-scope unknown reasons always include a safe code/message/action:
 
@@ -105,7 +89,7 @@ The HanaMesh client's `other-runtime` row (`kind:'other-client'`) reads the dist
 
 Core's `CORE_LEGACY_COMPONENTS_INSTALLED` is installed with version null (there is no bundle version), and recommends upgrading; `CORE_LEGACY_COMPONENTS_UNUSABLE` is incomplete with the exact member reason; every member absent is not-installed. Unreadable facts or missing/changed assessor remain unknown (`CORE_LEGACY_ASSESSOR_MISSING` / `CORE_LEGACY_ASSESSMENT_FAILED`). No-bundle current runtime observations use the same optional Core declaration `legacy` verdict. Existing total-bundle profile checks and runtime completeness guards remain unchanged. This observation proves profile installation/selection, not that DSH is running. Core's no-numeric-floor policy is pending owner ratification; AppHost does not invent one.
 
-Before every read, both profiles are resolved physically; same-directory aliases or unresolved identities keep `OTHER_RUNTIME_NOT_OBSERVED`. A DSH listener never inventories the HanaMesh client. Reader abort/disposal still suppresses late results; collecting metadata does not execute plugins, access credentials, mutate profiles or start DSH.
+Before every read, both profiles are resolved physically; same-directory aliases or unresolved identities keep `OTHER_RUNTIME_NOT_OBSERVED`. An internal reader observing DSH never inventories the HanaMesh client. Reader abort/disposal still suppresses late results; collecting metadata does not execute plugins, access credentials, mutate profiles or start DSH.
 
 - `AGENT_READER_VERSION_INVALID`, `AGENT_READER_VERSION_UNSUPPORTED`, `AGENT_READER_NODE_REQUIRED`, `AGENT_SHELL_ENV_UNAVAILABLE`, `AGENT_READER_ENTRYPOINT_UNAVAILABLE`, `AGENT_READER_DISCOVERY_INVALID`.
 - `AGENT_PROFILE_UNAVAILABLE`, `AGENT_READER_UNAVAILABLE`, `AGENT_READER_PERMISSION_DENIED`, `AGENT_READER_TIMEOUT`, `AGENT_READER_OUTPUT_LIMIT`, `AGENT_READER_DIAGNOSTIC`, `AGENT_READER_CLEANUP_FAILED`, `AGENT_READER_FAILED`.
