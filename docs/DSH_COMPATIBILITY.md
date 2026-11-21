@@ -33,7 +33,7 @@ Internal connection HTTPS/bind-address handling changed upstream; the local HTTP
 
 ## Installation behavior
 
-0.6.15 retains the monitored public CLI. CLI failures carry bounded, redacted stdout and stderr through the asynchronous operation's diagnostic details; the market shows the original cause in an expandable panel. The main failure message includes the exact pnpm category. A minimum-release-age rejection lists affected package versions and retains the actual cutoff in technical details. Verify the exact installation target and upgrade DSH through its Settings if necessary. No profile configuration, dependency exclusion or supply-chain policy is changed.
+AppHost uses the monitored public CLI. The authenticated AppHost installation event stream reports the CLI failure reason with bounded, redacted stdout and stderr. The main failure message includes the exact pnpm category. A minimum-release-age rejection lists affected package versions and retains the actual cutoff in technical details. Verify the exact installation target and upgrade DSH through its Settings if necessary. No profile configuration, dependency exclusion or supply-chain policy is changed.
 
 The official 0.2.0-rc.2 bundled pnpm 11.7.0 uses only the first matching package-name rule in `minimumReleaseAgeExclude`: an earlier exact old-version entry shadows a later exact new-version entry. The existing lockfile verifier can therefore reject an unrelated installation even though the new version is visibly listed. The 11.7.0 package obtained from npm has the same entry and core bytes as the supplied Desktop copy. Official Desktop 0.2.1-rc.3's pnpm 11.28.5 unions all matching exact versions and passes the same diagnostic profile. This establishes two tested endpoints, not the first fixed version. Both Desktop CLI and in-process manager use this pnpm path and set `ELECTRON_RUN_AS_NODE=1`; switching to the manager does not correct the 11.7.0 rule evaluation.
 
@@ -80,7 +80,7 @@ new DSH host. Official Desktop supplies its own coherent runtime and disables au
 
 官方 macOS rc.2 的 Electron-as-Node 包装脚本不等于本模块的独立 Node 监督运行时。现 guardian 明确拒绝 `process.versions.electron`，受控子进程环境也不继承宿主 Electron 启动变量；不移除该拒绝、不猜应用路径或增加客户端 hook。
 
-有独立 Node.js 24（24.13.1或更新24.x）时，在官方 profile 的公开插件用户配置层设置 AppHost **顶层** `nodeBinary` 为其实际绝对可执行路径；不是 library.nodeBinary，也不从PATH自动猜测。用户填写自己的真实安装路径，完全退出再重开。在网站安装交接设置和公开 install-target readback 看 ready/缺件；ready=true只代表安装前置具备，不是已安装或完整网站闭环。
+有独立 Node.js 24（24.13.1 或更新的 24.x）时，在官方 profile 的用户配置中设置 AppHost 顶层的 `nodeBinary`，填写 Node 可执行文件的实际绝对路径，然后完全退出并重新打开 DSH。在 AppHost 插件配置的「安装环境」查看结果。也可以在已认证的 DSH 工作区调用 `GET /hanamesh/library/node-runtime` 读取同一状态。`ready: true` 表示独立 Node 已通过安装环境检查。
 
 ```yaml
 - id: hanamesh-app-host

@@ -100,7 +100,7 @@ close 幂等，只关闭给定代的 owned view；最后一个活跃租约释放
 
 请求必须命中具名 host，写入必须有准确 Origin、JSON 和 `X-HanaMesh-Client: workspace-v1`，禁止 iframe 控制请求。认证回调先获得主体，授权回调逐请求判断，缺失任意回调拒绝启动。响应隐藏 PID、dataDir、命令和环境，带 traceId。400/401/403/404/405/409/413/415/503/504 分别按实际错误返回；失败并不代表一定没有持久预留，应使用 view 身份检查。
 
-市场客户端待启动时用 GET `/hanamesh/apps` 只读查询精确实例状态，按原回执 `expiresAt` 对 pending lease 续租；看到 ready 才单次 POST `/apps/resume` 取得 URL。已展示视图在页面回到前台时立即尝试续租，终态 `LEASE_EXPIRED` 或 `INSTANCE_NOT_READY` 清除失效 iframe，由用户从市场显式重新打开。关闭/隐藏继续释放租约并停止最后一个自有视图对应进程；不延长 TTL，不静默恢复。
+AppHost 应用视图等待实例启动时用 GET `/hanamesh/apps` 只读查询精确实例状态，按原回执 `expiresAt` 对 pending lease 续租；看到 ready 才单次 POST `/apps/resume` 取得 URL。已展示视图在页面回到前台时立即尝试续租，终态 `LEASE_EXPIRED` 或 `INSTANCE_NOT_READY` 清除失效 iframe，用户可从 HanaMesh 首页的「继续使用」或 AppHost 原生插件配置重新打开应用。关闭/隐藏继续释放租约并停止最后一个自有视图对应进程；不延长 TTL，不静默恢复。
 
 文档原表将 open/close 列在“只读路由”下，但它们会修改租约；本候选使用 POST 保持“GET 无状态变更”边界。原型客户端的 method/descriptor 兼容性待比对，不能无版本地替换原接口。
 
@@ -130,7 +130,7 @@ DSH 绑定必须提供同一个 `single` domain 的一次完整镜像 publish �
 
 ## 应用库配置（rc.26）
 
-`library.sources` **未配置**（undefined）→ 默认 `[{manifestUrl:"https://market.hanamesh.com/catalog-source.json?view=hanamesh",enabled:true}]`；显式 `[]` → 无来源（`CATALOG_SOURCE_REQUIRED`，由用户在「应用库来源」里添加）。默认只在初始 revision=0、来源为空的首启播种；已保存的旧来源、自定义来源或手动清空的列表保持原样，不自动迁移。
+`library.sources` **未配置**（undefined）→ 默认 `[{manifestUrl:"https://market.hanamesh.com/catalog-source.json?view=hanamesh",enabled:true}]`；显式 `[]` → 无来源（需要目录的工作区调用返回 `CATALOG_SOURCE_REQUIRED`）。默认只在初始 revision=0、来源为空的首启播种；已保存的旧来源、自定义来源或手动清空的列表保持原样，不自动迁移。
 
 `library.profileDir` / `profileName` / `dshBin` 与 `nodeBinary`：显式配置永远优先。缺省时按下列规则推断，推不出即留空（安装不可用 `LIBRARY_INSTALL_UNAVAILABLE`，浏览与已安装扫描仍照常）：
 
@@ -143,9 +143,9 @@ DSH 绑定必须提供同一个 `single` domain 的一次完整镜像 publish �
 
 推断结果以一行结构化日志 `hanamesh-app-host library: inferred {…}` 打出（只含路径与来源 URL，不含凭据）。不从 cwd、`PATH` 或个人 `~/.dsh` 猜。
 
-## 市场（rc.28，设计定案 2026-09-22 §4）
+## AppHost 工作区安装与管理路由
 
-`/hanamesh/library*` 路由全部保留，语义只增不改：
+下列路由供已认证的 DSH 工作区调用。完整的安装目标解析与事件接口见 [安装目标](INSTALL_TARGET.md)。
 
 | 路由 | 方法 | 输入 | 输出 |
 |---|---|---|---|
@@ -159,7 +159,7 @@ DSH 绑定必须提供同一个 `single` domain 的一次完整镜像 publish �
 
 事件流 `library.install-*` 增加 `kind`；`install-done.result` 对插件为 `{status:'restart-required', kind:'plugin', packageName, version}`。受保护包（`@hanamesh/hanamesh`、`@hanamesh/core`、`@hanamesh/usage`、`@hanamesh/dsh-app-host`、`@hanamesh/brand`）任何路径都 `PACKAGE_DENIED`：`plugins/*` 在启动操作前同步答 403，目录条目路径在操作内以 `-failed` 事件给出。「需重启」判定只来自本进程启动时的 profile 依赖快照（钉版本内核不暴露已加载插件集合）；快照不可读时一切已装计为已加载。客户端提示完全退出并重新打开；本包不重启 DSH。
 
-0.6.13 候选：套件 npm 身份为 `@hanamesh/core`、`@hanamesh/usage`、`@hanamesh/dsh-app-host`；Core 声明的 `core.name`、`moduleName`、升级目标和返回的 `packageName` 按这些新名精确比较，旧名声明不当作新三包。插件 id、`hanameshMarket` 服务、路由与存储键保持；普通 Recommender 不受保护、不加入套件。首装/补齐精确命令见 LIBRARY.md；已发布 0.6.12 原件不包含该适配。
+0.6.13 候选：套件 npm 身份为 `@hanamesh/core`、`@hanamesh/usage`、`@hanamesh/dsh-app-host`；Core 声明的 `core.name`、`moduleName`、升级目标和返回的 `packageName` 按这些新名精确比较，旧名声明不当作新三包。AppHost 经 `hanameshApps` 提供应用服务。Recommender 不属于受保护套件。套件的现行状态和精确升级目标由 Core 提供，见 [应用安装与运行时](LIBRARY.md#hanamesh-套件)。
 
 ## 应用使用证据（D-221，C-USAGE-LOCAL 第1版）
 
@@ -183,7 +183,7 @@ The plugin recognizes the exact upstream Desktop host entry and proves its profi
 
 For the exact privileged workspace, the existing authenticated control transport gains `POST /apps/bootstrap-authorize` with `{viewId, leaseToken, gatewayOrigin, challenge}`, returning `{authorization}` only after complete ownership/live-generation checks. A challenge is loaded and exchanged once, valid only for its owning exact origin/view. Failures include `UNAUTHENTICATED`, `LEASE_NOT_OWNED`, `LEASE_EXPIRED`, `GATEWAY_CHALLENGE_DENIED`. The controlled page and workspace perform exact-origin and Window/source proof. AppHost returns a control bootstrap URL in the ordinary open/resume receipt, then the page naturally navigates to the bound data origin; applications receive no injected SDK or authorization.
 
-Current C-MARKET edition 1 routes/readback and the hidden-by-default verification page remain intact. The direct C-WEB-CATALOG HanaMesh query is validated before all network access, including manifest discovery; the public market listing retains its own boundaries. Formal provider documents remain authoritative. No new Usage fields or observation calls are inferred from this implementation.
+The hidden-by-default AppHost verification page exercises authenticated workspace routes and reads the installation environment by default. Catalog reads from AppHost use the configured provider and validate the query before manifest discovery.
 
 ## D-230 activation cleanup and ordinary-app admission
 
@@ -205,7 +205,7 @@ Authenticated same-origin routes (normal workspace CSRF and connection cookie):
 
 Preparation never weakens authentication/CORS or guardian admission. Subsequent AppHost spawns, library CLI supervisors capture the new standalone binding without restarting DSH. In-flight operations retain their delegate; settings/preparation reject while library/host operations are in use.
 
-Support implementation: macOS13.5+ arm64/x64, known Node24.13.1 or24.22.0 (default24.22.0). Windows managed Node preparation remains unsupported (`supported:false` describes managed preparation). Windows x64 accepts an explicitly selected existing standalone Node for controlled CLI and installation-reader operations only, after the fixed probe verifies actual Node 24 version, OS/architecture and absence of Electron; a verified external selection may report `ready:true`. Owned application launch remains unsupported and fails before spawn or credential projection. Automatic installation readers have a separate Windows discovery/owned-tree implementation; their native proof remains required. mac x64 native proof is tracked separately from its signed archive integrity. No client or upstream files change. No npm lifecycle download.
+Support implementation: macOS13.5+ arm64/x64, known Node24.13.1 or24.22.0 (default24.22.0). Windows managed Node preparation remains unsupported (`supported:false` describes managed preparation). Windows x64 accepts an explicitly selected existing standalone Node for controlled CLI operations, after the fixed probe verifies actual Node 24 version, OS/architecture and absence of Electron; a verified external selection may report `ready:true`. Owned application launch remains unsupported and fails before spawn or credential projection. mac x64 native proof is tracked separately from its signed archive integrity. No client or upstream files change. No npm lifecycle download.
 
 Storage space budget is archive bytes + twice measured regular-file payload (new tree + staging); never delete another version or unknown files to make space. lib-provision alone owns staging/ledger/manifests; interrupted or cancelled downloads may leave its resumable owned cache. Another attempt requires a new visible confirmation. Existing versions remain until an explicit owned cleanup is designed; no automatic deletion or implied rollback. Offline startup verifies an existing active tree/ledger and standalone executable; failures are visible and never trigger a download.
 
@@ -214,9 +214,9 @@ Storage space budget is archive bytes + twice measured regular-file payload (new
 
 ## B17 套件安装包来源（2026-10-21 候选）
 
-AppHost 自有设置页「套件安装包来源」，公开同源端点 `GET|POST /hanamesh/library/suite-source`。GET 无参数，返回 `{mode, configuredRegistry, observation, traceId}`；`mode` 为 `configured|core`。`configured` 是唯一新增默认：使用显式 `library.registry`，未设时请求Core声明实际来源。市场目录 `library.sources` 的未设播种、显式空数组、自定义及已保存值均独立保持；目录 manifest URL 不是 npm registry。
+AppHost 插件配置中的「套件安装包来源」使用已认证的同源端点 `GET|POST /hanamesh/library/suite-source`。GET 无参数，返回 `{mode, configuredRegistry, observation, traceId}`；`mode` 为 `configured|core`。`configured` 是唯一新增默认：使用显式 `library.registry`，未设时请求Core声明实际来源。AppHost 工作区目录读取消费 `library.sources`。该字段独立保存目录 manifest URL。
 
-POST 严格只接受 `{mode:'configured'}` 或 `{mode:'core'}`，不接受 registry、版本或其他字段/查询参数。沿用精确 Host、同源 Origin、workspace-v1、Connection admission、逐操作 authorization、JSON/65536 字节及 no-store 规则。选择存自己的 `hanamesh_library` 单镜像可选 `suiteSource:{mode}`；未存值不改旧记录。来源、目录和网站交接设置按接收顺序串行读改写整个镜像，成功持久化后才发布新内存状态；保存失败 `500/SUITE_SOURCE_SAVE_FAILED`，旧选择和其他字段保持；关闭等待已排队写入。
+POST 严格只接受 `{mode:'configured'}` 或 `{mode:'core'}`，不接受 registry、版本或其他字段/查询参数。沿用精确 Host、同源 Origin、workspace-v1、Connection admission、逐操作 authorization、JSON/65536 字节及 no-store 规则。选择存自己的 `hanamesh_library` 单镜像可选 `suiteSource:{mode}`；未存值不改旧记录。套件安装包来源和 AppHost 目录来源共用串行写入队列。成功持久化镜像后才发布新内存状态。保存套件来源失败时返回 `500/SUITE_SOURCE_SAVE_FAILED`，并保留原有字段。关闭时等待已排队写入。
 
 GET 的 `observation` 为 `{observable:false,code}` 或 `{observable:true,state}`。后者仅转发公开 Core `hanameshSuiteSource` protocol `'1'` 同步 `getState()` 的六个字段：`protocolVersion/status/selection/registry/archiveCount/lastError`。status 为 `disabled|ready|failed|disposed`，selection 为 `configured|custom|disabled`。服务缺失（含尚未 provide）为 `CORE_SUITE_SOURCE_MISSING`，不杜撰 starting/ready；旧协议、读取异常或无效 DTO 为 `CORE_SUITE_SOURCE_INVALID`。GET 仅观察，保存不触发安装或授权。
 
@@ -237,7 +237,7 @@ B17 review repair（同0.6.8候选）：`AppHost` 未注入 `runtimeLedgerReader
 历史 GitHub DTO 按已审标准分发提议继续可读：source 只许 source/repo/ref，repo=目标 githubRepo，ref 为40位hex；可缺历史版本事实，不自动转换或选备用源。目录发布事实不作为 Core 兼容声明、安装授权或本机已装观察。随包 catalog/schema/page.json 同时描述默认和 HanaMesh 两视图，跨字段相等性由运行解码器检查。
 
 
-## 0.6.16 市场查询来源与诊断（原协议1）
+## 工作区安装来源与诊断
 
 A2 0.6.22：普通插件必须有 Indexer 已审核的 installMethods 和 oneClickInstall.allowed:true；仅执行其 npm 精确版本或完整 GitHub SHA。缺目标具名拒绝，不根据包名查可变版本标签。CLI 使用显式 library.registry（若有），否则保留宿主原生 registry 配置。删除普通插件按包名内部直装方法、元数据查询及其专用设置/规则加载。套件仅透传 Core installCommand。安装失败保留脱敏 CLI/读回诊断及补偿结果；精确版本发布后即可原生验收。
 
