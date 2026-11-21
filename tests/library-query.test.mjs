@@ -23,6 +23,6 @@ test('AH-L11: library card tracks install/provision/uninstall operations via the
   assert.match(source, /'\/hanamesh\/library\/events\?after='/, 'polls the event feed');
   assert.match(source, /event\.operationId!==operationId/, 'matches events by operationId');
   assert.match(source, /endsWith\('-failed'\)/);
-  assert.match(source, /t\('重试安装'\):t\('安装'\)/, 'failed card offers a retry');
+  assert.match(source, /row.state==='runtime-missing'\?applicationAction\('\/hanamesh\/library\/provision',row,'补齐运行时'\)/, 'runtime repair remains available after a failed operation');
   assert.match(source, /role:op\.failed\?'alert':'status'/, 'outcome is rendered on the card');
 });
