@@ -1,12 +1,9 @@
-import { installationStatusCors, serveInstallationStatus } from './installation-status-http.js';
-import {serveInstallTargetProbe} from './install-target-http.js';
 /**
  * Website → client install handoff (C-MARKET, 2026-10-15 E/F). Upstream Desktop listens on an OS-assigned port that
  * nothing records, and a browser tab without the launch token gets 401, so a website can neither find nor enter the
  * DSH web server. The library therefore opens its own loopback listener on the first free port of a named list and
- * answers exactly three routes there:
+ * answers only the handoff route there; Market owns discovery and installation-status:
  *
- *   GET  /hanamesh/library/install-target   probe (client, ready, need) for allowed website origins only
  *   POST /hanamesh/library/handoff          queue a target from an allowed website origin; never installs
  *   GET  /hanamesh/library/handoff?id=      that handoff's state for the same origin
  *
@@ -34,7 +31,7 @@ const TIMER_MAX_MS = 2_147_483_647;
 /** Fixed rules (correctness, not policy): listed on the settings page with the reason they cannot be switched off. */
 export const HANDOFF_RULES = Object.freeze([
   { rule: '只在本机 127.0.0.1 上监听，请求的 Host 必须是 127.0.0.1 或 localhost 加监听端口', why: '防止别的机器或 DNS 重绑定的网页冒充本机' },
-  { rule: '只有「允许交接的网站」能读取客户端能力、交接安装和交接状态；未许可网站仅能读取固定的来源拒绝提示', why: '拒绝提示只说明本机监听拒绝了该网站，不透露客户端类型、能力、安装情况或允许名单' },
+  { rule: '只有「允许交接的网站」能交接安装和读取交接状态', why: '客户端能力发现和安装状态由 Market 提供，本监听不接管' },
   { rule: '网站交接只会在应用库里弹出确认；只有你点「确认安装」才会安装', why: '网站不能替你决定装什么' },
   { rule: '交接状态只给发起它的那个网站看', why: '一个网站不能读另一个网站的交接' },
   { rule: `交接请求体不超过 ${HANDOFF_BODY_MAX_BYTES} 字节`, why: '交接只包含目录身份、合约版本及已审核的结构化安装目标；正文上限为 4096 字节，不接受来源命令' },
@@ -168,13 +165,6 @@ export function createHandoffHandler({ library, queue, settings, port }) {
       const bound = port();
       requireCondition([`127.0.0.1:${bound}`, `localhost:${bound}`].includes(req.headers.host), 'HOST_DENIED', 'Unrecognized request host.', {}, 403);
       const url = new URL(req.url ?? '/', `http://${req.headers.host}`), path = url.pathname, origin = req.headers.origin;
-      if (path === '/hanamesh/library/install-target') {
-        serveInstallTargetProbe(req,res,{allowedOrigins:settings().allowedOrigins,read:()=>library.installTarget(),traceId,send});return;
-      }
-      if(path === '/hanamesh/library/installation-status'){
-        cors=installationStatusCors(req,settings().allowedOrigins);
-        await serveInstallationStatus(req,res,{read:library.installationStatus,maxBodyBytes:HANDOFF_BODY_MAX_BYTES,traceId,cors,send});return;
-      }
       requireCondition(path === '/hanamesh/library/handoff', 'NOT_FOUND', 'Unknown handoff route.', {}, 404);
       requireCondition(typeof origin === 'string' && settings().allowedOrigins.includes(origin), 'ORIGIN_DENIED',
         'This website is not allowed to hand installs to this client. Add it in the HanaMesh library settings.', { origin: origin ?? null }, 403);

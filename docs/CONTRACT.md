@@ -1,3 +1,5 @@
+0.6.31（F02）：`/hanamesh/library/install-target` 与 `/hanamesh/library/installation-status` 的唯一 HTTP 提供方是独立 `@hanamesh/market`。AppHost 从 DSH 精确路由表和自有网站监听都撤掉这两个入口，并不再广告安装状态 HTTP 能力；单独加载 AppHost 时同样不提供，不按 Market 是否在场做兼容回退。下文涉及这两个入口的旧 AppHost 归属描述已被本条取代；协议、CORS、显式同意和取消义务由 Market 现行合约承担。AppHost 应用运行、Node、租约、网关及本单之外的路由不变。
+
 0.6.29：官方安装清单读取失败仅在可信宿主日志增加固定命令阶段、退出状态、stderr 字节数/分类和分阶段耗时；公开 observation/reason DTO、所有预算与不重试行为不变。见 [诊断边界](INSTALLATION_STATUS.md#trusted-command-diagnostics-0629)。
 
 0.6.27：Desktop payload 独立 Node 的启动识别上限为 30 s（实测最慢冷启动 4.07 s 的 7 倍以上余量），超时或插件卸载即终止该子进程；版本、平台与非 Electron 校验不变。

@@ -7,7 +7,6 @@ import {packageInstallTarget,installTargetName,sameInstallTarget,catalogPackageT
 import {SUITE_BUNDLE,SUITE_TARGET,SUITE_PACKAGES,readSuiteStatus,CORE_SUITE_DECLARATION_MISSING,readSuiteSourceState} from './suite.js';
 import { PROTECTED_PACKAGES } from './install.js';
 import { handoffSettings } from './handoff.js';
-import { INSTALLATION_STATUS_CAPABILITY } from '../installation-status.js';
 import {installationDiagnostic} from './diagnostics.js';
 
 /** Install-target contract version this market implements (schemas/install-target.schema.json). */
@@ -196,7 +195,7 @@ export function createLibraryService({domain,host,config={},dataRoot,ledgerReade
     async installVersion(input){requireInstaller('Version installation is unavailable.');requireCondition(typeof input?.version==='string'&&input.itemId!==SUITE_TARGET,'INVALID_INPUT','Select an exact catalog plugin version.');const {item}=await resolveTarget(input,true);if(present(item.installed)&&!item.upgradeAvailable)return{status:'already-installed',itemId:item.id,packageName:item.package.name};return installItem(item);},
     /** Public discovery is metadata only: no profile, authentication or installed rows. */
     installationStatus,
-    installTarget(){const need=ready()?[]:unavailable();return{client,ready:ready(),...(typeof installationStatus==='function'?{installationStatus:INSTALLATION_STATUS_CAPABILITY}:{}),...((suiteStatus.status!=='unknown'||suiteStatus.restartRequired)&&!installer?.suiteUpgradeUnavailable?{suite:structuredClone(suiteStatus)}:{}),installTarget:{contract:'hanamesh.install-target',contractVersion:INSTALL_TARGET_CONTRACT_VERSION,supported:[INSTALL_TARGET_CONTRACT_VERSION],fragmentPrefix:'#hanamesh-install?'},
+    installTarget(){const need=ready()?[]:unavailable();return{client,ready:ready(),...((suiteStatus.status!=='unknown'||suiteStatus.restartRequired)&&!installer?.suiteUpgradeUnavailable?{suite:structuredClone(suiteStatus)}:{}),installTarget:{contract:'hanamesh.install-target',contractVersion:INSTALL_TARGET_CONTRACT_VERSION,supported:[INSTALL_TARGET_CONTRACT_VERSION],fragmentPrefix:'#hanamesh-install?'},
       ...(!ready()?{error:{code:'INSTALL_TARGET_UNAVAILABLE',message:need.length?'应用库还不能安装：'+need.map(row=>row.need).join('；'):'Controlled installer is unavailable.',need}}:{})};},
     /** Plugin changes load without a restart (the host's public plugin manager is present). */
     get live(){return Boolean(installer?.live);},

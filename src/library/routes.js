@@ -1,12 +1,11 @@
-import { installationStatusCors, serveInstallationStatus } from './installation-status-http.js';
-import {serveInstallTargetProbe} from './install-target-http.js';
 import { randomUUID } from 'node:crypto';
 import { AppHostError, requireCondition } from '../errors.js';
 import { controlOrigins } from '../control-origin.js';
 import { HANDOFF_DEFAULTS, HANDOFF_RULES, HANDOFF_SETTING_NAMES, HANDOFF_BODY_MAX_BYTES } from './handoff.js';
 
-// Keep older route order; dsh.js registers each exact path on the public host API.
-export const LIBRARY_ROUTES=['/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/install','/hanamesh/library/provision','/hanamesh/library/uninstall','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/plugins/install','/hanamesh/library/plugins/uninstall','/hanamesh/library/target','/hanamesh/library/install-target','/hanamesh/library/handoffs','/hanamesh/library/handoffs/state','/hanamesh/library/handoff-settings','/hanamesh/library/suite/upgrade','/hanamesh/library/installation-status'];
+// Website discovery and installation-status belong exclusively to Market.
+// AppHost never registers those routes, including when Market is absent.
+export const LIBRARY_ROUTES=['/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/install','/hanamesh/library/provision','/hanamesh/library/uninstall','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/plugins/install','/hanamesh/library/plugins/uninstall','/hanamesh/library/target','/hanamesh/library/handoffs','/hanamesh/library/handoffs/state','/hanamesh/library/handoff-settings','/hanamesh/library/suite/upgrade'];
 export const NODE_RUNTIME_ROUTES=['/hanamesh/library/node-runtime','/hanamesh/library/node-runtime/settings','/hanamesh/library/node-runtime/plan','/hanamesh/library/node-runtime/prepare','/hanamesh/library/node-runtime/cancel'];
 LIBRARY_ROUTES.push('/hanamesh/library/version-target','/hanamesh/library/version/install','/hanamesh/library/suite/status','/hanamesh/library/versions',...NODE_RUNTIME_ROUTES,'/hanamesh/library/suite-source');
 const READ_ROUTES=new Set(['/hanamesh/library/version-target','/hanamesh/library/suite/status','/hanamesh/library/versions','/hanamesh/library/suite-source','/hanamesh/library/node-runtime','/hanamesh/library','/hanamesh/library/sources','/hanamesh/library/events','/hanamesh/library/installedPlugins','/hanamesh/library/target','/hanamesh/library/handoffs','/hanamesh/library/handoff-settings']);
@@ -29,13 +28,6 @@ export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,a
     const requestOrigin=`${parent.protocol}//${req.headers.host}`,url=new URL(req.url,requestOrigin),path=url.pathname;
     requireCondition(LIBRARY_ROUTES.includes(path),'NOT_FOUND','Unknown library route.',{},404);
     requireCondition(req.headers['sec-fetch-dest']!=='iframe','FRAME_CONTROL_DENIED','An application frame cannot control the host.',{},403);
-    if(path==='/hanamesh/library/installation-status'){
-      cors=installationStatusCors(req,[requestOrigin,origins.parent,...library.handoffSettings().allowedOrigins]);
-      await serveInstallationStatus(req,res,{read:library.installationStatus,maxBodyBytes:HANDOFF_BODY_MAX_BYTES,traceId,cors,send});return;
-    }
-    if(path==='/hanamesh/library/install-target'){
-      serveInstallTargetProbe(req,res,{allowedOrigins:[requestOrigin,origins.parent,...library.handoffSettings().allowedOrigins],read:()=>library.installTarget(),traceId,send});return;
-    }
     const readOnly=req.method==='GET'&&READ_ROUTES.has(path);
     requireCondition(readOnly||(req.method==='POST'&&!['/hanamesh/library/installedPlugins','/hanamesh/library/target','/hanamesh/library/handoffs'].includes(path)),'METHOD_NOT_ALLOWED','Unsupported library method.',{},405);
     requireCondition(!req.headers.origin||(origins.forwarded?origins.acceptsOrigin(req.headers.origin):req.headers.origin===requestOrigin),'ORIGIN_DENIED','Unapproved browser origin.',{},403);
@@ -74,7 +66,7 @@ export function createLibraryHttpHandler(library,{parentOrigin,transportOrigin,a
     else if(path==='/hanamesh/library/version-target')result=await library.resolveVersionTarget(input);
     else if(path==='/hanamesh/library/version/install')result=await library.installVersion(input);
     else if(path==='/hanamesh/library/versions'){
-      // Same transport lifetime as the existing read-only installation-status route.
+      // Cancel this read when its HTTP transport closes.
       const controller=new AbortController(),abort=()=>{if(!res.writableEnded)controller.abort();};req.once('aborted',abort);res.once('close',abort);
       try{if(req.aborted||res.destroyed)controller.abort();result=await library.versions(input,{signal:controller.signal});if(controller.signal.aborted)return;}
       catch(error){if(controller.signal.aborted)return;throw error;}

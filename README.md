@@ -1,3 +1,5 @@
+0.6.31（F02）：`/hanamesh/library/install-target` 与 `/hanamesh/library/installation-status` 的唯一 HTTP 提供方是独立 `@hanamesh/market`。AppHost 从 DSH 精确路由表和自有网站监听都撤掉这两个入口，并不再广告安装状态 HTTP 能力；单独加载 AppHost 时同样不提供，不按 Market 是否在场做兼容回退。下文涉及这两个入口的旧 AppHost 归属描述已被本条取代；协议、CORS、显式同意和取消义务由 Market 现行合约承担。AppHost 应用运行、Node、租约、网关及本单之外的路由不变。
+
 0.6.30 候选（PKG1）：应用库默认 provision 调用迁至已声明且随包提供的 @hanamesh/lib-provision 公开 API；发布前解包实际 npm tgz，检查全部 JS/MJS/CJS 的相对依赖闭包。
 
 0.6.29 候选（DT11）：Claude/Codex 只读命令失败在可信宿主日志保留固定命令阶段、退出状态、stderr 字节数/分类及 worker、anchor、CLI、清理耗时；不记录 stderr 原文、路径或环境值。Web 原因码与所有预算、超时、不重试规则保持。见 [状态协议](docs/INSTALLATION_STATUS.md#trusted-command-diagnostics-0629)。
