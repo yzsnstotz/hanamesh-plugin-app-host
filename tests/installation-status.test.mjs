@@ -1,15 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
-import {createHandoffHandler} from '../src/library/handoff.js';
-import {createLibraryHttpHandler} from '../src/library/routes.js';
+import {marketHttpOwner} from './fixtures/market-http-owner.mjs';
 import {createLibraryService} from '../src/library/service.js';
 const SITE='https://market.example',PATH='/hanamesh/library/installation-status';
 const body={contractVersion:'1',consent:'read-installations'};
 async function server(t,kind,read){
  let base;const library={installationStatus:read,installTarget:()=>({client:'dsh',ready:false}),handoffSettings:()=>({allowedOrigins:[SITE]})};
- const s=createServer((req,res)=>(kind==='handoff'?createHandoffHandler({library,queue:{},settings:library.handoffSettings,port:()=>new URL(base).port}):createLibraryHttpHandler(library,{parentOrigin:base,authenticate:()=>{throw new Error('status must not authenticate')},authorize:()=>{throw new Error('status must not authorize installs')}}))(req,res));
- await new Promise(r=>s.listen(0,'127.0.0.1',r));base=`http://127.0.0.1:${s.address().port}`;t.after(()=>new Promise(r=>{s.close(r);s.closeAllConnections()}));return base;
+ const {base:origin}=await marketHttpOwner(t,kind,library);return origin;
 }
 for(const kind of ['handoff','host'])test(`${kind} status POST reads only after explicit consent and strict admission`,async t=>{
  let reads=0;const base=await server(t,kind,async()=>{reads++;return{schemaVersion:1,client:'dsh',observations:[]}});
@@ -20,9 +18,9 @@ for(const kind of ['handoff','host'])test(`${kind} status POST reads only after 
  const preflight=await fetch(base+PATH,{method:'OPTIONS',headers:{origin:SITE}});assert.equal(preflight.status,204);assert.equal(reads,0);
  const res=await send();assert.equal(res.status,200);assert.equal(res.headers.get('access-control-allow-origin'),SITE);assert.equal(res.headers.get('cache-control'),'no-store');assert.equal((await res.json()).client,'dsh');assert.equal(reads,1);
 });
-test('capability is advertised without reading any installation and invokes a fresh explicit reader',async()=>{
+test('AppHost does not advertise a Market-owned HTTP capability; internal reads remain explicit and fresh',async()=>{
  let reads=0;const library=createLibraryService({domain:{global:{get:async()=>({revision:1,sources:[]})}},host:{},config:{},dataRoot:'/unused',installationStatus:async()=>({schemaVersion:1,checkedAt:String(++reads)})});
- await library.init();const probe=library.installTarget();assert.equal(probe.installationStatus?.contract,'hanamesh.installation-status');assert.equal(reads,0);
+ await library.init();const probe=library.installTarget();assert.equal(probe.installationStatus,undefined);assert.equal(reads,0);
  assert.equal((await library.installationStatus()).checkedAt,'1');assert.equal((await library.installationStatus()).checkedAt,'2');
 });
 test('separate authoritative reader is publicly implemented',async()=>{

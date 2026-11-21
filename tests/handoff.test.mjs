@@ -7,6 +7,8 @@ import { request } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { createHandoffQueue, createHandoffHandler, createHandoffListener, handoffSettings, HANDOFF_DEFAULTS, HANDOFF_RULES, HANDOFF_BODY_MAX_BYTES } from '../src/library/handoff.js';
 
+import { marketHttpOwner } from './fixtures/market-http-owner.mjs';
+
 const SITE = 'https://market.hanamesh.com';
 async function freePort() {
   const server = createServer(); await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -55,7 +57,7 @@ test('defaults are the owner-approved values and settings are validated only by 
 });
 
 test('probe answers client facts only to allowed websites; other valid websites read a constant refusal', async t => {
-  const { base } = await start(t, { library: fakeLibrary({ ready: false }) });
+  const { base } = await marketHttpOwner(t, 'handoff', { ...fakeLibrary({ ready: false }), handoffSettings: () => ({ allowedOrigins: [SITE] }) });
   const probe = await fetch(base + '/hanamesh/library/install-target', { headers: { origin: SITE } });
   assert.equal(probe.status, 200); assert.equal(probe.headers.get('access-control-allow-origin'), SITE);
   const body = await probe.json();
@@ -98,9 +100,10 @@ test('only allowed origins may hand off; preflight echoes the exact origin; noth
   assert.deepEqual(queue.open().map(row => [row.handoffId, row.state, row.packageName]), [[handoffId, 'pending', 'example-notes']]);
   const missing = await post(base, { itemId: 'missing' });
   assert.equal(missing.status, 404); assert.equal((await missing.json()).error.code, 'CATALOG_ITEM_MISSING');
-  const wrongHost = await fetch(base.replace('127.0.0.1', 'localhost') + '/hanamesh/library/install-target', { headers: { origin: SITE } });
+  const { base: probeBase } = await marketHttpOwner(t, 'handoff', { ...fakeLibrary(), handoffSettings: () => ({ allowedOrigins: [SITE] }) });
+  const wrongHost = await fetch(probeBase.replace('127.0.0.1', 'localhost') + '/hanamesh/library/install-target', { headers: { origin: SITE } });
   assert.equal(wrongHost.status, 200, 'localhost alias of the same port is accepted');
-  const port = new URL(base).port;
+  const port = new URL(probeBase).port;
   const rebound = await new Promise((resolve, reject) => request({ host: '127.0.0.1', port, path: '/hanamesh/library/install-target', headers: { host: `evil.example:${port}`, origin: SITE } },
     res => { res.resume(); res.on('end', () => resolve(res.statusCode)); }).on('error', reject).end());
   assert.equal(rebound, 403, 'a DNS-rebound Host is refused');

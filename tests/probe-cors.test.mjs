@@ -1,12 +1,10 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {createServer,request} from 'node:http';
-import {createHandoffHandler} from '../src/library/handoff.js';
-import {createLibraryHttpHandler} from '../src/library/routes.js';
+import {marketHttpOwner} from './fixtures/market-http-owner.mjs';
 const PATH='/hanamesh/library/install-target',SITE='https://unapproved.example',ALLOWED='https://market.hanamesh.com';
 async function boot(t,kind){
  let base,reads=0;const library={handoffSettings:()=>({allowedOrigins:[ALLOWED]}),installTarget:()=>{reads++;return{client:'hanamesh',ready:true,installTarget:{contract:'hanamesh.install-target'}}},installationStatus:()=>{throw new Error('must not inspect inventories')},resolveTarget:()=>{throw new Error('must not resolve installs')}};
- const server=createServer((req,res)=>(kind==='handoff'?createHandoffHandler({library,queue:{},settings:library.handoffSettings,port:()=>new URL(base).port}):createLibraryHttpHandler(library,{parentOrigin:base,authenticate:()=>{throw new Error('must not authenticate')},authorize:()=>{throw new Error('must not authorize')}}))(req,res));
- await new Promise(r=>server.listen(0,'127.0.0.1',r));base=`http://127.0.0.1:${server.address().port}`;t.after(()=>new Promise(r=>{server.close(r);server.closeAllConnections()}));return{base,reads:()=>reads};
+ const {base:origin}=await marketHttpOwner(t,kind,library);return{base:origin,reads:()=>reads};
 }
 const get=(base,patch={})=>fetch(base+PATH,{headers:{origin:SITE,...patch}});
 for(const kind of ['handoff','host']){

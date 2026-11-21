@@ -18,6 +18,7 @@ import * as storageDomain from '@deepseek-ai/dsh-storage-domain';
 import WebServer from '@deepseek-ai/dsh-host-webserver';
 import * as appHost from '../src/dsh.js';
 import { scratch, http, until } from './helpers.mjs';
+import { marketHttpOwner } from './fixtures/market-http-owner.mjs';
 
 const cliFixture=fileURLToPath(new URL('./fixtures/profile-cli.mjs', import.meta.url));
 const SITE = 'https://market.hanamesh.com', TOKEN = 'browser-session';
@@ -82,8 +83,7 @@ test('AH-HO01: the real plugin starts the listener, the window confirms, the gua
   const h = await boot(t);
   const before = (await h.get('/hanamesh/library/handoffs')).json.listener;
   assert.deepEqual([before.status, before.port], ['listening', h.port], 'dsh.js started the listener on the configured port');
-  const probe = await (await site(h.listener + '/hanamesh/library/install-target')).json();
-  assert.equal(probe.client, 'dsh'); assert.equal(probe.ready, true, JSON.stringify(probe));
+  assert.equal((await site(h.listener + '/hanamesh/library/install-target')).status, 404, 'AppHost never acts as the Market discovery provider');
   const posted = await site(h.listener + '/hanamesh/library/handoff', { method: 'POST', body: JSON.stringify({ ...item, contractVersion: '1' }) });
   assert.equal(posted.status, 202);
   const { handoffId } = await posted.json();
@@ -128,7 +128,7 @@ test('AH-HO02: settings page shows defaults, names and fixed rules; saving re-bi
   assert.deepEqual([saved.json.listener.status, saved.json.listener.port], ['listening', next]);
   assert.equal((await h.get('/hanamesh/library/handoffs')).json.pollMs, 900);
   await assert.rejects(fetch(h.listener + '/hanamesh/library/install-target'), 'the old port is closed');
-  assert.equal((await site(`http://127.0.0.1:${next}/hanamesh/library/install-target`)).status, 200);
+  assert.equal((await site(`http://127.0.0.1:${next}/hanamesh/library/handoff`,{method:'OPTIONS'})).status, 204);
   const refused = await h.post('/hanamesh/library/handoff-settings', { ...settings.json.settings, ttlMs: 100, pollMs: 900 });
   assert.equal(refused.status, 400); assert.equal(refused.json.error.code, 'INVALID_HANDOFF_SETTINGS');
   await h.ctx.fiber.dispose();
@@ -137,7 +137,7 @@ test('AH-HO02: settings page shows defaults, names and fixed rules; saving re-bi
 
 
 test('N16-6: both discovery listeners use the current website allowlist without exposing capabilities to other origins', async t => {
-  const h = await boot(t), path = '/hanamesh/library/install-target';
+  const host = await marketHttpOwner(t,'host'), handoff = await marketHttpOwner(t,'handoff'), h = { origin:host.base, listener:handoff.base }, path = '/hanamesh/library/install-target';
   for (const base of [h.origin, h.listener]) {
     const denied = await site(base + path, {headers: {origin: 'https://unapproved.example'}});
     assert.equal(denied.status, 403);assert.equal(denied.headers.get('access-control-allow-origin'), 'https://unapproved.example');
@@ -150,14 +150,13 @@ test('N16-6: both discovery listeners use the current website allowlist without 
     const preflight = await site(base + path, {method: 'OPTIONS'});assert.equal(preflight.status, 204);
     assert.equal(preflight.headers.get('access-control-allow-origin'), SITE);
   }
-  const settings = (await h.get('/hanamesh/library/handoff-settings')).json.settings;
-  assert.equal((await h.post('/hanamesh/library/handoff-settings', {...settings, allowedOrigins: ['https://approved.example']})).status, 200);
+  for(const owner of [host,handoff]){const service=owner.ctx.get('hanameshMarket');await service.saveSettings({handoff:{...service.handoffSettings(),allowedOrigins:['https://approved.example']}});}
   for (const base of [h.origin, h.listener]) {
     assert.equal((await site(base + path)).status, 403);
     const allowed = await site(base + path, {headers: {origin: 'https://approved.example'}});assert.equal(allowed.status, 200);
     assert.equal(allowed.headers.get('access-control-allow-origin'), 'https://approved.example');
   }
-  assert.equal((await h.get(path)).status, 200, 'the same-origin authenticated workspace keeps its discovery entry');
+  assert.equal((await fetch(h.origin+path)).status,200,'local tool discovery remains available at the owning Market');
 });
 
 test('N16-7: real DSH JSON storage preserves pollMs after unloading and reopening the plugin', async t => {
@@ -179,7 +178,7 @@ test('IS-CORDIS: the real plugin advertises a consented fresh Core reader on bot
  process.env.HOME=agentHome;process.env.CLAUDE_CONFIG_DIR=join(agentHome,'.claude');process.env.CODEX_HOME=join(agentHome,'.codex');t.after(()=>{for(const [key,value]of Object.entries(previous)){if(value===undefined)delete process.env[key];else process.env[key]=value}});
  const{declaration}=await import('./fixtures/core-suite-declaration.mjs');let value=declaration(),calls=0;
  const service={protocolVersion:'1',getSuiteDeclaration:async(...args)=>{assert.deepEqual(args,[],'status facts never request a registry plan');calls++;return value}};
- const h=await boot(t,{core:service});const before=calls;
+ const host=await marketHttpOwner(t,'host',{}, {core:service}),handoff=await marketHttpOwner(t,'handoff',{}, {core:service}),h={origin:host.base,listener:handoff.base};const before=calls;
  for(const base of [h.listener,h.origin]){
   const probe=await(await site(base+'/hanamesh/library/install-target')).json();assert.equal(probe.installationStatus?.contract,'hanamesh.installation-status','real DSH entry wires the advertised bridge');assert.equal(calls,before);
  }
@@ -187,7 +186,7 @@ test('IS-CORDIS: the real plugin advertises a consented fresh Core reader on bot
   const res=await site(base+'/hanamesh/library/installation-status',{method:'POST',body:JSON.stringify({contractVersion:'1',consent:'read-installations'})});assert.equal(res.status,200);
   const status=await res.json();assert.equal(status.observations.find(x=>x.channel==='dsh').status,'installed');assert.equal(status.observations.find(x=>x.channel==='hanamesh').status,'unknown');
  }
- assert.equal(calls,before+2);assert.deepEqual(h.manager.calls,[]);
+ assert.equal(calls,before+2);assert.equal(host.ctx.get('pluginManager'),undefined);assert.equal(handoff.ctx.get('pluginManager'),undefined);
  value={...value,completeness:'unknown',blocked:[{code:'CORE_SUITE_PEER_UNKNOWN'}]};const detect=async()=>(await(await site(h.listener+'/hanamesh/library/installation-status',{method:'POST',body:JSON.stringify({contractVersion:'1',consent:'read-installations'})})).json()).observations.find(x=>x.channel==='dsh');
  assert.equal((await detect()).status,'unknown');delete service.getSuiteDeclaration;assert.equal((await detect()).reason.code,'CORE_SUITE_DECLARATION_MISSING');
 });
